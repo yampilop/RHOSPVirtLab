@@ -111,6 +111,13 @@ $ ipmitool -I lanplus -U admin -P admin -H 192.168.122.1 -p 6230 power status
 Chassis Power is off
 ```
 
+If you are using firewalld, you should open the ports in the libvirtd zone:
+
+```
+firewall-cmd --zone=libvirt --add-port=6230-6232/udp --permanent 
+firewall-cmd --zone=libvirt --add-port=6230-6232/udp
+```
+
 ## RHOSP 16.1 installation
 
 ### First login
