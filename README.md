@@ -299,7 +299,7 @@ inspection_iprange = 192.168.24.100,192.168.24.120
 masquerade = true
 ```
 
-Edit /etc/hosts and delete the undercloud names from the line starting 127.0.0.1.
+Edit /etc/hosts and ensure there are no undercloud names in the lines starting with 127.0.0.1 and ::1. There should be just localhost names there.
 
 Create a /home/stack/templates/custom-undercloud-params.yaml file with the following content:
 
