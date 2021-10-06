@@ -18,19 +18,52 @@ sudo yum install virt-manager libvirt
 
 ### Import XML files
 
-Inside virt-manager, you need to import or create networks matching the following XML files:
+You need to import networks matching the following XML files:
 
 - libvirt-xmls
   - [default.xml](libvirt-xmls/default.xml)
   - [provisioning.xml](libvirt-xmls/provisioning.xml)
 
-You also need to import or create virtual machines (domains) matching the following XML files:
+To do that, just run:
+
+```
+sudo virsh net-define <XML_FILE>
+```
+
+List the networks to verify they were created:
+
+```
+$ sudo virsh net-list 
+ Name           State    Autostart   Persistent
+-------------------------------------------------
+ default        active   yes         yes
+ provisioning   active   yes         yes
+```
+
+You also need to import the virtual machines (domains) matching the following XML files:
 
 - libvirt-xmls
   - [undercloud.xml](libvirt-xmls/undercloud.xml)
   - [controller0.xml](libvirt-xmls/controller0.xml)
   - [compute0.xml](libvirt-xmls/compute0.xml)
   - [compute1.xml](libvirt-xmls/compute1.xml)
+
+To do that, just run:
+```
+sudo virsh define <XML_FILE>
+```
+
+List the domains to verify they were created:
+
+```
+$ sudo virsh list --all
+ Id   Name          State
+------------------------------
+ -    compute0      shut off
+ -    compute1      shut off
+ -    controller0   shut off
+ -    director      shut off
+```
 
 The resulting Virtual Machine Manager screen should look like the following picture:
 
@@ -123,6 +156,12 @@ firewall-cmd --zone=libvirt --add-port=6230-6232/udp
 ### First login
 
 Start undercloud virtual machine. Once it has booted, login as ***cloud-user*** using the password ***redhat***.
+
+Change to the root user:
+
+```
+sudo -i
+```
 
 ### Initial steps
 
