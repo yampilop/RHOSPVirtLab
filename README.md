@@ -16,7 +16,7 @@ This document assumes that you run a **Fedora 34** installation in your personal
 sudo yum install virt-manager libvirt
 ```
 
-### Import XML files
+### Import XML files for networks
 
 You need to import networks matching the following XML files:
 
@@ -40,7 +40,27 @@ $ sudo virsh net-list
  provisioning   active   yes         yes
 ```
 
-You also need to import the virtual machines (domains) matching the following XML files:
+### Configure storage files
+
+The size of the disk images should be as the following image:
+
+![Storage sizes](/images/storage.png)
+
+The storage from **undercloud** node should be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-update-2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)):
+
+![Storage sizes](/images/undercloud_img.png)
+
+The other storage files can be created blank.
+
+### Get access to the image as cloud-user
+
+To customize ***cloud-user*** password, add a CDROM device with the cloud-init configuration iso file found [here](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
+
+![Storage sizes](/images/undercloud_cdrom.png)
+
+### Import XML files for VMs
+
+You need to import the virtual machines (domains) matching the following XML files:
 
 - libvirt-xmls
   - [undercloud.xml](libvirt-xmls/undercloud.xml)
@@ -68,18 +88,6 @@ $ sudo virsh list --all
 The resulting Virtual Machine Manager screen should look like the following picture:
 
 ![Virtual Machine Manager](/images/VMM.png)
-
-The size of the disk images should be as the following image:
-
-![Storage sizes](/images/storage.png)
-
-The storage from undercloud node should be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-update-2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)):
-
-![Storage sizes](/images/undercloud_img.png)
-
-To customize ***cloud-user*** password, add a CDROM device with the cloud-init configuration iso file found [here](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
-
-![Storage sizes](/images/undercloud_cdrom.png)
 
 ### Install and configure virtualbmc
 
@@ -147,8 +155,8 @@ Chassis Power is off
 If you are using firewalld, you should open the ports in the libvirtd zone:
 
 ```
-firewall-cmd --zone=libvirt --add-port=6230-6232/udp --permanent 
-firewall-cmd --zone=libvirt --add-port=6230-6232/udp
+sudo firewall-cmd --zone=libvirt --add-port=6230-6232/udp --permanent 
+sudo firewall-cmd --zone=libvirt --add-port=6230-6232/udp
 ```
 
 ## RHOSP 16.1 installation
@@ -201,7 +209,7 @@ Register your system using your Red Hat valid credentials:
 sudo subscription-manager register
 ```
 
-Attach the subscription to a valid Openstack pool and set the release to the 8.2 version:
+Attach the subscription to a ***valid Openstack pool*** and set the release to the 8.2 version:
 
 ```
 sudo subscription-manager list --available --all --matches="Red Hat OpenStack"
@@ -275,27 +283,45 @@ openstack tripleo container image prepare default \
 cp /usr/share/python-tripleoclient/undercloud.conf.sample /home/stack/undercloud.conf
 ```
 
-Edit the undercloud.conf file to match the following parameters:
+**Edit** the undercloud.conf file to match the following parameters:
 
 ```
 [DEFAULT]
+...
 container_images_file = /home/stack/containers-prepare-parameter.yaml
+...
 custom_env_files = /home/stack/templates/custom-undercloud-params.yaml
+...
 enable_node_discovery = true
+...
 local_interface = eth0
+...
 local_ip = 192.168.24.1/24
+...
 local_subnet = ctlplane-subnet
+...
 overcloud_domain_name = localdomain
+...
 undercloud_admin_host = 192.168.24.3
+...
 undercloud_nameservers = 8.8.8.8,8.8.4.4
+...
 undercloud_ntp_servers = 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org
+...
 undercloud_public_host = 192.168.24.2
+...
 [ctlplane-subnet]
+...
 cidr = 192.168.24.0/24
+...
 dhcp_end = 192.168.24.55
+...
 dhcp_start = 192.168.24.5
+...
 gateway = 192.168.24.1
+...
 inspection_iprange = 192.168.24.100,192.168.24.120
+...
 masquerade = true
 ```
 
@@ -312,7 +338,7 @@ Create a /home/stack/templates/custom-undercloud-params.yaml file with the follo
 Edit the containers-prepare-parameter.yaml file adding this to the end (ensure to put your credentials):
 
 ```
-  ContainerImageRegistryLogin: true
+  ContainerImageRegistryLogin: false
   ContainerImageRegistryCredentials:
     registry.redhat.io:
       <username>: '<password>'
@@ -325,7 +351,7 @@ sudo systemctl stop NetworkManager
 sudo systemctl disable NetworkManager
 ```
 
-Delete other interfaces ifcfg files from /etc/sysconfig/network-scripts, except the **ifcfg-eth1**.
+Delete other interfaces ifcfg files from /etc/sysconfig/network-scripts, **except** the *related to the interface connected to the default network*.
 
 Enable and start network.service.
 
@@ -336,6 +362,14 @@ sudo systemctl enable --now network.service
 This service should start with no error. Otherwise you should review the network-scripts files looking for misconfigurations.
 
 ### Undercloud installation
+
+Test your registry.redhat.io credentials with podman:
+
+```
+sudo podman login registry.redhat.io
+```
+
+Execute the installation command and wait:
 
 ```
 openstack undercloud install
