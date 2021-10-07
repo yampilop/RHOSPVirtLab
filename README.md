@@ -418,7 +418,7 @@ Prepare the overcloud images and load them to openstack:
 ```
 cd /home/stack/images
 for i in /usr/share/rhosp-director-images/overcloud-full-latest-16.1.tar /usr/share/rhosp-director-images/ironic-python-agent-latest-16.1.tar; do tar -xvf $i; done
-source stackrc
+source /home/stack/stackrc
 openstack overcloud image upload --image-path /home/stack/images/
 ```
 
