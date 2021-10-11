@@ -1,0 +1,12 @@
+---
+vms:
+  - undercloud
+  - controller0
+  - compute0
+  - compute1
+
+bmcports:
+  undercloud: 6233
+  controller0: 6230
+  compute0: 6231
+  compute1: 6232

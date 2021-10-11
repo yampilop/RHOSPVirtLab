@@ -1,0 +1,48 @@
+---
+- name: Undercloud installation
+  hosts: undercloud
+  vars_files:
+    - vault_credentials.yaml
+
+  tasks:
+    - name: Change the hostname
+      debug:
+        msg: TODO
+
+    - name: Red Hat Subscription Registration
+      debug:
+        msg: TODO
+
+    - name: Manage repositories
+      debug:
+        msg: TODO
+
+    - name: Manage modules and services
+      debug:
+        msg: TODO
+
+    - name: Update packages
+      debug:
+        msg: TODO
+
+    - name: Reboot
+      debug:
+        msg: TODO
+
+    - name: Install packages
+      debug:
+        msg: TODO
+
+    - name: Get the configuration files from repo
+      debug:
+        msg: TODO
+
+    - name: Configure NetworkManager and network services
+      debug:
+        msg: TODO
+
+    - name: Install undercloud
+      debug:
+        msg: TODO
+
+

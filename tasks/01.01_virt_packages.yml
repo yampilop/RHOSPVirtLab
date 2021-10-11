@@ -1,0 +1,6 @@
+- name: PACKAGES - Ensure packages are installed
+  yum:
+    name:
+      - libvirt
+      - virt-manager
+    state: latest

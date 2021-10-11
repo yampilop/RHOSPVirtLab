@@ -1,0 +1,10 @@
+---
+- name: Undercloud configuration
+  hosts: director
+
+  tasks:
+    - name: Ensure stack user is set with the correct permissions
+      import_tasks: tasks/02.01_stack_user.yml
+
+    - name: Copy the key to login as stack user
+      import_tasks: tasks/02.02_ssh_key.yml

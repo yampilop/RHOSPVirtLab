@@ -1,0 +1,9 @@
+---
+- name: Overcloud deployment
+  hosts: undercloud
+
+  tasks:
+    - name: TODO
+      debug:
+        msg: TODO
+

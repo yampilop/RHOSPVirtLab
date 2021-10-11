@@ -1,0 +1,11 @@
+- name: STACK - Ensure user is created
+  user:
+    name: stack
+    password: "$6$redhat$l.NNwn3YXybGpYulm43xTMhs4X1ZUZBx7LfyQwTTnWuEP/JM22H8IV9YWULYZ9S1jbqjW0RTx86DuEmINWI2b/"
+    state: present
+
+- name: STACK - Ensure sudoers file exists
+  copy:
+    content: "stack ALL=(root) NOPASSWD:ALL"
+    dest: /etc/sudoers.d/stack
+    mode: 0440

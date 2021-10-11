@@ -8,185 +8,85 @@ Virtual lab to setup a Red Hat OpenStack Platform test installation in your pers
 
 This document assumes that you run a **Fedora 34** installation in your personal computer. The steps for other versions of Fedora and other Linux-based OS may differ from the exposed here.
 
-## Installation
+## Pull the repo
 
-### Install libvirt and virt-manager
-
-```
-sudo yum install virt-manager libvirt
-```
-
-### Import XML files for networks
-
-You need to import networks matching the following XML files:
-
-- libvirt-xmls
-  - [default.xml](libvirt-xmls/default.xml)
-  - [provisioning.xml](libvirt-xmls/provisioning.xml)
-
-To do that, just run:
+Move to a directory where you want to work, for example the home directory:
 
 ```
-sudo virsh net-define <XML_FILE>
+cd ~
 ```
 
-List the networks to verify they were created:
+Clone the repository and enter the directory.
 
 ```
-$ sudo virsh net-list 
- Name           State    Autostart   Persistent
--------------------------------------------------
- default        active   yes         yes
- provisioning   active   yes         yes
+git clone https://github.com/yampilop/RHOSPVirtLab.git
+cd RHOSPVirtLab
 ```
 
-### Configure storage files
+## Initial configurations
 
-The size of the disk images should be as the following image:
+### Download the RHEL8.2 QCOW2 image
 
-![Storage sizes](/images/storage.png)
+The storage from undercloud node will be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-update-2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)).
 
-The storage from **undercloud** node should be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-update-2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)):
+Download that image and place it in the ***storage*** folder inside the working directory.
 
-![Storage sizes](/images/undercloud_img.png)
-
-The other storage files can be created blank.
-
-### Get access to the image as cloud-user
-
-To customize ***cloud-user*** password, add a CDROM device with the cloud-init configuration iso file found [here](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
-
-![Storage sizes](/images/undercloud_cdrom.png)
-
-### Import XML files for VMs
-
-You need to import the virtual machines (domains) matching the following XML files:
-
-- libvirt-xmls
-  - [undercloud.xml](libvirt-xmls/undercloud.xml)
-  - [controller0.xml](libvirt-xmls/controller0.xml)
-  - [compute0.xml](libvirt-xmls/compute0.xml)
-  - [compute1.xml](libvirt-xmls/compute1.xml)
-
-To do that, just run:
-```
-sudo virsh define <XML_FILE>
-```
-
-List the domains to verify they were created:
+### Install ansible
 
 ```
-$ sudo virsh list --all
- Id   Name          State
-------------------------------
- -    compute0      shut off
- -    compute1      shut off
- -    controller0   shut off
- -    director      shut off
+sudo yum install ansible
 ```
 
-The resulting Virtual Machine Manager screen should look like the following picture:
-
-![Virtual Machine Manager](/images/VMM.png)
-
-### Install and configure virtualbmc
-
-Install the packages:
+### Test user and ansible installation
 
 ```
-sudo yum install python3-virtualbmc ipmitool
-```
+$ ansible local -m ping
 
-Enable and start the vbmcd service:
+workstation | SUCCESS => {
 
-```
-sudo systemctl enable --now vbmcd
-```
-
-Create the binding ports for the IPMI controller machines:
+    ...
+    
+    "ping": "pong"
+}
 
 ```
-vbmc add --username admin --password admin --address 192.168.122.1 --port 6230 controller0
-vbmc add --username admin --password admin --address 192.168.122.1 --port 6231 compute0
-vbmc add --username admin --password admin --address 192.168.122.1 --port 6232 compute1
-```
 
-List the ports:
+### Install requirements
 
 ```
-$ vbmc list
-+-------------+---------+---------------+------+
-| Domain name | Status  | Address       | Port |
-+-------------+---------+---------------+------+
-| compute0    | down    | 192.168.122.1 | 6231 |
-| compute1    | down    | 192.168.122.1 | 6232 |
-| controller0 | down    | 192.168.122.1 | 6230 |
-+-------------+---------+---------------+------+
+ansible-galaxy collection install -r requirements.yml
 ```
 
-Start the vbmc listening ports:
+## Create a vault for credentials
+
+You need to create a vault file to store your Red Hat Subscription credentials. To do that, execute the following command:
 
 ```
-vbmc start controller0
-vbmc start compute0
-vbmc start compute1
+ansible-vault create vault_credentials.yaml
 ```
 
-List the ports again:
+You will write the credentials in the following format:
 
 ```
-$ vbmc list
-+-------------+---------+---------------+------+
-| Domain name | Status  | Address       | Port |
-+-------------+---------+---------------+------+
-| compute0    | running | 192.168.122.1 | 6231 |
-| compute1    | running | 192.168.122.1 | 6232 |
-| controller0 | running | 192.168.122.1 | 6230 |
-+-------------+---------+---------------+------+
+rh_username: '<USERNAME>'
+rh_password: '<PASSWORD>'                        
 ```
 
-Test the status of controller0 as an example:
+## Execute the Ansible Playbook
+
+Execute the playbook with the following command (you will be prompted for the vault password):
 
 ```
-$ ipmitool -I lanplus -U admin -P admin -H 192.168.122.1 -p 6230 power status
-Chassis Power is off
+ansible-playbook --ask-vault-pass playbook.yml
 ```
 
-If you are using firewalld, you should open the ports in the libvirtd zone:
+_**TODO**_
 
-```
-sudo firewall-cmd --zone=libvirt --add-port=6230-6232/udp --permanent 
-sudo firewall-cmd --zone=libvirt --add-port=6230-6232/udp
-```
+---
+
+# OLD
 
 ## RHOSP 16.1 installation
-
-### First login
-
-Start undercloud virtual machine. Once it has booted, login as ***cloud-user*** using the password ***redhat***.
-
-Change to the root user:
-
-```
-sudo -i
-```
-
-### Initial steps
-
-Create the stack user, set a password and configure sudo permissions:
-
-```
-useradd stack
-passwd stack
-echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack
-chmod 0440 /etc/sudoers.d/stack
-```
-
-Change to stack user and 
-
-```
-su - stack
-```
 
 Create the first directories:
 

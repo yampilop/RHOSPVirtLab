@@ -1,0 +1,20 @@
+- name: DOMAINS - List libvirt VMs
+  community.libvirt.virt:
+    command: list_vms
+  register: all_vms
+
+- debug:
+    var: all_vms
+
+- name: DOMAINS - Define the domain from the template
+  community.libvirt.virt:
+    command: define
+    xml: '{{ lookup("template", "templates/{{ item }}.xml") }}'
+  when: all_vms.list_vms.item is not defined
+  loop: "{{ vms }}"
+
+- name: DOMAINS - Ensure undercloud domain is running
+  community.libvirt.virt:
+    name: undercloud
+    state: running
+

@@ -1,0 +1,48 @@
+- name: VIRTUALBMC - Ensure packages are installed
+  yum:
+    name:
+      - python3-virtualbmc
+      - ipmitool
+    state: latest
+
+- name: VIRTUALBMC - Enable and start vbmcd service
+  service:
+    name: vbmcd
+    state: started
+    enabled: true
+
+- name: VIRTUALBMC - Get node states
+  shell: "vbmc list 2>/dev/null | awk '/{{ item }}/ {print $4,$8}'"
+  register: vbmc_status
+  loop: "{{ vms }}"
+  changed_when: False
+
+- name: VIRTUALBMC - Ensure node exists
+  command: "vbmc add --username admin --password admin --address 192.168.250.1 --port {{ bmcports[item.item] }} {{ item.item }}"
+  when: not item.stdout
+  loop: "{{ vbmc_status.results }}"
+
+- name: VIRTUALBMC - Get node states again
+  shell: "vbmc list 2>/dev/null | grep running | awk '/{{ item }}/ {print $4,$8}'"
+  register: vbmc_running
+  loop: "{{ vms }}"
+  changed_when: False
+
+- name: VIRTUALBMC - Start node
+  command: "vbmc start {{ item.item }}"
+  when: not item.stdout
+  loop: "{{ vbmc_running.results }}"
+
+- name: VIRTUALBMC - Check if firewalld is installed and running
+  shell: "systemctl status firewalld.service | grep --only-matching 'Active: active (running)'"
+  register: firewalld_status
+  changed_when: False
+
+- name: VIRTUALBMC - Ensure port rules are configured to the firewall
+  firewalld:
+    port: 6230-6233/udp
+    zone: libvirt
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: firewalld_status.stdout

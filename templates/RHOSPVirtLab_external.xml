@@ -1,0 +1,16 @@
+<network>
+  <name>RHOSPVirtLab_external</name>
+  <forward mode="nat">
+    <nat>
+      <port start="1024" end="65535"/>
+    </nat>
+  </forward>
+  <ip address="192.168.250.1" netmask="255.255.255.0">
+    <dhcp>
+      <range start="192.168.250.2" end="192.168.250.254"/>
+      <host mac="0c:1f:0d:11:ba:02" name="director" ip="192.168.250.10"/>
+    </dhcp>
+  </ip>
+  <route address="10.0.0.0" prefix="24" gateway="192.168.250.10"/>
+</network>
+
