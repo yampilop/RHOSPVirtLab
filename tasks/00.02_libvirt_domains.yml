@@ -1,0 +1,11 @@
+- name: DOMAINS - Destroy the domain
+  community.libvirt.virt:
+    state: destroyed
+    name: "{{ item }}"
+  loop: "{{ vms }}"
+
+- name: DOMAINS - Delete the domain
+  community.libvirt.virt:
+    command: undefine
+    name: "{{ item }}"
+  loop: "{{ vms }}"

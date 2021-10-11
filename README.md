@@ -25,11 +25,13 @@ cd RHOSPVirtLab
 
 ## Initial configurations
 
-### Download the RHEL8.2 QCOW2 image
+### Download the RHEL8.2 QCOW2 image and custom ISO
 
 The storage from undercloud node will be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-update-2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)).
 
-Download that image and place it in the ***storage*** folder inside the working directory.
+To customize cloud-user password, you need the cloud-init configuration iso file [rhel-cloud-init.iso](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
+
+**Download** those images and place them in the ***storage*** folder inside the working directory.
 
 ### Install ansible
 
@@ -81,6 +83,14 @@ ansible-playbook --ask-vault-pass playbook.yml
 ```
 
 _**TODO**_
+
+## Clean the installation
+
+To start/restart the installation from scratch, a playbook is provided to clean everything in the local machine. Every progress in the lab will be erased. Please **be careful** with this command:
+
+```
+ansible-playbook 00_local_clean.yml
+```
 
 ---
 

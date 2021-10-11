@@ -3,9 +3,6 @@
     command: list_vms
   register: all_vms
 
-- debug:
-    var: all_vms
-
 - name: DOMAINS - Define the domain from the template
   community.libvirt.virt:
     command: define

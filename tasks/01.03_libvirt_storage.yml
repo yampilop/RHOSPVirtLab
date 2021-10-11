@@ -33,6 +33,20 @@
   loop:
     - RHOSPVirtLab_storage
 
+- name: STORAGE - Check if the needed image files exist
+  stat:
+    path: "{{ playbook_dir }}/storage/{{ item }}"
+  register: files_output
+  loop:
+    - rhel-8.2-update-2-x86_64-kvm.qcow2
+    - rhel-cloud-init.iso
+
+- name: Fail when any of the files does not exist
+  fail:
+    msg: "{{ item.item }} does not exist"
+  when: item.stat.exists == false
+  loop: "{{ files_output.results  }}"
+
 - name: STORAGE - Check if the disk file exists
   stat:
     path: "{{ playbook_dir }}/storage/{{ item }}_root.qcow2"

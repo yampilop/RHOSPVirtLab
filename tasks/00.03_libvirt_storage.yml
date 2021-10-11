@@ -1,0 +1,25 @@
+- name: STORAGE - Gather facts about libvirt storage pools
+  community.libvirt.virt_pool:
+    command: facts
+
+- name: STORAGE - Deactivate the pool
+  community.libvirt.virt_pool:
+    state: inactive
+    name: "{{ item }}"
+  # when: ansible_libvirt_pools[item]['status'] == 'active'
+  loop:
+    - RHOSPVirtLab_storage
+
+- name: STORAGE - Delete the pool
+  community.libvirt.virt_pool:
+    command: undefine
+    name: "{{ item }}"
+  when: ansible_libvirt_pools[item] is defined
+  loop:
+    - RHOSPVirtLab_storage
+
+- name: STORAGE - Delete the disk file
+  file:
+    path: "{{ playbook_dir }}/storage/{{ item }}_root.qcow2"
+    state: absent
+  loop: "{{ vms }}"

@@ -1,0 +1,21 @@
+- name: NETWORKS - Gather facts about libvirt networks
+  community.libvirt.virt_net:
+    command: facts
+
+- name: NETWORKS - Deactivate the network
+  community.libvirt.virt_net:
+    state: inactive
+    name: "{{ item }}"
+  # when: ansible_libvirt_networks[item]['state'] == 'active'
+  loop:
+    - RHOSPVirtLab_external
+    - RHOSPVirtLab_ctlplane
+
+- name: NETWORKS - Delete the network
+  community.libvirt.virt_net:
+    command: undefine
+    name: "{{ item }}"
+  when: ansible_libvirt_networks[item] is defined
+  loop:
+    - RHOSPVirtLab_external
+    - RHOSPVirtLab_ctlplane

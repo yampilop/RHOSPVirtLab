@@ -1,0 +1,10 @@
+- name: VIRTUALBMC - Get node states
+  shell: "vbmc list 2>/dev/null | awk '/{{ item }}/ {print $4,$8}'"
+  register: vbmc_status
+  loop: "{{ vms }}"
+  changed_when: False
+
+- name: VIRTUALBMC - Delete nodes
+  command: "vbmc delete {{ item.item }}"
+  when: item.stdout
+  loop: "{{ vbmc_status.results }}"
