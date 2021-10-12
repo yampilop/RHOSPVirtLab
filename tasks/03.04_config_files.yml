@@ -1,0 +1,30 @@
+- name: CONFIGFILES - Create directories
+  file:
+    path: "/home/stack/{{ item }}"
+    owner: stack
+    group: stack
+    state: directory
+  loop:
+    - images
+    - templates
+
+- name: CONFIGFILES - Set container images prepare file
+  template:
+    src: templates/containers-prepare-parameter.yaml
+    dest: /home/stack/containers-prepare-parameter.yaml
+    owner: stack
+    group: stack
+
+- name: CONFIGFILES - Set undercloud configuration file
+  copy:
+    src: templates/undercloud.conf
+    dest: /home/stack/undercloud.conf
+    owner: stack
+    group: stack
+
+- name: CONFIGFILES - Set custom undercloud parameters
+  copy:
+    src: templates/custom-undercloud-params.yaml
+    dest: /home/stack/templates/custom-undercloud-params.yaml
+    owner: stack
+    group: stack

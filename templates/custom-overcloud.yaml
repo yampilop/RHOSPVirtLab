@@ -1,0 +1,5 @@
+parameter_defaults:
+  NeutronBridgeMappings: "datacentre:br-ctlplane"
+  NeutronPhysicalBridge: "br-ctlplane"
+  ControllerExtraConfig:
+    nova::scheduler::filter::scheduler_host_subset_size: '999'

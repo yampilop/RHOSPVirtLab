@@ -11,8 +11,19 @@
     - name: Gathering facts
       setup:
 
+    - name: Resize root partition and filesystem
+      import_tasks: tasks/02.01_root_disk.yml
+
     - name: Ensure stack user is set with the correct permissions
-      import_tasks: tasks/02.01_stack_user.yml
+      import_tasks: tasks/02.02_stack_user.yml
 
     - name: Copy the key to login as stack user
-      import_tasks: tasks/02.02_ssh_key.yml
+      import_tasks: tasks/02.03_ssh_key.yml
+
+  handlers:
+    - name: Resize root filesystem
+      command: "xfs_growfs /"
+
+    - name: Reboot the machine
+      reboot:
+        reboot_timeout: 120

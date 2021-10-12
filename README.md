@@ -34,6 +34,14 @@ git clone https://github.com/yampilop/RHOSPVirtLab.git
 cd RHOSPVirtLab
 ```
 
+## Clean the installation
+
+To start/restart the installation from scratch, a playbook is provided to clean everything in the local machine. Every progress in the lab will be erased. Please **be careful** with this command:
+
+```
+ansible-playbook clean.yml
+```
+
 ## Initial configurations
 
 ### Download the RHEL8.2 QCOW2 image and custom ISO
@@ -58,7 +66,7 @@ $ ansible local -m ping
 workstation | SUCCESS => {
 
     ...
-    
+
     "ping": "pong"
 }
 
@@ -82,263 +90,64 @@ You will write the credentials in the following format:
 
 ```
 rh_username: '<USERNAME>'
-rh_password: '<PASSWORD>'                        
+rh_password: '<PASSWORD>'
 ```
 
 ## Execute the Ansible Playbook
 
-Execute the playbook with the following command (you will be prompted for the vault password):
+Execute the playbook with the following command (you will be prompted for the user password and the vault password):
 
 ```
 ansible-playbook --ask-vault-pass playbook.yml
 ```
 
-_**TODO**_
+## Last steps
 
-## Clean the installation
-
-To start/restart the installation from scratch, a playbook is provided to clean everything in the local machine. Every progress in the lab will be erased. Please **be careful** with this command:
+As the undercloud installation and overcloud deploy are tasks that last longer and require attention due to possible failures, they need to be executed manually. To do that, login to the undercloud:
 
 ```
-ansible-playbook 00_local_clean.yml
+ssh stack@192.168.250.10
 ```
 
----
+### Install the undercloud
 
-# OLD
-
-## RHOSP 16.1 installation
-
-Create the first directories:
-
-```
-mkdir /home/stack/images
-mkdir /home/stack/templates
-```
-
-Change the hostname:
-
-```
-sudo hostnamectl set-hostname undercloud.localdomain
-sudo hostnamectl set-hostname --transient undercloud.localdomain
-```
-
-### Red Hat subscription registration
-
-Register your system using your Red Hat valid credentials:
-```
-sudo subscription-manager register
-```
-
-Attach the subscription to a ***valid Openstack pool*** and set the release to the 8.2 version:
-
-```
-sudo subscription-manager list --available --all --matches="Red Hat OpenStack"
-sudo subscription-manager attach --pool=XXXXXXXXXXX
-sudo subscription-manager release --set=8.2
-```
-
-Disable all the repos and enable only the needed:
-
-```
-sudo subscription-manager repos --disable=*
-
-sudo subscription-manager repos \
---enable=rhel-8-for-x86_64-baseos-eus-rpms \
---enable=rhel-8-for-x86_64-appstream-eus-rpms \
---enable=rhel-8-for-x86_64-highavailability-eus-rpms \
---enable=ansible-2.9-for-rhel-8-x86_64-rpms \
---enable=openstack-16.1-for-rhel-8-x86_64-rpms \
---enable=fast-datapath-for-rhel-8-x86_64-rpms \
---enable=advanced-virt-for-rhel-8-x86_64-rpms \
---enable=rhceph-4-tools-for-rhel-8-x86_64-rpms
-```
-
-Set the right module streams:
-
-```
-sudo dnf module disable -y container-tools:rhel8
-sudo dnf module enable -y container-tools:2.0
-
-sudo dnf module disable -y virt:rhel
-sudo dnf module enable -y virt:8.2
-```
-
-Disable cloud-init:
-
-```
-sudo systemctl disable --now cloud-init
-```
-
-Install some useful tools:
-
-```
-sudo yum install -y vim wget bash-completion python3-argcomplete
-```
-
-Update the system:
-
-```
-sudo dnf update -y
-```
-
-Reboot the machine:
-
-```
-sudo reboot
-```
-
-### Install the needed packages
-
-```
-sudo dnf install -y python3-tripleoclient ceph-ansible rhosp-director-images rhosp-director-images-ipa
-```
-
-### Prepare the files for undercloud installation
-
-```
-openstack tripleo container image prepare default \
---local-push-destination \
---output-env-file containers-prepare-parameter.yaml
-
-cp /usr/share/python-tripleoclient/undercloud.conf.sample /home/stack/undercloud.conf
-```
-
-**Edit** the undercloud.conf file to match the following parameters:
-
-```
-[DEFAULT]
-...
-container_images_file = /home/stack/containers-prepare-parameter.yaml
-...
-custom_env_files = /home/stack/templates/custom-undercloud-params.yaml
-...
-enable_node_discovery = true
-...
-local_interface = eth0
-...
-local_ip = 192.168.24.1/24
-...
-local_subnet = ctlplane-subnet
-...
-overcloud_domain_name = localdomain
-...
-undercloud_admin_host = 192.168.24.3
-...
-undercloud_nameservers = 8.8.8.8,8.8.4.4
-...
-undercloud_ntp_servers = 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org
-...
-undercloud_public_host = 192.168.24.2
-...
-[ctlplane-subnet]
-...
-cidr = 192.168.24.0/24
-...
-dhcp_end = 192.168.24.55
-...
-dhcp_start = 192.168.24.5
-...
-gateway = 192.168.24.1
-...
-inspection_iprange = 192.168.24.100,192.168.24.120
-...
-masquerade = true
-```
-
-Edit /etc/hosts and ensure there are no undercloud names in the lines starting with 127.0.0.1 and ::1. There should be just localhost names there.
-
-Create a /home/stack/templates/custom-undercloud-params.yaml file with the following content:
-
-```
-  parameter_defaults:
-    AdminPassword: "redhat"
-    AdminEmail: "admin@example.com"
-```
-
-Edit the containers-prepare-parameter.yaml file adding this to the end (ensure to put your credentials):
-
-```
-  ContainerImageRegistryLogin: false
-  ContainerImageRegistryCredentials:
-    registry.redhat.io:
-      <username>: '<password>'
-```
-
-### Disable NetworkManager and enable network.service
-
-```
-sudo systemctl stop NetworkManager
-sudo systemctl disable NetworkManager
-```
-
-Delete other interfaces ifcfg files from /etc/sysconfig/network-scripts, **except** the *related to the interface connected to the default network*.
-
-Enable and start network.service.
-
-```
-sudo systemctl enable --now network.service
-```
-
-This service should start with no error. Otherwise you should review the network-scripts files looking for misconfigurations.
-
-### Undercloud installation
-
-Test your registry.redhat.io credentials with podman:
-
-```
-sudo podman login registry.redhat.io
-```
-
-Execute the installation command and wait:
+Execute the following command:
 
 ```
 openstack undercloud install
 ```
 
-This command should finish with no error.
-
-### Configure the external gateway inside the undercloud
-
-Add a /etc/sysconfig/network-scripts/ifcfg-vlan10 file with the following content:
+Wait for the process to finish with the following output:
 
 ```
-BOOTPROTO=none
-IPADDR=10.0.0.1
-PREFIX=24
-DEFROUTE=no
-IPV4_FAILURE_FATAL=no
-IPV6INIT=yes
-IPV6_AUTOCONF=no
-IPV6ADDR=2001:db8:fd00:1000::/64
-IPV6_DEFROUTE=no
-IPV6_FAILURE_FATAL=no
-IPV6_ADDR_GEN_MODE=stable-privacy
-NAME=vlan10
-DEVICE=vlan10
-ONBOOT=yes
-NM_CONTROLLED=no
+########################################################
+
+Deployment successful!
+
+########################################################
+
+Writing the stack virtual update mark file /var/lib/tripleo-heat-installer/update_mark_undercloud
+
+##########################################################
+
+The Undercloud has been successfully installed.
+
+Useful files:
+
+Password file is at /home/stack/undercloud-passwords.conf
+The stackrc file is at ~/stackrc
+
+Use these files to interact with OpenStack services, and
+ensure they are secured.
+
+##########################################################
 ```
 
-Edit the /etc/sysconfig/network-scripts/ifcfg-br-ctlplane file and add the following to OVS_EXTRA parameter at the end:
+### Prepare the overcloud
+
+Load the overcloud images to openstack:
 
 ```
- -- add-port br-ctlplane vlan10 tag=10 -- set interface vlan10 type=internal
-```
-
-Restart network.service ensuring there is no error:
-
-```
-sudo systemctl restart network
-```
-
-### Preparing overcloud images
-
-Prepare the overcloud images and load them to openstack:
-
-```
-cd /home/stack/images
-for i in /usr/share/rhosp-director-images/overcloud-full-latest-16.1.tar /usr/share/rhosp-director-images/ironic-python-agent-latest-16.1.tar; do tar -xvf $i; done
 source /home/stack/stackrc
 openstack overcloud image upload --image-path /home/stack/images/
 ```
@@ -347,55 +156,6 @@ List images:
 
 ```
 openstack image list --fit-width
-```
-  
-### Prepare the overcloud template files
-
-Create a /home/stack/instackenv.yaml file with the following content:
-```
-nodes:
-  - ports:
-      - address: 0c:1f:0d:6f:06:00
-        physical_network: ctlplane
-    name: "controller0"
-    capabilities: "profile:control,boot_option:local"
-    cpu: 6
-    memory: 8192
-    disk: 50
-    arch: "x86_64"
-    pm_type: "ipmi"
-    pm_user: "admin"
-    pm_password: "admin"
-    pm_addr: "192.168.122.1"
-    pm_port: "6230"
-  - ports:
-      - address: 0c:1f:0d:2f:e1:00
-        physical_network: ctlplane
-    name: "compute0"
-    capabilities: "profile:compute,boot_option:local"
-    cpu: 4
-    memory: 8192
-    disk: 50
-    arch: "x86_64"
-    pm_type: "ipmi"
-    pm_user: "admin"
-    pm_password: "admin"
-    pm_addr: "192.168.122.1"
-    pm_port: "6231"
-  - ports:
-      - address: 0c:1f:0d:2f:e2:00
-        physical_network: ctlplane
-    name: "compute1"
-    capabilities: "profile:compute,boot_option:local"
-    cpu: 4
-    memory: 8192
-    disk: 50
-    arch: "x86_64"
-    pm_type: "ipmi"
-    pm_user: "admin"
-    pm_password: "admin"
-    pm_addr: "192.168.122.1"
-    pm_port: "6232"
 ```
 
 Import the bremetal nodes:
@@ -434,42 +194,17 @@ openstack overcloud profiles list
 Generate the roles file:
 
 ```
-source stackrc
+source /home/stack/stackrc
 openstack overcloud roles generate \
 --roles-path /usr/share/openstack-tripleo-heat-templates/roles \
 -o /home/stack/templates/roles_data.yaml \
 Controller Compute
 ```
 
-Create a /home/stack/templates/node-info.yaml file with the following content:
-
-```
-parameter_defaults:
-  OvercloudControllerFlavor: control
-  OvercloudComputeFlavor: compute
-  ControllerCount: 1
-  ComputeCount: 2
-```
-
 Prepare the images for containers:
 
 ```
 sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file overcloud-images.yaml
-```
-
-Configure the physical networks for later provider network configurations. To do that, create a /home/stack/templates/physical_networks.yaml file with the following contents:
-
-```
-parameter_defaults:
-  NeutronBridgeMappings: "datacentre:br-ctlplane"
-  NeutronPhysicalBridge: "br-ctlplane"
-```
-
-Create a /home/stack/templates/nova-custom-config.yaml file with the following content to customize nova filter:
-```
-parameter_defaults:
-  ControllerExtraConfig:
-    nova::scheduler::filter::scheduler_host_subset_size: '999'
 ```
 
 ### Deploy the overcloud
@@ -485,13 +220,12 @@ openstack overcloud deploy \
 --ntp-server rhel.pool.ntp.org \
 -r /home/stack/templates/roles_data.yaml \
 -e /home/stack/templates/node-info.yaml \
--e /home/stack/templates/nova-custom-config.yaml \
 -e /home/stack/containers-prepare-parameter.yaml \
 -e /home/stack/overcloud-images.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
--e /home/stack/templates/physical_networks.yaml
+-e /home/stack/templates/custom-overcloud.yaml
 ```
 
 The output should end with the following:
@@ -506,15 +240,6 @@ Overcloud Deployed without error
 ```
 
 ***Take note of the Overcloud Horizon Dashboard URL***
-
-### After deploy tasks
-
-Masquerade external network traffic to allow dashboard navigation:
-
-```
-sudo iptables -t nat -A POSTROUTING -j MASQUERADE -s 10.0.0.0/24 -m state --state NEW,RELATED,ESTABLISHED -m comment --comment "CUSTOM masquerade external network traffic"
-sudo service iptables save
-```
 
 ### Open dashboard
 

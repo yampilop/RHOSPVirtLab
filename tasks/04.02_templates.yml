@@ -1,0 +1,20 @@
+- name: TEMPLATES - Prepare nodes file
+  template:
+    src: templates/instackenv.yaml
+    dest: /home/stack/instackenv.yaml
+    owner: stack
+    group: stack
+
+- name: TEMPLATES - Prepare node info file
+  template:
+    src: templates/node-info.yaml
+    dest: /home/stack/templates/node-info.yaml
+    owner: stack
+    group: stack
+
+- name: TEMPLATES - Perpare the physical network template
+  template:
+    src: templates/custom-overcloud.yaml
+    dest: /home/stack/templates/custom-overcloud.yaml
+    owner: stack
+    group: stack

@@ -1,0 +1,63 @@
+- name: REPMODPKG - Enable the needed repositories only
+  rhsm_repository:
+    name:
+      - rhel-8-for-x86_64-baseos-eus-rpms
+      - rhel-8-for-x86_64-appstream-eus-rpms
+      - rhel-8-for-x86_64-highavailability-eus-rpms
+      - ansible-2.9-for-rhel-8-x86_64-rpms
+      - openstack-16.1-for-rhel-8-x86_64-rpms
+      - fast-datapath-for-rhel-8-x86_64-rpms
+      - advanced-virt-for-rhel-8-x86_64-rpms
+      - rhceph-4-tools-for-rhel-8-x86_64-rpms
+    purge: yes
+
+- name: REPMODPKG - Disable container-tools module stream rhel8 and enable 2.0
+  copy:
+    dest: /etc/dnf/modules.d/container-tools.module
+    content: |
+      [container-tools]
+      name=container-tools
+      stream=2.0
+      profiles=common
+      state=enabled
+
+- name: REPMODPKG - Disable virt module stream rhel and enable 8.2
+  copy:
+    dest: /etc/dnf/modules.d/virt.module
+    content: |
+      [virt]
+      name=virt
+      stream=8.2
+      profiles=
+      state=enabled
+
+- name: REPMODPKG - Disable and stop cloud-init service
+  service:
+    name: cloud-init
+    state: stopped
+    enabled: false
+
+- name: REPMODPKG - Install useful tools
+  yum:
+    name:
+      - vim
+      - wget
+      - bash-completion 
+      - python3-argcomplete
+    state: latest
+
+- name: REPMODPKG - Update all packages
+  yum:
+    name: '*'
+    state: latest
+  notify: Reboot the machine
+
+- name: REPMODPKG - Install needed packages
+  yum:
+    name:
+      - python3-tripleoclient
+      - ceph-ansible
+      - rhosp-director-images
+      - rhosp-director-images-ipa
+    state: latest
+  become: yes

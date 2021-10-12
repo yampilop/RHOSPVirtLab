@@ -1,0 +1,4 @@
+parameter_defaults:
+  AdminPassword: "redhat"
+  AdminEmail: "admin@example.com"
+
