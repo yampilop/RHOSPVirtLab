@@ -38,7 +38,7 @@
       <source file="{{ playbook_dir }}/storage/undercloud_root.qcow2"/>
       <backingStore type="file">
         <format type="qcow2"/>
-        <source file="{{ playbook_dir }}/storage/rhel-8.2-update-2-x86_64-kvm.qcow2"/>
+        <source file="{{ playbook_dir }}/storage/rhel-8.2-x86_64-kvm.qcow2"/>
       </backingStore>
       <target dev="sda" bus="sata"/>
     </disk>

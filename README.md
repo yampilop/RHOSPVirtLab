@@ -8,6 +8,17 @@ Virtual lab to setup a Red Hat OpenStack Platform test installation in your pers
 
 This document assumes that you run a **Fedora 34** installation in your personal computer. The steps for other versions of Fedora and other Linux-based OS may differ from the exposed here.
 
+## Local user configuration
+
+The user from which you will execute the lab needs to have sudo permissions enabled. Also needs to be part of the libvirt and the kvm groups. To add it to those groups execute:
+
+```
+sudo usermod -aG libvirt $USERNAME
+sudo usermod -aG kvm $USERNAME
+```
+
+After that you need to logout and login again for the changes to take effect.
+
 ## Pull the repo
 
 Move to a directory where you want to work, for example the home directory:
@@ -27,7 +38,7 @@ cd RHOSPVirtLab
 
 ### Download the RHEL8.2 QCOW2 image and custom ISO
 
-The storage from undercloud node will be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-update-2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)).
+The storage from undercloud node will be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)).
 
 To customize cloud-user password, you need the cloud-init configuration iso file [rhel-cloud-init.iso](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
 

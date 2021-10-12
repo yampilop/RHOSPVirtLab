@@ -1,9 +1,35 @@
-- name: VIRTUALBMC - Ensure packages are installed
-  yum:
+- name: VIRTUALBMC - Ensure ipmitool is installed
+  package:
     name:
-      - python3-virtualbmc
       - ipmitool
     state: latest
+
+- name: VIRTUALBMC - Ensure VirtualBMC is installed
+  package:
+    name:
+      - python3-virtualbmc
+    state: latest
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: VIRTUALBMC - Ensure VirtualBMC is installed
+  pip:
+    name: virtualbmc
+    state: latest
+  when: ansible_facts['os_family'] != "RedHat"
+
+- name: VIRTUALBMC - Create VirtualBMC systemd unit
+  template:
+    src: templates/vbmcd.service
+    dest: /etc/systemd/system/vbmcd.service
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_facts['os_family'] != "RedHat"
+
+- name: VIRTUALBMC - Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  when: ansible_facts['os_family'] != "RedHat"
 
 - name: VIRTUALBMC - Enable and start vbmcd service
   service:
@@ -33,10 +59,8 @@
   when: not item.stdout
   loop: "{{ vbmc_running.results }}"
 
-- name: VIRTUALBMC - Check if firewalld is installed and running
-  shell: "systemctl status firewalld.service | grep --only-matching 'Active: active (running)'"
-  register: firewalld_status
-  changed_when: False
+- name: VIRTUALBMC - Get service facts
+  service_facts:
 
 - name: VIRTUALBMC - Ensure port rules are configured to the firewall
   firewalld:
@@ -45,4 +69,4 @@
     permanent: yes
     immediate: yes
     state: enabled
-  when: firewalld_status.stdout
+  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')

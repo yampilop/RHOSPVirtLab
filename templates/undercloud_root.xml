@@ -6,7 +6,7 @@
     <format type="qcow2"/>
   </target>
   <backingStore>
-    <path>rhel-8.2-update-2-x86_64-kvm.qcow2</path>
+    <path>rhel-8.2-x86_64-kvm.qcow2</path>
   </backingStore>
 </volume>
 

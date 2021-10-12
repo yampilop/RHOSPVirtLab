@@ -1,5 +1,5 @@
 - name: PACKAGES - Ensure packages are installed
-  yum:
+  package:
     name:
       - libvirt
       - virt-manager
