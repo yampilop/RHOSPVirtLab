@@ -28,3 +28,10 @@
     dest: /home/stack/templates/custom-undercloud-params.yaml
     owner: stack
     group: stack
+
+- name: CONFIGFILES - Set custom os-net-config parameters
+  copy:
+    src: templates/undercloud-os-net-config.json
+    dest: /home/stack/templates/undercloud-os-net-config.json
+    owner: stack
+    group: stack
