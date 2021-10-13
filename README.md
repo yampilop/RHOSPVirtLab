@@ -2,9 +2,9 @@
 
 Virtual lab to setup a Red Hat OpenStack Platform test installation in your personal computer
 
-![Overview](/images/overview.png)
+![Overview](images/overview.png)
 
-![Network diagram](/images/network_diagram.svg)
+![Network diagram](images/network_diagram.svg)
 
 ## Assumptions
 
@@ -203,12 +203,6 @@ openstack overcloud roles generate \
 Controller Compute
 ```
 
-Prepare the images for containers:
-
-```
-sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
-```
-
 ### Deploy the overcloud
 
 Execute the deploy command with all the templates and environment files:
@@ -223,7 +217,6 @@ openstack overcloud deploy \
 -r /home/stack/templates/roles_data.yaml \
 -e /home/stack/templates/node-info.yaml \
 -e /home/stack/templates/containers-prepare-parameter.yaml \
--e /home/stack/templates/overcloud-images.yaml \
 -e /home/stack/templates/custom-overcloud.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
