@@ -10,15 +10,8 @@
 
 - name: CONFIGFILES - Set container images prepare file
   template:
-    src: templates/containers-prepare-parameter.yaml
-    dest: /home/stack/containers-prepare-parameter.yaml
-    owner: stack
-    group: stack
-
-- name: CONFIGFILES - Set undercloud configuration file
-  copy:
-    src: templates/undercloud.conf
-    dest: /home/stack/undercloud.conf
+    src: templates/containers-prepare-parameter.yaml.j2
+    dest: /home/stack/templates/containers-prepare-parameter.yaml
     owner: stack
     group: stack
 
@@ -29,9 +22,9 @@
     owner: stack
     group: stack
 
-- name: CONFIGFILES - Set custom os-net-config parameters
+- name: CONFIGFILES - Set undercloud configuration file
   copy:
-    src: templates/undercloud-os-net-config.json
-    dest: /home/stack/templates/undercloud-os-net-config.json
+    src: templates/undercloud.conf
+    dest: /home/stack/undercloud.conf
     owner: stack
     group: stack

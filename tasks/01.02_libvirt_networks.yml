@@ -5,12 +5,10 @@
 - name: NETWORKS - Define the network from the template
   community.libvirt.virt_net:
     command: define
-    name: "{{ item }}"
-    xml: '{{ lookup("template", "templates/{{ item }}.xml") }}'
-  when: ansible_libvirt_networks[item] is not defined
-  loop:
-    - RHOSPVirtLab_external
-    - RHOSPVirtLab_ctlplane
+    name: "{{ item.name }}"
+    xml: '{{ lookup("template", "templates/network.xml.j2") }}'
+  when: ansible_libvirt_networks[item.name] is not defined
+  loop: "{{ networks }}"
 
 - name: NETWORKS - Gather facts about libvirt networks again
   community.libvirt.virt_net:
@@ -19,17 +17,13 @@
 - name: NETWORKS - Activate the network
   community.libvirt.virt_net:
     state: active
-    name: "{{ item }}"
-  when: ansible_libvirt_networks[item]['state'] != 'active'
-  loop:
-    - RHOSPVirtLab_external
-    - RHOSPVirtLab_ctlplane
+    name: "{{ item.name }}"
+  when: ansible_libvirt_networks[item.name]['state'] != 'active'
+  loop: "{{ networks }}"
 
 - name: NETWORKS - Enable autostart for the network
   community.libvirt.virt_net:
     autostart: yes
-    name: "{{ item }}"
-  when: ansible_libvirt_networks[item]['autostart'] != 'yes'
-  loop:
-    - RHOSPVirtLab_external
-    - RHOSPVirtLab_ctlplane
+    name: "{{ item.name }}"
+  when: ansible_libvirt_networks[item.name]['autostart'] != 'yes'
+  loop: "{{ networks }}"

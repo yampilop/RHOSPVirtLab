@@ -1,9 +1,0 @@
-<volume>
-  <name>controller0_root.qcow2</name>
-  <capacity>53687091200</capacity>
-  <allocation>0</allocation>
-  <target>
-    <format type="qcow2"/>
-  </target>
-</volume>
-

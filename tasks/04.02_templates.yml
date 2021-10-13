@@ -1,19 +1,19 @@
 - name: TEMPLATES - Prepare nodes file
   template:
-    src: templates/instackenv.yaml
-    dest: /home/stack/instackenv.yaml
+    src: templates/instackenv.yaml.j2
+    dest: /home/stack/templates/instackenv.yaml
     owner: stack
     group: stack
 
 - name: TEMPLATES - Prepare node info file
-  template:
+  copy:
     src: templates/node-info.yaml
     dest: /home/stack/templates/node-info.yaml
     owner: stack
     group: stack
 
 - name: TEMPLATES - Perpare the physical network template
-  template:
+  copy:
     src: templates/custom-overcloud.yaml
     dest: /home/stack/templates/custom-overcloud.yaml
     owner: stack

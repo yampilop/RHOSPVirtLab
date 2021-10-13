@@ -4,6 +4,8 @@ Virtual lab to setup a Red Hat OpenStack Platform test installation in your pers
 
 ![Overview](/images/overview.png)
 
+![Network diagram](/images/network_diagram.svg)
+
 ## Assumptions
 
 This document assumes that you run a **Fedora 34** installation in your personal computer. The steps for other versions of Fedora and other Linux-based OS may differ from the exposed here.
@@ -106,7 +108,7 @@ ansible-playbook --ask-vault-pass playbook.yml
 As the undercloud installation and overcloud deploy are tasks that last longer and require attention due to possible failures, they need to be executed manually. To do that, login to the undercloud:
 
 ```
-ssh stack@192.168.250.10
+ssh stack@undercloud
 ```
 
 ### Install the undercloud
@@ -162,8 +164,8 @@ Import the bremetal nodes:
 
 ```
 source /home/stack/stackrc
-openstack overcloud node import --validate-only /home/stack/instackenv.yaml
-openstack overcloud node import /home/stack/instackenv.yaml
+openstack overcloud node import --validate-only /home/stack/templates/instackenv.yaml
+openstack overcloud node import /home/stack/templates/instackenv.yaml
 openstack baremetal node list
 ```
 
@@ -204,7 +206,7 @@ Controller Compute
 Prepare the images for containers:
 
 ```
-sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file overcloud-images.yaml
+sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
 ```
 
 ### Deploy the overcloud
@@ -220,12 +222,12 @@ openstack overcloud deploy \
 --ntp-server rhel.pool.ntp.org \
 -r /home/stack/templates/roles_data.yaml \
 -e /home/stack/templates/node-info.yaml \
--e /home/stack/containers-prepare-parameter.yaml \
--e /home/stack/overcloud-images.yaml \
+-e /home/stack/templates/containers-prepare-parameter.yaml \
+-e /home/stack/templates/overcloud-images.yaml \
+-e /home/stack/templates/custom-overcloud.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
--e /home/stack/templates/custom-overcloud.yaml
+-e /usr/share/openstack-tripleo-heat-templates/environments/net-multiple-nics.yaml
 ```
 
 The output should end with the following:

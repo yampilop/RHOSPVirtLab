@@ -51,13 +51,3 @@
     name: '*'
     state: latest
   notify: Reboot the machine
-
-- name: REPMODPKG - Install needed packages
-  yum:
-    name:
-      - python3-tripleoclient
-      - ceph-ansible
-      - rhosp-director-images
-      - rhosp-director-images-ipa
-    state: latest
-  become: yes

@@ -38,24 +38,24 @@
     enabled: true
 
 - name: VIRTUALBMC - Get node states
-  shell: "vbmc list 2>/dev/null | awk '/{{ item }}/ {print $4,$8}'"
+  shell: "vbmc list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
   register: vbmc_status
   loop: "{{ vms }}"
   changed_when: False
 
 - name: VIRTUALBMC - Ensure node exists
-  command: "vbmc add --username admin --password admin --address 192.168.250.1 --port {{ bmcports[item.item] }} {{ item.item }}"
+  command: "vbmc add --username admin --password admin --address 192.168.250.1 --port {{ item.item.bmcport }} {{ item.item.name }}"
   when: not item.stdout
   loop: "{{ vbmc_status.results }}"
 
 - name: VIRTUALBMC - Get node states again
-  shell: "vbmc list 2>/dev/null | grep running | awk '/{{ item }}/ {print $4,$8}'"
+  shell: "vbmc list 2>/dev/null | grep running | awk '/{{ item.name }}/ {print $4,$8}'"
   register: vbmc_running
   loop: "{{ vms }}"
   changed_when: False
 
 - name: VIRTUALBMC - Start node
-  command: "vbmc start {{ item.item }}"
+  command: "vbmc start {{ item.item.name }}"
   when: not item.stdout
   loop: "{{ vbmc_running.results }}"
 
@@ -64,9 +64,10 @@
 
 - name: VIRTUALBMC - Ensure port rules are configured to the firewall
   firewalld:
-    port: 6230-6233/udp
+    port: "{{ item.bmcport }}/udp"
     zone: libvirt
     permanent: yes
     immediate: yes
     state: enabled
   when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+  loop: "{{ vms }}"

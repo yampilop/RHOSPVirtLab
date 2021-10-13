@@ -3,10 +3,11 @@
   hosts: local
   vars_files:
     - vars/vms.yml
+    - vars/networks.yml
 
   tasks:
-    - name: Ensure virtualization packages are installed
-      import_tasks: tasks/01.01_virt_packages.yml
+    - name: Ensure virtualization packages are installed and services are running
+      import_tasks: tasks/01.01_virt_pkg_svc.yml
 
     - name: Configure libvirt networks
       import_tasks: tasks/01.02_libvirt_networks.yml

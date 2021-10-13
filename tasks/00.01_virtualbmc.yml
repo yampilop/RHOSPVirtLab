@@ -1,5 +1,5 @@
 - name: VIRTUALBMC - Get node states
-  shell: "vbmc list 2>/dev/null | awk '/{{ item }}/ {print $4,$8}'"
+  shell: "vbmc list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
   register: vbmc_status
   loop: "{{ vms }}"
   changed_when: False

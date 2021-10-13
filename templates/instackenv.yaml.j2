@@ -1,0 +1,17 @@
+nodes:
+{% for vm in vms if not vm.profile == 'undercloud' %}
+  - ports:
+      - address: {{ vm.mac }}:00
+        physical_network: ctlplane
+    name: "{{ vm.name }}"
+    capabilities: "profile:{{ vm.profile }},boot_option:local"
+    cpu: {{ vm.vcpus }}
+    memory: {{ (vm.memory / 1024) | int }}
+    disk: {{ (vm.disk_size / 1073741824) | int }}
+    arch: "x86_64"
+    pm_type: "ipmi"
+    pm_user: "admin"
+    pm_password: "admin"
+    pm_addr: "192.168.250.1"
+    pm_port: "{{ vm.bmcport }}"
+{% endfor %}

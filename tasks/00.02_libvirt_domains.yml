@@ -1,11 +1,18 @@
+- name: DOMAINS - List libvirt VMs
+  community.libvirt.virt:
+    command: list_vms
+  register: all_vms
+
 - name: DOMAINS - Destroy the domain
   community.libvirt.virt:
-    state: destroyed
-    name: "{{ item }}"
+    command: destroy
+    name: "{{ item.name }}"
+  when: item.name in all_vms.list_vms
   loop: "{{ vms }}"
 
-- name: DOMAINS - Delete the domain
+- name: DOMAINS - Undefine the domain
   community.libvirt.virt:
     command: undefine
-    name: "{{ item }}"
+    name: "{{ item.name }}"
+  when: item.name in all_vms.list_vms
   loop: "{{ vms }}"

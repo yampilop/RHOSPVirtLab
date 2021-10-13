@@ -17,15 +17,11 @@
     - name: Set the configuration files
       import_tasks: tasks/03.04_config_files.yml
 
-    - name: Configure NetworkManager and network services
-      import_tasks: tasks/03.05_network.yml
+  post_tasks:
+    - name: Install openstack tripleo packages
+      import_tasks: tasks/03.05_packages.yml
 
   handlers:
     - name: Reboot the machine
       reboot:
         reboot_timeout: 120
-
-    - name: Restart network service
-      service:
-        name: network
-        state: restarted

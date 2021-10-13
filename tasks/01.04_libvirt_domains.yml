@@ -6,8 +6,8 @@
 - name: DOMAINS - Define the domain from the template
   community.libvirt.virt:
     command: define
-    xml: '{{ lookup("template", "templates/{{ item }}.xml") }}'
-  when: all_vms.list_vms.item is not defined
+    xml: '{{ lookup("template", "templates/domain.xml.j2") }}'
+  when: item.name not in all_vms.list_vms
   loop: "{{ vms }}"
 
 - name: DOMAINS - Ensure undercloud domain is running
@@ -15,3 +15,10 @@
     name: undercloud
     state: running
 
+- name: Add management IPs entries to /etc/hosts on the local machines
+  lineinfile:
+    path: "/etc/hosts"
+    regexp: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
+    line: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
+    state: present
+  loop: "{{ vms }}"

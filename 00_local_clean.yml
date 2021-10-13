@@ -3,6 +3,7 @@
   hosts: local
   vars_files:
     - vars/vms.yml
+    - vars/networks.yml
 
   tasks:
     - name: Clean VirtualBMC
