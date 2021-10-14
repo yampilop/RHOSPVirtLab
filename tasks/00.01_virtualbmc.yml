@@ -5,6 +5,6 @@
   changed_when: False
 
 - name: VIRTUALBMC - Delete nodes
-  command: "vbmc delete {{ item.item }}"
+  command: "vbmc delete {{ item.item.name }}"
   when: item.stdout
   loop: "{{ vbmc_status.results }}"
