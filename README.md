@@ -36,14 +36,6 @@ git clone https://github.com/yampilop/RHOSPVirtLab.git
 cd RHOSPVirtLab
 ```
 
-## Clean the installation
-
-To start/restart the installation from scratch, a playbook is provided to clean everything in the local machine. Every progress in the lab will be erased. Please **be careful** with this command:
-
-```
-ansible-playbook clean.yml
-```
-
 ## Initial configurations
 
 ### Download the RHEL8.2 QCOW2 image and custom ISO
@@ -93,6 +85,14 @@ You will write the credentials in the following format:
 ```
 rh_username: '<USERNAME>'
 rh_password: '<PASSWORD>'
+```
+
+## Clean the installation
+
+To start/restart the installation from scratch, a playbook is provided to clean everything in the local machine. Every progress in the lab will be erased. Please **be careful** with this command:
+
+```
+ansible-playbook clean.yml
 ```
 
 ## Execute the Ansible Playbook
