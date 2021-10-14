@@ -1,0 +1,17 @@
+- name: NETWORKS - Gather facts about libvirt networks
+  community.libvirt.virt_net:
+    command: facts
+
+- name: NETWORKS - Destroy the network
+  community.libvirt.virt_net:
+    command: destroy
+    name: "{{ item.name }}"
+  when: ansible_libvirt_networks[item.name] is defined
+  loop: "{{ networks }}"
+
+- name: NETWORKS - Undefine the network
+  community.libvirt.virt_net:
+    command: undefine
+    name: "{{ item.name }}"
+  when: ansible_libvirt_networks[item.name] is defined
+  loop: "{{ networks }}"

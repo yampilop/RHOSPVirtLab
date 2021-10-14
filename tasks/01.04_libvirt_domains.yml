@@ -1,0 +1,24 @@
+- name: DOMAINS - List libvirt VMs
+  community.libvirt.virt:
+    command: list_vms
+  register: all_vms
+
+- name: DOMAINS - Define the domain from the template
+  community.libvirt.virt:
+    command: define
+    xml: '{{ lookup("template", "templates/domain.xml.j2") }}'
+  when: item.name not in all_vms.list_vms
+  loop: "{{ vms }}"
+
+- name: DOMAINS - Ensure undercloud domain is running
+  community.libvirt.virt:
+    name: undercloud
+    state: running
+
+- name: Add management IPs entries to /etc/hosts on the local machines
+  lineinfile:
+    path: "/etc/hosts"
+    regexp: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
+    line: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
+    state: present
+  loop: "{{ vms }}"

@@ -1,0 +1,12 @@
+- name: PACKAGES - Ensure packages are installed
+  package:
+    name:
+      - libvirt
+      - virt-manager
+    state: latest
+
+- name: PACKAGES - Ensure libvirt socket is enabled and running
+  systemd:
+    name: libvirtd.socket
+    state: started
+    enabled: true

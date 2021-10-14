@@ -1,0 +1,25 @@
+<network>
+  <name>{{ item.name }}</name>
+{% if item.nat %}
+  <forward mode="nat">
+    <nat>
+      <port start="1024" end="65535"/>
+    </nat>
+  </forward>
+{% endif %}
+{% if item.ipv4 %}
+  <ip address="{{ item.ipv4.address }}" netmask="{{ item.ipv4.netmask }}">
+    {% if item.ipv4.dhcp %}
+    <dhcp>
+      <range start="{{ item.ipv4.dhcp.start }}" end="{{ item.ipv4.dhcp.end }}" />
+      {% if item.ipv4.dhcp.hosts %}
+      {% for vm in vms %}
+      <host mac="{{ vm.mac }}:{{ item.mac_suffix }}" name="{{ vm.name }}" ip="{{ vm.nics[item.name] }}"/>
+      {% endfor %}
+      {% endif %}
+    </dhcp>
+    {% endif %}
+  </ip>
+{% endif %}
+</network>
+

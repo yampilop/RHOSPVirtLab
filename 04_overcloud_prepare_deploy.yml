@@ -1,0 +1,12 @@
+---
+- name: Overcloud deployment
+  hosts: undercloud
+  vars_files:
+    - vars/vms.yml
+  
+  tasks:
+    - name: Prepare the overcloud images and load them to openstack
+      import_tasks: tasks/04.01_overcloud_images.yml
+
+    - name: Prepare the template files
+      import_tasks: tasks/04.02_templates.yml

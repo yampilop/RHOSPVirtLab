@@ -1,0 +1,73 @@
+- name: VIRTUALBMC - Ensure ipmitool is installed
+  package:
+    name:
+      - ipmitool
+    state: latest
+
+- name: VIRTUALBMC - Ensure VirtualBMC is installed
+  package:
+    name:
+      - python3-virtualbmc
+    state: latest
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: VIRTUALBMC - Ensure VirtualBMC is installed
+  pip:
+    name: virtualbmc
+    state: latest
+  when: ansible_facts['os_family'] != "RedHat"
+
+- name: VIRTUALBMC - Create VirtualBMC systemd unit
+  template:
+    src: templates/vbmcd.service
+    dest: /etc/systemd/system/vbmcd.service
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_facts['os_family'] != "RedHat"
+
+- name: VIRTUALBMC - Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  when: ansible_facts['os_family'] != "RedHat"
+
+- name: VIRTUALBMC - Enable and start vbmcd service
+  service:
+    name: vbmcd
+    state: started
+    enabled: true
+
+- name: VIRTUALBMC - Get node states
+  shell: "vbmc list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
+  register: vbmc_status
+  loop: "{{ vms }}"
+  changed_when: False
+
+- name: VIRTUALBMC - Ensure node exists
+  command: "vbmc add --username admin --password admin --address 192.168.250.1 --port {{ item.item.bmcport }} {{ item.item.name }}"
+  when: not item.stdout
+  loop: "{{ vbmc_status.results }}"
+
+- name: VIRTUALBMC - Get node states again
+  shell: "vbmc list 2>/dev/null | grep running | awk '/{{ item.name }}/ {print $4,$8}'"
+  register: vbmc_running
+  loop: "{{ vms }}"
+  changed_when: False
+
+- name: VIRTUALBMC - Start node
+  command: "vbmc start {{ item.item.name }}"
+  when: not item.stdout
+  loop: "{{ vbmc_running.results }}"
+
+- name: VIRTUALBMC - Get service facts
+  service_facts:
+
+- name: VIRTUALBMC - Ensure port rules are configured to the firewall
+  firewalld:
+    port: "{{ item.bmcport }}/udp"
+    zone: libvirt
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+  loop: "{{ vms }}"

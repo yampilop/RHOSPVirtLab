@@ -1,0 +1,12 @@
+---
+- name: Local configuration
+  import_playbook: 01_local_installation.yml
+
+- name: Undercloud configuration
+  import_playbook: 02_undercloud_configuration.yml
+
+- name: Undercloud prepare installation
+  import_playbook: 03_undercloud_prepare_installation.yml
+
+- name: Overcloud prepare deploy
+  import_playbook: 04_overcloud_prepare_deploy.yml

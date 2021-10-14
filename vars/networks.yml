@@ -1,0 +1,39 @@
+---
+networks:
+  - name: RHOSPVirtLab_ctlplane
+    nat: false
+    mac_suffix: '00'
+    ipv4: false
+  - name: RHOSPVirtLab_storage
+    nat: false
+    mac_suffix: '01'
+    ipv4: false
+  - name: RHOSPVirtLab_storage_mgmt
+    nat: false
+    mac_suffix: '02'
+    ipv4: false
+  - name: RHOSPVirtLab_internal_api
+    nat: false
+    mac_suffix: '03'
+    ipv4: false
+  - name: RHOSPVirtLab_tenant
+    nat: false
+    mac_suffix: '04'
+    ipv4: false
+  - name: RHOSPVirtLab_external
+    nat: true
+    mac_suffix: '05'
+    ipv4:
+      address: '10.0.0.1'
+      netmask: '255.255.255.0'
+      dhcp: false
+  - name: RHOSPVirtLab_management
+    nat: true
+    mac_suffix: '0f'
+    ipv4:
+      address: '192.168.250.1'
+      netmask: '255.255.255.0'
+      dhcp:
+        start: '192.168.250.100'
+        end: '192.168.250.254'
+        hosts: true

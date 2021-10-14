@@ -1,0 +1,29 @@
+- name: NETWORKS - Gather facts about libvirt networks
+  community.libvirt.virt_net:
+    command: facts
+
+- name: NETWORKS - Define the network from the template
+  community.libvirt.virt_net:
+    command: define
+    name: "{{ item.name }}"
+    xml: '{{ lookup("template", "templates/network.xml.j2") }}'
+  when: ansible_libvirt_networks[item.name] is not defined
+  loop: "{{ networks }}"
+
+- name: NETWORKS - Gather facts about libvirt networks again
+  community.libvirt.virt_net:
+    command: facts
+
+- name: NETWORKS - Activate the network
+  community.libvirt.virt_net:
+    state: active
+    name: "{{ item.name }}"
+  when: ansible_libvirt_networks[item.name]['state'] != 'active'
+  loop: "{{ networks }}"
+
+- name: NETWORKS - Enable autostart for the network
+  community.libvirt.virt_net:
+    autostart: yes
+    name: "{{ item.name }}"
+  when: ansible_libvirt_networks[item.name]['autostart'] != 'yes'
+  loop: "{{ networks }}"

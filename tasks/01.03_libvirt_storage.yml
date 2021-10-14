@@ -1,0 +1,59 @@
+- name: STORAGE - Create storage directory
+  file:
+    path: "{{ playbook_dir }}/storage"
+    state: directory
+    mode: '0777'
+
+- name: STORAGE - Define the pool from the template
+  community.libvirt.virt_pool:
+    command: define
+    name: "{{ item }}"
+    xml: '{{ lookup("template", "templates/{{ item }}.xml.j2") }}'
+  when: ansible_libvirt_pools[item] is not defined
+  loop:
+    - RHOSPVirtLab_storage
+
+- name: STORAGE - Gather facts about libvirt storage pools
+  community.libvirt.virt_pool:
+    command: facts
+
+- name: STORAGE - Activate the pool
+  community.libvirt.virt_pool:
+    state: active
+    name: "{{ item }}"
+  when: ansible_libvirt_pools[item]['status'] != 'active'
+  loop:
+    - RHOSPVirtLab_storage
+
+- name: STORAGE - Enable autostart for the pool
+  community.libvirt.virt_pool:
+    autostart: yes
+    name: "{{ item }}"
+  when: ansible_libvirt_pools[item]['autostart'] != 'yes'
+  loop:
+    - RHOSPVirtLab_storage
+
+- name: STORAGE - Check if the needed image files exist
+  stat:
+    path: "{{ playbook_dir }}/storage/{{ item }}"
+  register: files_output
+  loop:
+    - rhel-8.2-x86_64-kvm.qcow2
+    - rhel-cloud-init.iso
+
+- name: Fail when any of the files does not exist
+  fail:
+    msg: "{{ item.item }} does not exist"
+  when: item.stat.exists == false
+  loop: "{{ files_output.results  }}"
+
+- name: STORAGE - Check if the disk file exists
+  stat:
+    path: "{{ playbook_dir }}/storage/{{ item.name }}_root.qcow2"
+  register: disk_file
+  loop: "{{ vms }}"
+
+- name: Create disk file
+  command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --format qcow2"
+  when: not item.stat.exists
+  loop: "{{ disk_file.results }}"
