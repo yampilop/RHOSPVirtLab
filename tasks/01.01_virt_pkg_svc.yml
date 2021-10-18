@@ -2,6 +2,7 @@
   package:
     name:
       - libvirt
+      - guestfs-tools
       - virt-manager
     state: latest
 

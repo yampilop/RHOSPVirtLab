@@ -57,3 +57,8 @@
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --format qcow2"
   when: not item.stat.exists
   loop: "{{ disk_file.results }}"
+
+- name: Prepare backing stored disk files and resize root partition
+  command: "virt-resize --expand /dev/sda3 storage/{{ item.item.backing_store }} storage/{{ item.item.name }}_root.qcow2"
+  when: (not item.stat.exists) and (item.item.backing_store != '')
+  loop: "{{ disk_file.results }}"
