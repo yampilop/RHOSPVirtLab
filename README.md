@@ -2,9 +2,9 @@
 
 Virtual lab to setup a Red Hat OpenStack Platform test installation in your personal computer
 
-![Overview](images/overview.png)
+<img src="images/overview.png" alt="Overview" width="100%" />
 
-![Network diagram](images/network_diagram.svg)
+<img src="images/network_diagram.svg" alt="Network diagram" width="70%" />
 
 ## Assumptions
 
@@ -14,7 +14,7 @@ This document assumes that you run a **Fedora 34** installation in your personal
 
 The user from which you will execute the lab needs to have sudo permissions enabled. Also needs to be part of the libvirt and the kvm groups. To add it to those groups execute:
 
-```
+```bash
 sudo usermod -aG libvirt $USERNAME
 sudo usermod -aG kvm $USERNAME
 ```
@@ -25,13 +25,13 @@ After that you need to logout and login again for the changes to take effect.
 
 Move to a directory where you want to work, for example the home directory:
 
-```
+```bash
 cd ~
 ```
 
 Clone the repository and enter the directory.
 
-```
+```bash
 git clone https://github.com/yampilop/RHOSPVirtLab.git
 cd RHOSPVirtLab
 ```
@@ -48,13 +48,13 @@ To customize cloud-user password, you need the cloud-init configuration iso file
 
 ### Install ansible
 
-```
+```bash
 sudo yum install ansible
 ```
 
 ### Test user and ansible installation
 
-```
+```bash
 $ ansible local -m ping
 
 workstation | SUCCESS => {
@@ -68,7 +68,7 @@ workstation | SUCCESS => {
 
 ### Install requirements
 
-```
+```bash
 ansible-galaxy collection install -r requirements.yml
 ```
 
@@ -76,13 +76,13 @@ ansible-galaxy collection install -r requirements.yml
 
 You need to create a vault file to store your Red Hat Subscription credentials. To do that, execute the following command:
 
-```
+```bash
 ansible-vault create vault_credentials.yaml
 ```
 
 You will write the credentials in the following format:
 
-```
+```yml
 rh_username: '<USERNAME>'
 rh_password: '<PASSWORD>'
 ```
@@ -91,7 +91,7 @@ rh_password: '<PASSWORD>'
 
 To start/restart the installation from scratch, a playbook is provided to clean everything in the local machine. Every progress in the lab will be erased. Please **be careful** with this command:
 
-```
+```bash
 ansible-playbook clean.yml
 ```
 
@@ -99,7 +99,7 @@ ansible-playbook clean.yml
 
 Execute the playbook with the following command (you will be prompted for the user password and the vault password):
 
-```
+```bash
 ansible-playbook --ask-vault-pass playbook.yml
 ```
 
@@ -107,7 +107,7 @@ ansible-playbook --ask-vault-pass playbook.yml
 
 As the undercloud installation and overcloud deploy are tasks that last longer and require attention due to possible failures, they need to be executed manually. To do that, login to the undercloud:
 
-```
+```bash
 ssh stack@undercloud
 ```
 
@@ -115,7 +115,7 @@ ssh stack@undercloud
 
 Execute the following command:
 
-```
+```bash
 openstack undercloud install
 ```
 
@@ -149,20 +149,20 @@ ensure they are secured.
 
 Load the overcloud images to openstack:
 
-```
+```bash
 source /home/stack/stackrc
 openstack overcloud image upload --image-path /home/stack/images/
 ```
 
 List images:
 
-```
+```bash
 openstack image list --fit-width
 ```
 
 Import the bremetal nodes:
 
-```
+```bash
 source /home/stack/stackrc
 openstack overcloud node import --validate-only /home/stack/templates/instackenv.yaml
 openstack overcloud node import /home/stack/templates/instackenv.yaml
@@ -171,31 +171,31 @@ openstack baremetal node list
 
 Run validations (you can ignore the undercloud-neutron-sanity-check FAILED):
 
-```
+```bash
 openstack tripleo validator run --group pre-introspection
 ```
 
 Introspect the nodes:
 
-```
+```bash
 openstack overcloud node introspect --all-manageable --provide
 ```
 
 After the process finishes, the nodes must be in available state:
 
-```
+```bash
 openstack baremetal node list
 ```
 
 List the profiles to check if they match the configuration:
 
-```
+```bash
 openstack overcloud profiles list
 ```
 
 Generate the roles file:
 
-```
+```bash
 source /home/stack/stackrc
 openstack overcloud roles generate \
 --roles-path /usr/share/openstack-tripleo-heat-templates/roles \
@@ -205,7 +205,7 @@ Controller Compute
 
 Prepare the images for containers:
 
-```
+```bash
 sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
 ```
 
@@ -213,7 +213,7 @@ sudo openstack tripleo container image prepare -e /home/stack/templates/containe
 
 Execute the deploy command with all the templates and environment files:
 
-```
+```bash
 openstack overcloud deploy \
 --log-file overcloud_deployment.log \
 --timeout 120 \
