@@ -27,10 +27,10 @@
      units="px"
      width="1024px"
      inkscape:snap-object-midpoints="false"
-     inkscape:snap-global="false"
-     inkscape:zoom="0.54759344"
-     inkscape:cx="1052.7884"
-     inkscape:cy="486.67494"
+     inkscape:snap-global="true"
+     inkscape:zoom="0.9023751"
+     inkscape:cx="1085.4688"
+     inkscape:cy="344.09194"
      inkscape:window-width="1920"
      inkscape:window-height="1011"
      inkscape:window-x="0"
@@ -195,6 +195,21 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
+       style="fill:none;stroke:#216778;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 962,412 H 712"
+       id="path3185"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#216778;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 962,612 H 712"
+       id="path3187"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#216778;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 962,812 H 712"
+       id="path3189"
+       sodipodi:nodetypes="cc" />
+    <path
        style="fill:none;stroke:#39396c;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 662,62 H 762"
        id="path4446"
@@ -216,24 +231,9 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#216778;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 962,312 H 662 v -50"
+       d="M 962,212 H 712"
        id="path56387"
-       sodipodi:nodetypes="ccc" />
-    <path
-       style="fill:none;stroke:#216778;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 962,512 H 662 v -50"
-       id="path91877"
-       sodipodi:nodetypes="ccc" />
-    <path
-       style="fill:none;stroke:#216778;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 962,712 H 662 v -50"
-       id="path91879"
-       sodipodi:nodetypes="ccc" />
-    <path
-       style="fill:none;stroke:#216778;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 962,912 H 662 v -50"
-       id="path91881"
-       sodipodi:nodetypes="ccc" />
+       sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#668000;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 62,452 H 612"
@@ -308,20 +308,9 @@
        id="path56393" />
     <path
        style="fill:none;stroke:#aa8800;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 712,212 H 862"
-       id="path50127" />
-    <path
-       style="fill:none;stroke:#aa8800;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 712,412 H 862"
-       id="path53171" />
-    <path
-       style="fill:none;stroke:#aa8800;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 712,612 H 862"
-       id="path53173" />
-    <path
-       style="fill:none;stroke:#aa8800;stroke-width:7.559;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 712,812 H 862"
-       id="path53175" />
+       d="m 662,262 v 50 h 200"
+       id="path50127"
+       sodipodi:nodetypes="ccc" />
     <g
        id="g21519"
        transform="translate(900)">
@@ -339,9 +328,9 @@
          transform="rotate(-90,221.4763,566.26264)"><tspan
            x="138.56557"
            y="412"
-           id="tspan7252"><tspan
+           id="tspan11042"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan7250">RHOSPVirtLab_ctlplane</tspan></tspan></text>
+             id="tspan11040">RHOSPVirtLab_ctlplane</tspan></tspan></text>
     </g>
     <g
        id="g21527">
@@ -359,9 +348,9 @@
          transform="rotate(-90,221.4763,566.26264)"><tspan
            x="138.56557"
            y="412"
-           id="tspan7256"><tspan
+           id="tspan11046"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan7254">RHOSPVirtLab_storage</tspan></tspan></text>
+             id="tspan11044">RHOSPVirtLab_storage</tspan></tspan></text>
     </g>
     <g
        id="g21535"
@@ -380,9 +369,9 @@
          transform="rotate(-90,250.01796,594.85442)"><tspan
            x="138.56557"
            y="412"
-           id="tspan7260"><tspan
+           id="tspan11050"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan7258">RHOSPVirtLab_storage_mgmt</tspan></tspan></text>
+             id="tspan11048">RHOSPVirtLab_storage_mgmt</tspan></tspan></text>
     </g>
     <g
        id="g21543"
@@ -401,9 +390,9 @@
          transform="rotate(-90,221.4763,566.26264)"><tspan
            x="138.56557"
            y="412"
-           id="tspan7264"><tspan
+           id="tspan11054"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan7262">RHOSPVirtLab_internal_api</tspan></tspan></text>
+             id="tspan11052">RHOSPVirtLab_internal_api</tspan></tspan></text>
     </g>
     <g
        id="g21551"
@@ -422,9 +411,9 @@
          transform="rotate(-90,221.4763,566.26264)"><tspan
            x="138.56557"
            y="412"
-           id="tspan7268"><tspan
+           id="tspan11058"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan7266">RHOSPVirtLab_tenant</tspan></tspan></text>
+             id="tspan11056">RHOSPVirtLab_tenant</tspan></tspan></text>
     </g>
     <g
        id="g21559"
@@ -444,16 +433,16 @@
          transform="rotate(-90,221.4763,566.26264)"><tspan
            x="138.56557"
            y="412"
-           id="tspan7272"><tspan
+           id="tspan11062"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle;stroke:none"
-             id="tspan7270">RHOSPVirtLab_external</tspan></tspan></text>
+             id="tspan11060">RHOSPVirtLab_external</tspan></tspan></text>
     </g>
     <g
        id="g21567"
        transform="translate(800)">
       <path
          style="fill:none;stroke:#aa8800;stroke-width:30.236;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         d="M 62.00011,62 V 962"
+         d="M 62.00011,62 V 362"
          id="path21561"
          sodipodi:nodetypes="cc" />
       <text
@@ -462,12 +451,12 @@
          x="138.56557"
          y="412"
          id="text21565"
-         transform="rotate(-90,221.4763,566.26264)"><tspan
+         transform="rotate(-90,71.60846,416.3948)"><tspan
            x="138.56557"
            y="412"
-           id="tspan7276"><tspan
+           id="tspan11066"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan7274">RHOSPVirtLab_management</tspan></tspan></text>
+             id="tspan11064">RHOSPVirtLab_management</tspan></tspan></text>
     </g>
     <g
        id="g44206"
@@ -656,5 +645,38 @@
          id="path4092"
          style="stroke:url(#radialGradient293)" />
     </g>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px"
+       x="561.76562"
+       y="117.8125"
+       id="text44212-3"><tspan
+         sodipodi:role="line"
+         id="tspan44210-6"
+         x="561.76562"
+         y="117.8125"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle">10.0.0.1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px"
+       x="761.76562"
+       y="117.8125"
+       id="text9274"><tspan
+         sodipodi:role="line"
+         id="tspan9272"
+         x="761.76562"
+         y="117.8125"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle">192.168.250.1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px"
+       x="731.76562"
+       y="287.8125"
+       id="text10655"><tspan
+         sodipodi:role="line"
+         id="tspan10653"
+         x="731.76562"
+         y="287.8125"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle">192.168.250.10</tspan></text>
   </g>
 </svg>

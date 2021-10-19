@@ -16,3 +16,7 @@
 
     - name: Copy the key to login as stack user
       import_tasks: tasks/02.02_ssh_key.yml
+
+  roles:
+    - name: geerlingguy.swap
+      swap_file_size_mb: '8192'

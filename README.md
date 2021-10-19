@@ -54,7 +54,7 @@ sudo yum install ansible
 
 ### Test user and ansible installation
 
-```bash
+```
 $ ansible local -m ping
 
 workstation | SUCCESS => {
@@ -70,6 +70,7 @@ workstation | SUCCESS => {
 
 ```bash
 ansible-galaxy collection install -r requirements.yml
+ansible-galaxy install -r requirements.yml
 ```
 
 ## Create a vault for credentials

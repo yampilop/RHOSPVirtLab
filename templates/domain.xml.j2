@@ -44,15 +44,16 @@
 {% endif %}
       <target dev="sda" bus="sata"/>
     </disk>
+{% if item.cdrom != '' %}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
-      <source file="{{ playbook_dir }}/storage/rhel-cloud-init.iso"/>
+      <source file="{{ playbook_dir }}/storage/{{ item.cdrom }}"/>
       <target dev="sdb" bus="sata"/>
       <readonly/>
       <address type="drive" controller="0" bus="0" target="0" unit="1"/>
     </disk>
     <controller type="usb" model="qemu-xhci" ports="15"/>
-
+{% endif %}
 {% for network in networks if network.name in item.nics %}
     <interface type="network">
       <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
