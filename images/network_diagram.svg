@@ -9,6 +9,9 @@
    id="svg5"
    sodipodi:docname="network_diagram.svg"
    inkscape:version="1.1 (c68e22c387, 2021-05-23)"
+   inkscape:export-filename="/home/jmarti/Documents/RHOSPVirtLab/images/network_diagram.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -19,7 +22,7 @@
      bordercolor="#cccccc"
      borderopacity="1"
      inkscape:pageshadow="0"
-     inkscape:pageopacity="1"
+     inkscape:pageopacity="0"
      inkscape:pagecheckerboard="false"
      inkscape:document-units="px"
      showgrid="true"
@@ -28,15 +31,15 @@
      width="1024px"
      inkscape:snap-object-midpoints="false"
      inkscape:snap-global="true"
-     inkscape:zoom="0.9023751"
-     inkscape:cx="1085.4688"
-     inkscape:cy="344.09194"
+     inkscape:zoom="0.45118755"
+     inkscape:cx="-443.27464"
+     inkscape:cy="322.4823"
      inkscape:window-width="1920"
      inkscape:window-height="1011"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g21519"
      inkscape:snap-center="true"
      inkscape:snap-others="true"
      inkscape:snap-nodes="true"
@@ -325,12 +328,12 @@
          x="138.56557"
          y="412"
          id="text3340"
-         transform="rotate(-90,221.4763,566.26264)"><tspan
+         transform="rotate(-90,221.47624,566.26269)"><tspan
            x="138.56557"
            y="412"
-           id="tspan11042"><tspan
+           id="tspan5174"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan11040">RHOSPVirtLab_ctlplane</tspan></tspan></text>
+             id="tspan5172">RHOSPVirtLab_ctlplane</tspan></tspan></text>
     </g>
     <g
        id="g21527">
@@ -345,12 +348,12 @@
          x="138.56557"
          y="412"
          id="text21525"
-         transform="rotate(-90,221.4763,566.26264)"><tspan
+         transform="rotate(-90,221.45118,566.28776)"><tspan
            x="138.56557"
            y="412"
-           id="tspan11046"><tspan
+           id="tspan5178"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan11044">RHOSPVirtLab_storage</tspan></tspan></text>
+             id="tspan5176">RHOSPVirtLab_storage</tspan></tspan></text>
     </g>
     <g
        id="g21535"
@@ -366,12 +369,12 @@
          x="138.56557"
          y="412"
          id="text21533"
-         transform="rotate(-90,250.01796,594.85442)"><tspan
+         transform="rotate(-90,250.0179,594.85448)"><tspan
            x="138.56557"
            y="412"
-           id="tspan11050"><tspan
+           id="tspan5182"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan11048">RHOSPVirtLab_storage_mgmt</tspan></tspan></text>
+             id="tspan5180">RHOSPVirtLab_storage_mgmt</tspan></tspan></text>
     </g>
     <g
        id="g21543"
@@ -387,12 +390,12 @@
          x="138.56557"
          y="412"
          id="text21541"
-         transform="rotate(-90,221.4763,566.26264)"><tspan
+         transform="rotate(-90,221.30534,566.09179)"><tspan
            x="138.56557"
            y="412"
-           id="tspan11054"><tspan
+           id="tspan5186"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan11052">RHOSPVirtLab_internal_api</tspan></tspan></text>
+             id="tspan5184">RHOSPVirtLab_internal_api</tspan></tspan></text>
     </g>
     <g
        id="g21551"
@@ -408,12 +411,12 @@
          x="138.56557"
          y="412"
          id="text21549"
-         transform="rotate(-90,221.4763,566.26264)"><tspan
+         transform="rotate(-90,221.86361,566.13964)"><tspan
            x="138.56557"
            y="412"
-           id="tspan11058"><tspan
+           id="tspan5190"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan11056">RHOSPVirtLab_tenant</tspan></tspan></text>
+             id="tspan5188">RHOSPVirtLab_tenant</tspan></tspan></text>
     </g>
     <g
        id="g21559"
@@ -430,12 +433,12 @@
          x="138.56557"
          y="412"
          id="text21557"
-         transform="rotate(-90,221.4763,566.26264)"><tspan
+         transform="rotate(-90,221.53321,565.80924)"><tspan
            x="138.56557"
            y="412"
-           id="tspan11062"><tspan
+           id="tspan5194"><tspan
              style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle;stroke:none"
-             id="tspan11060">RHOSPVirtLab_external</tspan></tspan></text>
+             id="tspan5192">RHOSPVirtLab_external</tspan></tspan></text>
     </g>
     <g
        id="g21567"
@@ -447,16 +450,16 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-size:18.6667px;line-height:1;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;inline-size:273.434;fill:#ffffff"
-         x="138.56557"
+         style="font-size:18.6667px;line-height:1;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:273.434;fill:#ffffff"
+         x="271.26501"
          y="412"
          id="text21565"
-         transform="rotate(-90,71.60846,416.3948)"><tspan
-           x="138.56557"
+         transform="rotate(-90,69.574552,414.41113)"><tspan
+           x="271.26501"
            y="412"
-           id="tspan11066"><tspan
-             style="font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle"
-             id="tspan11064">RHOSPVirtLab_management</tspan></tspan></text>
+           id="tspan5198"><tspan
+             style="font-family:Verdana;-inkscape-font-specification:Verdana"
+             id="tspan5196">RHOSPVirtLab_management</tspan></tspan></text>
     </g>
     <g
        id="g44206"
@@ -645,38 +648,62 @@
          id="path4092"
          style="stroke:url(#radialGradient293)" />
     </g>
-    <text
-       xml:space="preserve"
-       style="font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px"
-       x="561.76562"
-       y="117.8125"
-       id="text44212-3"><tspan
-         sodipodi:role="line"
-         id="tspan44210-6"
-         x="561.76562"
-         y="117.8125"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle">10.0.0.1</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px"
-       x="761.76562"
-       y="117.8125"
-       id="text9274"><tspan
-         sodipodi:role="line"
-         id="tspan9272"
-         x="761.76562"
-         y="117.8125"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle">192.168.250.1</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px"
-       x="731.76562"
-       y="287.8125"
-       id="text10655"><tspan
-         sodipodi:role="line"
-         id="tspan10653"
-         x="731.76562"
-         y="287.8125"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;font-family:Verdana;-inkscape-font-specification:Verdana;text-align:center;text-anchor:middle">192.168.250.10</tspan></text>
+    <g
+       id="g2415"
+       transform="translate(749.99989,-100)">
+      <path
+         style="fill:none;stroke:#aa8800;stroke-width:30.236;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 62.00011,162 V 262"
+         id="path2407"
+         sodipodi:nodetypes="cc" />
+      <text
+         xml:space="preserve"
+         style="font-size:13.3333px;line-height:1;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:273.434;fill:#ffffff;stroke:none"
+         x="271.26501"
+         y="412"
+         id="text2413"
+         transform="rotate(-90,69.118212,414.2646)"><tspan
+           x="271.26501"
+           y="412"
+           id="tspan5200">192.168.250.1</tspan></text>
+    </g>
+    <g
+       id="g7190"
+       transform="rotate(90,287.00005,536.99995)">
+      <path
+         style="fill:none;stroke:#aa8800;stroke-width:30.236;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 62.0001,162 V 262"
+         id="path7184"
+         sodipodi:nodetypes="cc" />
+      <text
+         xml:space="preserve"
+         style="font-size:13.3333px;line-height:1;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:273.434;fill:#ffffff;stroke:none"
+         x="271.26501"
+         y="412"
+         id="text7188"
+         transform="rotate(-90,69.204471,414.35087)"><tspan
+           x="271.26501"
+           y="412"
+           id="tspan5202">192.168.250.10</tspan></text>
+    </g>
+    <g
+       id="g8424"
+       transform="rotate(-0.03623703,-157826.89,-711348.04)">
+      <path
+         style="fill:none;stroke:#d45500;stroke-width:30.236;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 62.00011,162 V 262"
+         id="path8418"
+         sodipodi:nodetypes="cc" />
+      <text
+         xml:space="preserve"
+         style="font-size:13.3333px;line-height:1;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;white-space:pre;inline-size:273.434;fill:#ffffff;stroke:none"
+         x="271.26501"
+         y="412"
+         id="text8422"
+         transform="rotate(-90,69.118227,414.26458)"><tspan
+           x="271.26501"
+           y="412"
+           id="tspan5204">10.0.0.1</tspan></text>
+    </g>
   </g>
 </svg>

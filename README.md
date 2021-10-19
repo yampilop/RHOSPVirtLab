@@ -2,9 +2,9 @@
 
 Virtual lab to setup a Red Hat OpenStack Platform test installation in your personal computer
 
-<img src="images/overview.png" alt="Overview" width="100%" />
+![Overview](images/overview.png)
 
-<img src="images/network_diagram.svg" alt="Network diagram" width="70%" />
+![Network diagram](images/network_diagram.png)
 
 ## Assumptions
 
@@ -12,7 +12,7 @@ This document assumes that you run a **Fedora 34** installation in your personal
 
 ## Local user configuration
 
-The user from which you will execute the lab needs to have sudo permissions enabled. Also needs to be part of the libvirt and the kvm groups. To add it to those groups execute:
+The user from which you will execute the lab needs to have `sudo` permissions enabled. Also needs to be part of the `libvirt` and the `kvm` groups. To add it to those groups execute:
 
 ```bash
 sudo usermod -aG libvirt $USERNAME
@@ -40,9 +40,9 @@ cd RHOSPVirtLab
 
 ### Download the RHEL8.2 QCOW2 image and custom ISO
 
-The storage from undercloud node will be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)).
+The storage from `undercloud` node will be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)).
 
-To customize cloud-user password, you need the cloud-init configuration iso file [rhel-cloud-init.iso](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
+To customize `cloud-user` password, you need the `cloud-init` configuration iso file [rhel-cloud-init.iso](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
 
 **Download** those images and place them in the ***storage*** folder inside the working directory.
 
@@ -54,13 +54,13 @@ sudo yum install ansible
 
 ### Test user and ansible installation
 
+```bash
+ansible local -m ping
 ```
-$ ansible local -m ping
 
+```
 workstation | SUCCESS => {
-
     ...
-
     "ping": "pong"
 }
 
@@ -106,7 +106,7 @@ ansible-playbook --ask-vault-pass playbook.yml
 
 ## Last steps
 
-As the undercloud installation and overcloud deploy are tasks that last longer and require attention due to possible failures, they need to be executed manually. To do that, login to the undercloud:
+As the `undercloud` installation and `overcloud` deploy are tasks that last longer and require attention due to possible failures, they need to be executed manually. To do that, login to the `undercloud`:
 
 ```bash
 ssh stack@undercloud
@@ -148,7 +148,7 @@ ensure they are secured.
 
 ### Prepare the overcloud
 
-Load the overcloud images to openstack:
+Load the `overcloud` images to openstack:
 
 ```bash
 source /home/stack/stackrc
@@ -170,7 +170,7 @@ openstack overcloud node import /home/stack/templates/instackenv.yaml
 openstack baremetal node list
 ```
 
-Run validations (you can ignore the undercloud-neutron-sanity-check FAILED):
+Run validations (you can ignore the `undercloud-neutron-sanity-check` `FAILED`):
 
 ```bash
 openstack tripleo validator run --group pre-introspection
@@ -182,7 +182,7 @@ Introspect the nodes:
 openstack overcloud node introspect --all-manageable --provide
 ```
 
-After the process finishes, the nodes must be in available state:
+After the process finishes, the nodes must be in `available` state:
 
 ```bash
 openstack baremetal node list
@@ -246,4 +246,4 @@ Overcloud Deployed without error
 
 ### Open dashboard
 
-From a web browser, open the Overcloud Horizon Dashboard URL and login as **admin** using the password inside the /home/stack/overcloudrc file.
+From a web browser, open the Overcloud Horizon Dashboard URL and login as **admin** using the password inside the `/home/stack/overcloudrc` file.
