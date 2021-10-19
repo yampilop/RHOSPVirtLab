@@ -21,4 +21,5 @@
     regexp: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
     line: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
     state: present
+  when: item.nics.RHOSPVirtLab_management is defined
   loop: "{{ vms }}"

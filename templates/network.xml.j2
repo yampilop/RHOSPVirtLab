@@ -13,7 +13,7 @@
     <dhcp>
       <range start="{{ item.ipv4.dhcp.start }}" end="{{ item.ipv4.dhcp.end }}" />
       {% if item.ipv4.dhcp.hosts %}
-      {% for vm in vms %}
+      {% for vm in vms if vm.nics[item.name] is defined %}
       <host mac="{{ vm.mac }}:{{ item.mac_suffix }}" name="{{ vm.name }}" ip="{{ vm.nics[item.name] }}"/>
       {% endfor %}
       {% endif %}

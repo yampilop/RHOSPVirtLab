@@ -6,8 +6,8 @@
     group: stack
 
 - name: TEMPLATES - Prepare node info file
-  copy:
-    src: templates/node-info.yaml
+  template:
+    src: templates/node-info.yaml.j2
     dest: /home/stack/templates/node-info.yaml
     owner: stack
     group: stack

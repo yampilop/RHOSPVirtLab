@@ -3,7 +3,7 @@
   hosts: director
   gather_facts: no
 
-  tasks:
+  pre_tasks:
     - name: Wait for the undercloud to come up
       wait_for_connection:
         timeout: 60
@@ -11,6 +11,7 @@
     - name: Gathering facts
       setup:
 
+  tasks:
     - name: Ensure stack user is set with the correct permissions
       import_tasks: tasks/02.01_stack_user.yml
 
