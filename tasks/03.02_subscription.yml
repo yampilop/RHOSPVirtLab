@@ -2,6 +2,7 @@
   shell: 'subscription-manager status'
   register: status
   changed_when: false
+  failed_when: false
 
 - name: SUBSCRIPTION - Register, attach and set release
   redhat_subscription:
@@ -14,4 +15,4 @@
       service_level_agreement: 'Self-Support'
       usage: 'Development/Test'
     release: '8.2'
-  when: (status is search('Disabled')) and (status is not search('Content Access Mode'))
+  when: (status is not search('Current')) and (status is not search('Content Access Mode'))
