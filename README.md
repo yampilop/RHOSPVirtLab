@@ -285,27 +285,10 @@ From a web browser, open the Overcloud Horizon Dashboard URL and login as **admi
 
 ### Post deploy configurations
 
-#### Networks
+In order to be able to boot some instances:
 
-![Network topology](images/network_topology.png)
-
-Create a default tenant network:
-
-```bash
-source /home/stack/overcloudrc
-openstack network create default
-openstack subnet create default --network default --gateway 172.20.1.1 --subnet-range 172.20.0.0/16
-```
-
-Create a default provider network:
-
-```bash
-source /home/stack/overcloudrc
-openstack network create provider --external --provider-network-type flat --provider-physical-network datacentre --share
-openstack subnet create provider-subnet --network  provider --dhcp --allocation-pool start=10.9.101.50,end=10.9.101.100 --gateway 10.9.101.254 --subnet-range 10.9.101.0/24
-openstack router create external
-openstack router set --external-gateway provider external
-openstack router add subnet external default
-```
-
-Using either the CLI or the Dashboard, create some flavors and upload some images, in order to be able to boot some instances.
+ * Create an external network type flat pointed to the provider physical network named `datacentre`. Attach subnet in the range 10.0.0.0/24 with default gateway 10.0.0.1.
+ * Create a tenant network.
+ * Create some flavors.
+ * Upload some images.
+ * Create a projects and users and assing roles.
