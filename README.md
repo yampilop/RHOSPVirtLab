@@ -1,10 +1,6 @@
 # RHOSP 16.1 Virtual Lab
 
-Virtual lab to setup a Red Hat OpenStack Platform test installation in your personal computer
-
-![Overview](images/overview.png)
-
-![Network diagram](images/network_diagram.png)
+Virtual lab to setup a Red Hat OpenStack Platform test installation in your personal computer.
 
 ## Assumptions
 
@@ -59,8 +55,9 @@ ansible local -m ping
 ```
 
 ```
+BECOME password:
 workstation | SUCCESS => {
-    ...
+    "changed": false,
     "ping": "pong"
 }
 
@@ -103,6 +100,19 @@ Execute the playbook with the following command (you will be prompted for the us
 ```bash
 ansible-playbook --ask-vault-pass playbook.yml
 ```
+
+The playbook sets up the following environment:
+
+![Overview](images/overview.png)
+
+![Network diagram](images/network_diagram.png)
+
+### Customizing the environment
+
+If you want to customize the default environment created by the playbook, you need to edit the files:
+
+- vars/networks.yml
+- vars/vms.yml
 
 ## Last steps
 
@@ -247,6 +257,47 @@ Overcloud Deployed without error
 
 ***Take note of the Overcloud Horizon Dashboard URL***
 
+Analize the Overcloud rc file to take note of the admin password:
+
+```bash
+grep PASSWORD overcloudrc
+```
+
+```
+export OS_PASSWORD=XXXXXXXXXXXXXX
+```
+
 ### Open dashboard
 
-From a web browser, open the Overcloud Horizon Dashboard URL and login as **admin** using the password inside the `/home/stack/overcloudrc` file.
+From a web browser, open the Overcloud Horizon Dashboard URL and login as **admin**.
+
+![Dashboard](images/dashboard.png)
+
+![Hypervisors](images/hypervisors.png)
+
+### Post deploy configurations
+
+#### Networks
+
+![Network topology](images/network_topology.png)
+
+Create a default tenant network:
+
+```bash
+source /home/stack/overcloudrc
+openstack network create default
+openstack subnet create default --network default --gateway 172.20.1.1 --subnet-range 172.20.0.0/16
+```
+
+Create a default provider network:
+
+```bash
+source /home/stack/overcloudrc
+openstack network create provider --external --provider-network-type flat --provider-physical-network datacentre --share
+openstack subnet create provider-subnet --network  provider --dhcp --allocation-pool start=10.9.101.50,end=10.9.101.100 --gateway 10.9.101.254 --subnet-range 10.9.101.0/24
+openstack router create external
+openstack router set --external-gateway provider external
+openstack router add subnet external default
+```
+
+Using either the CLI or the Dashboard, create some flavors and upload some images, in order to be able to boot some instances.
