@@ -1,10 +1,12 @@
 <network>
   <name>{{ item.name }}</name>
-{% if item.nat %}
-  <forward mode="nat">
+{% if item.forward %}
+  <forward mode="{{ item.forward }}">
+    {% if item.forward == 'nat' %}
     <nat>
       <port start="1024" end="65535"/>
     </nat>
+    {% endif %}
   </forward>
 {% endif %}
 {% if item.ipv4 %}
