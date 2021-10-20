@@ -207,6 +207,7 @@ Controller Compute
 Prepare the images for containers:
 
 ```bash
+source /home/stack/stackrc
 sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
 ```
 
@@ -215,6 +216,7 @@ sudo openstack tripleo container image prepare -e /home/stack/templates/containe
 Execute the deploy command with all the templates and environment files:
 
 ```bash
+source /home/stack/stackrc
 openstack overcloud deploy \
 --log-file overcloud_deployment.log \
 --timeout 120 \
@@ -226,6 +228,7 @@ openstack overcloud deploy \
 -e /home/stack/templates/containers-prepare-parameter.yaml \
 -e /home/stack/templates/overcloud-images.yaml \
 -e /home/stack/templates/custom-overcloud.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/net-multiple-nics.yaml

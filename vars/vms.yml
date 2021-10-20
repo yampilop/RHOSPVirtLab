@@ -30,6 +30,7 @@ vms:
       RHOSPVirtLab_internal_api: ''
       RHOSPVirtLab_tenant: ''
       RHOSPVirtLab_external: ''
+      RHOSPVirtLab_management: '192.168.250.20'
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
     profile: 'compute'

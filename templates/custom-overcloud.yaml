@@ -3,3 +3,5 @@ parameter_defaults:
   NeutronPhysicalBridge: "br-ex"
   ControllerExtraConfig:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
+  AllNodesExtraConfig:
+    swap_size_megabytes: '8192'

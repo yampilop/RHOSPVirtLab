@@ -12,7 +12,7 @@
     owner: stack
     group: stack
 
-- name: TEMPLATES - Perpare the physical network template
+- name: TEMPLATES - Perpare the custom overcloud parameters template
   copy:
     src: templates/custom-overcloud.yaml
     dest: /home/stack/templates/custom-overcloud.yaml
