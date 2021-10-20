@@ -1,9 +1,17 @@
+- name: SUBSCRIPTION - Check subscription-manager status
+  shell: 'subscription-manager status'
+  register: status
+  changed_when: false
+
 - name: SUBSCRIPTION - Register, attach and set release
   redhat_subscription:
     state: present
     username: "{{ rh_username }}"
     password: "{{ rh_password }}"
-    pool: '^Red Hat OpenStack'
-    auto_attach: true
+    pool: 'Red Hat OpenStack'
+    syspurpose:
+      role: 'Red Hat Enterprise Linux Server'
+      service_level_agreement: 'Self-Support'
+      usage: 'Development/Test'
     release: '8.2'
-  notify: Reboot the machine
+  when: (status is search('Disabled')) and (status is not search('Content Access Mode'))
