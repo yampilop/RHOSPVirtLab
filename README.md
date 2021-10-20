@@ -6,9 +6,17 @@ Virtual lab to setup a Red Hat OpenStack Platform test installation in your pers
 
 This document assumes that you run a **Fedora 34** installation in your personal computer. The steps for other versions of Fedora and other Linux-based OS may differ from the exposed here.
 
+Your personal computer must fulfill the following **minimum requirements**:
+
+  * CPU: 12 cores
+  * RAM: 32GB
+  * Disk: 250GB of free space
+
 ## Local user configuration
 
-The user from which you will execute the lab needs to have `sudo` permissions enabled. Also needs to be part of the `libvirt` and the `kvm` groups. To add it to those groups execute:
+The user from which you will execute the lab needs to have `sudo` **permissions enabled**.
+
+Also needs to be part of the `libvirt` and the `kvm` groups. To add it to those groups execute:
 
 ```bash
 sudo usermod -aG libvirt $USERNAME
