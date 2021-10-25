@@ -275,15 +275,36 @@ grep PASSWORD overcloudrc
 export OS_PASSWORD=XXXXXXXXXXXXXX
 ```
 
+### Post deploy configurations
+
+#### Create a domain and a project
+
+```
+source /home/stack/overcloudrc
+openstack domain create RHOSPVirtLab
+openstack project create --domain RHOSPVirtLab test-project
+```
+
+#### Create domain users
+
+```
+source /home/stack/overcloudrc
+openstack user create --domain RHOSPVirtLab --project test-project --project-domain RHOSPVirtLab --password-prompt --description "Test project admin" test-admin
+openstack role add --domain RHOSPVirtLab --user test-admin --user-domain RHOSPVirtLab admin
+openstack role add --project test-project --user test-admin --user-domain RHOSPVirtLab admin
+```
+
+(Choose a password for the test-admin user)
+
 ### Open dashboard
 
-From a web browser, open the Overcloud Horizon Dashboard URL and login as **admin**.
+From a web browser, open the Overcloud Horizon Dashboard URL and login to the domain **RHOSPVirtLab** as **test-admin** using the password you configured.
 
 ![Dashboard](images/dashboard.png)
 
 ![Hypervisors](images/hypervisors.png)
 
-### Post deploy configurations
+#### Requirements for instances
 
 In order to be able to boot some instances:
 
@@ -291,4 +312,3 @@ In order to be able to boot some instances:
  * Create a tenant network.
  * Create some flavors.
  * Upload some images.
- * Create a projects and users and assing roles.

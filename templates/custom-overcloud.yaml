@@ -3,5 +3,6 @@ parameter_defaults:
   NeutronPhysicalBridge: "br-ex"
   ControllerExtraConfig:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
+    horizon::keystone_multidomain_support: true
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
