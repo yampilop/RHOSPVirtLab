@@ -12,6 +12,7 @@
   when: ansible_libvirt_pools[item] is not defined
   loop:
     - RHOSPVirtLab_storage
+  become: yes
 
 - name: STORAGE - Gather facts about libvirt storage pools
   community.libvirt.virt_pool:
@@ -24,6 +25,7 @@
   when: ansible_libvirt_pools[item]['status'] != 'active'
   loop:
     - RHOSPVirtLab_storage
+  become: yes
 
 - name: STORAGE - Enable autostart for the pool
   community.libvirt.virt_pool:
@@ -32,6 +34,7 @@
   when: ansible_libvirt_pools[item]['autostart'] != 'yes'
   loop:
     - RHOSPVirtLab_storage
+  become: yes
 
 - name: STORAGE - Check if the needed image files exist
   stat:

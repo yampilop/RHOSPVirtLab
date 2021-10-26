@@ -3,6 +3,7 @@
     name:
       - ipmitool
     state: latest
+  become: yes
 
 - name: VIRTUALBMC - Ensure VirtualBMC is installed
   package:
@@ -16,6 +17,7 @@
     name: virtualbmc
     state: latest
   when: ansible_facts['os_family'] != "RedHat"
+  become: yes
 
 - name: VIRTUALBMC - Create VirtualBMC systemd unit
   template:
@@ -25,17 +27,20 @@
     group: root
     mode: '0644'
   when: ansible_facts['os_family'] != "RedHat"
+  become: yes
 
 - name: VIRTUALBMC - Reload systemd daemon
   systemd:
     daemon_reload: yes
   when: ansible_facts['os_family'] != "RedHat"
+  become: yes
 
 - name: VIRTUALBMC - Enable and start vbmcd service
   service:
     name: vbmcd
     state: started
     enabled: true
+  become: yes
 
 - name: VIRTUALBMC - Get node states
   shell: "vbmc list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
@@ -71,3 +76,4 @@
     state: enabled
   when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
   loop: "{{ vms }}"
+  become: yes

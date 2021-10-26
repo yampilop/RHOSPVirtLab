@@ -4,6 +4,7 @@
   vars_files:
     - vars/vms.yml
     - vars/networks.yml
+  become: no
 
   tasks:
     - name: Ensure virtualization packages are installed and services are running
