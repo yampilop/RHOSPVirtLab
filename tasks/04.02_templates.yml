@@ -18,3 +18,10 @@
     dest: /home/stack/templates/custom-overcloud.yaml
     owner: stack
     group: stack
+
+- name: TEMPLATES - Perpare the custom network data
+  copy:
+    src: templates/network_data.yaml
+    dest: /home/stack/templates/network_data.yaml
+    owner: stack
+    group: stack

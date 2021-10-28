@@ -242,6 +242,7 @@ openstack overcloud deploy \
 --stack overcloud \
 --ntp-server 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org \
 -r /home/stack/templates/roles_data.yaml \
+-n /home/stack/templates/network_data.yaml \
 -e /home/stack/templates/node-info.yaml \
 -e /home/stack/templates/containers-prepare-parameter.yaml \
 -e /home/stack/templates/overcloud-images.yaml \
@@ -290,11 +291,23 @@ openstack project create --domain RHOSPVirtLab test-project
 ```
 source /home/stack/overcloudrc
 openstack user create --domain RHOSPVirtLab --project test-project --project-domain RHOSPVirtLab --password-prompt --description "Test project admin" test-admin
+```
+(Choose a password for the test-admin user)
+
+Assign administration roles:
+
+```
 openstack role add --domain RHOSPVirtLab --user test-admin --user-domain RHOSPVirtLab admin
 openstack role add --project test-project --user test-admin --user-domain RHOSPVirtLab admin
 ```
 
-(Choose a password for the test-admin user)
+### Create a provider network
+
+```
+source /home/stack/overcloudrc
+openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
+openstack subnet create --subnet-range 10.0.0.0/24 --no-dhcp --gateway 10.0.0.1 --network default-provider --allocation-pool start=10.0.0.100,end=10.0.0.250 default-provider-subnet
+```
 
 ### Open dashboard
 
@@ -306,9 +319,10 @@ From a web browser, open the Overcloud Horizon Dashboard URL and login to the do
 
 #### Requirements for instances
 
-In order to be able to boot some instances:
+In order to be able to boot some instances with public access:
 
- * Create an external network type flat pointed to the provider physical network named `datacentre`. Attach subnet in the range 10.0.0.0/24 with default gateway 10.0.0.1.
  * Create a tenant network.
+ * Create a router and set the `default-provider` as external network.
+ * Assign floating IPs to the project.
  * Create some flavors.
  * Upload some images.
