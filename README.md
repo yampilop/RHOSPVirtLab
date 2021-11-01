@@ -322,7 +322,7 @@ From a web browser, open the Overcloud Horizon Dashboard URL and login to the do
 In order to be able to boot some instances with public access:
 
  * Create a tenant network.
- * Create a router and set the `default-provider` as external network.
+ * Create a router. Set the `default-provider` as external network. Attach a port to the tenant network with the default gateway IP.
  * Assign floating IPs to the project.
  * Create some flavors.
  * Upload some images.
