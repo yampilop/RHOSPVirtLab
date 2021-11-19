@@ -258,13 +258,11 @@ The output should end with the following:
 ```
 Ansible passed.
 Overcloud configuration completed.
-Overcloud Endpoint: http://10.0.0.X:5000
-Overcloud Horizon Dashboard URL: http://10.0.0.X:80/dashboard
+Overcloud Endpoint: http://10.0.0.254:5000
+Overcloud Horizon Dashboard URL: http://10.0.0.254:80/dashboard
 Overcloud rc file: /home/stack/overcloudrc
 Overcloud Deployed without error
 ```
-
-***Take note of the Overcloud Horizon Dashboard URL***
 
 Analize the Overcloud rc file to take note of the admin password:
 
@@ -311,7 +309,7 @@ openstack subnet create --subnet-range 10.0.0.0/24 --no-dhcp --gateway 10.0.0.1 
 
 ### Open dashboard
 
-From a web browser, open the Overcloud Horizon Dashboard URL and login to the domain **RHOSPVirtLab** as **test-admin** using the password you configured.
+From a web browser, open the Overcloud Horizon Dashboard URL ([http://10.0.0.254:80/dashboard](http://10.0.0.254:80/dashboard)) and login to the domain **RHOSPVirtLab** as **test-admin** using the password you configured.
 
 ![Dashboard](images/dashboard.png)
 
