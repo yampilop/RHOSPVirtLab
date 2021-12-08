@@ -8,7 +8,7 @@ vms:
     bmcport: 6233
     mac: '0c:1f:0d:11:00'
     disk_size: 107374182400
-    backing_store: 'rhel-8.2-x86_64-kvm.qcow2'
+    backing_store: 'rhel-8.4-x86_64-kvm.qcow2'
     cdrom: 'rhel-cloud-init.iso'
     nics:
       RHOSPVirtLab_ctlplane: ''

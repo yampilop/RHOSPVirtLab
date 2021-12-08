@@ -41,7 +41,7 @@
     path: "{{ playbook_dir }}/storage/{{ item }}"
   register: files_output
   loop:
-    - rhel-8.2-x86_64-kvm.qcow2
+    - rhel-8.4-x86_64-kvm.qcow2
     - rhel-cloud-init.iso
 
 - name: Fail when any of the files does not exist

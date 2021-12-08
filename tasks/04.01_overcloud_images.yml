@@ -6,5 +6,5 @@
     group: stack
     remote_src: yes
   loop:
-    - /usr/share/rhosp-director-images/overcloud-full-latest-16.1.tar
-    - /usr/share/rhosp-director-images/ironic-python-agent-latest-16.1.tar
+    - /usr/share/rhosp-director-images/overcloud-full-latest-16.2.tar
+    - /usr/share/rhosp-director-images/ironic-python-agent-latest-16.2.tar

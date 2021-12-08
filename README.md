@@ -1,4 +1,4 @@
-# RHOSP 16.1 Virtual Lab
+# RHOSP 16.2 Virtual Lab
 
 Virtual lab to setup a Red Hat OpenStack Platform test installation in your personal computer.
 
@@ -42,9 +42,9 @@ cd RHOSPVirtLab
 
 ## Initial configurations
 
-### Download the RHEL8.2 QCOW2 image and custom ISO
+### Download the RHEL8.4 QCOW2 image and custom ISO
 
-The storage from `undercloud` node will be created based on the **Red Hat Enterprise Linux 8.2 Update KVM Guest Image** ([rhel-8.2-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.2/x86_64/product-software)).
+The storage from `undercloud` node will be created based on the **Red Hat Enterprise Linux 8.4 Update KVM Guest Image** ([rhel-8.4-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.4/x86_64/product-software)).
 
 To customize `cloud-user` password, you need the `cloud-init` configuration iso file [rhel-cloud-init.iso](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
 

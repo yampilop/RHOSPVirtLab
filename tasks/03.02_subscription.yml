@@ -14,5 +14,5 @@
       role: 'Red Hat Enterprise Linux Server'
       service_level_agreement: 'Self-Support'
       usage: 'Development/Test'
-    release: '8.2'
+    release: '8.4'
   when: (status is not search('Current')) and (status is not search('Content Access Mode'))
