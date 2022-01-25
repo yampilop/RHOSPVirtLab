@@ -7,3 +7,4 @@ parameter_defaults:
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
   PublicVirtualFixedIPs: [{'ip_address':'10.0.0.254'}]
+  NovaReservedHostMemory: 2048
