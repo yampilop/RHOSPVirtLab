@@ -7,7 +7,6 @@
       - ansible-2.9-for-rhel-8-x86_64-rpms
       - openstack-16.2-for-rhel-8-x86_64-rpms
       - fast-datapath-for-rhel-8-x86_64-rpms
-      - advanced-virt-for-rhel-8-x86_64-rpms
       - rhceph-4-tools-for-rhel-8-x86_64-rpms
     purge: yes
 
@@ -19,16 +18,6 @@
       name=container-tools
       stream=3.0
       profiles=common
-      state=enabled
-
-- name: REPMODPKG - Disable virt module stream rhel and enable av
-  copy:
-    dest: /etc/dnf/modules.d/virt.module
-    content: |
-      [virt]
-      name=virt
-      stream=av
-      profiles=
       state=enabled
 
 - name: REPMODPKG - Disable and stop cloud-init service

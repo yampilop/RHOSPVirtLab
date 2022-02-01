@@ -2,7 +2,7 @@
 workstation ansible_host=localhost ansible_connection=local ansible_user=ansible ansible_become=yes ansible_python_interpreter="/usr/bin/env python"
 
 [openstack_config]
-director ansible_host=192.168.250.10 ansible_user=cloud-user ansible_password=redhat ansible_become=yes
+director ansible_host=192.168.250.10 ansible_user=cloud-user ansible_password=redhat ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
 
 [openstack_oper]
-undercloud ansible_host=192.168.250.10 ansible_user=stack ansible_become=yes
+undercloud ansible_host=192.168.250.10 ansible_user=stack ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
