@@ -1,29 +1,40 @@
 # RHOSP 16.2 Virtual Lab
 
-Virtual lab to setup a Red Hat OpenStack Platform test installation in your personal computer.
+Virtual lab to setup a Red Hat OpenStack Platform test installation over a RHEL Hypervisor.
 
 ## Assumptions
 
-This document assumes that you run a **Fedora 34** installation in your personal computer. The steps for other versions of Fedora and other Linux-based OS may differ from the exposed here.
+This document assumes that you run a **RHEL 8.4** installation in your server. The steps for other OS versions may differ from the exposed here.
 
-Your personal computer must fulfill the following **minimum requirements**:
+Your server must fulfill the following **minimum requirements**:
 
-  * CPU: 12 cores
-  * RAM: 32GB
-  * Disk: 250GB of free space
+  * CPU: 12 cores               //TODO
+  * RAM: 128GB                  //TODO
+  * Disk: 250GB of free space   //TODO
 
-## Local user configuration
-
-The user from which you will execute the lab needs to have `sudo` **permissions enabled**.
-
-Also needs to be part of the `libvirt` and the `kvm` groups. To add it to those groups execute:
+Your server needs to be registered and attached to a valid pool. To do that:
 
 ```bash
-sudo usermod -aG libvirt $USERNAME
-sudo usermod -aG kvm $USERNAME
+sudo subscription-manager register
+sudo subscription-manager list --available --all
+(select a valid available pool)
+sudo subscription-manager attach --pool=<POOL_ID>
+sudo subscription-manager release --set=8.4
+sudo subscription-manager repos --disable=*
+sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms \
+--enable=rhel-8-for-x86_64-appstream-eus-rpms \
+--enable=ansible-2.9-for-rhel-8-x86_64-rpms \
+--enable=advanced-virt-for-rhel-8-x86_64-rpms
+sudo dnf update -y
+sudo reboot
 ```
 
-After that you need to logout and login again for the changes to take effect.
+## Install required and useful packages
+
+```bash
+sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete
+sudo dnf -y module install python36
+```
 
 ## Pull the repo
 
@@ -42,20 +53,6 @@ cd RHOSPVirtLab
 
 ## Initial configurations
 
-### Download the RHEL8.4 QCOW2 image and custom ISO
-
-The storage from `undercloud` node will be created based on the **Red Hat Enterprise Linux 8.4 Update KVM Guest Image** ([rhel-8.4-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.4/x86_64/product-software)).
-
-To customize `cloud-user` password, you need the `cloud-init` configuration iso file [rhel-cloud-init.iso](https://gitlab.com/neyder/rhel-cloud-init/-/raw/master/rhel-cloud-init.iso).
-
-**Download** those images and place them in the ***storage*** folder inside the working directory.
-
-### Install ansible
-
-```bash
-sudo yum install ansible
-```
-
 ### Test user and ansible installation
 
 ```bash
@@ -63,36 +60,39 @@ ansible local -m ping
 ```
 
 ```
-BECOME password:
 workstation | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/libexec/platform-python"
+    },
     "changed": false,
     "ping": "pong"
 }
-
 ```
 
-### For KDE users
+### Download the RHEL8.4 QCOW2 image and custom ISO
 
-If you are running *KDE*, make sure **Klipper** is enabled (right click the expand arrow of your system tray > Configure System Tray... > Entries > Make sure Clipboard is not set to 'Disabled').
+The storage from `undercloud` node will be created based on the **Red Hat Enterprise Linux 8.4 Update KVM Guest Image** ([rhel-8.4-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.4/x86_64/product-software)):
 
-Also, before running the playbook, in a second terminal run:
+![QCOW2 image](images/rhel-8.4-x86_64-kvm.png)
+
+Right click the "Download now" button and copy the link. Then download it and place it in storage folder:
 
 ```bash
-sudo klipper
+wget "<COPIED_LINK>" -O storage/rhel-8.4-x86_64-kvm.qcow2
 ```
 
-Or else you will end up with a failure similar to this one:
+### Local user configuration
 
-```
-TASK [VIRTUALBMC - Ensure node exists] ********************************************************************************************
-failed: [workstation] (item={'cmd': "vbmc list 2>/dev/null | awk '/undercloud/ {print $4,$8}'", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2021-12-08 13:51:21.755357', 'end': '2021-12-08 13:51:22.069128', 'delta': '0:00:00.313771', 'changed': False, 'invocation': {'module_args': {'_raw_params': "vbmc list 2>/dev/null | awk '/undercloud/ {print $4,$8}'", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'name': 'undercloud', 'title': 'RHOSPVirtLab Undercloud', 'profile': 'undercloud', 'memory': 6291456, 'vcpus': 2, 'bmcport': 6233, 'mac': '0c:1f:0d:11:00', 'disk_size': 107374182400, 'backing_store': 'rhel-8.2-x86_64-kvm.qcow2', 'cdrom': 'rhel-cloud-init.iso', 'nics': {'RHOSPVirtLab_ctlplane': '', 'RHOSPVirtLab_management': '192.168.250.10'}}, 'ansible_loop_var': 'item'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["vbmc", "add", "--username", "admin", "--password", "admin", "--address", "192.168.250.1", "--port", "6233", "undercloud"], "delta": "0:00:00.306814", "end": "2021-12-08 13:51:23.920380", "item": {"ansible_loop_var": "item", "changed": false, "cmd": "vbmc list 2>/dev/null | awk '/undercloud/ {print $4,$8}'", "delta": "0:00:00.313771", "end": "2021-12-08 13:51:22.069128", "failed": false, "invocation": {"module_args": {"_raw_params": "vbmc list 2>/dev/null | awk '/undercloud/ {print $4,$8}'", "_uses_shell": true, "argv": null, "chdir": null, "creates": null, "executable": null, "removes": null, "stdin": null, "stdin_add_newline": true, "strip_empty_ends": true, "warn": true}}, "item": {"backing_store": "rhel-8.2-x86_64-kvm.qcow2", "bmcport": 6233, "cdrom": "rhel-cloud-init.iso", "disk_size": 107374182400, "mac": "0c:1f:0d:11:00", "memory": 6291456, "name": "undercloud", "nics": {"RHOSPVirtLab_ctlplane": "", "RHOSPVirtLab_management": "192.168.250.10"}, "profile": "undercloud", "title": "RHOSPVirtLab Undercloud", "vcpus": 2}, "rc": 0, "start": "2021-12-08 13:51:21.755357", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}, "msg": "non-zero return code", "rc": 1, "start": "2021-12-08 13:51:23.613566", "stderr": "Service 'org.kde.klipper' does not exist.\nTraceback (most recent call last):\n  File \"/usr/bin/vbmc\", line 6, in <module>\n    from virtualbmc.cmd.vbmc import main\n  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>\n    from cliff.app import App\n  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>\n    import cmd2\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>\n    from .cmd2 import Cmd\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>\n    from .clipboard import (\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>\n    _ = pyperclip.paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste\n    return paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper\n    assert len(clipboardContents) > 0\nAssertionError", "stderr_lines": ["Service 'org.kde.klipper' does not exist.", "Traceback (most recent call last):", "  File \"/usr/bin/vbmc\", line 6, in <module>", "    from virtualbmc.cmd.vbmc import main", "  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>", "    from cliff.app import App", "  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>", "    import cmd2", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>", "    from .cmd2 import Cmd", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>", "    from .clipboard import (", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>", "    _ = pyperclip.paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste", "    return paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper", "    assert len(clipboardContents) > 0", "AssertionError"], "stdout": "", "stdout_lines": []}
-failed: [workstation] (item={'cmd': "vbmc list 2>/dev/null | awk '/controller0/ {print $4,$8}'", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2021-12-08 13:51:22.221169', 'end': '2021-12-08 13:51:22.525946', 'delta': '0:00:00.304777', 'changed': False, 'invocation': {'module_args': {'_raw_params': "vbmc list 2>/dev/null | awk '/controller0/ {print $4,$8}'", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'name': 'controller0', 'title': 'RHOSPVirtLab Controller 0', 'profile': 'control', 'memory': 8388608, 'vcpus': 2, 'bmcport': 6230, 'mac': '0c:1f:0d:11:01', 'disk_size': 53687091200, 'backing_store': '', 'cdrom': '', 'nics': {'RHOSPVirtLab_ctlplane': '', 'RHOSPVirtLab_storage': '', 'RHOSPVirtLab_storage_mgmt': '', 'RHOSPVirtLab_internal_api': '', 'RHOSPVirtLab_tenant': '', 'RHOSPVirtLab_external': ''}}, 'ansible_loop_var': 'item'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["vbmc", "add", "--username", "admin", "--password", "admin", "--address", "192.168.250.1", "--port", "6230", "controller0"], "delta": "0:00:00.311453", "end": "2021-12-08 13:51:24.388092", "item": {"ansible_loop_var": "item", "changed": false, "cmd": "vbmc list 2>/dev/null | awk '/controller0/ {print $4,$8}'", "delta": "0:00:00.304777", "end": "2021-12-08 13:51:22.525946", "failed": false, "invocation": {"module_args": {"_raw_params": "vbmc list 2>/dev/null | awk '/controller0/ {print $4,$8}'", "_uses_shell": true, "argv": null, "chdir": null, "creates": null, "executable": null, "removes": null, "stdin": null, "stdin_add_newline": true, "strip_empty_ends": true, "warn": true}}, "item": {"backing_store": "", "bmcport": 6230, "cdrom": "", "disk_size": 53687091200, "mac": "0c:1f:0d:11:01", "memory": 8388608, "name": "controller0", "nics": {"RHOSPVirtLab_ctlplane": "", "RHOSPVirtLab_external": "", "RHOSPVirtLab_internal_api": "", "RHOSPVirtLab_storage": "", "RHOSPVirtLab_storage_mgmt": "", "RHOSPVirtLab_tenant": ""}, "profile": "control", "title": "RHOSPVirtLab Controller 0", "vcpus": 2}, "rc": 0, "start": "2021-12-08 13:51:22.221169", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}, "msg": "non-zero return code", "rc": 1, "start": "2021-12-08 13:51:24.076639", "stderr": "Service 'org.kde.klipper' does not exist.\nTraceback (most recent call last):\n  File \"/usr/bin/vbmc\", line 6, in <module>\n    from virtualbmc.cmd.vbmc import main\n  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>\n    from cliff.app import App\n  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>\n    import cmd2\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>\n    from .cmd2 import Cmd\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>\n    from .clipboard import (\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>\n    _ = pyperclip.paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste\n    return paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper\n    assert len(clipboardContents) > 0\nAssertionError", "stderr_lines": ["Service 'org.kde.klipper' does not exist.", "Traceback (most recent call last):", "  File \"/usr/bin/vbmc\", line 6, in <module>", "    from virtualbmc.cmd.vbmc import main", "  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>", "    from cliff.app import App", "  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>", "    import cmd2", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>", "    from .cmd2 import Cmd", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>", "    from .clipboard import (", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>", "    _ = pyperclip.paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste", "    return paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper", "    assert len(clipboardContents) > 0", "AssertionError"], "stdout": "", "stdout_lines": []}
-failed: [workstation] (item={'cmd': "vbmc list 2>/dev/null | awk '/compute0/ {print $4,$8}'", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2021-12-08 13:51:22.668134', 'end': '2021-12-08 13:51:22.958017', 'delta': '0:00:00.289883', 'changed': False, 'invocation': {'module_args': {'_raw_params': "vbmc list 2>/dev/null | awk '/compute0/ {print $4,$8}'", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'name': 'compute0', 'title': 'RHOSPVirtLab Compute 0', 'profile': 'compute', 'memory': 6291456, 'vcpus': 4, 'bmcport': 6231, 'mac': '0c:1f:0d:11:02', 'disk_size': 53687091200, 'backing_store': '', 'cdrom': '', 'nics': {'RHOSPVirtLab_ctlplane': '', 'RHOSPVirtLab_storage': '', 'RHOSPVirtLab_storage_mgmt': '', 'RHOSPVirtLab_internal_api': '', 'RHOSPVirtLab_tenant': '', 'RHOSPVirtLab_external': ''}}, 'ansible_loop_var': 'item'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["vbmc", "add", "--username", "admin", "--password", "admin", "--address", "192.168.250.1", "--port", "6231", "compute0"], "delta": "0:00:00.318383", "end": "2021-12-08 13:51:24.859400", "item": {"ansible_loop_var": "item", "changed": false, "cmd": "vbmc list 2>/dev/null | awk '/compute0/ {print $4,$8}'", "delta": "0:00:00.289883", "end": "2021-12-08 13:51:22.958017", "failed": false, "invocation": {"module_args": {"_raw_params": "vbmc list 2>/dev/null | awk '/compute0/ {print $4,$8}'", "_uses_shell": true, "argv": null, "chdir": null, "creates": null, "executable": null, "removes": null, "stdin": null, "stdin_add_newline": true, "strip_empty_ends": true, "warn": true}}, "item": {"backing_store": "", "bmcport": 6231, "cdrom": "", "disk_size": 53687091200, "mac": "0c:1f:0d:11:02", "memory": 6291456, "name": "compute0", "nics": {"RHOSPVirtLab_ctlplane": "", "RHOSPVirtLab_external": "", "RHOSPVirtLab_internal_api": "", "RHOSPVirtLab_storage": "", "RHOSPVirtLab_storage_mgmt": "", "RHOSPVirtLab_tenant": ""}, "profile": "compute", "title": "RHOSPVirtLab Compute 0", "vcpus": 4}, "rc": 0, "start": "2021-12-08 13:51:22.668134", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}, "msg": "non-zero return code", "rc": 1, "start": "2021-12-08 13:51:24.541017", "stderr": "Service 'org.kde.klipper' does not exist.\nTraceback (most recent call last):\n  File \"/usr/bin/vbmc\", line 6, in <module>\n    from virtualbmc.cmd.vbmc import main\n  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>\n    from cliff.app import App\n  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>\n    import cmd2\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>\n    from .cmd2 import Cmd\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>\n    from .clipboard import (\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>\n    _ = pyperclip.paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste\n    return paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper\n    assert len(clipboardContents) > 0\nAssertionError", "stderr_lines": ["Service 'org.kde.klipper' does not exist.", "Traceback (most recent call last):", "  File \"/usr/bin/vbmc\", line 6, in <module>", "    from virtualbmc.cmd.vbmc import main", "  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>", "    from cliff.app import App", "  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>", "    import cmd2", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>", "    from .cmd2 import Cmd", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>", "    from .clipboard import (", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>", "    _ = pyperclip.paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste", "    return paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper", "    assert len(clipboardContents) > 0", "AssertionError"], "stdout": "", "stdout_lines": []}
-failed: [workstation] (item={'cmd': "vbmc list 2>/dev/null | awk '/compute1/ {print $4,$8}'", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2021-12-08 13:51:23.105613', 'end': '2021-12-08 13:51:23.415454', 'delta': '0:00:00.309841', 'changed': False, 'invocation': {'module_args': {'_raw_params': "vbmc list 2>/dev/null | awk '/compute1/ {print $4,$8}'", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'name': 'compute1', 'title': 'RHOSPVirtLab Compute 1', 'profile': 'compute', 'memory': 6291456, 'vcpus': 4, 'bmcport': 6232, 'mac': '0c:1f:0d:11:03', 'disk_size': 53687091200, 'backing_store': '', 'cdrom': '', 'nics': {'RHOSPVirtLab_ctlplane': '', 'RHOSPVirtLab_storage': '', 'RHOSPVirtLab_storage_mgmt': '', 'RHOSPVirtLab_internal_api': '', 'RHOSPVirtLab_tenant': '', 'RHOSPVirtLab_external': ''}}, 'ansible_loop_var': 'item'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["vbmc", "add", "--username", "admin", "--password", "admin", "--address", "192.168.250.1", "--port", "6232", "compute1"], "delta": "0:00:00.299091", "end": "2021-12-08 13:51:25.312021", "item": {"ansible_loop_var": "item", "changed": false, "cmd": "vbmc list 2>/dev/null | awk '/compute1/ {print $4,$8}'", "delta": "0:00:00.309841", "end": "2021-12-08 13:51:23.415454", "failed": false, "invocation": {"module_args": {"_raw_params": "vbmc list 2>/dev/null | awk '/compute1/ {print $4,$8}'", "_uses_shell": true, "argv": null, "chdir": null, "creates": null, "executable": null, "removes": null, "stdin": null, "stdin_add_newline": true, "strip_empty_ends": true, "warn": true}}, "item": {"backing_store": "", "bmcport": 6232, "cdrom": "", "disk_size": 53687091200, "mac": "0c:1f:0d:11:03", "memory": 6291456, "name": "compute1", "nics": {"RHOSPVirtLab_ctlplane": "", "RHOSPVirtLab_external": "", "RHOSPVirtLab_internal_api": "", "RHOSPVirtLab_storage": "", "RHOSPVirtLab_storage_mgmt": "", "RHOSPVirtLab_tenant": ""}, "profile": "compute", "title": "RHOSPVirtLab Compute 1", "vcpus": 4}, "rc": 0, "start": "2021-12-08 13:51:23.105613", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}, "msg": "non-zero return code", "rc": 1, "start": "2021-12-08 13:51:25.012930", "stderr": "Service 'org.kde.klipper' does not exist.\nTraceback (most recent call last):\n  File \"/usr/bin/vbmc\", line 6, in <module>\n    from virtualbmc.cmd.vbmc import main\n  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>\n    from cliff.app import App\n  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>\n    import cmd2\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>\n    from .cmd2 import Cmd\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>\n    from .clipboard import (\n  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>\n    _ = pyperclip.paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste\n    return paste()\n  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper\n    assert len(clipboardContents) > 0\nAssertionError", "stderr_lines": ["Service 'org.kde.klipper' does not exist.", "Traceback (most recent call last):", "  File \"/usr/bin/vbmc\", line 6, in <module>", "    from virtualbmc.cmd.vbmc import main", "  File \"/usr/lib/python3.9/site-packages/virtualbmc/cmd/vbmc.py\", line 17, in <module>", "    from cliff.app import App", "  File \"/usr/local/lib/python3.9/site-packages/cliff/app.py\", line 23, in <module>", "    import cmd2", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/__init__.py\", line 55, in <module>", "    from .cmd2 import Cmd", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/cmd2.py\", line 85, in <module>", "    from .clipboard import (", "  File \"/usr/local/lib/python3.9/site-packages/cmd2/clipboard.py\", line 19, in <module>", "    _ = pyperclip.paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 681, in lazy_load_stub_paste", "    return paste()", "  File \"/usr/local/lib/python3.9/site-packages/pyperclip/__init__.py\", line 301, in paste_klipper", "    assert len(clipboardContents) > 0", "AssertionError"], "stdout": "", "stdout_lines": []}
+The user from which you will execute the lab needs to have `sudo` **permissions enabled with no password**.
 
-PLAY RECAP ************************************************************************************************************************
-workstation                : ok=22   changed=9    unreachable=0    failed=1    skipped=7    rescued=0    ignored=0  
+Also needs to be part of the `libvirt` and the `kvm` groups. To add it to those groups execute:
+
+```bash
+sudo usermod -aG libvirt $USERNAME
+sudo usermod -aG kvm $USERNAME
 ```
+
+After that you need to logout and login again for the changes to take effect.
 
 ### Install requirements
 
