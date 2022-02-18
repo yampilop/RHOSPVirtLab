@@ -1,6 +1,12 @@
 ---
 # tasks file for RHOSP-virt-infra
 
+- name: Ensure the home directory has execution permissions
+  file:
+    path: '~/'
+    state: directory
+    mode: 'g=x,o=x'
+
 - name: Ensure the ssh directory exists
   file:
     path: ~/.ssh

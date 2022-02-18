@@ -22,7 +22,7 @@
   community.libvirt.virt_pool:
     state: active
     name: "{{ item }}"
-  when: ansible_libvirt_pools[item]['status'] != 'active'
+  when: (ansible_libvirt_pools[item] is defined) and (ansible_libvirt_pools[item]['status'] != 'active')
   loop:
     - RHOSPVirtLab_storage
   become: yes
@@ -31,7 +31,7 @@
   community.libvirt.virt_pool:
     autostart: yes
     name: "{{ item }}"
-  when: ansible_libvirt_pools[item]['autostart'] != 'yes'
+  when: (ansible_libvirt_pools[item] is defined) and (ansible_libvirt_pools[item]['autostart'] != 'yes')
   loop:
     - RHOSPVirtLab_storage
   become: yes
@@ -60,8 +60,17 @@
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --format qcow2"
   when: not item.stat.exists
   loop: "{{ disk_file.results }}"
+  become: yes
+
+- name: STORAGE - Set permissions to disk files
+  file:
+    path: "{{ playbook_dir }}/storage/{{ item.name }}_root.qcow2"
+    mode: "777"
+  loop: "{{ vms }}"
+  become: yes
 
 - name: Prepare backing stored disk files and resize root partition
   command: "virt-resize --expand /dev/sda3 storage/{{ item.item.backing_store }} storage/{{ item.item.name }}_root.qcow2"
   when: (not item.stat.exists) and (item.item.backing_store != '')
   loop: "{{ disk_file.results }}"
+  become: yes
