@@ -1,3 +1,0 @@
----
-- name: Local clean
-  import_playbook: 00_local_clean.yml
