@@ -19,6 +19,6 @@
 
 - name: STORAGE - Delete the disk file
   file:
-    path: "{{ playbook_dir }}/storage/{{ item.name }}_root.qcow2"
+    path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
     state: absent
   loop: "{{ vms }}"

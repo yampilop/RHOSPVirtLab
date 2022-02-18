@@ -1,2 +1,4 @@
 ---
 # vars file for RHOSP-virt-infra
+
+pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'

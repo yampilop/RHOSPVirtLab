@@ -34,11 +34,11 @@
   <devices>
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2"/>
-      <source file="{{ playbook_dir }}/storage/{{ item.name }}_root.qcow2"/>
+      <source file="{{ pool_location }}/{{ item.name }}_root.qcow2"/>
 {% if item.backing_store != '' %}
       <backingStore type="file">
         <format type="qcow2"/>
-        <source file="{{ playbook_dir }}/storage/{{ item.backing_store }}"/>
+        <source file="{{ pool_location }}/{{ item.backing_store }}"/>
       </backingStore>
 {% endif %}
       <target dev="sda" bus="sata"/>
@@ -46,7 +46,7 @@
 {% if item.cdrom != '' %}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
-      <source file="{{ playbook_dir }}/storage/{{ item.cdrom }}"/>
+      <source file="{{ pool_location }}/{{ item.cdrom }}"/>
       <target dev="sdb" bus="sata"/>
       <readonly/>
       <address type="drive" controller="0" bus="0" target="0" unit="1"/>

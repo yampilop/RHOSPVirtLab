@@ -1,12 +1,6 @@
 ---
 # tasks file for RHOSP-virt-infra
 
-- name: Ensure the home directory has execution permissions
-  file:
-    path: '~/'
-    state: directory
-    mode: 'g=x,o=x'
-
 - name: Ensure the ssh directory exists
   file:
     path: ~/.ssh
@@ -45,11 +39,11 @@
       - kvm
     append: yes
 
-- name: Ensure libvirt service is enabled and running
+- name: Ensure libvirt socket is enabled and running
   systemd:
-    name: libvirtd.service
+    name: libvirtd.socket
     state: started
-    enabled: true
+    enabled: yes
   become: yes
 
 - name: Install virtualbmc from pip
@@ -75,7 +69,7 @@
   service:
     name: vbmcd
     state: started
-    enabled: true
+    enabled: yes
   become: yes
 
 - name: Clean VirtualBMC

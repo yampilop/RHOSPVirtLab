@@ -1,22 +1,22 @@
 - name: VIRTUALBMC - Get node states
-  shell: "vbmc list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
+  shell: "/usr/local/bin/vbmc list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
   register: vbmc_status
   loop: "{{ vms }}"
   changed_when: False
 
 - name: VIRTUALBMC - Ensure node exists
-  command: "vbmc add --username admin --password admin --address 192.168.250.1 --port {{ item.item.bmcport }} {{ item.item.name }}"
+  command: "/usr/local/bin/vbmc add --username admin --password admin --address 192.168.250.1 --port {{ item.item.bmcport }} {{ item.item.name }}"
   when: not item.stdout
   loop: "{{ vbmc_status.results }}"
 
 - name: VIRTUALBMC - Get node states again
-  shell: "vbmc list 2>/dev/null | grep running | awk '/{{ item.name }}/ {print $4,$8}'"
+  shell: "/usr/local/bin/vbmc list 2>/dev/null | grep running | awk '/{{ item.name }}/ {print $4,$8}'"
   register: vbmc_running
   loop: "{{ vms }}"
   changed_when: False
 
 - name: VIRTUALBMC - Start node
-  command: "vbmc start {{ item.item.name }}"
+  command: "/usr/local/bin/vbmc start {{ item.item.name }}"
   when: not item.stdout
   loop: "{{ vbmc_running.results }}"
 

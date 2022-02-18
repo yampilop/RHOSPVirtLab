@@ -51,6 +51,8 @@ Clone the repository and enter the directory.
 ```bash
 git clone https://github.com/yampilop/RHOSPVirtLab.git
 cd RHOSPVirtLab
+git fetch
+git switch rhel-hypervisor
 ```
 
 ## Initial configurations
@@ -69,18 +71,6 @@ hypervisor | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
-```
-
-### Download the RHEL8.4 QCOW2 image and custom ISO
-
-The storage from `undercloud` node will be created based on the **Red Hat Enterprise Linux 8.4 Update KVM Guest Image** ([rhel-8.4-x86_64-kvm.qcow2](https://access.redhat.com/downloads/content/479/ver=/rhel---8/8.4/x86_64/product-software)):
-
-![QCOW2 image](images/rhel-8.4-x86_64-kvm.png)
-
-Right click the "Download now" button and copy the link. Then download it and place it in storage folder:
-
-```bash
-wget "<COPIED_LINK>" -O storage/rhel-8.4-x86_64-kvm.qcow2
 ```
 
 ### Install requirements
@@ -119,6 +109,7 @@ ansible-playbook --ask-vault-pass playbook.yml
 
 The playbook sets up the following environment:
 
+// TODO UPDATE
 ![Overview](images/overview.png)
 
 ![Network diagram](images/network_diagram.png)

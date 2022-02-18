@@ -1,8 +1,9 @@
 - name: STORAGE - Create storage directory
   file:
-    path: "{{ playbook_dir }}/storage"
+    path: "{{ pool_location }}"
     state: directory
     mode: '0777'
+  become: yes
 
 - name: STORAGE - Define the pool from the template
   community.libvirt.virt_pool:
@@ -36,15 +37,31 @@
     - RHOSPVirtLab_storage
   become: yes
 
+- name: STORAGE - Copy rhel-cloud-init.iso to the pool location
+  template:
+    src: "rhel-cloud-init.iso"
+    dest: "{{ pool_location }}/rhel-cloud-init.iso"
+    mode: "0777"
+    owner: root
+    group: root
+
+- name: STORAGE - Download the rhel base image
+  get_url:
+    url: http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2
+    dest: "{{ pool_location }}/rhel-8.4-x86_64-kvm.qcow2"
+    mode: "0777"
+    owner: root
+    group: root
+
 - name: STORAGE - Check if the needed image files exist
   stat:
-    path: "{{ playbook_dir }}/storage/{{ item }}"
+    path: "{{ pool_location }}/{{ item }}"
   register: files_output
   loop:
     - rhel-8.4-x86_64-kvm.qcow2
     - rhel-cloud-init.iso
 
-- name: Fail when any of the files does not exist
+- name: STORAGE - Fail when any of the files does not exist
   fail:
     msg: "{{ item.item }} does not exist"
   when: item.stat.exists == false
@@ -52,11 +69,11 @@
 
 - name: STORAGE - Check if the disk file exists
   stat:
-    path: "{{ playbook_dir }}/storage/{{ item.name }}_root.qcow2"
+    path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
   register: disk_file
   loop: "{{ vms }}"
 
-- name: Create disk file
+- name: STORAGE - Create disk file
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --format qcow2"
   when: not item.stat.exists
   loop: "{{ disk_file.results }}"
@@ -64,13 +81,13 @@
 
 - name: STORAGE - Set permissions to disk files
   file:
-    path: "{{ playbook_dir }}/storage/{{ item.name }}_root.qcow2"
+    path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
     mode: "777"
   loop: "{{ vms }}"
   become: yes
 
 - name: Prepare backing stored disk files and resize root partition
-  command: "virt-resize --expand /dev/sda3 storage/{{ item.item.backing_store }} storage/{{ item.item.name }}_root.qcow2"
+  command: "virt-resize --expand /dev/sda3 {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
   when: (not item.stat.exists) and (item.item.backing_store != '')
   loop: "{{ disk_file.results }}"
   become: yes
