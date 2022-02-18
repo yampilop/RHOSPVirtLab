@@ -6,7 +6,7 @@
   community.libvirt.virt_net:
     command: define
     name: "{{ item.name }}"
-    xml: '{{ lookup("template", "templates/network.xml.j2") }}'
+    xml: '{{ lookup("template", "network.xml.j2") }}'
   when: ansible_libvirt_networks[item.name] is not defined
   loop: "{{ networks }}"
   become: yes

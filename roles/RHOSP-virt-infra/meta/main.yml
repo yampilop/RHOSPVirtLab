@@ -1,0 +1,18 @@
+galaxy_info:
+  role_name: RHOSP-virt-infra
+  description: Virtual Lab infrastructure for Red Hat Openstack Platform
+  author: Juan Pablo Marti
+  company: Red Hat, Inc.
+  license: license (GPL-2.0-or-later, MIT, etc)
+  min_ansible_version: 2.9
+
+  platforms:
+    - name: Red Hat Enterprise Linux
+      versions:
+      - 8.4
+
+  galaxy_tags:
+    - rhel
+    - libvirt
+
+dependencies: []

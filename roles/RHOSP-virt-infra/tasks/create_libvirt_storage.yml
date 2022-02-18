@@ -8,7 +8,7 @@
   community.libvirt.virt_pool:
     command: define
     name: "{{ item }}"
-    xml: '{{ lookup("template", "templates/{{ item }}.xml.j2") }}'
+    xml: '{{ lookup("template", "{{ item }}.xml.j2") }}'
   when: ansible_libvirt_pools[item] is not defined
   loop:
     - RHOSPVirtLab_storage

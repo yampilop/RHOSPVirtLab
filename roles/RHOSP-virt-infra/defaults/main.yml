@@ -1,0 +1,4 @@
+---
+# defaults file for RHOSP-virt-infra
+
+cleanup: False

@@ -1,0 +1,19 @@
+galaxy_info:
+  role_name: RHOSP-undercloud
+  description: Red Hat Openstack Platform preparation role
+  author: Juan Pablo Marti
+  company: Red Hat, Inc.
+  license: license (GPL-2.0-or-later, MIT, etc)
+  min_ansible_version: 2.9
+
+  platforms:
+    - name: Red Hat Enterprise Linux
+      versions:
+      - 8.4
+
+  galaxy_tags:
+    - openstack
+    - rhel
+
+dependencies:
+  - geerlingguy.swap

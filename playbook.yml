@@ -1,12 +1,19 @@
 ---
-- name: Local configuration
-  import_playbook: 01_local_installation.yml
+- name: Infrastructure configuration
+  hosts: infrastructure
+  vars_files:
+    - vars/vms.yml
+    - vars/networks.yml
+  become: no
+  roles:
+    - role: RHOSP-virt-infra
+      vars:
+        cleanup: False # Set to True if you want to clean up the lab and start it from scratch
 
-- name: Undercloud configuration
-  import_playbook: 02_undercloud_configuration.yml
-
-- name: Undercloud prepare installation
-  import_playbook: 03_undercloud_prepare_installation.yml
-
-- name: Overcloud prepare deploy
-  import_playbook: 04_overcloud_prepare_deploy.yml
+#- name: Openstack configuration
+#  hosts: openstack
+#  vars_files:
+#    - vars/vms.yml
+#    - vars/networks.yml
+#  roles:
+#    - role: RHOSP-undercloud

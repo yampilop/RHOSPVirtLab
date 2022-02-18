@@ -23,17 +23,19 @@ sudo subscription-manager release --set=8.4
 sudo subscription-manager repos --disable=*
 sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms \
 --enable=rhel-8-for-x86_64-appstream-eus-rpms \
---enable=ansible-2.9-for-rhel-8-x86_64-rpms \
---enable=advanced-virt-for-rhel-8-x86_64-rpms
+--enable=ansible-2.9-for-rhel-8-x86_64-rpms
 sudo dnf update -y
 sudo reboot
 ```
+
+### Local user configuration
+
+The user from which you will execute the lab needs to have `sudo` **permissions enabled with no password**.
 
 ## Install required and useful packages
 
 ```bash
 sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete
-sudo dnf -y module install python36
 ```
 
 ## Pull the repo
@@ -56,11 +58,11 @@ cd RHOSPVirtLab
 ### Test user and ansible installation
 
 ```bash
-ansible local -m ping
+ansible infrastructure -m ping
 ```
 
 ```
-workstation | SUCCESS => {
+hypervisor | SUCCESS => {
     "ansible_facts": {
         "discovered_interpreter_python": "/usr/libexec/platform-python"
     },
@@ -80,19 +82,6 @@ Right click the "Download now" button and copy the link. Then download it and pl
 ```bash
 wget "<COPIED_LINK>" -O storage/rhel-8.4-x86_64-kvm.qcow2
 ```
-
-### Local user configuration
-
-The user from which you will execute the lab needs to have `sudo` **permissions enabled with no password**.
-
-Also needs to be part of the `libvirt` and the `kvm` groups. To add it to those groups execute:
-
-```bash
-sudo usermod -aG libvirt $USERNAME
-sudo usermod -aG kvm $USERNAME
-```
-
-After that you need to logout and login again for the changes to take effect.
 
 ### Install requirements
 
@@ -118,11 +107,7 @@ rh_password: '<PASSWORD>'
 
 ## Clean the installation
 
-To start/restart the installation from scratch, a playbook is provided to clean everything in the local machine. Every progress in the lab will be erased. Please **be careful** with this command:
-
-```bash
-ansible-playbook clean.yml
-```
+To start/restart the installation from scratch, you need to edit the playbook.yml file and set `cleanup: True` instead of `False`.
 
 ## Execute the Ansible Playbook
 

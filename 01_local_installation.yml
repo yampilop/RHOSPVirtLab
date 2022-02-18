@@ -1,6 +1,6 @@
 ---
 - name: Local configuration for the Lab to work
-  hosts: local
+  hosts: infrastructure
   vars_files:
     - vars/vms.yml
     - vars/networks.yml

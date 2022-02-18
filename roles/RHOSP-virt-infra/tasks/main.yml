@@ -1,0 +1,102 @@
+---
+# tasks file for RHOSP-virt-infra
+
+- name: Ensure the ssh directory exists
+  file:
+    path: ~/.ssh
+    state: directory
+
+- name: Create ssh key
+  openssh_keypair:
+    path: ~/.ssh/id_rsa
+
+- name: Ensure packages are installed
+  dnf:
+    name:
+      - libvirt
+      - libvirt-bash-completion
+      - libguestfs-tools
+      - ipmitool
+      - '@python36'
+      - python3-lxml
+      - python3-libvirt
+    state: present
+  become: yes
+
+- name: Ensure the needed groups exist
+  group:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - libvirt
+    - kvm
+
+- name: Ensure the user belongs to the proper groups
+  user:
+    name: "{{ ansible_user }}"
+    groups:
+      - libvirt
+      - kvm
+    append: yes
+
+- name: Ensure libvirt service is enabled and running
+  systemd:
+    name: libvirtd.service
+    state: started
+    enabled: true
+  become: yes
+
+- name: Install virtualbmc from pip
+  pip:
+    name:
+      - virtualbmc
+
+- name: VIRTUALBMC - Create VirtualBMC systemd unit
+  template:
+    src: vbmcd.service
+    dest: /etc/systemd/system/vbmcd.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: VIRTUALBMC - Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: VIRTUALBMC - Enable and start vbmcd service
+  service:
+    name: vbmcd
+    state: started
+    enabled: true
+  become: yes
+
+- name: Clean VirtualBMC
+  import_tasks: clean_virtualbmc.yml
+  when: cleanup
+
+- name: Clean libvirt domains
+  import_tasks: clean_libvirt_domains.yml
+  when: cleanup
+
+- name: Clean libvirt storage pools and images
+  import_tasks: clean_libvirt_storage.yml
+  when: cleanup
+
+- name: Clean libvirt networks
+  import_tasks: clean_libvirt_networks.yml
+  when: cleanup
+
+- name: Configure libvirt networks
+  import_tasks: create_libvirt_networks.yml
+
+- name: Configure libvirt storage pools and images
+  import_tasks: create_libvirt_storage.yml
+
+- name: Configure libvirt domains
+  import_tasks: create_libvirt_domains.yml
+
+- name: Install and configure VirtualBMC
+  import_tasks: create_virtualbmc.yml
+

@@ -1,8 +1,0 @@
-- name: Ensure the directory exists
-  file:
-    path: ~/.ssh
-    state: directory
-
-- name: SSHKEY - Create ssh key
-  openssh_keypair:
-    path: ~/.ssh/id_rsa
