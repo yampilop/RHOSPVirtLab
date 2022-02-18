@@ -1,0 +1,26 @@
+---
+physical:
+  - name: compute2
+    title: 'RHOSPVirtLab Physical Compute 2'
+    profile: 'compute'
+    memory: 6291456
+    cpus: 4
+    pm_type: "ipmi"
+    pm_user: "admin"
+    pm_password: "admin"
+    pm_addr: "192.168.122.1"
+    pm_port: "6230"
+    mac: '0c:1f:0d:13:00'
+    disk_size: 53687091200
+  - name: compute3
+    title: 'RHOSPVirtLab Physical Compute 3'
+    profile: 'compute'
+    memory: 6291456
+    cpus: 4
+    pm_type: "ipmi"
+    pm_user: "admin"
+    pm_password: "admin"
+    pm_addr: "192.168.122.1"
+    pm_port: "6231"
+    mac: '0c:1f:0d:13:00'
+    disk_size: 53687091200

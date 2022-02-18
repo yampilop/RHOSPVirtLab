@@ -8,9 +8,9 @@ This document assumes that you run a **RHEL 8.4** installation in your server. T
 
 Your server must fulfill the following **minimum requirements**:
 
-  * CPU: 12 cores               //TODO
-  * RAM: 128GB                  //TODO
-  * Disk: 250GB of free space   //TODO
+  * CPU: 16 cores
+  * RAM: 64GB
+  * Disk: 350GB of free space
 
 Your server needs to be registered and attached to a valid pool. To do that:
 
@@ -109,7 +109,6 @@ ansible-playbook --ask-vault-pass playbook.yml
 
 The playbook sets up the following environment:
 
-// TODO UPDATE
 ![Overview](images/overview.png)
 
 ![Network diagram](images/network_diagram.png)
@@ -118,8 +117,9 @@ The playbook sets up the following environment:
 
 If you want to customize the default environment created by the playbook, you need to edit the files:
 
-- vars/networks.yml
-- vars/vms.yml
+- vars/networks.yml (The virtual networks and their connection to the physical interfaces of the hypervisor) //TODO
+- vars/vms.yml (The VMs to be created in the hypervisor)
+- vars/physical.yml (The physical nodes to be added as baremetal nodes in the undercloud) //TODO
 
 ## Last steps
 

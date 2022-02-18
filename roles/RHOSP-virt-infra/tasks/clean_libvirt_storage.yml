@@ -17,6 +17,10 @@
   loop:
     - RHOSPVirtLab_storage
 
+- name: STORAGE - Gather facts about libvirt storage pools
+  community.libvirt.virt_pool:
+    command: facts
+
 - name: STORAGE - Delete the disk file
   file:
     path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
