@@ -1,5 +1,5 @@
 [infrastructure]
-hypervisor ansible_host=localhost ansible_connection=local ansible_user=ansible ansible_become=yes
+hypervisor ansible_host=localhost ansible_connection=local ansible_become=yes
 
 [openstack]
-undercloud ansible_host=192.168.250.10 ansible_user=stack ansible_password=redhat ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
+undercloud ansible_host=192.168.250.10 ansible_user=stack ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'

@@ -37,10 +37,23 @@
     - RHOSPVirtLab_storage
   become: yes
 
-- name: STORAGE - Copy rhel-cloud-init.iso to the pool location
+- name: STORAGE - Render user-data
   template:
-    src: "rhel-cloud-init.iso"
-    dest: "{{ pool_location }}/rhel-cloud-init.iso"
+    src: "user-data.j2"
+    dest: "/home/{{ ansible_user }}/user-data"
+
+- name: STORAGE - Copy meta-data
+  copy:
+    src: "templates/meta-data"
+    dest: "/home/{{ ansible_user }}/meta-data"
+
+- name: STORAGE - Create undercloud-init.iso image with user-data and meta-data
+  command: "genisoimage -output /home/{{ ansible_user }}/undercloud-init.iso -volid cidata -joliet -rock /home/{{ ansible_user }}/user-data /home/{{ ansible_user }}/meta-data"
+
+- name: STORAGE - Copy undercloud-init.iso to the pool location
+  copy:
+    src: "/home/{{ ansible_user }}/undercloud-init.iso"
+    dest: "{{ pool_location }}/undercloud-init.iso"
     mode: "0777"
     owner: root
     group: root
@@ -59,7 +72,7 @@
   register: files_output
   loop:
     - rhel-8.4-x86_64-kvm.qcow2
-    - rhel-cloud-init.iso
+    - undercloud-init.iso
 
 - name: STORAGE - Fail when any of the files does not exist
   fail:
@@ -86,7 +99,7 @@
   loop: "{{ vms }}"
   become: yes
 
-- name: Prepare backing stored disk files and resize root partition
+- name: STORAGE - Prepare backing stored disk files and resize root partition
   command: "virt-resize --expand /dev/sda3 {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
   when: (not item.stat.exists) and (item.item.backing_store != '')
   loop: "{{ disk_file.results }}"

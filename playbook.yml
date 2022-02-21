@@ -9,11 +9,12 @@
     - role: RHOSP-virt-infra
       vars:
         cleanup: False # Set to True if you want to clean up the lab and start it from scratch
+        create: True # Set to False if you want not to create the lab resources
 
 #- name: Openstack configuration
 #  hosts: openstack
 #  vars_files:
 #    - vars/vms.yml
-#    - vars/networks.yml
+#    - vars/physical.yml
 #  roles:
 #    - role: RHOSP-undercloud

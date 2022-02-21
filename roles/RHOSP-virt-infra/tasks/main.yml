@@ -3,12 +3,16 @@
 
 - name: Ensure the ssh directory exists
   file:
-    path: ~/.ssh
+    path: "/home/{{ ansible_user }}/.ssh"
     state: directory
 
 - name: Create ssh key
   openssh_keypair:
-    path: ~/.ssh/id_rsa
+    path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+
+- name: Get ssh public key into variable
+  set_fact:
+    ssh_public_key: "{{ lookup('file', '/home/{{ ansible_user }}/.ssh/id_rsa.pub') }}"
 
 - name: Ensure packages are installed
   dnf:
@@ -90,13 +94,26 @@
 
 - name: Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
+  when: create
 
 - name: Configure libvirt storage pools and images
   import_tasks: create_libvirt_storage.yml
+  when: create
 
 - name: Configure libvirt domains
   import_tasks: create_libvirt_domains.yml
+  when: create
 
 - name: Install and configure VirtualBMC
   import_tasks: create_virtualbmc.yml
+  when: create
 
+- name: Bridge hypervisor interfaces to libvirt bridges
+  nmcli:
+    type: bridge-slave
+    conn_name: "{{ item.hypervisor_if }}_bridged_to{{ item.bridge }}"
+    ifname: "{{ item.hypervisor_if }}"
+    master: '{{ item.bridge }}'
+    state: present
+  loop: "{{ networks }}"
+  when: item.hypervisor_if is defined

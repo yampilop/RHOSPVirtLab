@@ -1,26 +1,33 @@
 ---
 networks:
   - name: RHOSPVirtLab_ctlplane
+    bridge: br-ctlplane
     forward: false
     mac_suffix: '00'
     ipv4: false
+    hypervisor_if: eth1
   - name: RHOSPVirtLab_storage
+    bridge: br-storage
     forward: false
     mac_suffix: '01'
     ipv4: false
   - name: RHOSPVirtLab_storage_mgmt
+    bridge: br-storage-mgmt
     forward: false
     mac_suffix: '02'
     ipv4: false
   - name: RHOSPVirtLab_internal_api
+    bridge: br-internal-api
     forward: false
     mac_suffix: '03'
     ipv4: false
   - name: RHOSPVirtLab_tenant
+    bridge: br-tenant
     forward: false
     mac_suffix: '04'
     ipv4: false
   - name: RHOSPVirtLab_external
+    bridge: br-external
     forward: route
     mac_suffix: '05'
     ipv4:
@@ -28,6 +35,7 @@ networks:
       netmask: '255.255.255.0'
       dhcp: false
   - name: RHOSPVirtLab_management
+    bridge: br-management
     forward: nat
     mac_suffix: '0f'
     ipv4:

@@ -5,11 +5,11 @@ vms:
     profile: 'undercloud'
     memory: 6291456
     vcpus: 2
-    bmcport: 6233
+    bmcport: 6230
     mac: '0c:1f:0d:10:00'
     disk_size: 107374182400
     backing_store: 'rhel-8.4-x86_64-kvm.qcow2'
-    cdrom: 'rhel-cloud-init.iso'
+    cdrom: 'undercloud-init.iso'
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
@@ -18,7 +18,7 @@ vms:
     profile: 'control'
     memory: 8388608
     vcpus: 2
-    bmcport: 6230
+    bmcport: 6231
     mac: '0c:1f:0d:11:00'
     disk_size: 53687091200
     backing_store: ''
@@ -35,7 +35,7 @@ vms:
     profile: 'control'
     memory: 8388608
     vcpus: 2
-    bmcport: 6230
+    bmcport: 6232
     mac: '0c:1f:0d:11:01'
     disk_size: 53687091200
     backing_store: ''
@@ -52,7 +52,7 @@ vms:
     profile: 'control'
     memory: 8388608
     vcpus: 2
-    bmcport: 6230
+    bmcport: 6233
     mac: '0c:1f:0d:11:02'
     disk_size: 53687091200
     backing_store: ''
@@ -69,7 +69,7 @@ vms:
     profile: 'compute'
     memory: 6291456
     vcpus: 4
-    bmcport: 6231
+    bmcport: 6234
     mac: '0c:1f:0d:12:00'
     disk_size: 53687091200
     backing_store: ''
@@ -86,7 +86,7 @@ vms:
     profile: 'compute'
     memory: 6291456
     vcpus: 4
-    bmcport: 6232
+    bmcport: 6235
     mac: '0c:1f:0d:12:01'
     disk_size: 53687091200
     backing_store: ''

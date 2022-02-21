@@ -1,0 +1,14 @@
+#cloud-config
+system_info:
+  default_user:
+    name: stack
+users:
+  - name: stack
+    ssh_authorized_keys:
+      - {{ ssh_public_key }}
+chpasswd:
+  list: |
+    root:redhat
+    stack:redhat
+  expire: False
+ssh_pwauth: True

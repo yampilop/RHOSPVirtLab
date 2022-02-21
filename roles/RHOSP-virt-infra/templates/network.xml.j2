@@ -1,5 +1,6 @@
 <network>
   <name>{{ item.name }}</name>
+  <bridge name="{{ item.bridge }}" stp="on" delay="0"/>
 {% if item.forward %}
   <forward mode="{{ item.forward }}">
     {% if item.forward == 'nat' %}

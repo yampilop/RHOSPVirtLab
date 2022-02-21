@@ -1,2 +1,8 @@
 ---
 # handlers file for RHOSP-virt-infra
+
+- name: HANDLER - Clean known_hosts file
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.ssh/known_hosts"
+    regexp: '^undercloud'
+    state: absent

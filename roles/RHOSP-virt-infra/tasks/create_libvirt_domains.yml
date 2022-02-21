@@ -11,6 +11,7 @@
   when: item.name not in all_vms.list_vms
   loop: "{{ vms }}"
   become: yes
+  notify: HANDLER - Clean known_hosts file
 
 - name: DOMAINS - Ensure undercloud domain is running
   community.libvirt.virt:
@@ -18,7 +19,7 @@
     state: running
   become: yes
 
-- name: Add management IPs entries to /etc/hosts on the local machines
+- name: DOMAINS - Add management IPs entries to /etc/hosts on the local machines
   lineinfile:
     path: "/etc/hosts"
     regexp: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
