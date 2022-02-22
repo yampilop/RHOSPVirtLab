@@ -108,12 +108,19 @@
   import_tasks: create_virtualbmc.yml
   when: create
 
+- name: Get bridge interfaces members
+  set_fact:
+    interfaces_reverted: "{{
+        ansible_facts | json_query('@.* | [?device].{key: device, value: interfaces}') | items2dict
+    }}"
+
 - name: Bridge hypervisor interfaces to libvirt bridges
   nmcli:
     type: bridge-slave
-    conn_name: "{{ item.hypervisor_if }}_bridged_to{{ item.bridge }}"
+    conn_name: "{{ item.hypervisor_if }}"
     ifname: "{{ item.hypervisor_if }}"
     master: '{{ item.bridge }}'
+    autoconnect: yes
     state: present
+  when: item.hypervisor_if is defined and ( item.hypervisor_if not in interfaces_reverted[item.bridge] )
   loop: "{{ networks }}"
-  when: item.hypervisor_if is defined

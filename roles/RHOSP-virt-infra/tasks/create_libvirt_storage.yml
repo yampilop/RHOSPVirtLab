@@ -41,14 +41,21 @@
   template:
     src: "user-data.j2"
     dest: "/home/{{ ansible_user }}/user-data"
+  become: no
+  register: user_data
 
 - name: STORAGE - Copy meta-data
   copy:
     src: "templates/meta-data"
     dest: "/home/{{ ansible_user }}/meta-data"
+  become: no
+  register: meta_data
 
 - name: STORAGE - Create undercloud-init.iso image with user-data and meta-data
   command: "genisoimage -output /home/{{ ansible_user }}/undercloud-init.iso -volid cidata -joliet -rock /home/{{ ansible_user }}/user-data /home/{{ ansible_user }}/meta-data"
+  become: no
+  when: user_data.changed or meta_data.changed
+  register: overcloud_init
 
 - name: STORAGE - Copy undercloud-init.iso to the pool location
   copy:
@@ -57,6 +64,7 @@
     mode: "0777"
     owner: root
     group: root
+  when: overcloud_init.changed
 
 - name: STORAGE - Download the rhel base image
   get_url:

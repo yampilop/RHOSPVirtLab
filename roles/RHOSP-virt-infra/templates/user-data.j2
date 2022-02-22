@@ -4,6 +4,8 @@ system_info:
     name: stack
 users:
   - name: stack
+    gecos: OpenStack Admin
+    sudo: ALL=(ALL) NOPASSWD:ALL
     ssh_authorized_keys:
       - {{ ssh_public_key }}
 chpasswd:
