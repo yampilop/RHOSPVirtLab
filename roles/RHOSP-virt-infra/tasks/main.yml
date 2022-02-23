@@ -110,9 +110,7 @@
 
 - name: Get bridge interfaces members
   set_fact:
-    interfaces_reverted: "{{
-        ansible_facts | json_query('@.* | [?device].{key: device, value: interfaces}') | items2dict
-    }}"
+    interfaces_reverted: "{{ ansible_facts | json_query('@.* | [?device].{key: device, value: interfaces}') | items2dict }}"
 
 - name: Bridge hypervisor interfaces to libvirt bridges
   nmcli:
@@ -122,5 +120,5 @@
     master: '{{ item.bridge }}'
     autoconnect: yes
     state: present
-  when: item.hypervisor_if is defined and ( item.hypervisor_if not in interfaces_reverted[item.bridge] )
+  when: ( item.hypervisor_if is defined ) and ( interfaces_reverted[item.bridge] is defined ) and ( item.hypervisor_if not in interfaces_reverted[item.bridge] )
   loop: "{{ networks }}"
