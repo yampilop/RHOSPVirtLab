@@ -1,2 +1,65 @@
 ---
 # defaults file for RHOSP-undercloud
+
+# vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
+vms:
+  - name: undercloud
+    title: 'RHOSPVirtLab Undercloud'
+    profile: 'undercloud'
+    memory: 6291456
+    vcpus: 2
+    bmcport: 6230
+    mac: '0c:1f:0d:10:00'
+    disk_size: 107374182400
+    backing_store: 'rhel-8.4-x86_64-kvm.qcow2'
+    cdrom: 'undercloud-init.iso'
+    nics:
+      RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_management: '192.168.250.10'
+  - name: controller0
+    title: 'RHOSPVirtLab Controller 0'
+    profile: 'control'
+    memory: 8388608
+    vcpus: 2
+    bmcport: 6231
+    mac: '0c:1f:0d:11:00'
+    disk_size: 53687091200
+    backing_store: ''
+    cdrom: ''
+    nics:
+      RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_storage: ''
+      RHOSPVirtLab_storage_mgmt: ''
+      RHOSPVirtLab_internal_api: ''
+      RHOSPVirtLab_tenant: ''
+      RHOSPVirtLab_external: ''
+  - name: compute0
+    title: 'RHOSPVirtLab Compute 0'
+    profile: 'compute'
+    memory: 6291456
+    vcpus: 4
+    bmcport: 6234
+    mac: '0c:1f:0d:12:00'
+    disk_size: 53687091200
+    backing_store: ''
+    cdrom: ''
+    nics:
+      RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_storage: ''
+      RHOSPVirtLab_storage_mgmt: ''
+      RHOSPVirtLab_internal_api: ''
+      RHOSPVirtLab_tenant: ''
+      RHOSPVirtLab_external: ''
+
+# physical is a list to define the physical machines to be connected. The role doesn't define any by default
+physical:
+
+# repositories to be enabled on the undercloud
+repositories:
+  - rhel-8-for-x86_64-baseos-rpms
+  - rhel-8-for-x86_64-appstream-rpms
+  - rhel-8-for-x86_64-highavailability-rpms
+  - ansible-2.9-for-rhel-8-x86_64-rpms
+  - openstack-16.2-for-rhel-8-x86_64-rpms
+  - fast-datapath-for-rhel-8-x86_64-rpms
+  - rhceph-4-tools-for-rhel-8-x86_64-rpms

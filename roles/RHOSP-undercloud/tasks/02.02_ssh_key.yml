@@ -1,6 +1,0 @@
-- name: SSHKEY - Copy the ssh key
-  authorized_key:
-    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-    user: stack
-    state: present
-

@@ -1,7 +1,0 @@
-- name: PACKAGES - Install needed packages
-  yum:
-    name:
-      - python3-tripleoclient
-      - ceph-ansible
-      - rhosp-director-images
-    state: latest

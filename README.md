@@ -21,8 +21,8 @@ sudo subscription-manager list --available --all
 sudo subscription-manager attach --pool=<POOL_ID>
 sudo subscription-manager release --set=8.4
 sudo subscription-manager repos --disable=*
-sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-eus-rpms \
---enable=rhel-8-for-x86_64-appstream-eus-rpms \
+sudo subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms \
+--enable=rhel-8-for-x86_64-appstream-rpms \
 --enable=ansible-2.9-for-rhel-8-x86_64-rpms
 sudo dnf update -y
 sudo reboot
@@ -117,9 +117,9 @@ The playbook sets up the following environment:
 
 If you want to customize the default environment created by the playbook, you need to edit the files:
 
-- vars/networks.yml (The virtual networks and their connection to the physical interfaces of the hypervisor) //TODO
+- vars/networks.yml (The virtual networks and their connection to the physical interfaces of the hypervisor)
 - vars/vms.yml (The VMs to be created in the hypervisor)
-- vars/physical.yml (The physical nodes to be added as baremetal nodes in the undercloud) //TODO
+- vars/physical.yml (The physical nodes to be added as baremetal nodes in the undercloud)
 
 ## Last steps
 

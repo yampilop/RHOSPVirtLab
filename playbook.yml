@@ -5,16 +5,29 @@
     - vars/vms.yml
     - vars/networks.yml
   become: no
+  
   roles:
     - role: RHOSP-virt-infra
       vars:
         cleanup: False # Set to True if you want to clean up the lab and start it from scratch
         create: True # Set to False if you want not to create the lab resources
 
-#- name: Openstack configuration
-#  hosts: openstack
-#  vars_files:
-#    - vars/vms.yml
+- name: Openstack configuration
+  hosts: openstack
+  vars_files:
+    - vault_credentials.yaml
+    - vars/vms.yml
 #    - vars/physical.yml
-#  roles:
-#    - role: RHOSP-undercloud
+  become: no
+  gather_facts: no
+  
+  pre_tasks:
+    - name: Wait for the undercloud to come up
+      wait_for_connection:
+        timeout: 120
+
+    - name: Gathering facts
+      setup:
+  
+  roles:
+    - role: RHOSP-undercloud

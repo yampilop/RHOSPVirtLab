@@ -1,2 +1,129 @@
 ---
 # tasks file for RHOSP-undercloud
+
+- name: Configure swap file on the undercloud
+  include_role:
+    name: geerlingguy.swap
+  vars:
+    swap_file_size_mb: '8192'
+
+- name: HOSTNAME - Change the hostname
+  hostname:
+    name: undercloud.localdomain
+
+- name: Red Hat Subscription management
+  import_tasks: tasks/subscription.yml
+
+- name: REPOSITORIES - Enable the needed repositories only
+  rhsm_repository:
+    name: "{{ repositories }}"
+    purge: yes
+
+- name: MODULES - Disable container-tools module stream rhel8 and enable 3.0
+  copy:
+    dest: /etc/dnf/modules.d/container-tools.module
+    content: |
+      [container-tools]
+      name=container-tools
+      stream=3.0
+      profiles=common
+      state=enabled
+
+- name: SERVICES - Disable and stop cloud-init service
+  service:
+    name: cloud-init
+    state: stopped
+    enabled: false
+
+- name: PACKAGES - Install useful tools
+  yum:
+    name:
+      - vim
+      - wget
+      - bash-completion 
+      - python3-argcomplete
+    state: latest
+
+- name: PACKAGES - Update all packages
+  yum:
+    name: '*'
+    state: latest
+  notify: HANDLER - Reboot the machine
+
+- name: CONFIGFILES - Create directories
+  file:
+    path: "/home/stack/{{ item }}"
+    owner: stack
+    group: stack
+    state: directory
+  loop:
+    - images
+    - templates
+
+- name: CONFIGFILES - Set container images prepare file
+  template:
+    src: containers-prepare-parameter.yaml.j2
+    dest: /home/stack/templates/containers-prepare-parameter.yaml
+    owner: stack
+    group: stack
+
+- name: CONFIGFILES - Set custom undercloud parameters
+  copy:
+    src: templates/custom-undercloud-params.yaml
+    dest: /home/stack/templates/custom-undercloud-params.yaml
+    owner: stack
+    group: stack
+
+- name: CONFIGFILES - Set undercloud configuration file
+  copy:
+    src: templates/undercloud.conf
+    dest: /home/stack/undercloud.conf
+    owner: stack
+    group: stack
+
+- name: PACKAGES - Install needed packages
+  yum:
+    name:
+      - python3-tripleoclient
+      - ceph-ansible
+      - rhosp-director-images
+    state: latest
+
+- name: IMAGES - Unpack director images
+  unarchive:
+    src: "{{ item }}"
+    dest: /home/stack/images/
+    owner: stack
+    group: stack
+    remote_src: yes
+  loop:
+    - /usr/share/rhosp-director-images/overcloud-full-latest-16.2.tar
+    - /usr/share/rhosp-director-images/ironic-python-agent-latest-16.2.tar
+
+- name: TEMPLATES - Prepare nodes file
+  template:
+    src: instackenv.yaml.j2
+    dest: /home/stack/templates/instackenv.yaml
+    owner: stack
+    group: stack
+
+- name: TEMPLATES - Prepare node info file
+  template:
+    src: node-info.yaml.j2
+    dest: /home/stack/templates/node-info.yaml
+    owner: stack
+    group: stack
+
+- name: TEMPLATES - Perpare the custom overcloud parameters template
+  copy:
+    src: templates/custom-overcloud.yaml
+    dest: /home/stack/templates/custom-overcloud.yaml
+    owner: stack
+    group: stack
+
+- name: TEMPLATES - Perpare the custom network data
+  copy:
+    src: templates/network_data.yaml
+    dest: /home/stack/templates/network_data.yaml
+    owner: stack
+    group: stack

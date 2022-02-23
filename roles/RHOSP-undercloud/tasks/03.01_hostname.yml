@@ -1,3 +1,0 @@
-- name: HOSTNAME - Change the hostname
-  hostname:
-    name: undercloud.localdomain

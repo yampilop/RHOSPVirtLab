@@ -1,2 +1,6 @@
 ---
 # handlers file for RHOSP-undercloud
+
+- name: HANDLER - Reboot the machine
+  reboot:
+    reboot_timeout: 120
