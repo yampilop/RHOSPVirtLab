@@ -30,4 +30,8 @@ parameter_defaults:
   ContainerImageRegistryLogin: false
   ContainerImageRegistryCredentials:
     registry.redhat.io:
+{% if rh_serviceaccount and rh_token %}
+      {{ rh_serviceaccount }}: "{{ rh_token }}"
+{% else %}
       {{ rh_username }}: '{{ rh_password }}'
+{% endif %}

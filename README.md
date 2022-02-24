@@ -93,7 +93,13 @@ You will write the credentials in the following format:
 ```yml
 rh_username: '<USERNAME>'
 rh_password: '<PASSWORD>'
+rh_orgid: '<ORG_ID>'
+rh_activationkey: '<ACTIVATION_KEY>'
+rh_serviceaccount: '<SERVICE_ACCOUNT>'
+rh_token: '<TOKEN>'
 ```
+
+`rh_serviceaccount` and `rh_token` are optional to be used in the case a Registry Service Account is created to use with the container registry (in order not to use the credentials in plain text files).
 
 ## Clean the installation
 

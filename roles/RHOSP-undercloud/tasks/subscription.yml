@@ -7,9 +7,10 @@
 - name: SUBSCRIPTION - Register, attach and set release
   redhat_subscription:
     state: present
+    org_id: "{{ rh_orgid }}"
+    activationkey: "{{ rh_activationkey }}"
     username: "{{ rh_username }}"
     password: "{{ rh_password }}"
-    pool: 'Red Hat OpenStack'
     syspurpose:
       role: 'Red Hat Enterprise Linux Server'
       service_level_agreement: 'Self-Support'
