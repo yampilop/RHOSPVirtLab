@@ -26,8 +26,3 @@
     path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
     state: absent
   loop: "{{ vms }}"
-
-- name: STORAGE - Delete undercloud-init.iso
-  file:
-    path: "{{ pool_location }}/undercloud-init.iso"
-    state: absent

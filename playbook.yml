@@ -24,7 +24,7 @@
   pre_tasks:
     - name: Wait for the undercloud to come up
       wait_for_connection:
-        timeout: 120
+        timeout: 60
 
     - name: Gathering facts
       setup:

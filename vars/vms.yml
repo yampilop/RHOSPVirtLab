@@ -3,8 +3,8 @@ vms:
   - name: undercloud
     title: 'RHOSPVirtLab Undercloud'
     profile: 'undercloud'
-    memory: 6291456
-    vcpus: 2
+    memory: 8388608
+    vcpus: 4
     bmcport: 6230
     mac: '0c:1f:0d:10:00'
     disk_size: 107374182400
@@ -67,8 +67,8 @@ vms:
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
     profile: 'compute'
-    memory: 6291456
-    vcpus: 4
+    memory: 31457280
+    vcpus: 10
     bmcport: 6234
     mac: '0c:1f:0d:12:00'
     disk_size: 53687091200
@@ -84,8 +84,8 @@ vms:
   - name: compute1
     title: 'RHOSPVirtLab Compute 1'
     profile: 'compute'
-    memory: 6291456
-    vcpus: 4
+    memory: 31457280
+    vcpus: 10
     bmcport: 6235
     mac: '0c:1f:0d:12:01'
     disk_size: 53687091200
