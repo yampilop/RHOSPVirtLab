@@ -41,19 +41,20 @@
   template:
     src: "user-data.j2"
     dest: "/home/{{ ansible_user }}/user-data"
-  become: no
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   register: user_data
 
 - name: STORAGE - Copy meta-data
   copy:
     src: "templates/meta-data"
     dest: "/home/{{ ansible_user }}/meta-data"
-  become: no
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   register: meta_data
 
 - name: STORAGE - Create undercloud-init.iso image with user-data and meta-data
   command: "genisoimage -output /home/{{ ansible_user }}/undercloud-init.iso -volid cidata -joliet -rock /home/{{ ansible_user }}/user-data /home/{{ ansible_user }}/meta-data"
-  become: no
   when: user_data.changed or meta_data.changed
   register: overcloud_init
 
@@ -64,7 +65,9 @@
     mode: "0777"
     owner: root
     group: root
+  become: yes
   when: overcloud_init.changed
+  register: overcloud_init_pool
 
 - name: STORAGE - Download the rhel base image
   get_url:
@@ -99,6 +102,7 @@
   when: not item.stat.exists
   loop: "{{ disk_file.results }}"
   become: yes
+  notify: HANDLER - Clean known_hosts file
 
 - name: STORAGE - Set permissions to disk files
   file:
@@ -112,3 +116,4 @@
   when: (not item.stat.exists) and (item.item.backing_store != '')
   loop: "{{ disk_file.results }}"
   become: yes
+  notify: HANDLER - Clean known_hosts file

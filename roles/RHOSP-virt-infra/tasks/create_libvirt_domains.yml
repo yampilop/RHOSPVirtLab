@@ -13,11 +13,39 @@
   become: yes
   notify: HANDLER - Clean known_hosts file
 
+- name: DOMAINS - Stop undercloud if undercloud-init.iso changed in order to reboot
+  community.libvirt.virt:
+    name: undercloud
+    state: shutdown
+  become: yes
+  when: overcloud_init_pool.changed
+
+- name: DOMAINS - Wait for the undercloud to stop
+  community.libvirt.virt:
+    command: list_vms
+    state: running
+  become: yes
+  register: running_vms
+  retries: 3
+  delay: 15
+  until: '"undercloud" not in running_vms.list_vms'
+  when: overcloud_init_pool.changed
+
 - name: DOMAINS - Ensure undercloud domain is running
   community.libvirt.virt:
     name: undercloud
     state: running
   become: yes
+
+- name: DOMAINS - Wait for the undercloud to start
+  community.libvirt.virt:
+    command: list_vms
+    state: running
+  become: yes
+  register: running_vms
+  retries: 3
+  delay: 15
+  until: '"undercloud" in running_vms.list_vms'
 
 - name: DOMAINS - Add management IPs entries to /etc/hosts on the local machines
   lineinfile:

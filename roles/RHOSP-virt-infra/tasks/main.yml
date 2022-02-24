@@ -120,5 +120,6 @@
     master: '{{ item.bridge }}'
     autoconnect: yes
     state: present
+  become: yes
   when: ( item.hypervisor_if is defined ) and ( interfaces_reverted[item.bridge] is defined ) and ( item.hypervisor_if not in interfaces_reverted[item.bridge] )
   loop: "{{ networks }}"

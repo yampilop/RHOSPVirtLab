@@ -29,12 +29,6 @@
       profiles=common
       state=enabled
 
-- name: SERVICES - Disable and stop cloud-init service
-  service:
-    name: cloud-init
-    state: stopped
-    enabled: false
-
 - name: PACKAGES - Install useful tools
   yum:
     name:
