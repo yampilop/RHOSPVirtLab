@@ -4,7 +4,11 @@
   vars_files:
     - vars/vms.yml
     - vars/networks.yml
-  become: no
+
+  pre_tasks:
+    - name: Set ansible_user to the current user
+      set_fact:
+        ansible_user: "{{ lookup('env','USER') }}"
   
   roles:
     - role: RHOSP-virt-infra
@@ -18,13 +22,12 @@
     - vault_credentials.yaml
     - vars/vms.yml
 #    - vars/physical.yml
-  become: no
   gather_facts: no
   
   pre_tasks:
     - name: Wait for the undercloud to come up
       wait_for_connection:
-        timeout: 60
+        timeout: 120
 
     - name: Gathering facts
       setup:
