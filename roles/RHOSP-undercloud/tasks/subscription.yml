@@ -4,16 +4,28 @@
   changed_when: false
   failed_when: false
 
-- name: SUBSCRIPTION - Register, attach and set release
+- name: SUBSCRIPTION - Register, attach and set release (with OrgID and Activation Key)
   redhat_subscription:
     state: present
     org_id: "{{ rh_orgid }}"
     activationkey: "{{ rh_activationkey }}"
-    username: "{{ rh_username }}"
-    password: "{{ rh_password }}"
     syspurpose:
       role: 'Red Hat Enterprise Linux Server'
       service_level_agreement: 'Self-Support'
       usage: 'Development/Test'
     release: '8.4'
-  when: (status is not search('Current')) and (status is not search('Content Access Mode'))
+    force: yes
+  when: (status is not search('Current')) and (status is not search('Content Access Mode')) and ( (rh_orgid is defined) and (rh_activationkey is defined) )
+
+- name: SUBSCRIPTION - Register, attach and set release (with username and password)
+  redhat_subscription:
+    state: present
+    username: "{{ rh_username }}"
+    password: "{{ rh_password }}"
+    pool: 'Red Hat OpenStack'
+    syspurpose:
+      role: 'Red Hat Enterprise Linux Server'
+      service_level_agreement: 'Self-Support'
+      usage: 'Development/Test'
+    release: '8.4'
+  when: (status is not search('Current')) and (status is not search('Content Access Mode')) and ( (rh_orgid is not defined) or (rh_activationkey is not defined) )

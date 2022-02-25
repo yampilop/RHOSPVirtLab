@@ -35,7 +35,7 @@ The user from which you will execute the lab needs to have `sudo` **permissions 
 ## Install required and useful packages
 
 ```bash
-sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete tmux
+sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete tmux tcpdump
 ```
 
 ## Pull the repo
@@ -99,6 +99,7 @@ rh_serviceaccount: '<SERVICE_ACCOUNT>'
 rh_token: '<TOKEN>'
 ```
 
+`rh_orgid` and `rh_activationkey` are optional to be used in the case an Activation Key is created for subscription-manager.
 `rh_serviceaccount` and `rh_token` are optional to be used in the case a Registry Service Account is created to use with the container registry (in order not to use the credentials in plain text files).
 
 ## Clean the installation
@@ -167,6 +168,18 @@ Use these files to interact with OpenStack services, and
 ensure they are secured.
 
 ##########################################################
+```
+
+### Auto source and completion
+
+To enable auto-sourcing of stackrc file and auto-sourcing of openstack bash completion, do the following:
+
+```bash
+openstack complete 2>/dev/null | sed '1d;$d' | sudo tee /usr/share/bash-completion/completions/openstack
+cat <<EOF >> /home/stack/.bashrc
+source /home/stack/stackrc
+source /usr/share/bash-completion/completions/openstack
+EOF
 ```
 
 ### Prepare the overcloud

@@ -4,5 +4,5 @@
 - name: HANDLER - Clean known_hosts file
   lineinfile:
     path: "/home/{{ ansible_user }}/.ssh/known_hosts"
-    regexp: "^undercloud|^{{ vms |  selectattr('name', 'search', 'undercloud') |list | first).nics['RHOSPVirtLab_management'] }}"
+    regexp: "^undercloud|^{{ (vms | selectattr('name', 'search', 'undercloud') | list | first).nics.RHOSPVirtLab_management }}"
     state: absent
