@@ -4,6 +4,14 @@
 cleanup: False
 create: True
 
+# overcloud parameters
+external_if: eno1
+overcloud_ip: 10.0.0.254
+forwarded_ports:
+  - 80  
+  - 6080
+  - 5000
+
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud
@@ -61,7 +69,7 @@ networks:
     forward: false
     mac_suffix: '00'
     ipv4: false
-    hypervisor_if: eth1
+    hypervisor_if: eno2
   - name: RHOSPVirtLab_storage
     bridge: br-storage
     forward: false

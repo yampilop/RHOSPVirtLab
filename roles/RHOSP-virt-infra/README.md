@@ -45,7 +45,7 @@ networks:
     forward: false
     mac_suffix: '00'
     ipv4: false
-    hypervisor_if: eth1
+    hypervisor_if: eno2
   - name: RHOSPVirtLab_storage
     bridge: br-storage
     forward: false

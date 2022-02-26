@@ -109,8 +109,8 @@
     group: stack
 
 - name: TEMPLATES - Perpare the custom overcloud parameters template
-  copy:
-    src: templates/custom-overcloud.yaml
+  template:
+    src: custom-overcloud.yaml.j2
     dest: /home/stack/templates/custom-overcloud.yaml
     owner: stack
     group: stack

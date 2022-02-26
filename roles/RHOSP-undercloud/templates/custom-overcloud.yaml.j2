@@ -6,5 +6,4 @@ parameter_defaults:
     horizon::keystone_multidomain_support: true
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
-  PublicVirtualFixedIPs: [{'ip_address':'10.0.0.254'}]
-  NovaReservedHostMemory: 2048
+  PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]

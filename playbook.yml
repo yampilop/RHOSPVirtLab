@@ -4,6 +4,7 @@
   vars_files:
     - vars/vms.yml
     - vars/networks.yml
+    - vars/overcloud.yml
 
   pre_tasks:
     - name: Set ansible_user to the current user
@@ -22,6 +23,7 @@
     - vault_credentials.yaml
     - vars/vms.yml
 #    - vars/physical.yml
+    - vars/overcloud.yml
   gather_facts: no
   
   pre_tasks:

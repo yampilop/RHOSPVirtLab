@@ -1,6 +1,9 @@
 ---
 # defaults file for RHOSP-undercloud
 
+# overcloud parameters
+overcloud_ip: 10.0.0.254
+
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud
