@@ -43,9 +43,9 @@
       - kvm
     append: yes
 
-- name: Ensure libvirt socket is enabled and running
-  systemd:
-    name: libvirtd.socket
+- name: Ensure libvirtd service is enabled and running
+  service:
+    name: libvirtd
     state: started
     enabled: yes
   become: yes

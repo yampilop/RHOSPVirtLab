@@ -1,3 +1,21 @@
+- name: NETWORKS - Create libvirt hooks directory
+  file:
+    path: /etc/libvirt/hooks
+    state: directory
+    mode: 755
+    owner: root
+    group: root
+
+- name: NETWORKS - Add hook for libvirt networks (hack) in order to allow port-forwarding
+  template:
+    src: network-hook.j2
+    dest: /etc/libvirt/hooks/network
+    mode: 755
+    owner: root
+    group: root
+  become: yes
+  notify: HANDLER - restart libvirtd service
+
 - name: NETWORKS - Gather facts about libvirt networks
   community.libvirt.virt_net:
     command: facts

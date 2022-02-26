@@ -6,3 +6,9 @@
     path: "/home/{{ ansible_user }}/.ssh/known_hosts"
     regexp: "^undercloud|^{{ (vms | selectattr('name', 'search', 'undercloud') | list | first).nics.RHOSPVirtLab_management }}"
     state: absent
+ 
+- name: HANDLER - restart libvirtd service
+  service:
+    name: libvirtd
+    state: restarted
+  become: yes
