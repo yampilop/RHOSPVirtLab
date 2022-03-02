@@ -264,11 +264,11 @@ openstack overcloud deploy \
 -e /home/stack/templates/node-info.yaml \
 -e /home/stack/templates/containers-prepare-parameter.yaml \
 -e /home/stack/templates/overcloud-images.yaml \
--e /home/stack/templates/custom-overcloud.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/net-multiple-nics.yaml
+-e /usr/share/openstack-tripleo-heat-templates/environments/net-multiple-nics.yaml \
+-e /home/stack/templates/custom-overcloud.yaml
 ```
 
 The output should end with the following:
