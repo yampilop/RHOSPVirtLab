@@ -1,5 +1,5 @@
 parameter_defaults:
-  OvercloudControllerFlavor: control
-  OvercloudComputeFlavor: compute
+  OvercloudControllerFlavor: baremetal
+  OvercloudComputeFlavor: baremetal
   ControllerCount: {{ vms | selectattr("profile", "equalto", "control") | list | count }}
   ComputeCount: {{ vms | selectattr("profile", "equalto", "compute") | list | count }}

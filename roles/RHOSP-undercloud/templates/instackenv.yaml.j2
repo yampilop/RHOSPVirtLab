@@ -4,7 +4,7 @@ nodes:
       - address: {{ vm.mac }}:00
         physical_network: ctlplane
     name: "{{ vm.name }}"
-    capabilities: "profile:{{ vm.profile }},boot_option:local"
+    capabilities: "node:{{ vm.name }},boot_option:local"
     cpu: {{ vm.vcpus }}
     memory: {{ (vm.memory / 1024) | int }}
     disk: {{ (vm.disk_size / 1073741824) | int }}

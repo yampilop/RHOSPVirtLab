@@ -7,10 +7,7 @@ parameter_defaults:
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
-  HostnameMap:
-{% for vm in vms | sort(attribute='name') if vm.profile == 'control' %}
-    overcloud-controller-{{ loop.index0 }}: {{ vm.name }}
-{% endfor %}
-{% for vm in vms | sort(attribute='name') if vm.profile == 'compute' %}
-    overcloud-novacompute-{{ loop.index0 }}: {{ vm.name }}
-{% endfor %}
+  ControllerSchedulerHints:
+    'capabilities:node': 'controller%index%'
+  ComputeSchedulerHints:
+    'capabilities:node': 'compute%index%'

@@ -3,7 +3,7 @@ vms:
   - name: undercloud
     title: 'RHOSPVirtLab Undercloud'
     profile: 'undercloud'
-    memory: 8388608
+    memory: 16777216
     vcpus: 4
     bmcport: 6230
     mac: '0c:1f:0d:10:00'
