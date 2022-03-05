@@ -123,3 +123,17 @@
   become: yes
   when: ( item.hypervisor_if is defined ) and ( interfaces_reverted[item.bridge] is defined ) and ( item.hypervisor_if not in interfaces_reverted[item.bridge] )
   loop: "{{ networks }}"
+
+- name: Enable masquerade in the firewall to allow external traffic
+  firewalld:
+    zone: "{{ item }}"
+    masquerade: yes
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+  loop:
+    - public
+    - libvirt
+  become: yes
+
