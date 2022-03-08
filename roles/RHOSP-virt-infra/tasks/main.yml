@@ -50,6 +50,13 @@
     enabled: yes
   become: yes
 
+- name: Ensure NetworkManager service is enabled and running
+  service:
+    name: NetworkManager
+    state: started
+    enabled: yes
+  become: yes
+
 - name: Install virtualbmc from pip
   pip:
     name:
