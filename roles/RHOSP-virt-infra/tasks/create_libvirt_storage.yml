@@ -98,7 +98,7 @@
   loop: "{{ vms }}"
 
 - name: STORAGE - Create disk file
-  command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --format qcow2"
+  command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --allocation {{ item.item.disk_size }} --prealloc-metadata --format qcow2"
   when: not item.stat.exists
   loop: "{{ disk_file.results }}"
   become: yes
