@@ -197,7 +197,7 @@ List images:
 openstack image list --fit-width
 ```
 
-Import the bremetal nodes:
+Import the baremetal nodes:
 
 ```bash
 source /home/stack/stackrc
@@ -282,7 +282,7 @@ Overcloud rc file: /home/stack/overcloudrc
 Overcloud Deployed without error
 ```
 
-Analize the Overcloud rc file to take note of the admin password:
+Analyze the Overcloud rc file to take note of the admin password:
 
 ```bash
 grep PASSWORD overcloudrc

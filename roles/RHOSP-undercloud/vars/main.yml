@@ -1,2 +1,10 @@
 ---
 # vars file for RHOSP-undercloud
+
+overcloud_roles:
+  - name: Controller
+    profile: control
+  - name: Compute
+    profile: compute
+  - name: ComputeSriov
+    profile: computesriov

@@ -22,7 +22,7 @@
   vars_files:
     - vault_credentials.yaml
     - vars/vms.yml
-#    - vars/physical.yml
+    - vars/physical.yml
     - vars/overcloud.yml
   gather_facts: no
   

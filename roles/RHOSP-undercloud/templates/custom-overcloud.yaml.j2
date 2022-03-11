@@ -7,7 +7,7 @@ parameter_defaults:
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
-  ControllerSchedulerHints:
-    'capabilities:node': 'controller%index%'
-  ComputeSchedulerHints:
-    'capabilities:node': 'compute%index%'
+{% for ocrole in overcloud_roles %}
+  {{ ocrole.name }}SchedulerHints:
+    'capabilities:node': '{{ ocrole.profile }}%index%'
+{% endfor %}
