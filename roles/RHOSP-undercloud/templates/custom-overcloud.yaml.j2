@@ -9,5 +9,5 @@ parameter_defaults:
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% for ocrole in overcloud_roles %}
   {{ ocrole.name }}SchedulerHints:
-    'capabilities:node': '{{ ocrole.profile }}%index%'
+    'capabilities:node': '{{ ocrole.name | lower }}%index%'
 {% endfor %}

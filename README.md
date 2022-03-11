@@ -237,7 +237,7 @@ source /home/stack/stackrc
 openstack overcloud roles generate \
 --roles-path /usr/share/openstack-tripleo-heat-templates/roles \
 -o /home/stack/templates/roles_data.yaml \
-Controller Compute
+Controller Compute ComputeSriov
 ```
 
 Prepare the images for containers:
@@ -255,7 +255,6 @@ Execute the deploy command with all the templates and environment files:
 source /home/stack/stackrc
 openstack overcloud deploy \
 --log-file overcloud_deployment.log \
---timeout 120 \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
 --stack overcloud \
 --ntp-server 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org \
@@ -274,8 +273,7 @@ openstack overcloud deploy \
 The output should end with the following:
 
 ```
-Ansible passed.
-Overcloud configuration completed.
+Ansible passed. Overcloud configuration completed.
 Overcloud Endpoint: http://10.0.0.254:5000
 Overcloud Horizon Dashboard URL: http://10.0.0.254:80/dashboard
 Overcloud rc file: /home/stack/overcloudrc
