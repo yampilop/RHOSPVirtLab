@@ -57,6 +57,54 @@ vms:
 # physical is a list to define the physical machines to be connected. The role doesn't define any by default
 physical:
 
+# networks is a list to define the virtual networks to be created
+networks:
+  - name: RHOSPVirtLab_ctlplane
+    bridge: br-ctlplane
+    forward: false
+    mac_suffix: '00'
+    ipv4: false
+    hypervisor_if: eno2
+  - name: RHOSPVirtLab_storage
+    bridge: br-storage
+    forward: false
+    mac_suffix: '01'
+    ipv4: false
+  - name: RHOSPVirtLab_storage_mgmt
+    bridge: br-storage-mgmt
+    forward: false
+    mac_suffix: '02'
+    ipv4: false
+  - name: RHOSPVirtLab_internal_api
+    bridge: br-internal-api
+    forward: false
+    mac_suffix: '03'
+    ipv4: false
+  - name: RHOSPVirtLab_tenant
+    bridge: br-tenant
+    forward: false
+    mac_suffix: '04'
+    ipv4: false
+  - name: RHOSPVirtLab_external
+    bridge: br-external
+    forward: route
+    mac_suffix: '05'
+    ipv4:
+      address: '10.0.0.1'
+      netmask: '255.255.255.0'
+      dhcp: false
+  - name: RHOSPVirtLab_management
+    bridge: br-management
+    forward: nat
+    mac_suffix: '0f'
+    ipv4:
+      address: '192.168.250.1'
+      netmask: '255.255.255.0'
+      dhcp:
+        start: '192.168.250.100'
+        end: '192.168.250.254'
+        hosts: true
+
 # repositories to be enabled on the undercloud
 repositories:
   - rhel-8-for-x86_64-baseos-rpms

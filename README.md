@@ -292,51 +292,19 @@ export OS_PASSWORD=XXXXXXXXXXXXXX
 
 ### Post deploy configurations
 
-#### Create a domain and a project
+#### Execute the post-deployment script
 
-```
-source /home/stack/overcloudrc
-openstack domain create RHOSPVirtLab
-openstack project create --domain RHOSPVirtLab test-project
-```
+Execute the script to create basic resources:
 
-#### Create domain users
-
-```
-source /home/stack/overcloudrc
-openstack user create --domain RHOSPVirtLab --project test-project --project-domain RHOSPVirtLab --password-prompt --description "Test project admin" test-admin
-```
-(Choose a password for the test-admin user)
-
-Assign administration roles:
-
-```
-openstack role add --domain RHOSPVirtLab --user test-admin --user-domain RHOSPVirtLab admin
-openstack role add --project test-project --user test-admin --user-domain RHOSPVirtLab admin
-```
-
-### Create a provider network
-
-```
-source /home/stack/overcloudrc
-openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
-openstack subnet create --subnet-range 10.0.0.0/24 --no-dhcp --gateway 10.0.0.1 --network default-provider --allocation-pool start=10.0.0.100,end=10.0.0.250 default-provider-subnet
+```bash
+/home/stack/post_deployment.sh
 ```
 
 ### Open dashboard
 
-From a web browser, open the Overcloud Horizon Dashboard URL ([http://10.0.0.254:80/dashboard](http://10.0.0.254:80/dashboard)) and login to the domain **RHOSPVirtLab** as **test-admin** using the password you configured.
+From a web browser, open the Overcloud Horizon Dashboard URL pointing to the hypervisor IP/domain name (http://HIPERVISOR:80/dashboard) and login to the domain **RHOSPVirtLab** as **test-admin** using the password **redhat**.
 
 ![Dashboard](images/dashboard.png)
 
 ![Hypervisors](images/hypervisors.png)
 
-#### Requirements for instances
-
-In order to be able to boot some instances with public access:
-
- * Create a tenant network.
- * Create a router. Set the `default-provider` as external network. Attach a port to the tenant network with the default gateway IP.
- * Assign floating IPs to the project.
- * Create some flavors.
- * Upload some images.

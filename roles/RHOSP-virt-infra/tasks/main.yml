@@ -57,10 +57,11 @@
     enabled: yes
   become: yes
 
-- name: Install virtualbmc from pip
+- name: Install packages from pip
   pip:
     name:
       - virtualbmc
+      - netaddr
 
 - name: VIRTUALBMC - Create VirtualBMC systemd unit
   template:

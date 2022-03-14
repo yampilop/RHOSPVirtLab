@@ -94,6 +94,18 @@
     - /usr/share/rhosp-director-images/overcloud-full-latest-16.2.tar
     - /usr/share/rhosp-director-images/ironic-python-agent-latest-16.2.tar
 
+- name: IMAGES - Download images for testing
+  get_url:
+    url: "{{ item.url }}"
+    dest: "images/{{ item.name }}"
+    owner: stack
+    group: stack
+  loop:
+    - url: http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2
+      name: rhel-8.4-x86_64-kvm.qcow2
+    - url: https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
+      name: cirros.qcow2
+
 - name: TEMPLATES - Prepare nodes file
   template:
     src: instackenv.yaml.j2
@@ -119,5 +131,13 @@
   copy:
     src: templates/network_data.yaml
     dest: /home/stack/templates/network_data.yaml
+    owner: stack
+    group: stack
+
+- name: POSTDEPLOYMENT - Prepare post-deployment script
+  template:
+    src: post_deployment.sh.j2
+    dest: /home/stack/post_deployment.sh
+    mode: '755'
     owner: stack
     group: stack

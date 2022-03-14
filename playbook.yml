@@ -21,6 +21,7 @@
   hosts: openstack
   vars_files:
     - vault_credentials.yaml
+    - vars/networks.yml
     - vars/vms.yml
     - vars/physical.yml
     - vars/overcloud.yml
