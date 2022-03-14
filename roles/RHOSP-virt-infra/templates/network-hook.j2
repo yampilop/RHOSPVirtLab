@@ -38,22 +38,25 @@ rules_update() {
 network_name="$1"
 network_task="$2"
 
-case "${network_task}" in
-  started)
-    rules_update ${network_name} " -I "
-  ;;
+if [ "${network_name}" = "RHOSPVirtLab_external" ]; then
+
+  case "${network_task}" in
+    started)
+      rules_update ${network_name} " -I "
+    ;;
   
-  stopped)
-    rules_update ${network_name} " -D "
-  ;;
+    stopped)
+      rules_update ${network_name} " -D "
+    ;;
 
-  updated)
-    rules_update ${network_name} " -D "
-    rules_update ${network_name} " -I "
-  ;;
+    updated)
+      rules_update ${network_name} " -D "
+      rules_update ${network_name} " -I "
+    ;;
 
-  *)
-    echo "network hook called with unexpected options $*" >&2
-  ;;
-esac
+    *)
+      echo "network hook called with unexpected options $*" >&2
+    ;;
+  esac
 
+fi
