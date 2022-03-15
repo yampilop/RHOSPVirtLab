@@ -1,6 +1,11 @@
 ---
 # tasks file for RHOSP-undercloud
 
+- name: Verify the RHOSP version selected is supported
+  fail:
+    msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
+  when: RHOSP_version_supported[RHOSP_version] is not defined
+
 - name: Configure swap file on the undercloud
   include_role:
     name: geerlingguy.swap
@@ -16,18 +21,19 @@
 
 - name: REPOSITORIES - Enable the needed repositories only
   rhsm_repository:
-    name: "{{ repositories }}"
+    name: "{{ RHOSP_version_supported[RHOSP_version].repos }}"
     purge: yes
 
-- name: MODULES - Disable container-tools module stream rhel8 and enable 3.0
+- name: MODULES - Enable and configure modules
   copy:
-    dest: /etc/dnf/modules.d/container-tools.module
+    dest: "/etc/dnf/modules.d/{{ item.name }}.module"
     content: |
-      [container-tools]
-      name=container-tools
-      stream=3.0
-      profiles=common
+      [{{ item.name }}]
+      name={{ item.name }}
+      stream={{ item.stream }}
+      profiles={{ item.profiles }}
       state=enabled
+  loop: "{{ RHOSP_version_supported[RHOSP_version].modules }}"
 
 - name: PACKAGES - Install useful tools
   yum:
@@ -91,8 +97,8 @@
     group: stack
     remote_src: yes
   loop:
-    - /usr/share/rhosp-director-images/overcloud-full-latest-16.2.tar
-    - /usr/share/rhosp-director-images/ironic-python-agent-latest-16.2.tar
+    - "/usr/share/rhosp-director-images/overcloud-full-latest-{{ RHOSP_version }}.tar"
+    - "/usr/share/rhosp-director-images/ironic-python-agent-latest-{{ RHOSP_version }}.tar"
 
 - name: IMAGES - Download images for testing
   get_url:
@@ -101,8 +107,8 @@
     owner: stack
     group: stack
   loop:
-    - url: http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2
-      name: rhel-8.4-x86_64-kvm.qcow2
+    - url: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
+      name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     - url: https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
       name: cirros.qcow2
 

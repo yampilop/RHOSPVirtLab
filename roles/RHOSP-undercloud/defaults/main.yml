@@ -1,6 +1,9 @@
 ---
 # defaults file for RHOSP-undercloud
 
+# RHOSP version
+RHOSP_version: 16.2
+
 # overcloud parameters
 overcloud_ip: 10.0.0.254
 
@@ -14,7 +17,7 @@ vms:
     bmcport: 6230
     mac: '0c:1f:0d:10:00'
     disk_size: 107374182400
-    backing_store: 'rhel-8.4-x86_64-kvm.qcow2'
+    backing_store: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     cdrom: 'undercloud-init.iso'
     nics:
       RHOSPVirtLab_ctlplane: ''
@@ -104,13 +107,3 @@ networks:
         start: '192.168.250.100'
         end: '192.168.250.254'
         hosts: true
-
-# repositories to be enabled on the undercloud
-repositories:
-  - rhel-8-for-x86_64-baseos-rpms
-  - rhel-8-for-x86_64-appstream-rpms
-  - rhel-8-for-x86_64-highavailability-rpms
-  - ansible-2.9-for-rhel-8-x86_64-rpms
-  - openstack-16.2-for-rhel-8-x86_64-rpms
-  - fast-datapath-for-rhel-8-x86_64-rpms
-  - rhceph-4-tools-for-rhel-8-x86_64-rpms

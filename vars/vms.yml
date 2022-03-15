@@ -8,7 +8,7 @@ vms:
     bmcport: 6230
     mac: '0c:1f:0d:10:00'
     disk_size: 107374182400
-    backing_store: 'rhel-8.4-x86_64-kvm.qcow2'
+    backing_store: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     cdrom: 'undercloud-init.iso'
     nics:
       RHOSPVirtLab_ctlplane: ''

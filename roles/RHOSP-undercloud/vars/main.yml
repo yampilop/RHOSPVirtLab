@@ -8,3 +8,43 @@ overcloud_roles:
     profile: compute
   - name: ComputeSriov
     profile: computesriov
+
+RHOSP_version_supported:
+  16.2:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
+      name: 'rhel-8.4-x86_64-kvm.qcow2'
+    rhel_release: '8.4'
+    repos:
+      - rhel-8-for-x86_64-baseos-rpms
+      - rhel-8-for-x86_64-appstream-rpms
+      - rhel-8-for-x86_64-highavailability-rpms
+      - ansible-2.9-for-rhel-8-x86_64-rpms
+      - openstack-16.2-for-rhel-8-x86_64-rpms
+      - fast-datapath-for-rhel-8-x86_64-rpms
+      - rhceph-4-tools-for-rhel-8-x86_64-rpms
+    modules:
+      - name: 'container-tools'
+        stream: '3.0'
+        profiles: 'common'
+  16.1:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-8/8.2.0/BaseOS/x86_64/images/rhel-guest-image-8.2-290.x86_64.qcow2'
+      name: 'rhel-8.2-x86_64-kvm.qcow2'
+    rhel_release: '8.2'
+    repos:
+      - rhel-8-for-x86_64-baseos-rpms
+      - rhel-8-for-x86_64-appstream-rpms
+      - rhel-8-for-x86_64-highavailability-rpms
+      - ansible-2.9-for-rhel-8-x86_64-rpms
+      - openstack-16.1-for-rhel-8-x86_64-rpms
+      - fast-datapath-for-rhel-8-x86_64-rpms
+      - advanced-virt-for-rhel-8-x86_64-rpms
+      - rhceph-4-tools-for-rhel-8-x86_64-rpms
+    modules:
+      - name: container-tools
+        stream: '2.0'
+        profiles: 'common'
+      - name: virt
+        stream: '8.2'
+        profiles: ''

@@ -71,8 +71,8 @@
 
 - name: STORAGE - Download the rhel base image
   get_url:
-    url: http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2
-    dest: "{{ pool_location }}/rhel-8.4-x86_64-kvm.qcow2"
+    url: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
+    dest: "{{ pool_location }}/{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     mode: "0777"
     owner: root
     group: root
@@ -82,7 +82,7 @@
     path: "{{ pool_location }}/{{ item }}"
   register: files_output
   loop:
-    - rhel-8.4-x86_64-kvm.qcow2
+    - "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     - undercloud-init.iso
 
 - name: STORAGE - Fail when any of the files does not exist

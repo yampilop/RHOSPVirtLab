@@ -2,6 +2,8 @@
 
 {% set ext = networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first %}                                                                                    
 {% set ext_addr = ext.ipv4.address ~ '/' ~ ext.ipv4.netmask %}
+{% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
+{% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
 
 source /home/stack/overcloudrc
 # Domain
@@ -24,5 +26,5 @@ openstack flavor show small_2_2_20 || openstack flavor create --ram 2048 --disk 
 openstack flavor show small_1_1_10 || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public small_1_1_10
 
 # Images
-openstack image show 'rhel8.4' || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/rhel-8.4-x86_64-kvm.qcow2 --public 'rhel8.4'
+openstack image show '{{ rhel_image_name }}' || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
 openstack image show CirrOS || openstack image create --disk-format qcow2 --file images/cirros.qcow2 --public CirrOS

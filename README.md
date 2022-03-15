@@ -1,6 +1,11 @@
-# RHOSP 16.2 Virtual Lab
+# RHOSP Virtual Lab
 
 Virtual lab to setup a Red Hat OpenStack Platform test installation over a RHEL Hypervisor.
+
+Currently supported RHOSP versions:
+
+- 16.2 (default)
+- 16.1
 
 ## Assumptions
 
@@ -127,6 +132,8 @@ If you want to customize the default environment created by the playbook, you ne
 - vars/networks.yml (The virtual networks and their connection to the physical interfaces of the hypervisor)
 - vars/vms.yml (The VMs to be created in the hypervisor)
 - vars/physical.yml (The physical nodes to be added as baremetal nodes in the undercloud)
+- vars/overcloud.yml (The parameters of the overcloud configuration and the hypervisor forwarded ports)
+- vars/version.yml (The version of RHOSP to deploy)
 
 ## Last steps
 

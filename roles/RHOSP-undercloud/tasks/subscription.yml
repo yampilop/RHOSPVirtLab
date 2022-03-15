@@ -14,7 +14,7 @@
       role: 'Red Hat Enterprise Linux Server'
       service_level_agreement: 'Self-Support'
       usage: 'Development/Test'
-    release: '8.4'
+    release: "{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
     force_register: yes
   when: (status is not search('Current')) and (status is not search('Content Access Mode')) and ( (rh_orgid is defined) and (rh_activationkey is defined) )
   failed_when: false
@@ -29,7 +29,7 @@
       role: 'Red Hat Enterprise Linux Server'
       service_level_agreement: 'Self-Support'
       usage: 'Development/Test'
-    release: '8.4'
+    release: "{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
     force_register: yes
   when: (status is not search('Current')) and (status is not search('Content Access Mode')) and ( (rh_orgid is not defined) or (rh_activationkey is not defined) )
   failed_when: false

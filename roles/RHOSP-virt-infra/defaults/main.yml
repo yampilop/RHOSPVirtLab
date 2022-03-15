@@ -1,6 +1,10 @@
 ---
 # defaults file for RHOSP-virt-infra
 
+# RHOSP version
+RHOSP_version: 16.2
+
+# Cleaning and creating parameters
 cleanup: False
 create: True
 
@@ -22,7 +26,7 @@ vms:
     bmcport: 6230
     mac: '0c:1f:0d:10:00'
     disk_size: 107374182400
-    backing_store: 'rhel-8.4-x86_64-kvm.qcow2'
+    backing_store: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     cdrom: 'undercloud-init.iso'
     nics:
       RHOSPVirtLab_ctlplane: ''
