@@ -2,6 +2,7 @@
 - name: Infrastructure configuration
   hosts: infrastructure
   vars_files:
+    - vars/version.yml
     - vars/vms.yml
     - vars/networks.yml
     - vars/overcloud.yml
@@ -21,6 +22,7 @@
   hosts: openstack
   vars_files:
     - vault_credentials.yaml
+    - vars/version.yml
     - vars/networks.yml
     - vars/vms.yml
     - vars/physical.yml
