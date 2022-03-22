@@ -14,6 +14,7 @@ RHOSP_version_supported:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
       name: 'rhel-8.4-x86_64-kvm.qcow2'
+      main_partition: '/dev/sda3'
     rhel_release: '8.4'
     repos:
       - rhel-8-for-x86_64-baseos-rpms
@@ -27,10 +28,16 @@ RHOSP_version_supported:
       - name: 'container-tools'
         stream: '3.0'
         profiles: 'common'
+    packages:
+      - python3-argcomplete
+      - python3-tripleoclient
+      - ceph-ansible
+      - rhosp-director-images
   16.1:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.2.0/BaseOS/x86_64/images/rhel-guest-image-8.2-290.x86_64.qcow2'
       name: 'rhel-8.2-x86_64-kvm.qcow2'
+      main_partition: '/dev/sda3'
     rhel_release: '8.2'
     repos:
       - rhel-8-for-x86_64-baseos-rpms
@@ -48,3 +55,28 @@ RHOSP_version_supported:
       - name: virt
         stream: '8.2'
         profiles: ''
+    packages:
+      - python3-argcomplete
+      - python3-tripleoclient
+      - ceph-ansible
+      - rhosp-director-images
+  13.0:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-7/7.9/Server/x86_64/images/rhel-guest-image-7.9-30.x86_64.qcow2'
+      name: 'rhel-7.9-x86_64-kvm.qcow2'
+      main_partition: '/dev/sda1'
+    rhel_release: '7.9'
+    repos:
+      - rhel-7-server-rpms
+      - rhel-7-server-extras-rpms
+      - rhel-7-server-rh-common-rpms
+      - rhel-ha-for-rhel-7-server-rpms
+      - rhel-7-server-openstack-13-rpms
+      - rhel-7-server-rhceph-3-tools-rpms
+    modules: []
+    packages:
+      - python-argcomplete
+      - python-tripleoclient
+      - ceph-ansible
+      - rhosp-director-images
+      - rhosp-director-images-ipa

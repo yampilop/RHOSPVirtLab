@@ -41,7 +41,6 @@
       - vim
       - wget
       - bash-completion 
-      - python3-argcomplete
     state: latest
 
 - name: PACKAGES - Update all packages
@@ -83,10 +82,7 @@
 
 - name: PACKAGES - Install needed packages
   yum:
-    name:
-      - python3-tripleoclient
-      - ceph-ansible
-      - rhosp-director-images
+    name: "{{ RHOSP_version_supported[RHOSP_version].packages }}"
     state: latest
 
 - name: IMAGES - Unpack director images

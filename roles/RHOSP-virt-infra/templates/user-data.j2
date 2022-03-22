@@ -14,3 +14,7 @@ chpasswd:
     stack:redhat
   expire: False
 ssh_pwauth: True
+{% if RHOSP_version == 13.0 %}
+runcmd:
+  - nmcli connection add type ethernet ifname eth1 autoconnect true
+{% endif %}

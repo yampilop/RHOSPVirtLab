@@ -114,7 +114,7 @@
   become: yes
 
 - name: STORAGE - Prepare backing stored disk files and resize root partition
-  command: "virt-resize --expand /dev/sda3 {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
+  command: "virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
   when: (not item.stat.exists) and (item.item.backing_store != '')
   loop: "{{ disk_file.results }}"
   become: yes
