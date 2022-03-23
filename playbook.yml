@@ -2,7 +2,7 @@
 - name: Infrastructure configuration
   hosts: infrastructure
   vars_files:
-    - vars/version.yml
+    - vars/options.yml
     - vars/vms.yml
     - vars/networks.yml
     - vars/overcloud.yml
@@ -14,15 +14,12 @@
   
   roles:
     - role: RHOSP-virt-infra
-      vars:
-        cleanup: False # Set to True if you want to clean up the lab and start it from scratch
-        create: True # Set to False if you want not to create the lab resources
 
 - name: Openstack configuration
   hosts: openstack
   vars_files:
     - vault_credentials.yaml
-    - vars/version.yml
+    - vars/options.yml
     - vars/networks.yml
     - vars/vms.yml
     - vars/physical.yml

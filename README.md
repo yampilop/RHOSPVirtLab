@@ -110,7 +110,7 @@ rh_token: '<TOKEN>'
 
 ## Clean the installation
 
-To start/restart the installation from scratch, you need to edit the playbook.yml file and set `cleanup: True` instead of `False`.
+To start/restart the installation from scratch, you need to edit the options.yml file and set `cleanup: True` instead of `False`.
 
 ## Execute the Ansible Playbook
 
@@ -134,7 +134,7 @@ If you want to customize the default environment created by the playbook, you ne
 - vars/vms.yml (The VMs to be created in the hypervisor)
 - vars/physical.yml (The physical nodes to be added as baremetal nodes in the undercloud)
 - vars/overcloud.yml (The parameters of the overcloud configuration and the hypervisor forwarded ports)
-- vars/version.yml (The version of RHOSP to deploy)
+- vars/options.yml (The version of RHOSP to deploy and the cleanup parameter)
 
 ## Last steps
 
