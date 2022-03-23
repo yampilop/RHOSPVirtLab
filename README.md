@@ -6,6 +6,7 @@ Currently supported RHOSP versions:
 
 - 16.2 (default)
 - 16.1
+- 13.0
 
 ## Assumptions
 
@@ -208,15 +209,8 @@ Import the baremetal nodes:
 
 ```bash
 source /home/stack/stackrc
-openstack overcloud node import --validate-only /home/stack/templates/instackenv.yaml
 openstack overcloud node import /home/stack/templates/instackenv.yaml
 openstack baremetal node list
-```
-
-Run validations (you can ignore the `undercloud-neutron-sanity-check` `FAILED`):
-
-```bash
-openstack tripleo validator run --group pre-introspection
 ```
 
 Introspect the nodes:
@@ -231,12 +225,6 @@ After the process finishes, the nodes must be in `available` state:
 openstack baremetal node list
 ```
 
-List the profiles to check if they match the configuration:
-
-```bash
-openstack overcloud profiles list
-```
-
 Generate the roles file:
 
 ```bash
@@ -249,9 +237,28 @@ Controller Compute ComputeSriov
 
 Prepare the images for containers:
 
+For 16.X versions:
+
 ```bash
 source /home/stack/stackrc
 sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
+```
+
+For 13.0 version (use your Red Hat credentials in the docker login command):
+
+```bash
+source /home/stack/stackrc
+sudo docker login registry.redhat.io
+sudo openstack overcloud container image prepare \
+--output-env-file /home/stack/templates/overcloud-images.yaml \
+--tag-from-label {version}-{release} \
+--namespace=registry.redhat.io/rhosp13 \
+--prefix=openstack- \
+--push-destination=192.168.24.1:8787 \
+--output-images-file /home/stack/local_registry_images.yaml
+openstack overcloud container image upload \
+--config-file /home/stack/local_registry_images.yaml \
+--verbose
 ```
 
 ### Deploy the overcloud

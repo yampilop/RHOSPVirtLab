@@ -75,7 +75,6 @@ RHOSP_version_supported:
       - rhel-7-server-rhceph-3-tools-rpms
     modules: []
     packages:
-      - python-argcomplete
       - python-tripleoclient
       - ceph-ansible
       - rhosp-director-images

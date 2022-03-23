@@ -1,8 +1,13 @@
 nodes:
 {% for vm in vms if not vm.profile == 'undercloud' %}
+{% if RHOSP_version == 13.0 %}
+  - mac: 
+      - '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
+{% else %}
   - ports:
-      - address: {{ vm.mac }}:00
+      - address: '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
         physical_network: ctlplane
+{% endif %}
     name: "{{ vm.name }}"
     capabilities: "node:{{ vm.name }},boot_option:local"
     cpu: {{ vm.vcpus }}
@@ -17,9 +22,14 @@ nodes:
 {% endfor %}
 
 {% for node in physical %}
+{% if RHOSP_version == 13.0 %}
+  - mac: 
+      - '{{ node.mac }}'
+{% else %}
   - ports:
-      - address: {{ node.mac }}
+      - address: '{{ node.mac }}'
         physical_network: ctlplane
+{% endif %}
     name: "{{ node.name }}"
     capabilities: "node:{{ node.name }},boot_option:local"
     cpu: {{ node.cpus }}
