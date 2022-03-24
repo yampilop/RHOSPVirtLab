@@ -256,7 +256,7 @@ sudo openstack overcloud container image prepare \
 --prefix=openstack- \
 --push-destination=192.168.24.1:8787 \
 --output-images-file /home/stack/local_registry_images.yaml
-openstack overcloud container image upload \
+sudo openstack overcloud container image upload \
 --config-file /home/stack/local_registry_images.yaml \
 --verbose
 ```
