@@ -133,6 +133,8 @@
     conn_name: "{{ item.hypervisor_if }}"
     ifname: "{{ item.hypervisor_if }}"
     master: '{{ item.bridge }}'
+    method4: disabled
+    method6: disabled
     autoconnect: yes
     state: present
   become: yes
