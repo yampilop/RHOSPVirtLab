@@ -74,9 +74,9 @@
     group: stack
 
 - name: CONFIGFILES - Set undercloud configuration file
-  copy:
-    src: templates/undercloud.conf
-    dest: /home/stack/undercloud.conf
+  template:
+    src: "undercloud.conf.j2"
+    dest: "/home/stack/undercloud.conf"
     owner: stack
     group: stack
 
