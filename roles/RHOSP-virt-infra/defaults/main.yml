@@ -43,10 +43,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_storage: ''
-      RHOSPVirtLab_storage_mgmt: ''
-      RHOSPVirtLab_internal_api: ''
-      RHOSPVirtLab_tenant: ''
+      RHOSPVirtLab_vlans: ''
       RHOSPVirtLab_external: ''
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
@@ -60,11 +57,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_storage: ''
-      RHOSPVirtLab_storage_mgmt: ''
-      RHOSPVirtLab_internal_api: ''
-      RHOSPVirtLab_tenant: ''
-      RHOSPVirtLab_external: ''
+      RHOSPVirtLab_vlans: ''
 
 # networks is a list to define the virtual networks to be created
 networks:
@@ -74,26 +67,12 @@ networks:
     mac_suffix: '00'
     ipv4: false
     hypervisor_if: eno2
-  - name: RHOSPVirtLab_storage
-    bridge: br-storage
+  - name: RHOSPVirtLab_vlans
+    bridge: br-vlans
     forward: false
     mac_suffix: '01'
     ipv4: false
-  - name: RHOSPVirtLab_storage_mgmt
-    bridge: br-storage-mgmt
-    forward: false
-    mac_suffix: '02'
-    ipv4: false
-  - name: RHOSPVirtLab_internal_api
-    bridge: br-internal-api
-    forward: false
-    mac_suffix: '03'
-    ipv4: false
-  - name: RHOSPVirtLab_tenant
-    bridge: br-tenant
-    forward: false
-    mac_suffix: '04'
-    ipv4: false
+    hypervisor_if: eno3
   - name: RHOSPVirtLab_external
     bridge: br-external
     forward: route

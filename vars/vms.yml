@@ -25,10 +25,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_storage: ''
-      RHOSPVirtLab_storage_mgmt: ''
-      RHOSPVirtLab_internal_api: ''
-      RHOSPVirtLab_tenant: ''
+      RHOSPVirtLab_vlans: ''
       RHOSPVirtLab_external: ''
   - name: controller1
     title: 'RHOSPVirtLab Controller 1'
@@ -42,10 +39,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_storage: ''
-      RHOSPVirtLab_storage_mgmt: ''
-      RHOSPVirtLab_internal_api: ''
-      RHOSPVirtLab_tenant: ''
+      RHOSPVirtLab_vlans: ''
       RHOSPVirtLab_external: ''
   - name: controller2
     title: 'RHOSPVirtLab Controller 2'
@@ -59,10 +53,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_storage: ''
-      RHOSPVirtLab_storage_mgmt: ''
-      RHOSPVirtLab_internal_api: ''
-      RHOSPVirtLab_tenant: ''
+      RHOSPVirtLab_vlans: ''
       RHOSPVirtLab_external: ''
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
@@ -76,11 +67,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_storage: ''
-      RHOSPVirtLab_storage_mgmt: ''
-      RHOSPVirtLab_internal_api: ''
-      RHOSPVirtLab_tenant: ''
-      RHOSPVirtLab_external: ''
+      RHOSPVirtLab_vlans: ''
   - name: compute1
     title: 'RHOSPVirtLab Compute 1'
     profile: 'compute'
@@ -93,8 +80,4 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_storage: ''
-      RHOSPVirtLab_storage_mgmt: ''
-      RHOSPVirtLab_internal_api: ''
-      RHOSPVirtLab_tenant: ''
-      RHOSPVirtLab_external: ''
+      RHOSPVirtLab_vlans: ''

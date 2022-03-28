@@ -6,30 +6,16 @@ networks:
     mac_suffix: '00'
     ipv4: false
     hypervisor_if: eno2
-  - name: RHOSPVirtLab_storage
-    bridge: br-storage
+  - name: RHOSPVirtLab_vlans
+    bridge: br-vlans
     forward: false
     mac_suffix: '01'
     ipv4: false
-  - name: RHOSPVirtLab_storage_mgmt
-    bridge: br-storage-mgmt
-    forward: false
-    mac_suffix: '02'
-    ipv4: false
-  - name: RHOSPVirtLab_internal_api
-    bridge: br-internal-api
-    forward: false
-    mac_suffix: '03'
-    ipv4: false
-  - name: RHOSPVirtLab_tenant
-    bridge: br-tenant
-    forward: false
-    mac_suffix: '04'
-    ipv4: false
+    hypervisor_if: eno3
   - name: RHOSPVirtLab_external
     bridge: br-external
     forward: route
-    mac_suffix: '05'
+    mac_suffix: '02'
     ipv4:
       address: '10.0.0.1'
       netmask: '255.255.255.0'
