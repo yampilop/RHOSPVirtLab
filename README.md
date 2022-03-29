@@ -225,16 +225,6 @@ After the process finishes, the nodes must be in `available` state:
 openstack baremetal node list
 ```
 
-Generate the roles file:
-
-```bash
-source /home/stack/stackrc
-openstack overcloud roles generate \
---roles-path /usr/share/openstack-tripleo-heat-templates/roles \
--o /home/stack/templates/roles_data.yaml \
-Controller Compute ComputeSriov
-```
-
 Prepare the images for containers:
 
 For 16.X versions:
