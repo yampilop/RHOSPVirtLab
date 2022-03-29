@@ -58,6 +58,7 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_vlans: ''
+      RHOSPVirtLab_external: ''
 
 # networks is a list to define the virtual networks to be created
 networks:

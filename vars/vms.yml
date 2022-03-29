@@ -68,6 +68,7 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_vlans: ''
+      RHOSPVirtLab_external: ''
   - name: compute1
     title: 'RHOSPVirtLab Compute 1'
     profile: 'compute'
@@ -81,3 +82,4 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_vlans: ''
+      RHOSPVirtLab_external: ''
