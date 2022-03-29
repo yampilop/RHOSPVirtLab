@@ -63,7 +63,7 @@ undercloud_nameservers = {{ ansible_dns.nameservers | join(',') }}
 {% else %}
 undercloud_nameservers = 8.8.8.8,8.8.4.4
 {% endif %}
-undercloud_ntp_servers = 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org
+undercloud_ntp_servers = {{ ntp_servers | join(',') }}
 undercloud_public_host = 192.168.24.2
 #undercloud_service_certificate =
 #undercloud_timezone = <None>

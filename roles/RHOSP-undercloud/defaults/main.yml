@@ -7,6 +7,13 @@ RHOSP_version: 16.2
 # overcloud parameters
 overcloud_ip: 10.0.0.254
 
+# ntp servers
+ntp_servers: 
+  - '0.pool.ntp.org'
+  - '1.pool.ntp.org'
+  - '2.pool.ntp.org'
+  - '3.pool.ntp.org'
+
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud
