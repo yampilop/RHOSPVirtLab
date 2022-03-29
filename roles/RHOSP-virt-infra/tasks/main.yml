@@ -133,8 +133,8 @@
     conn_name: "{{ item.hypervisor_if }}"
     ifname: "{{ item.hypervisor_if }}"
     master: '{{ item.bridge }}'
-    method4: disabled
-    method6: disabled
+    ip4: ''
+    gw4: ''
     autoconnect: yes
     state: present
   become: yes
@@ -154,3 +154,9 @@
     - libvirt
   become: yes
 
+- name: Create stack alias to connect to undercloud
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "alias stack='ssh stack@undercloud'"
+    insertafter: EOF
+    state: present

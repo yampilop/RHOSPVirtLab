@@ -76,6 +76,11 @@
     mode: "0777"
     owner: root
     group: root
+    timeout: 30
+  retries: 3
+  delay: 10
+  register: result
+  until: result is not failed
 
 - name: STORAGE - Check if the needed image files exist
   stat:
