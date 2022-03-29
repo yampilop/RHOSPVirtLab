@@ -4,10 +4,13 @@
 overcloud_roles:
   - name: Controller
     profile: control
+    nic_configs: controller.yaml
   - name: Compute
     profile: compute
+    nic_configs: compute.yaml
   - name: ComputeSriov
     profile: computesriov
+    nic_configs: computesriov.yaml
 
 RHOSP_version_supported:
   16.2:

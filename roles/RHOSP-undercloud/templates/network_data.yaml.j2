@@ -1,6 +1,6 @@
 - name: Storage
   vip: true
-  vlan: 30
+  vlan: {{ network_data_vlans.Storage }}
   name_lower: storage
   ip_subnet: '172.16.1.0/24'
   allocation_pools: [{'start': '172.16.1.4', 'end': '172.16.1.250'}]
@@ -10,7 +10,7 @@
 - name: StorageMgmt
   name_lower: storage_mgmt
   vip: true
-  vlan: 40
+  vlan: {{ network_data_vlans.StorageMgmt }}
   ip_subnet: '172.16.3.0/24'
   allocation_pools: [{'start': '172.16.3.4', 'end': '172.16.3.250'}]
   ipv6_subnet: 'fd00:fd00:fd00:4000::/64'
@@ -19,7 +19,7 @@
 - name: InternalApi
   name_lower: internal_api
   vip: true
-  vlan: 20
+  vlan: {{ network_data_vlans.InternalApi }}
   ip_subnet: '172.16.2.0/24'
   allocation_pools: [{'start': '172.16.2.4', 'end': '172.16.2.250'}]
   ipv6_subnet: 'fd00:fd00:fd00:2000::/64'
@@ -28,7 +28,7 @@
 - name: Tenant
   vip: false  # Tenant network does not use VIPs
   name_lower: tenant
-  vlan: 50
+  vlan: {{ network_data_vlans.Tenant }}
   ip_subnet: '172.16.0.0/24'
   allocation_pools: [{'start': '172.16.0.4', 'end': '172.16.0.250'}]
   ipv6_subnet: 'fd00:fd00:fd00:5000::/64'
@@ -37,7 +37,7 @@
 - name: External
   vip: true
   name_lower: external
-  vlan: 10
+  vlan: {{ network_data_vlans.External }}
   ip_subnet: '10.0.0.0/24'
   allocation_pools: [{'start': '10.0.0.4', 'end': '10.0.0.99'}]
   gateway_ip: '10.0.0.1'
@@ -51,7 +51,7 @@
   enabled: true
   vip: false  # Management network does not use VIPs
   name_lower: management
-  vlan: 60
+  vlan: {{ network_data_vlans.Management }}
   ip_subnet: '10.0.1.0/24'
   allocation_pools: [{'start': '10.0.1.4', 'end': '10.0.1.250'}]
   gateway_ip: '10.0.1.1'

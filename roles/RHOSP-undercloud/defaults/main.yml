@@ -14,6 +14,15 @@ ntp_servers:
   - '2.pool.ntp.org'
   - '3.pool.ntp.org'
 
+# vlans to use in the network-data
+network_data_vlans:
+  External: 10
+  InternalApi: 20
+  Storage: 30
+  StorageMgmt: 40
+  Tenant: 50
+  Management: 60
+
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud
@@ -56,6 +65,7 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_vlans: ''
+      RHOSPVirtLab_external: ''
 
 # physical is a list to define the physical machines to be connected. The role doesn't define any by default
 physical:

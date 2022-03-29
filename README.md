@@ -280,7 +280,7 @@ openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/net-multiple-nics.yaml \
+-e /home/stack/templates/custom-network-configuration.yaml \
 -e /home/stack/templates/custom-overcloud.yaml
 ```
 

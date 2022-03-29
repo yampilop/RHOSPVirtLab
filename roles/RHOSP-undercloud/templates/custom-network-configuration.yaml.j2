@@ -1,0 +1,8 @@
+resource_registry:
+{% for ocrole in overcloud_roles %}
+  OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.nic_configs }}
+{% endfor %}
+
+parameter_defaults:
+  NetworkDeploymentActions: ['CREATE','UPDATE']
+  DnsServers: {{ ansible_dns.nameservers }}
