@@ -31,7 +31,7 @@ nodes:
         physical_network: ctlplane
 {% endif %}
     name: "{{ node.name }}"
-    capabilities: "node:{{ node.name }},boot_option:local"
+    capabilities: "{{ ["node:" ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
     cpu: {{ node.cpus }}
     memory: {{ (node.memory / 1024) | int }}
     disk: {{ (node.disk_size / 1073741824) | int }}
