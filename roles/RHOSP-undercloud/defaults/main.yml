@@ -23,6 +23,21 @@ network_data_vlans:
   Tenant: 50
   Management: 60
 
+# interfaces to use in each nic-config
+interfaces:
+  controller:
+    ControlPlane: nic1
+    Vlans: nic2
+    External: nic3
+  compute:
+    ControlPlane: nic1
+    Vlans: nic2
+    External: nic3
+  computesriov:
+    ControlPlane: nic1
+    Vlans: nic2
+    Provider: nic3
+
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud

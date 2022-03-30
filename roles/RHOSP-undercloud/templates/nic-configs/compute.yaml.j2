@@ -167,7 +167,7 @@ resources:
             $network_config:
               network_config:
               - type: interface
-                name: nic1
+                name: {{ interfaces.compute.ControlPlane }}
                 mtu:
                   get_param: ControlPlaneMtu
                 use_dhcp: false
@@ -185,11 +185,11 @@ resources:
                   list_concat_unique:
                     - get_param: ControlPlaneStaticRoutes
               - type: interface
-                name: nic2
+                name: {{ interfaces.compute.Vlans }}
                 mtu:
                   get_attr: [MinViableMtu, value]
               - type: vlan
-                device: nic2
+                device: {{ interfaces.compute.Vlans }}
                 mtu:
                   get_param: StorageMtu
                 vlan_id:
@@ -201,7 +201,7 @@ resources:
                   list_concat_unique:
                     - get_param: StorageInterfaceRoutes
               - type: vlan
-                device: nic2
+                device: {{ interfaces.compute.Vlans }}
                 mtu:
                   get_param: InternalApiMtu
                 vlan_id:
@@ -227,12 +227,12 @@ resources:
                     - get_param: TenantInterfaceRoutes
                 members:
                 - type: interface
-                  name: nic2
+                  name: {{ interfaces.compute.Vlans }}
                   mtu:
                     get_attr: [MinViableMtu, value]
                   primary: true
                 - type: vlan
-                  device: nic2
+                  device: {{ interfaces.compute.Vlans }}
                   mtu:
                     get_param: TenantMtu
                   vlan_id:
@@ -256,7 +256,7 @@ resources:
                           get_param: ExternalInterfaceDefaultRoute
                 members:
                 - type: interface
-                  name: nic3
+                  name: {{ interfaces.compute.External }}
                   mtu:
                     get_param: ExternalMtu
                   use_dhcp: false
