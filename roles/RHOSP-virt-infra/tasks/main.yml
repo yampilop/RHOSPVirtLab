@@ -143,7 +143,7 @@
 
 - name: Activate the connection if slave interfaces has not the right master
   command: "nmcli connection up {{ item.hypervisor_if }}"
-  when: ( item.hypervisor_if is defined ) and ( item.hypervisor_if not in ((ansible_facts | dict2items | selectattr('value.device', 'defined') | selectattr('value.device', 'equalto', item.bridge) | list | first).value.interfaces) )
+  when: ( item.hypervisor_if is defined ) and (( item.hypervisor_if not in ((ansible_facts | dict2items | selectattr('value.device', 'defined') | selectattr('value.device', 'equalto', item.bridge) | list | first).value.interfaces) ) or (not (ansible_facts | dict2items | selectattr('value.device', 'defined') | selectattr('value.device', 'equalto', item.bridge) | list | first).value.active))
   loop: "{{ networks }}"
 
 - name: Enable masquerade in the firewall to allow external traffic
