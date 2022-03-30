@@ -247,24 +247,39 @@ resources:
                 routes:
                   list_concat_unique:
                     - get_param: InternalApiInterfaceRoutes
-              - type: vlan
-                device: nic2
+              - type: ovs_bridge
+                name: br-tenant
                 mtu:
                   get_param: TenantMtu
-                vlan_id:
-                  get_param: TenantNetworkVlanID
+                dns_servers:
+                  get_param: DnsServers
+                use_dhcp: false
                 addresses:
                 - ip_netmask:
                     get_param: TenantIpSubnet
                 routes:
                   list_concat_unique:
                     - get_param: TenantInterfaceRoutes
-              - type: interface
-                name: nic3
+                members:
+                - type: interface
+                  name: nic2
+                  mtu:
+                    get_attr: [MinViableMtu, value]
+                  primary: true
+                - type: vlan
+                  device: nic2
+                  mtu:
+                    get_param: TenantMtu
+                  vlan_id:
+                    get_param: TenantNetworkVlanID
+                  use_dhcp: false
+              - type: ovs_bridge
+                name: bridge_name
                 mtu:
                   get_param: ExternalMtu
-                vlan_id:
-                  get_param: ExternalNetworkVlanID
+                dns_servers:
+                  get_param: DnsServers
+                use_dhcp: false
                 addresses:
                 - ip_netmask:
                     get_param: ExternalIpSubnet
@@ -274,6 +289,13 @@ resources:
                     - - default: true
                         next_hop:
                           get_param: ExternalInterfaceDefaultRoute
+                members:
+                - type: interface
+                  name: nic3
+                  mtu:
+                    get_param: ExternalMtu
+                  use_dhcp: false
+                  primary: true
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
