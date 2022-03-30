@@ -222,8 +222,7 @@ resources:
                 members:
                 - type: interface
                   name: {{ interfaces.computesriov.Provider }}
-                  mtu:
-                    get_param: 1500
+                  mtu: 1500
                   use_dhcp: false
                   primary: true
 

@@ -261,7 +261,6 @@ openstack overcloud deploy \
 --log-file overcloud_deployment.log \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
 --stack overcloud \
---ntp-server 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org \
 -r /home/stack/templates/roles_data.yaml \
 -n /home/stack/templates/network_data.yaml \
 -e /home/stack/templates/node-info.yaml \

@@ -7,7 +7,10 @@ RHOSP_version: 16.2
 # overcloud parameters
 overcloud_ip: 10.0.0.254
 
-# ntp servers
+# dns and ntp servers
+dns_servers:
+  - '8.8.8.8'
+  - '8.8.4.4'
 ntp_servers: 
   - '0.pool.ntp.org'
   - '1.pool.ntp.org'
@@ -37,6 +40,25 @@ interfaces:
     ControlPlane: nic1
     Vlans: nic2
     Provider: nic3
+
+# ComputeSriov default properties
+ComputeSriovProperties:
+  isolcpus: '8-19'
+  hugepagesz: '1GB'
+  hugepages: 32
+  kernelargs: 'iommu=pt intel_iommu=on'
+  devmappings: 'sriov1:nic4,sriov2:nic5'
+  sharedcpus: '4-7'
+  hostmemory: 8192
+  pcipassthrough:
+    - vendor_id: 8086
+      product_id: 1528
+      address: '0000:85:00.0'
+      network: 'sriov1'
+    - vendor_id: 8086
+      product_id: 1528
+      address: '0000:85:00.1'
+      network: 'sriov1'
 
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:

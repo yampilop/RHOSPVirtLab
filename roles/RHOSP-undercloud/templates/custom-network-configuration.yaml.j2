@@ -5,4 +5,40 @@ resource_registry:
 
 parameter_defaults:
   NetworkDeploymentActions: ['CREATE','UPDATE']
-  DnsServers: {{ ansible_dns.nameservers }}
+  DnsServers: {{ dns_servers | join(',') }}
+
+  ComputeSriovParameters:
+    IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
+    KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
+    TunedProfileName: "cpu-partitioning"
+    NeutronPhysicalDevMappings: '{{ ComputeSriovProperties.devmappings }}'
+    NovaComputeCpuDedicatedSet: '{{ ComputeSriovProperties.isolcpus }}'
+    NovaComputeCpuSharedSet: '{{ ComputeSriovProperties.sharedcpus }}'
+    NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}
+
+    NovaPCIPassthrough:
+{% for passt in ComputeSriovProperties.pcipassthrough %}
+      - vendor_id: "{{ passt.vendor_id }}"
+        product_id: "{{ passt.product_id }}"
+        address: "{{ passt.address }}"
+        physical_network: "{{ passt.network }}"
+{% endfor %}
+
+  NovaSchedulerDefaultFilters:
+    - AvailabilityZoneFilter
+    - NUMATopologyFilter
+    - ComputeFilter
+    - ComputeCapabilitiesFilter
+    - ImagePropertiesFilter
+    - AggregateInstanceExtraSpecsFilter
+    - AggregateMultiTenancyIsolation
+    - AggregateCoreFilter
+    - ServerGroupAntiAffinityFilter
+    - ServerGroupAffinityFilter
+    - SameHostFilter
+    - DifferentHostFilter
+    - PciPassthroughFilter
+
+  NovaSchedulerAvailableFilters:
+    - "nova.scheduler.filters.all_filters"
+    - "nova.scheduler.filters.pci_passthrough_filter.PciPassthroughFilter"

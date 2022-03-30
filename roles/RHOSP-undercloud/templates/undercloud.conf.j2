@@ -58,11 +58,7 @@ undercloud_admin_host = 192.168.24.3
 #undercloud_enable_selinux = true
 #undercloud_hostname = <None>
 #undercloud_log_file = install-undercloud.log
-{% if ansible_dns %}
-undercloud_nameservers = {{ ansible_dns.nameservers | join(',') }}
-{% else %}
-undercloud_nameservers = 8.8.8.8,8.8.4.4
-{% endif %}
+undercloud_nameservers = {{ dns_servers | join(',') }}
 undercloud_ntp_servers = {{ ntp_servers | join(',') }}
 undercloud_public_host = 192.168.24.2
 #undercloud_service_certificate =
