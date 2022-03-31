@@ -6,6 +6,7 @@ resource_registry:
 parameter_defaults:
   NetworkDeploymentActions: ['CREATE','UPDATE']
   DnsServers: {{ dns_servers | join(',') }}
+  NtpServer: {{ ntp_servers | join(',') }}
 
   ComputeSriovParameters:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
