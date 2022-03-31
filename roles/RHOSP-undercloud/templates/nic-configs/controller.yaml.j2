@@ -251,15 +251,7 @@ resources:
                 name: br-tenant
                 mtu:
                   get_param: TenantMtu
-                dns_servers:
-                  get_param: DnsServers
                 use_dhcp: false
-                addresses:
-                - ip_netmask:
-                    get_param: TenantIpSubnet
-                routes:
-                  list_concat_unique:
-                    - get_param: TenantInterfaceRoutes
                 members:
                 - type: interface
                   name: {{ interfaces.compute.Vlans }}
@@ -273,6 +265,14 @@ resources:
                   vlan_id:
                     get_param: TenantNetworkVlanID
                   use_dhcp: false
+                  dns_servers:
+                    get_param: DnsServers
+                  addresses:
+                  - ip_netmask:
+                      get_param: TenantIpSubnet
+                  routes:
+                    list_concat_unique:
+                      - get_param: TenantInterfaceRoutes
               - type: ovs_bridge
                 name: bridge_name
                 mtu:
