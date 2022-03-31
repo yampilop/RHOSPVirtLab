@@ -1,0 +1,37 @@
+#/bin/bash
+
+source /home/stack/stackrc
+
+# Auto source and completion
+{% if RHOSP_version == 13.0 %}
+openstack complete 2>/dev/null | sudo tee /usr/share/bash-completion/completions/openstack
+{% else %}
+openstack complete 2>/dev/null | sed '1d;$d' | sudo tee /usr/share/bash-completion/completions/openstack
+{% endif %}
+cat <<EOF >> /home/stack/.bashrc
+source /home/stack/stackrc
+source /usr/share/bash-completion/completions/openstack
+EOF
+
+# Prepare the overcloud
+openstack overcloud image upload --image-path /home/stack/images/
+openstack image list --fit-width
+openstack overcloud node import /home/stack/templates/instackenv.yaml
+openstack baremetal node list
+openstack overcloud node introspect --all-manageable --provide
+openstack baremetal node list
+{% if RHOSP_version == 13.0 %}
+sudo docker login registry.redhat.io --username {{ rh_username }} --password {{ rh_password }}
+sudo openstack overcloud container image prepare \
+--output-env-file /home/stack/templates/overcloud-images.yaml \
+--tag-from-label {version}-{release} \
+--namespace=registry.redhat.io/rhosp13 \
+--prefix=openstack- \
+--push-destination=192.168.24.1:8787 \
+--output-images-file /home/stack/local_registry_images.yaml
+sudo openstack overcloud container image upload \
+--config-file /home/stack/local_registry_images.yaml \
+--verbose
+{% else %}
+sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
+{% endif %}

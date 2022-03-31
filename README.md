@@ -178,100 +178,25 @@ ensure they are secured.
 ##########################################################
 ```
 
-### Auto source and completion
+### Pre-deployment actions
 
-To enable auto-sourcing of stackrc file and auto-sourcing of openstack bash completion, do the following:
-
-```bash
-openstack complete 2>/dev/null | sed '1d;$d' | sudo tee /usr/share/bash-completion/completions/openstack
-cat <<EOF >> /home/stack/.bashrc
-source /home/stack/stackrc
-source /usr/share/bash-completion/completions/openstack
-EOF
-```
-
-### Prepare the overcloud
-
-Load the `overcloud` images to openstack:
+For most cases it is available a script with all the common pre-deployment tasks. Run it using:
 
 ```bash
-source /home/stack/stackrc
-openstack overcloud image upload --image-path /home/stack/images/
+/home/stack/pre_deployment.sh
 ```
 
-List images:
-
-```bash
-openstack image list --fit-width
-```
-
-Import the baremetal nodes:
-
-```bash
-source /home/stack/stackrc
-openstack overcloud node import /home/stack/templates/instackenv.yaml
-openstack baremetal node list
-```
-
-Introspect the nodes:
-
-```bash
-openstack overcloud node introspect --all-manageable --provide
-```
-
-After the process finishes, the nodes must be in `available` state:
-
-```bash
-openstack baremetal node list
-```
-
-Prepare the images for containers:
-
-For 16.X versions:
-
-```bash
-source /home/stack/stackrc
-sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
-```
-
-For 13.0 version (use your Red Hat credentials in the docker login command):
-
-```bash
-source /home/stack/stackrc
-sudo docker login registry.redhat.io
-sudo openstack overcloud container image prepare \
---output-env-file /home/stack/templates/overcloud-images.yaml \
---tag-from-label {version}-{release} \
---namespace=registry.redhat.io/rhosp13 \
---prefix=openstack- \
---push-destination=192.168.24.1:8787 \
---output-images-file /home/stack/local_registry_images.yaml
-sudo openstack overcloud container image upload \
---config-file /home/stack/local_registry_images.yaml \
---verbose
-```
+If you want a customized experience, consider reviewing the script and executing the tasks manually.
 
 ### Deploy the overcloud
 
-Execute the deploy command with all the templates and environment files:
+Execute the deployment script provided:
 
 ```bash
-source /home/stack/stackrc
-openstack overcloud deploy \
---log-file overcloud_deployment.log \
---templates /usr/share/openstack-tripleo-heat-templates/ \
---stack overcloud \
--r /home/stack/templates/roles_data.yaml \
--n /home/stack/templates/network_data.yaml \
--e /home/stack/templates/node-info.yaml \
--e /home/stack/templates/containers-prepare-parameter.yaml \
--e /home/stack/templates/overcloud-images.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
--e /home/stack/templates/custom-network-configuration.yaml \
--e /home/stack/templates/custom-overcloud.yaml
+/home/stack/deploy.sh
 ```
+
+If you want a customized experience, consider reviewing the script and executing the task manually.
 
 The output should end with the following:
 

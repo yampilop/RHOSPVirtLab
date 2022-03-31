@@ -164,6 +164,29 @@
     group: stack
   loop: "{{ overcloud_roles }}"
 
+- name: TEMPLATES - Prepare the RHSM configuration template
+  template:
+    src: "rhsm.yaml.j2"
+    dest: "/home/stack/templates/rhsm.yaml"
+    owner: stack
+    group: stack
+
+- name: PREDEPLOYMENT - Prepare the pre-deployment script
+  template:
+    src: pre_deployment.sh.j2
+    dest: /home/stack/pre_deployment.sh
+    mode: '755'
+    owner: stack
+    group: stack
+
+- name: DEPLOYMENT - Prepare the deployment script
+  template:
+    src: deploy.sh.j2
+    dest: /home/stack/deploy.sh
+    mode: '755'
+    owner: stack
+    group: stack
+
 - name: POSTDEPLOYMENT - Prepare post-deployment script
   template:
     src: post_deployment.sh.j2
