@@ -39,7 +39,7 @@ interfaces:
   computesriov:
     ControlPlane: nic1
     Vlans: nic2
-    Provider: nic3
+    External: nic3
 
 # ComputeSriov default properties
 ComputeSriovProperties:

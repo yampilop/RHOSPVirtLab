@@ -28,7 +28,7 @@
       subnet: tenant_subnet
   # For systems with both IPv4 and IPv6, you may specify a gateway network for
   # each, such as ['ControlPlane', 'External']
-  default_route_networks: ['External']
+  default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-controller-%index%'
   RoleParametersDefault:
     OVNCMSOptions: "enable-chassis-as-gw"
@@ -215,6 +215,7 @@
       subnet: tenant_subnet
     Storage:
       subnet: storage_subnet
+  default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-novacompute-%index%'
   RoleParametersDefault:
     TunedProfileName: "virtual-host"
@@ -287,12 +288,15 @@
     Compute SR-IOV Role
   CountDefault: 1
   networks:
+    External:
+      subnet: external_subnet
     InternalApi:
       subnet: internal_api_subnet
     Tenant:
       subnet: tenant_subnet
     Storage:
       subnet: storage_subnet
+  default_route_networks: ['External','ControlPlane']
   RoleParametersDefault:
     TunedProfileName: "cpu-partitioning"
   update_serial: 25

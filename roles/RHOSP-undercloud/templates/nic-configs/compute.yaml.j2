@@ -184,6 +184,9 @@ resources:
                 routes:
                   list_concat_unique:
                     - get_param: ControlPlaneStaticRoutes
+                    - - default: true
+                        next_hop:
+                          get_param: ControlPlaneDefaultRoute
               - type: interface
                 name: {{ interfaces.compute.Vlans }}
                 mtu:
