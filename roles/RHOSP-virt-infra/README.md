@@ -11,11 +11,23 @@ It's tested to work on a Red Hat Enterprise Linux version 8.4 system.
 Role Variables
 --------------
 
+RHOSP_version: **16.2**|16.1|13.0
+  This variable sets the version of RHOSP to install.
+
 cleanup: **False**|True
   This variable sets if the resources (domains, networks, storage) should be cleaned before the creation process.
 
 create: **True**|False
   This variable sets if the resources (domains, networks, storage) should be created. Useful in combination with cleanup:True to wipe the lab environment.
+
+external_if: eno1
+  This variable sets the interface that connects the hypervisor with the Internet.
+
+overcloud_ip: 10.0.0.254
+  This variable sets the overcloud virtual IP (used for example to access Horizon)
+
+forwarded_ports: [80,6080,5000]
+  List of ports to be forwarded to the overcloud IP (enabling access to Horizon using the hypervisor IP address)
 
 vms: []
   List of the virtual machines to be created, in the format:
@@ -35,6 +47,10 @@ vms: []
       NETWORK_NAME_2: 'IP_ADDRESS_2'
       ...
 ```
+  By default the role creates:
+    - undercloud
+    - controller0
+    - compute0
 
 networks: []
   List of the virtual networks to be created. The default values should work. You can replace or add the hypervisor_if values to set wich interfaces in the hypervisor are linked to each bridge (useful to connect physical nodes to the lab).
@@ -46,26 +62,12 @@ networks:
     mac_suffix: '00'
     ipv4: false
     hypervisor_if: eno2
-  - name: RHOSPVirtLab_storage
-    bridge: br-storage
+  - name: RHOSPVirtLab_vlans
+    bridge: br-vlans
     forward: false
     mac_suffix: '01'
     ipv4: false
-  - name: RHOSPVirtLab_storage_mgmt
-    bridge: br-storage-mgmt
-    forward: false
-    mac_suffix: '02'
-    ipv4: false
-  - name: RHOSPVirtLab_internal_api
-    bridge: br-internal-api
-    forward: false
-    mac_suffix: '03'
-    ipv4: false
-  - name: RHOSPVirtLab_tenant
-    bridge: br-tenant
-    forward: false
-    mac_suffix: '04'
-    ipv4: false
+    hypervisor_if: eno3
   - name: RHOSPVirtLab_external
     bridge: br-external
     forward: route
@@ -94,14 +96,16 @@ Example Playbook
 - name: Infrastructure configuration
   hosts: infrastructure
   vars_files:
+    - vars/options.yml
     - vars/vms.yml
     - vars/networks.yml
-  become: no
+    - vars/overcloud.yml
+  pre_tasks:
+    - name: Set ansible_user to the current user
+      set_fact:
+        ansible_user: "{{ lookup('env','USER') }}"
   roles:
     - role: RHOSP-virt-infra
-      vars:
-        cleanup: False
-        create: True
 ```
 
 License
