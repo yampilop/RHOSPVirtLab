@@ -136,6 +136,8 @@ If you want to customize the default environment created by the playbook, you ne
 - vars/overcloud.yml (The parameters of the overcloud configuration and the hypervisor forwarded ports)
 - vars/options.yml (The version of RHOSP to deploy and the cleanup parameter)
 
+You also can add to vars/overcloud.yml or vars/options.yml values overriding the default ones from the roles.
+
 ## Last steps
 
 As the `undercloud` installation and `overcloud` deploy are tasks that last longer and require attention due to possible failures, they need to be executed manually. To do that, login to the `undercloud`:
@@ -188,7 +190,7 @@ For most cases it is available a script with all the common pre-deployment tasks
 
 If you want a customized experience, consider reviewing the script and executing the tasks manually.
 
-### Deploy the overcloud
+### Deployment
 
 Execute the deployment script provided:
 
@@ -218,9 +220,7 @@ grep PASSWORD overcloudrc
 export OS_PASSWORD=XXXXXXXXXXXXXX
 ```
 
-### Post deploy configurations
-
-#### Execute the post-deployment script
+### Post-deployment actions
 
 Execute the script to create basic resources:
 
