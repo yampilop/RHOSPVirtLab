@@ -2,7 +2,7 @@
   file:
     path: "{{ pool_location }}"
     state: directory
-    mode: '0777'
+    mode: "0777"
   become: yes
 
 - name: STORAGE - Define the pool from the template
@@ -88,7 +88,7 @@
   register: files_output
   loop:
     - "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
-    - undercloud-init.iso
+    - "undercloud-init.iso"
 
 - name: STORAGE - Fail when any of the files does not exist
   fail:

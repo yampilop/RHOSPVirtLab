@@ -28,7 +28,7 @@
       - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      - '@python36'
+      - "@python36"
       - python3-lxml
       - python3-libvirt
     state: present
@@ -72,11 +72,11 @@
 
 - name: VIRTUALBMC - Create VirtualBMC systemd unit
   template:
-    src: vbmcd.service
-    dest: /etc/systemd/system/vbmcd.service
+    src: "vbmcd.service"
+    dest: "/etc/systemd/system/vbmcd.service"
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
 
 - name: VIRTUALBMC - Reload systemd daemon
@@ -132,9 +132,9 @@
     type: bridge-slave
     conn_name: "{{ item.hypervisor_if }}"
     ifname: "{{ item.hypervisor_if }}"
-    master: '{{ item.bridge }}'
-    ip4: ''
-    gw4: ''
+    master: "{{ item.bridge }}"
+    ip4: ""
+    gw4: ""
     autoconnect: yes
     state: present
   become: yes

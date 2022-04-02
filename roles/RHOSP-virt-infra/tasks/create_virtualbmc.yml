@@ -26,7 +26,7 @@
 - name: VIRTUALBMC - Ensure port rules are configured to the firewall
   firewalld:
     port: "{{ item.bmcport }}/udp"
-    zone: libvirt
+    zone: "libvirt"
     permanent: yes
     immediate: yes
     state: enabled

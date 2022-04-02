@@ -10,7 +10,7 @@
   include_role:
     name: geerlingguy.swap
   vars:
-    swap_file_size_mb: '8192'
+    swap_file_size_mb: "8192"
 
 - name: HOSTNAME - Change the hostname
   hostname:
@@ -62,15 +62,15 @@
 
 - name: CONFIGFILES - Set container images prepare file
   template:
-    src: containers-prepare-parameter.yaml.j2
-    dest: /home/stack/templates/containers-prepare-parameter.yaml
+    src: "containers-prepare-parameter.yaml.j2"
+    dest: "/home/stack/templates/containers-prepare-parameter.yaml"
     owner: stack
     group: stack
 
 - name: CONFIGFILES - Set custom undercloud parameters
   copy:
-    src: templates/custom-undercloud-params.yaml
-    dest: /home/stack/templates/custom-undercloud-params.yaml
+    src: "templates/custom-undercloud-params.yaml"
+    dest: "/home/stack/templates/custom-undercloud-params.yaml"
     owner: stack
     group: stack
 
@@ -89,7 +89,7 @@
 - name: IMAGES - Unpack director images
   unarchive:
     src: "{{ item }}"
-    dest: /home/stack/images/
+    dest: "/home/stack/images/"
     owner: stack
     group: stack
     remote_src: yes
@@ -107,54 +107,27 @@
   loop:
     - url: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
       name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
-    - url: https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
-      name: cirros.qcow2
+    - url: "https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img"
+      name: "cirros.qcow2"
   retries: 3
   delay: 10
   register: result
   until: result is not failed
 
-- name: TEMPLATES - Prepare nodes file
+- name: TEMPLATES - Prepare templates
   template:
-    src: instackenv.yaml.j2
-    dest: /home/stack/templates/instackenv.yaml
+    src: "{{ item }}.j2"
+    dest: "/home/stack/templates/{{ item }}"
     owner: stack
     group: stack
-
-- name: TEMPLATES - Prepare node info file
-  template:
-    src: node-info.yaml.j2
-    dest: /home/stack/templates/node-info.yaml
-    owner: stack
-    group: stack
-
-- name: TEMPLATES - Prepare roles data file
-  template:
-    src: roles_data.yaml.j2
-    dest: /home/stack/templates/roles_data.yaml
-    owner: stack
-    group: stack
-
-- name: TEMPLATES - Perpare the custom overcloud parameters template
-  template:
-    src: custom-overcloud.yaml.j2
-    dest: /home/stack/templates/custom-overcloud.yaml
-    owner: stack
-    group: stack
-
-- name: TEMPLATES - Perpare the custom network data
-  template:
-    src: network_data.yaml.j2
-    dest: /home/stack/templates/network_data.yaml
-    owner: stack
-    group: stack
-
-- name: TEMPLATES - Perpare the custom network configuration template
-  template:
-    src: custom-network-configuration.yaml.j2
-    dest: /home/stack/templates/custom-network-configuration.yaml
-    owner: stack
-    group: stack
+  loop:
+    - instackenv.yaml
+    - node-info.yaml
+    - roles_data.yaml
+    - custom-overcloud.yaml
+    - network_data.yaml
+    - custom-network-configuration.yaml
+    - rhsm.yaml
 
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
@@ -164,33 +137,14 @@
     group: stack
   loop: "{{ overcloud_roles }}"
 
-- name: TEMPLATES - Prepare the RHSM configuration template
+- name: SCRIPTS - Prepare the scripts
   template:
-    src: "rhsm.yaml.j2"
-    dest: "/home/stack/templates/rhsm.yaml"
+    src: "{{ item }}.j2"
+    dest: "/home/stack/{{ item }}"
+    mode: "755"
     owner: stack
     group: stack
-
-- name: PREDEPLOYMENT - Prepare the pre-deployment script
-  template:
-    src: pre_deployment.sh.j2
-    dest: /home/stack/pre_deployment.sh
-    mode: '755'
-    owner: stack
-    group: stack
-
-- name: DEPLOYMENT - Prepare the deployment script
-  template:
-    src: deploy.sh.j2
-    dest: /home/stack/deploy.sh
-    mode: '755'
-    owner: stack
-    group: stack
-
-- name: POSTDEPLOYMENT - Prepare post-deployment script
-  template:
-    src: post_deployment.sh.j2
-    dest: /home/stack/post_deployment.sh
-    mode: '755'
-    owner: stack
-    group: stack
+  loop:
+    - pre_deployment.sh
+    - deploy.sh
+    - post_deployment.sh

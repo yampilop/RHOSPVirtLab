@@ -7,7 +7,7 @@
 - name: DOMAINS - Define the domain from the template
   community.libvirt.virt:
     command: define
-    xml: '{{ lookup("template", "domain.xml.j2") }}'
+    xml: "{{ lookup('template', 'domain.xml.j2') }}"
   when: item.name not in all_vms.list_vms
   loop: "{{ vms }}"
   become: yes
