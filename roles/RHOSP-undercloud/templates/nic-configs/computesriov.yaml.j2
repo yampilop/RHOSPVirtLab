@@ -38,7 +38,7 @@ parameters:
     description: IP address/subnet on the storage network
     type: string
   StorageNetworkVlanID:
-    default: 191
+    default: {{ network_data_vlans.Storage }}
     description: Vlan ID for the storage network traffic.
     type: number
   StorageMtu:
@@ -60,7 +60,7 @@ parameters:
     description: IP address/subnet on the internal_api network
     type: string
   InternalApiNetworkVlanID:
-    default: 190
+    default: {{ network_data_vlans.InternalApi }}
     description: Vlan ID for the internal_api network traffic.
     type: number
   InternalApiMtu:
@@ -82,7 +82,7 @@ parameters:
     description: IP address/subnet on the tenant network
     type: string
   TenantNetworkVlanID:
-    default: 193
+    default: {{ network_data_vlans.Tenant }}
     description: Vlan ID for the tenant network traffic.
     type: number
   TenantMtu:
@@ -104,7 +104,7 @@ parameters:
     description: IP address/subnet on the external network
     type: string
   ExternalNetworkVlanID:
-    default: 10
+    default: {{ network_data_vlans.External }}
     description: Vlan ID for the external network traffic.
     type: number
   ExternalMtu:
@@ -151,9 +151,11 @@ resources:
         yaql:
           expression: $.data.max()
           data:
+            - {get_param: ControlPlaneMtu}
             - {get_param: StorageMtu}
             - {get_param: InternalApiMtu}
             - {get_param: TenantMtu}
+            - {get_param: ExternalMtu}
 
   OsNetConfigImpl:
     type: OS::Heat::SoftwareConfig
@@ -166,10 +168,10 @@ resources:
           params:
             $network_config:
               network_config:
-              - type: interface
-                name: {{ interfaces.computesriov.ControlPlane }}
+              - type: ovs_bridge
+                name: bridge_name
                 mtu:
-                  get_param: ControlPlaneMtu
+                  get_attr: [MinViableMtu, value]
                 use_dhcp: false
                 dns_servers:
                   get_param: DnsServers
@@ -187,83 +189,60 @@ resources:
                     - - default: true
                         next_hop:
                           get_param: ControlPlaneDefaultRoute
-              - type: interface
-                name: {{ interfaces.computesriov.Vlans }}
-                mtu:
-                  get_attr: [MinViableMtu, value]
-              - type: vlan
-                device: {{ interfaces.computesriov.Vlans }}
-                mtu:
-                  get_param: StorageMtu
-                vlan_id:
-                  get_param: StorageNetworkVlanID
-                addresses:
-                - ip_netmask:
-                    get_param: StorageIpSubnet
-                routes:
-                  list_concat_unique:
-                    - get_param: StorageInterfaceRoutes
-              - type: vlan
-                device: {{ interfaces.computesriov.Vlans }}
-                mtu:
-                  get_param: InternalApiMtu
-                vlan_id:
-                  get_param: InternalApiNetworkVlanID
-                addresses:
-                - ip_netmask:
-                    get_param: InternalApiIpSubnet
-                routes:
-                  list_concat_unique:
-                    - get_param: InternalApiInterfaceRoutes
-              - type: ovs_bridge
-                name: br-tenant
-                mtu:
-                  get_param: TenantMtu
-                use_dhcp: false
                 members:
                 - type: interface
-                  name: {{ interfaces.computesriov.Vlans }}
+                  name: {{ interfaces.computesriov.ControlPlane }}
                   mtu:
                     get_attr: [MinViableMtu, value]
+                  # force the MAC address of the bridge to this interface
                   primary: true
                 - type: vlan
-                  device: {{ interfaces.computesriov.Vlans }}
+                  mtu:
+                    get_param: StorageMtu
+                  vlan_id:
+                    get_param: StorageNetworkVlanID
+                  addresses:
+                  - ip_netmask:
+                      get_param: StorageIpSubnet
+                  routes:
+                    list_concat_unique:
+                      - get_param: StorageInterfaceRoutes
+                - type: vlan
+                  mtu:
+                    get_param: InternalApiMtu
+                  vlan_id:
+                    get_param: InternalApiNetworkVlanID
+                  addresses:
+                  - ip_netmask:
+                      get_param: InternalApiIpSubnet
+                  routes:
+                    list_concat_unique:
+                      - get_param: InternalApiInterfaceRoutes
+                - type: vlan
                   mtu:
                     get_param: TenantMtu
                   vlan_id:
                     get_param: TenantNetworkVlanID
-                  use_dhcp: false
-                  dns_servers:
-                    get_param: DnsServers
                   addresses:
                   - ip_netmask:
                       get_param: TenantIpSubnet
                   routes:
                     list_concat_unique:
                       - get_param: TenantInterfaceRoutes
-              - type: ovs_bridge
-                name: bridge_name
-                mtu:
-                  get_param: ExternalMtu
-                dns_servers:
-                  get_param: DnsServers
-                use_dhcp: false
-                addresses:
-                - ip_netmask:
-                    get_param: ExternalIpSubnet
-                routes:
-                  list_concat_unique:
-                    - get_param: ExternalInterfaceRoutes
-                    - - default: true
-                        next_hop:
-                          get_param: ExternalInterfaceDefaultRoute
-                members:
-                - type: interface
-                  name: {{ interfaces.computesriov.External }}
+                - type: vlan
                   mtu:
                     get_param: ExternalMtu
-                  use_dhcp: false
-                  primary: true
+                  vlan_id:
+                    get_param: ExternalNetworkVlanID
+                  addresses:
+                  - ip_netmask:
+                      get_param: ExternalIpSubnet
+                  routes:
+                    list_concat_unique:
+                      - get_param: ExternalInterfaceRoutes
+                      - - default: true
+                          next_hop:
+                            get_param: ExternalInterfaceDefaultRoute
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
