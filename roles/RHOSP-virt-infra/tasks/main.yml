@@ -28,6 +28,7 @@
       - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
+      - rhel-system-roles
       - "@python36"
       - python3-lxml
       - python3-libvirt
@@ -57,7 +58,7 @@
     enabled: yes
   become: yes
 
-- name: Ensure NetworkManager service is enabled and running
+- name: Ensure NetworkManager is enabled and running
   service:
     name: NetworkManager
     state: started
@@ -107,44 +108,105 @@
   import_tasks: clean_libvirt_networks.yml
   when: cleanup
 
-- name: Configure libvirt networks
-  import_tasks: create_libvirt_networks.yml
-  when: create
-
-- name: Configure libvirt storage pools and images
-  import_tasks: create_libvirt_storage.yml
-  when: create
-
-- name: Configure libvirt domains
-  import_tasks: create_libvirt_domains.yml
-  when: create
-
-- name: Install and configure VirtualBMC
-  import_tasks: create_virtualbmc.yml
-  when: create
-
 - name: Get bridge interfaces members
   set_fact:
     interfaces_reverted: "{{ ansible_facts | json_query('@.* | [?device].{key: device, value: interfaces}') | items2dict }}"
 
-- name: Bridge hypervisor interfaces to libvirt bridges
-  nmcli:
-    type: bridge-slave
-    conn_name: "{{ item.hypervisor_if }}"
-    ifname: "{{ item.hypervisor_if }}"
-    master: "{{ item.bridge }}"
-    ip4: ""
-    gw4: ""
-    autoconnect: yes
-    state: present
-  become: yes
-  when: ( item.hypervisor_if is defined ) and ( interfaces_reverted[item.bridge] is defined ) and ( item.hypervisor_if not in interfaces_reverted[item.bridge] )
+- name: Define bridges for networks linked with the hypervisor
+  set_fact:
+    custom_network_connections: "{{ custom_network_connections | default([]) + [connection] }}"
+  vars:
+    ip:
+      dhcp4: no
+      auto6: no
+      address:
+        - "{% if item.ipv4 %}{{ (item.ipv4.address ~ '/' ~ item.ipv4.netmask) | ipaddr('network/prefix') }}{% endif %}"
+    noip:
+      dhcp4: no
+      auto6: no
+    connection:
+      name: "{{ item.bridge }}"
+      interface_name: "{{ item.bridge }}"
+      type: bridge
+      autoconnect: yes
+      ip: "{% if item.ipv4 %}{{ ip }}{% else %}{{ noip }}{% endif %}"
+      state: up
+  when: item.hypervisor_if is defined
   loop: "{{ networks }}"
 
-- name: Activate the connection if slave interfaces has not the right master
-  command: "nmcli connection up {{ item.hypervisor_if }}"
-  when: ( item.hypervisor_if is defined ) and (( item.hypervisor_if not in ((ansible_facts | dict2items | selectattr('value.device', 'defined') | selectattr('value.device', 'equalto', item.bridge) | list | first).value.interfaces) ) or (not (ansible_facts | dict2items | selectattr('value.device', 'defined') | selectattr('value.device', 'equalto', item.bridge) | list | first).value.active))
+- name: Define hypervisor interfaces
+  set_fact:
+    custom_network_connections: "{{ custom_network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ item.hypervisor_if }}"
+      interface_name: "{{ item.hypervisor_if }}"
+      type: ethernet
+      autoconnect: yes
+      ip:
+        dhcp4: no
+        auto6: no
+      state: up
+  when: item.hypervisor_if is defined
   loop: "{{ networks }}"
+
+- name: Define hypervisor default interface
+  set_fact:
+    custom_network_connections: "{{ custom_network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ external_if }}"
+      interface_name: "{{ external_if }}"
+      type: ethernet
+      autoconnect: yes
+      ip:
+        dhcp4: yes
+        auto6: yes
+      state: up
+
+- name: Define network configuration for interfaces bridged to libvirt
+  set_fact:
+    custom_network_connections: "{{ custom_network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ item.hypervisor_if }}"
+      interface_name: "{{ item.hypervisor_if }}"
+      type: ethernet
+      controller: "{{ item.bridge }}"
+      port_type: bridge
+      autoconnect: yes
+      state: up
+  when: ( item.hypervisor_if is defined ) and ( interfaces_reverted[item.bridge] is defined )
+  loop: "{{ networks }}"
+
+- name: Define network configuration for vlans
+  set_fact:
+    custom_network_connections: "{{ custom_network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "vlan{{ item.id }}"
+      type: vlan
+      vlan_id: "{{ item.id }}"
+      parent: "{% for net in networks %}{% if item in net.vlans %}{{ net.hypervisor_if }}{% endif %}{% endfor %}"
+      autoconnect: yes
+      ip:
+        dhcp4: no
+        auto6: no
+        address:
+          - "{{ item.address }}"
+      state: up
+  when: item.address != ""
+  loop: "{{ networks | selectattr('vlans', 'defined') | map(attribute='vlans') | list | flatten(levels=1) }}"
+
+- name: Configure network using system role
+  include_role:
+    name: rhel-system-roles.network
+  vars:
+    network_allow_restart: yes
+    network_connections: "{{ custom_network_connections }}"
+
+- name: Gather facts again to get interfaces
+  setup:
 
 - name: Enable masquerade in the firewall to allow external traffic
   firewalld:
@@ -165,3 +227,20 @@
     line: "alias stack='ssh stack@undercloud'"
     insertafter: EOF
     state: present
+
+- name: Configure libvirt networks
+  import_tasks: create_libvirt_networks.yml
+  when: create
+
+- name: Configure libvirt storage pools and images
+  import_tasks: create_libvirt_storage.yml
+  when: create
+
+- name: Configure libvirt domains
+  import_tasks: create_libvirt_domains.yml
+  when: create
+
+- name: Install and configure VirtualBMC
+  import_tasks: create_virtualbmc.yml
+  when: create
+
