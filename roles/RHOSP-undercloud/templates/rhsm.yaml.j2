@@ -10,6 +10,10 @@ parameter_defaults:
 {% if (rh_orgid is not defined) or (rh_activationkey is not defined) %}    
     rhsm_username: "{{ rh_username }}"
     rhsm_password: "{{ rh_password }}"
+{% endif %}
+{% if rh_pool is defined %}
+    rhsm_pool_ids: "{{ rh_pool }}"
+{% else %}
     rhsm_autosubscribe: true
 {% endif %}
     rhsm_method: "portal"
