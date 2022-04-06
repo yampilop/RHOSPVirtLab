@@ -4,6 +4,8 @@
 # RHOSP version
 RHOSP_version: 16.2
 
+create: True
+
 # overcloud parameters
 overcloud_ip: 10.0.0.254
 
@@ -30,16 +32,10 @@ network_data_vlans:
 interfaces:
   controller:
     ControlPlane: nic1
-    Vlans: nic2
-    External: nic3
   compute:
     ControlPlane: nic1
-    Vlans: nic2
-    External: nic3
   computesriov:
     ControlPlane: nic1
-    Vlans: nic2
-    External: nic3
 
 # ComputeSriov default properties
 ComputeSriovProperties:
@@ -87,8 +83,6 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_vlans: ''
-      RHOSPVirtLab_external: ''
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
     profile: 'compute'
@@ -101,8 +95,6 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
-      RHOSPVirtLab_vlans: ''
-      RHOSPVirtLab_external: ''
 
 # physical is a list to define the physical machines to be connected. The role doesn't define any by default
 physical:
@@ -111,28 +103,31 @@ physical:
 networks:
   - name: RHOSPVirtLab_ctlplane
     bridge: br-ctlplane
-    forward: false
+    forward: bridge
     mac_suffix: '00'
     ipv4: false
     hypervisor_if: eno2
-  - name: RHOSPVirtLab_vlans
-    bridge: br-vlans
-    forward: false
-    mac_suffix: '01'
-    ipv4: false
-    hypervisor_if: eno3
-  - name: RHOSPVirtLab_external
-    bridge: br-external
-    forward: route
-    mac_suffix: '05'
-    ipv4:
-      address: '10.0.0.1'
-      netmask: '255.255.255.0'
-      dhcp: false
+    vlans:
+      - name: External
+        id: "{{ network_data_vlans.External }}"
+        address: '10.0.0.1/24'
+      - name: InternalApi
+        id: "{{ network_data_vlans.InternalApi }}"
+        address: ''
+      - name: Storage
+        id: "{{ network_data_vlans.Storage }}"
+        address: ''
+      - name: StorageMgmt
+        id: "{{ network_data_vlans.StorageMgmt }}"
+        address: ''
+      - name: Tenant
+        id: "{{ network_data_vlans.Tenant }}"
+        address: ''
   - name: RHOSPVirtLab_management
     bridge: br-management
     forward: nat
     mac_suffix: '0f'
+    vlans: []
     ipv4:
       address: '192.168.250.1'
       netmask: '255.255.255.0'
