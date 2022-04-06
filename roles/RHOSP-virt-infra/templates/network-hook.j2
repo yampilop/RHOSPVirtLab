@@ -38,7 +38,7 @@ rules_update() {
 network_name="$1"
 network_task="$2"
 
-if [ "${network_name}" = "RHOSPVirtLab_external" ]; then
+if [ "${network_name}" = "RHOSPVirtLab_ctlplane" ]; then
 
   case "${network_task}" in
     started)

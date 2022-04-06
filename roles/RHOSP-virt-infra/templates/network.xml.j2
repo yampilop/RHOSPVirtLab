@@ -1,6 +1,6 @@
 <network>
   <name>{{ item.name }}</name>
-  <bridge name="{{ item.bridge }}" stp="on" delay="0"/>
+  <bridge name="{{ item.bridge }}" {% if item.forward != 'bridge' %}stp="on" delay="0" {% endif %}/>
 {% if item.forward %}
   <forward mode="{{ item.forward }}">
     {% if item.forward == 'nat' %}
@@ -10,7 +10,7 @@
     {% endif %}
   </forward>
 {% endif %}
-{% if item.ipv4 %}
+{% if item.ipv4 and item.hypervisor_if is not defined %}
   <ip address="{{ item.ipv4.address }}" netmask="{{ item.ipv4.netmask }}">
     {% if item.ipv4.dhcp %}
     <dhcp>
