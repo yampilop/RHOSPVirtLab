@@ -1,3 +1,53 @@
 ---
 RHOSP_version: 16.2
 cleanup: False
+external_if: eno1
+overcloud_ip: 10.0.0.254
+forwarded_ports:
+  - 80
+  - 6080
+  - 5000
+dns_servers:
+  - '8.8.8.8'
+  - '8.8.4.4'
+ntp_servers: 
+  - '0.pool.ntp.org'
+  - '1.pool.ntp.org'
+  - '2.pool.ntp.org'
+  - '3.pool.ntp.org'
+network_data_vlans:
+  External: 10
+  InternalApi: 20
+  Storage: 30
+  StorageMgmt: 40
+  Tenant: 50
+  Management: 60
+interfaces:
+  controller:
+    ControlPlane: nic1
+    External: nic2
+  compute:
+    ControlPlane: nic1
+    External: nic2
+  computesriov:
+    ControlPlane: nic2
+    External: nic3
+ComputeSriovProperties:
+  isolcpus: '8-19'
+  hugepagesz: '1GB'
+  hugepages: 32
+  kernelargs: 'iommu=pt intel_iommu=on'
+  devmappings: 'sriov1:nic4,sriov2:nic5'
+  sharedcpus: '4-7'
+  hostmemory: 8192
+  pcipassthrough:
+    - vendor_id: 8086
+      product_id: 1528
+      address: '0000:85:00.0'
+      network: 'sriov1'
+    - vendor_id: 8086
+      product_id: 1528
+      address: '0000:85:00.1'
+      network: 'sriov1'
+
+

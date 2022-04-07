@@ -135,10 +135,9 @@ If you want to customize the default environment created by the playbook, you ne
 - vars/networks.yml (The virtual networks and their connection to the physical interfaces of the hypervisor)
 - vars/vms.yml (The VMs to be created in the hypervisor)
 - vars/physical.yml (The physical nodes to be added as baremetal nodes in the undercloud)
-- vars/overcloud.yml (The parameters of the overcloud configuration and the hypervisor forwarded ports)
-- vars/options.yml (The version of RHOSP to deploy and the cleanup parameter)
+- vars/options.yml (Customizable parameters like the version of RHOSP to deploy, the cleanup parameter, etc.)
 
-You also can add to vars/overcloud.yml or vars/options.yml values overriding the default ones from the roles.
+You also can add to vars/options.yml any value overriding the default values from the roles.
 
 ## Last steps
 

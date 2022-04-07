@@ -1,7 +1,0 @@
----
-external_if: eno1
-overcloud_ip: 10.0.0.254
-forwarded_ports:
-  - 80
-  - 6080
-  - 5000
