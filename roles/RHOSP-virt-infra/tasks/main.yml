@@ -108,19 +108,19 @@
   import_tasks: clean_libvirt_networks.yml
   when: cleanup
 
-- name: Get bridge interfaces members
-  set_fact:
-    interfaces_reverted: "{{ ansible_facts | json_query('@.* | [?device].{key: device, value: interfaces}') | items2dict }}"
+#- name: Get bridge interfaces members
+#  set_fact:
+#    interfaces_reverted: "{{ ansible_facts | json_query('@.* | [?device].{key: device, value: interfaces}') | items2dict }}"
 
 - name: Define bridges for networks linked with the hypervisor
   set_fact:
-    custom_network_connections: "{{ custom_network_connections | default([]) + [connection] }}"
+    network_connections: "{{ network_connections + [connection] }}"
   vars:
     ip:
       dhcp4: no
       auto6: no
       address:
-        - "{% if item.ipv4 %}{{ (item.ipv4.address ~ '/' ~ item.ipv4.netmask) | ipaddr('network/prefix') }}{% endif %}"
+        - "{% if item.ipv4 %}{{ (item.ipv4.address ~ '/' ~ item.ipv4.netmask) | ipaddr('host/prefix') }}{% endif %}"
     noip:
       dhcp4: no
       auto6: no
@@ -131,12 +131,12 @@
       autoconnect: yes
       ip: "{% if item.ipv4 %}{{ ip }}{% else %}{{ noip }}{% endif %}"
       state: up
-  when: item.hypervisor_if is defined
+  when: item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
 
 - name: Define hypervisor interfaces
   set_fact:
-    custom_network_connections: "{{ custom_network_connections + [connection] }}"
+    network_connections: "{{ network_connections + [connection] }}"
   vars:
     connection:
       name: "{{ item.hypervisor_if }}"
@@ -147,26 +147,12 @@
         dhcp4: no
         auto6: no
       state: up
-  when: item.hypervisor_if is defined
+  when: item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
-
-- name: Define hypervisor default interface
-  set_fact:
-    custom_network_connections: "{{ custom_network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ external_if }}"
-      interface_name: "{{ external_if }}"
-      type: ethernet
-      autoconnect: yes
-      ip:
-        dhcp4: yes
-        auto6: yes
-      state: up
 
 - name: Define network configuration for interfaces bridged to libvirt
   set_fact:
-    custom_network_connections: "{{ custom_network_connections + [connection] }}"
+    network_connections: "{{ network_connections + [connection] }}"
   vars:
     connection:
       name: "{{ item.hypervisor_if }}"
@@ -176,57 +162,17 @@
       port_type: bridge
       autoconnect: yes
       state: up
-  when: ( item.hypervisor_if is defined ) and ( interfaces_reverted[item.bridge] is defined )
+  when: item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
-
-- name: Define network configuration for vlans
-  set_fact:
-    custom_network_connections: "{{ custom_network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "vlan{{ item.id }}"
-      type: vlan
-      vlan_id: "{{ item.id }}"
-      parent: "{% for net in networks %}{% if item in net.vlans %}{{ net.hypervisor_if }}{% endif %}{% endfor %}"
-      autoconnect: yes
-      ip:
-        dhcp4: no
-        auto6: no
-        address:
-          - "{{ item.address }}"
-      state: up
-  when: item.address != ""
-  loop: "{{ networks | selectattr('vlans', 'defined') | map(attribute='vlans') | list | flatten(levels=1) }}"
 
 - name: Configure network using system role
   include_role:
     name: rhel-system-roles.network
   vars:
     network_allow_restart: yes
-    network_connections: "{{ custom_network_connections }}"
 
 - name: Gather facts again to get interfaces
   setup:
-
-- name: Enable masquerade in the firewall to allow external traffic
-  firewalld:
-    zone: "{{ item }}"
-    masquerade: yes
-    permanent: yes
-    immediate: yes
-    state: enabled
-  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
-  loop:
-    - public
-    - libvirt
-  become: yes
-
-- name: Create stack alias to connect to undercloud
-  lineinfile:
-    path: "/home/{{ ansible_user }}/.bashrc"
-    line: "alias stack='ssh stack@undercloud'"
-    insertafter: EOF
-    state: present
 
 - name: Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
@@ -244,3 +190,31 @@
   import_tasks: create_virtualbmc.yml
   when: create
 
+- name: Enable masquerade in the firewall to allow external traffic
+  firewalld:
+    zone: "{{ item }}"
+    masquerade: yes
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+  loop:
+    - public
+    - libvirt
+  become: yes
+
+- name: Set port forwarding rules
+  firewalld:
+    rich_rule: rule family=ipv4 forward-port port={{ item }} protocol=tcp to-port={{ item }} to-addr={{ overcloud_ip }}
+    zone: public
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ forwarded_ports }}"
+
+- name: Create stack alias to connect to undercloud
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "alias stack='ssh stack@undercloud'"
+    insertafter: EOF
+    state: present

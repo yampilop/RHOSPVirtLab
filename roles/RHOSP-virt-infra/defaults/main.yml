@@ -12,7 +12,7 @@ create: True
 external_if: eno1
 overcloud_ip: 10.0.0.254
 forwarded_ports:
-  - 80  
+  - 80
   - 6080
   - 5000
 
@@ -43,6 +43,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
     profile: 'compute'
@@ -55,36 +56,29 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
 
 # networks is a list to define the virtual networks to be created
 networks:
   - name: RHOSPVirtLab_ctlplane
     bridge: br-ctlplane
     forward: bridge
+    hypervisor_if: eno2
     mac_suffix: '00'
     ipv4: false
-    hypervisor_if: eno2
-    vlans:
-      - name: External
-        id: "{{ network_data_vlans.External }}"
-        address: '10.0.0.1/24'
-      - name: InternalApi
-        id: "{{ network_data_vlans.InternalApi }}"
-        address: ''
-      - name: Storage
-        id: "{{ network_data_vlans.Storage }}"
-        address: ''
-      - name: StorageMgmt
-        id: "{{ network_data_vlans.StorageMgmt }}"
-        address: ''
-      - name: Tenant
-        id: "{{ network_data_vlans.Tenant }}"
-        address: ''
+  - name: RHOSPVirtLab_external
+    bridge: br-external
+    forward: bridge
+    hypervisor_if: eno3
+    mac_suffix: '05'
+    ipv4:
+      address: '10.0.0.1'
+      netmask: '255.255.255.0'
+      dhcp: false
   - name: RHOSPVirtLab_management
     bridge: br-management
     forward: nat
     mac_suffix: '0f'
-    vlans: []
     ipv4:
       address: '192.168.250.1'
       netmask: '255.255.255.0'

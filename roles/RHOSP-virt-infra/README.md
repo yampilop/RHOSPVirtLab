@@ -8,6 +8,8 @@ Requirements
 
 It's tested to work on a Red Hat Enterprise Linux version 8.4 system.
 
+Requires rhel-system-roles package installed.
+
 Role Variables
 --------------
 

@@ -15,4 +15,5 @@ galaxy_info:
     - rhel
     - libvirt
 
-dependencies: []
+dependencies:
+ - rhel-system-roles.network
