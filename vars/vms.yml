@@ -25,6 +25,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
   - name: controller1
     title: 'RHOSPVirtLab Controller 1'
     profile: 'control'
@@ -37,6 +38,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
   - name: controller2
     title: 'RHOSPVirtLab Controller 2'
     profile: 'control'
@@ -49,6 +51,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
     profile: 'compute'
@@ -61,6 +64,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
   - name: compute1
     title: 'RHOSPVirtLab Compute 1'
     profile: 'compute'
@@ -73,3 +77,4 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
