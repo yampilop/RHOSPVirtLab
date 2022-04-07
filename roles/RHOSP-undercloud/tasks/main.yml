@@ -127,7 +127,6 @@
     - custom-overcloud.yaml
     - network_data.yaml
     - custom-network-configuration.yaml
-    - rhsm.yaml
 
 - name: TEMPLATES - Prepare the nic-configs templates
   template:

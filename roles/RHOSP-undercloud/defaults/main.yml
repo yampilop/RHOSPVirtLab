@@ -32,10 +32,13 @@ network_data_vlans:
 interfaces:
   controller:
     ControlPlane: nic1
+    External: nic2
   compute:
     ControlPlane: nic1
+    External: nic2
   computesriov:
-    ControlPlane: nic1
+    ControlPlane: nic2
+    External: nic3
 
 # ComputeSriov default properties
 ComputeSriovProperties:
@@ -83,6 +86,7 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
   - name: compute0
     title: 'RHOSPVirtLab Compute 0'
     profile: 'compute'
@@ -95,39 +99,32 @@ vms:
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
+      RHOSPVirtLab_external: ''
 
 # physical is a list to define the physical machines to be connected. The role doesn't define any by default
-physical:
+physical: []
 
 # networks is a list to define the virtual networks to be created
 networks:
   - name: RHOSPVirtLab_ctlplane
     bridge: br-ctlplane
     forward: bridge
+    hypervisor_if: eno2
     mac_suffix: '00'
     ipv4: false
-    hypervisor_if: eno2
-    vlans:
-      - name: External
-        id: "{{ network_data_vlans.External }}"
-        address: '10.0.0.1/24'
-      - name: InternalApi
-        id: "{{ network_data_vlans.InternalApi }}"
-        address: ''
-      - name: Storage
-        id: "{{ network_data_vlans.Storage }}"
-        address: ''
-      - name: StorageMgmt
-        id: "{{ network_data_vlans.StorageMgmt }}"
-        address: ''
-      - name: Tenant
-        id: "{{ network_data_vlans.Tenant }}"
-        address: ''
+  - name: RHOSPVirtLab_external
+    bridge: br-external
+    forward: bridge
+    hypervisor_if: eno3
+    mac_suffix: '05'
+    ipv4:
+      address: '10.0.0.1'
+      netmask: '255.255.255.0'
+      dhcp: false
   - name: RHOSPVirtLab_management
     bridge: br-management
     forward: nat
     mac_suffix: '0f'
-    vlans: []
     ipv4:
       address: '192.168.250.1'
       netmask: '255.255.255.0'
