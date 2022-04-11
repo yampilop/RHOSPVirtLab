@@ -248,6 +248,16 @@ resources:
                   mtu:
                     get_param: ExternalMtu
                   primary: true
+{% for sriovif in interfaces.computesriov.Sriov %}
+              - type: sriov_pf
+                name: {{ sriovif.device }}
+                numvfs: {{ sriovif.numvfs }}
+                use_dhcp: false
+                promisc: false
+                mtu:
+                  get_param: ExternalMtu
+                defroute: false
+{% endfor %}
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
