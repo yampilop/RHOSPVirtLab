@@ -8,11 +8,13 @@ parameter_defaults:
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
 
+  NeutronBridgeMappings: "{{ BridgeMappings }}"
+  NeutronPhysicalBridge: "br-ex"
+
   ComputeSriovParameters:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
-    NeutronPhysicalDevMappings: '{{ ComputeSriovProperties.devmappings }}'
     NovaComputeCpuDedicatedSet: '{{ ComputeSriovProperties.isolcpus }}'
     NovaComputeCpuSharedSet: '{{ ComputeSriovProperties.sharedcpus }}'
     NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}

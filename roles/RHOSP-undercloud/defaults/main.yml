@@ -40,13 +40,15 @@ interfaces:
     ControlPlane: nic2
     External: nic3
 
+# All computes default properties
+BridgeMappings: 'datacentre:br-ex,sriov1:eno4,sriov2:eno5'
+
 # ComputeSriov default properties
 ComputeSriovProperties:
   isolcpus: '8-19'
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  devmappings: 'sriov1:nic4,sriov2:nic5'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:

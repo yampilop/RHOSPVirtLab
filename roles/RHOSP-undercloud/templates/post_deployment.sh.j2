@@ -24,6 +24,7 @@ openstack subnet show default-provider-subnet || openstack subnet create --subne
 # Flavors
 openstack flavor show small_2_2_20 || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public small_2_2_20
 openstack flavor show small_1_1_10 || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public small_1_1_10
+openstack flavor show small_2_2_20_pinned || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --property hw:cpu_policy=dedicated --property hw:mem_page_size=large --public small_2_2_20_pinned
 
 # Images
 openstack image show '{{ rhel_image_name }}' || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
