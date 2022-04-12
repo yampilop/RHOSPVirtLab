@@ -42,8 +42,10 @@ interfaces:
     Sriov:
       - device: nic4
         numvfs: 8
+        network: 'sriov1'
       - device: nic5
         numvfs: 8
+        network: 'sriov2'
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex,sriov1:eno4,sriov2:eno5'
