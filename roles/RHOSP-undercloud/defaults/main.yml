@@ -42,13 +42,9 @@ interfaces:
     Sriov:
       - device: nic4
         numvfs: 8
-        network: 'sriov1'
-      - device: nic5
-        numvfs: 8
-        network: 'sriov2'
 
 # All computes default properties
-BridgeMappings: 'datacentre:br-ex,sriov1:eno4,sriov2:eno5'
+BridgeMappings: 'datacentre:br-ex'
 
 # ComputeSriov default properties
 ComputeSriovProperties:
@@ -56,6 +52,7 @@ ComputeSriovProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
+  physicaldevmappings: 'sriov1:eno4'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:
@@ -65,21 +62,9 @@ ComputeSriovProperties:
       network: 'sriov1'
       trusted: true
     - vendor_id: 8086
-      product_id: 1528
-      address: '0000:85:00.1'
-      network: 'sriov2'
-      trusted: true
-    - vendor_id: 8086
       product_id: 1515
-      devname: '*0v*'
       address: '0000:85:10.*'
       network: 'sriov1'
-      trusted: true
-    - vendor_id: 8086
-      product_id: 1515
-      devname: '*1v*'
-      address: '0000:85:10.*'
-      network: 'sriov2'
       trusted: true
 
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node

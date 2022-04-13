@@ -32,12 +32,16 @@ interfaces:
   computesriov:
     ControlPlane: nic2
     External: nic3
+    Sriov:
+      - device: nic4
+        numvfs: 8
+
 ComputeSriovProperties:
   isolcpus: '8-19'
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  devmappings: 'sriov1:nic4,sriov2:nic5'
+  physicaldevmappings: 'sriov1:eno4'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:
@@ -45,9 +49,9 @@ ComputeSriovProperties:
       product_id: 1528
       address: '0000:85:00.0'
       network: 'sriov1'
+      trusted: true
     - vendor_id: 8086
-      product_id: 1528
-      address: '0000:85:00.1'
+      product_id: 1515
+      address: '0000:85:10.*'
       network: 'sriov1'
-
-
+      trusted: true

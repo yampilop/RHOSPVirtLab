@@ -249,19 +249,14 @@ resources:
                     get_param: ExternalMtu
                   primary: true
 {% for sriovif in interfaces.computesriov.Sriov %}
-              - type: ovs_bridge
-                name: {{ sriovif.network }}
+              - type: sriov_pf
+                name: {{ sriovif.device }}
+                numvfs: {{ sriovif.numvfs }}
+                promisc: false
+                use_dhcp: false
                 mtu:
                   get_param: ExternalMtu
-                use_dhcp: false
-                members:
-                - type: sriov_pf
-                  name: {{ sriovif.device }}
-                  numvfs: {{ sriovif.numvfs }}
-                  promisc: false
-                  mtu:
-                    get_param: ExternalMtu
-                  primary: true
+                defroute: false
 {% endfor %}
 outputs:
   OS::stack_id:

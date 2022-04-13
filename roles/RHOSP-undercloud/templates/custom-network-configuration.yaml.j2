@@ -10,6 +10,7 @@ parameter_defaults:
 
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
+  NeutronFlatNetworks: "*"
 
   ComputeSriovParameters:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
@@ -26,22 +27,15 @@ parameter_defaults:
         address: "{{ passt.address }}"
         physical_network: "{{ passt.network }}"
 {% endfor %}
+    NeutronPhysicalDevMappings: "{{ ComputeSriovProperties.physicaldevmappings }}"
 
   NovaSchedulerDefaultFilters:
     - AvailabilityZoneFilter
-    - NUMATopologyFilter
     - ComputeFilter
     - ComputeCapabilitiesFilter
     - ImagePropertiesFilter
-    - AggregateInstanceExtraSpecsFilter
-    - AggregateMultiTenancyIsolation
-    - AggregateCoreFilter
     - ServerGroupAntiAffinityFilter
     - ServerGroupAffinityFilter
-    - SameHostFilter
-    - DifferentHostFilter
+    - AggregateInstanceExtraSpecsFilter
+    - NUMATopologyFilter
     - PciPassthroughFilter
-
-  NovaSchedulerAvailableFilters:
-    - "nova.scheduler.filters.all_filters"
-    - "nova.scheduler.filters.pci_passthrough_filter.PciPassthroughFilter"
