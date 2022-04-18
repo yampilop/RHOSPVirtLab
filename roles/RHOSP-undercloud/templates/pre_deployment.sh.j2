@@ -39,5 +39,8 @@ sudo openstack overcloud container image upload \
 --config-file /home/stack/local_registry_images.yaml \
 --verbose
 {% else %}
-sudo openstack tripleo container image prepare -e /home/stack/templates/containers-prepare-parameter.yaml -r /home/stack/templates/roles_data.yaml --output-env-file /home/stack/templates/overcloud-images.yaml
+sudo openstack tripleo container image prepare \
+-r /home/stack/templates/roles_data.yaml \
+-e /home/stack/templates/containers-prepare-parameter.yaml \
+--output-env-file /home/stack/templates/overcloud-images.yaml
 {% endif %}

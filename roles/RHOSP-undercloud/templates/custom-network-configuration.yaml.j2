@@ -12,6 +12,10 @@ parameter_defaults:
   NeutronPhysicalBridge: "br-ex"
   NeutronFlatNetworks: "*"
 
+  NeutronNetworkVLANRanges: "{{ NetworkVlanRanges }}"
+  NeutronTunnelTypes: 'geneve'
+  NeutronNetworkType: 'geneve,vlan'
+
   ComputeSriovParameters:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
@@ -24,7 +28,7 @@ parameter_defaults:
 {% for passt in ComputeSriovProperties.pcipassthrough %}
       - vendor_id: "{{ passt.vendor_id }}"
         product_id: "{{ passt.product_id }}"
-        address: "{{ passt.address }}"
+        address: {{ passt.address }}
         physical_network: "{{ passt.network }}"
 {% endfor %}
     NeutronPhysicalDevMappings: "{{ ComputeSriovProperties.physicaldevmappings }}"
