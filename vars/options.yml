@@ -35,7 +35,8 @@ interfaces:
     Sriov:
       - device: nic4
         numvfs: 8
-
+BridgeMappings: 'datacentre:br-ex'
+NetworkVlanRanges: 'datacentre:1:1000,sriov1:11:19'
 ComputeSriovProperties:
   isolcpus: '8-19'
   hugepagesz: '1GB'
@@ -52,6 +53,10 @@ ComputeSriovProperties:
       trusted: true
     - vendor_id: 8086
       product_id: 1515
-      address: '0000:85:10.*'
+      address:
+        domain: "0000"
+        bus: "85"
+        slot: "10"
+        function: ".*"
       network: 'sriov1'
       trusted: true
