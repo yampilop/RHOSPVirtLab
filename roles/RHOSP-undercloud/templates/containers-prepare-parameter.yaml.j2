@@ -1,9 +1,6 @@
 parameter_defaults:
   ContainerImagePrepare:
   - push_destination: true
-    excludes:
-    - ceph
-    - prometheus
     set:
       ceph_alertmanager_image: ose-prometheus-alertmanager
       ceph_alertmanager_namespace: registry.redhat.io/openshift4
