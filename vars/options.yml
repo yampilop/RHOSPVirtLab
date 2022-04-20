@@ -60,3 +60,4 @@ ComputeSriovProperties:
         function: ".*"
       network: 'sriov1'
       trusted: true
+DeployOctavia: false

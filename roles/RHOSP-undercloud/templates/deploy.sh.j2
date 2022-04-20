@@ -16,6 +16,9 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml \
+{% if DeployOctavia %}
+-e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
+{% endif %}
 -e /home/stack/templates/custom-network-configuration.yaml \
 -e /home/stack/templates/custom-overcloud.yaml
 date

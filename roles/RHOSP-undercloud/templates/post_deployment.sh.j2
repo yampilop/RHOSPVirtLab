@@ -29,3 +29,9 @@ openstack flavor show small_2_2_20_pinned || openstack flavor create --ram 2048 
 # Images
 openstack image show '{{ rhel_image_name }}' || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
 openstack image show CirrOS || openstack image create --disk-format qcow2 --file images/cirros.qcow2 --public CirrOS
+
+{% if DeployOctavia %}
+# Octavia configuration
+openstack loadbalancer flavorprofile show amphora-single-profile || openstack loadbalancer flavorprofile create --name amphora-single-profile --provider amphora --flavor-data '{"loadbalancer_topology": "SINGLE"}'
+openstack loadbalancer flavor show standalone-lb || openstack loadbalancer flavor create --name standalone-lb --flavorprofile amphora-single-profile --description "A non-high availability load balancer for testing."
+{% endif %}
