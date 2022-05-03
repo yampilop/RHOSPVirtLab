@@ -28,7 +28,6 @@
       - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      - rhel-system-roles
       - "@python36"
       - python3-lxml
       - python3-libvirt
