@@ -41,7 +41,7 @@ The user from which you will execute the lab needs to have `sudo` **permissions 
 ## Install required and useful packages
 
 ```bash
-sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete tmux tcpdump
+sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete tmux tcpdump rhel-system-roles
 ```
 
 ## Pull the repo
