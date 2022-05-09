@@ -19,7 +19,7 @@ openstack role add --project test-project --user test-admin --user-domain RHOSPV
 
 # External network
 openstack network show default-provider || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
-openstack subnet show default-provider-subnet || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --no-dhcp --gateway {{ ext.ipv4.address }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet 
+openstack subnet show default-provider-subnet || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext.ipv4.address }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet 
 
 # Flavors
 openstack flavor show small_2_2_20 || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public small_2_2_20
