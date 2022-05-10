@@ -11,6 +11,9 @@ overcloud_roles:
   - name: ComputeSriov
     profile: computesriov
     nic_configs: computesriov.yaml
+  - name: ComputeOvsDpdk
+    profile: computeovsdpdk
+    nic_configs: computeovsdpdk.yaml
 
 RHOSP_version_supported:
   16.2:
