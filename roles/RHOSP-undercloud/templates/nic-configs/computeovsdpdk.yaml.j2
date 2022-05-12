@@ -248,6 +248,7 @@ resources:
                   mtu:
                     get_param: ExternalMtu
                   primary: true
+{% if interfaces.computeovsdpdk.DpdkBonds is defined %}
               - type: ovs_user_bridge
                 name: br-dpdk
                 use_dhcp: false
@@ -271,6 +272,7 @@ resources:
                       name: {{ port.interface }}
 {% endfor %}
 {% endfor %}
+{% endif %}
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
