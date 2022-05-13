@@ -24,7 +24,7 @@ time openstack overcloud deploy \
 {% if ((vms | selectattr("profile", "equalto", "ceph-storage") | list | count) + (physical | selectattr("profile", "equalto", "ceph-storage") | list | count)) > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml
+-e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml \
 -e /home/stack/templates/custom-ceph.yaml \
 {% endif %}
 -e /home/stack/templates/custom-overcloud.yaml
