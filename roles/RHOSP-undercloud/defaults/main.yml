@@ -52,6 +52,12 @@ interfaces:
     Sriov:
       - device: nic4
         numvfs: 8
+  cephstorage:
+    ControlPlane: nic2
+    External: nic3
+  computehci:
+    ControlPlane: nic2
+    External: nic3
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
@@ -91,6 +97,10 @@ ComputeOvsDpdkProperties:
   memorychannels: '4'
   ovsdpdkcorelist: '0,24,1,25'
   ovspmdcorelist: '2,26,3,27'
+
+# CephStorage default properties
+CephStorageProperties:
+  devices: ['/dev/sdb']
 
 # Octavia parameters
 DeployOctavia: false

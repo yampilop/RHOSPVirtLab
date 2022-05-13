@@ -1,0 +1,5 @@
+parameter_defaults:
+  CephAnsibleDisksConfig:
+    devices: {{ CephStorageProperties.devices }}
+    osd_scenario: lvm
+    osd_objectstore: bluestore

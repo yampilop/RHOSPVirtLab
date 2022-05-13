@@ -45,6 +45,12 @@ interfaces:
     Sriov:
       - device: nic4
         numvfs: 8
+  cephstorage:
+    ControlPlane: nic2
+    External: nic3
+  computehci:
+    ControlPlane: nic2
+    External: nic3
 BridgeMappings: 'datacentre:br-ex'
 NetworkVlanRanges: 'datacentre:1:1000,sriov1:11:19'
 ComputeSriovProperties:
@@ -83,4 +89,6 @@ ComputeOvsDpdkProperties:
   memorychannels: '4'
   ovsdpdkcorelist: '0,24,1,25'
   ovspmdcorelist: '2,26,3,27'
+CephStorageProperties:
+  devices: ['/dev/sdb']
 DeployOctavia: False

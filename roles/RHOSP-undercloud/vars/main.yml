@@ -14,6 +14,12 @@ overcloud_roles:
   - name: ComputeOvsDpdk
     profile: computeovsdpdk
     nic_configs: computeovsdpdk.yaml
+  - name: CephStorage
+    profile: ceph-storage
+    nic_configs: ceph-storage.yaml
+  - name: ComputeHCI
+    profile: computehci
+    nic_configs: computehci.yaml
 
 RHOSP_version_supported:
   16.2:
