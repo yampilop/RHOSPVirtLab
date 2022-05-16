@@ -14,9 +14,13 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
+{% if ((vms | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count)) > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dpdk.yaml \
+{% endif %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml \
+{% if (physical | selectattr("profile", "equalto", "computesriov") | list | count) > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml \
+{% endif %}
 {% if DeployOctavia %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
 {% endif %}
