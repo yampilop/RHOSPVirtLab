@@ -70,6 +70,7 @@ ComputeSriovProperties:
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
   physicaldevmappings: 'sriov1:eno4'
+  dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:
