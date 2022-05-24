@@ -206,7 +206,6 @@
     immediate: yes
     state: enabled
   loop: "{{ forwarded_ports }}"
-  when: (networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first).forward == 'bridge'
 
 - name: Create stack alias to connect to undercloud
   lineinfile:
