@@ -9,8 +9,6 @@
 - name: Configure swap file on the undercloud
   include_role:
     name: geerlingguy.swap
-  vars:
-    swap_file_size_mb: "8192"
 
 - name: HOSTNAME - Change the hostname
   hostname:
