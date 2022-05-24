@@ -107,10 +107,6 @@
   import_tasks: clean_libvirt_networks.yml
   when: cleanup
 
-#- name: Get bridge interfaces members
-#  set_fact:
-#    interfaces_reverted: "{{ ansible_facts | json_query('@.* | [?device].{key: device, value: interfaces}') | items2dict }}"
-
 - name: Define bridges for networks linked with the hypervisor
   set_fact:
     network_connections: "{{ network_connections + [connection] }}"
@@ -210,6 +206,7 @@
     immediate: yes
     state: enabled
   loop: "{{ forwarded_ports }}"
+  when: (networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first).forward == 'bridge'
 
 - name: Create stack alias to connect to undercloud
   lineinfile:

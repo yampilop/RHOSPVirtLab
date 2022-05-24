@@ -6,6 +6,17 @@
     owner: root
     group: root
 
+- name: NETWORKS - Add hook for libvirt networks (hack) in order to allow port-forwarding when the network is forwarding route
+  template:
+    src: "network-hook.j2"
+    dest: "/etc/libvirt/hooks/network"
+    mode: "755"
+    owner: root
+    group: root
+  become: yes
+  notify: HANDLER - restart libvirtd service
+  when: (networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first).forward == 'nat'
+
 - name: NETWORKS - Gather facts about libvirt networks
   community.libvirt.virt_net:
     command: facts
