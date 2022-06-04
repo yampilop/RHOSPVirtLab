@@ -1,3 +1,8 @@
+{% set dpdk_count = ((vms | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count)) %}
+{% set sriov_count = (physical | selectattr("profile", "equalto", "computesriov") | list | count) %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "ceph-storage") | list | count) + (physical | selectattr("profile", "equalto", "ceph-storage") | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "computehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
+
 #/bin/bash
 
 source /home/stack/stackrc
@@ -14,18 +19,18 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
-{% if ((vms | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count)) > 0 %}
+{% if dpdk_count > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dpdk.yaml \
 {% endif %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml \
-{% if (physical | selectattr("profile", "equalto", "computesriov") | list | count) > 0 %}
+{% if sriov_count > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml \
 {% endif %}
 {% if DeployOctavia %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
 {% endif %}
 -e /home/stack/templates/custom-network-configuration.yaml \
-{% if ((vms | selectattr("profile", "equalto", "ceph-storage") | list | count) + (physical | selectattr("profile", "equalto", "ceph-storage") | list | count)) > 0 %}
+{% if (ceph_count + hci_count) > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml \

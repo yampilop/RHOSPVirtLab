@@ -1,8 +1,9 @@
 {% set ceph_count = ((vms | selectattr("profile", "equalto", "ceph-storage") | list | count) + (physical | selectattr("profile", "equalto", "ceph-storage") | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "computehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
 
 parameter_defaults:
-{% if ceph_count < 3 %}
-  CephPoolDefaultSize: {{ ceph_count }}
+{% if ceph_count + hci_count < 3 %}
+  CephPoolDefaultSize: {{ ceph_count + hci_count }}
 {% endif %}
   CephPoolDefaultPgNum: 64
   CephAnsibleDisksConfig:
@@ -14,3 +15,7 @@ parameter_defaults:
     - {"name": volumes, "target_size_ratio": 0.5, "pg_autoscale_mode": True, "application": rbd}
     - {"name": vms,     "target_size_ratio": 0.2, "pg_autoscale_mode": True, "application": rbd}
     - {"name": images,  "target_size_ratio": 0.2, "pg_autoscale_mode": True, "application": rbd}
+{% if hci_count > 0 %}
+  CephAnsibleExtraConfig:
+    is_hci: true
+{% endif %}
