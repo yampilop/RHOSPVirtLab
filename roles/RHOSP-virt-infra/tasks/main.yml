@@ -50,19 +50,16 @@
       - kvm
     append: yes
 
-- name: Ensure libvirtd service is enabled and running
+- name: Ensure required services are enabled and running
   service:
-    name: libvirtd
+    name: "{{ item }}"
     state: started
     enabled: yes
   become: yes
-
-- name: Ensure NetworkManager is enabled and running
-  service:
-    name: NetworkManager
-    state: started
-    enabled: yes
-  become: yes
+  loop:
+    - libvirtd
+    - NetworkManager
+    - firewalld
 
 - name: Install packages from pip
   pip:
