@@ -5,7 +5,12 @@
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
 
+################################################################################
+### Default domain specifics and shared ########################################
+################################################################################
+
 source /home/stack/overcloudrc
+
 # Domain
 openstack domain create RHOSPVirtLab --or-show
 
@@ -35,3 +40,37 @@ openstack image show CirrOS || openstack image create --disk-format qcow2 --file
 openstack loadbalancer flavorprofile show amphora-single-profile || openstack loadbalancer flavorprofile create --name amphora-single-profile --provider amphora --flavor-data '{"loadbalancer_topology": "SINGLE"}'
 openstack loadbalancer flavor show standalone-lb || openstack loadbalancer flavor create --name standalone-lb --flavorprofile amphora-single-profile --description "A non-high availability load balancer for testing."
 {% endif %}
+
+################################################################################
+### RHOSPVirtLab domain specifics ##############################################
+################################################################################
+
+if [ ! -f /home/stack/RHOSPVirtLabrc ]; then
+  cp /home/stack/overcloudrc /home/stack/RHOSPVirtLabrc
+  sed -i 's/OS_USERNAME=admin/OS_USERNAME=test-admin/' /home/stack/RHOSPVirtLabrc
+  sed -i 's/OS_PROJECT_NAME=admin/OS_PROJECT_NAME=test-project/' /home/stack/RHOSPVirtLabrc
+  sed -i 's/DOMAIN_NAME=Default/DOMAIN_NAME=RHOSPVirtLab/' /home/stack/RHOSPVirtLabrc
+  sed -i 's/OS_PASSWORD=.*/OS_PASSWORD=redhat/' /home/stack/RHOSPVirtLabrc
+fi
+
+source /home/stack/RHOSPVirtLabrc
+
+# Keypairs
+openstack keypair show undercloud-key || openstack keypair create --public-key /home/stack/.ssh/id_rsa.pub undercloud-key
+
+# Server groups
+openstack server group show affinity-group || openstack server group create --policy affinity affinity-group
+openstack server group show anti-affinity-group || openstack server group create --policy anti-affinity anti-affinity-group
+openstack server group show soft-affinity-group || openstack server group create --policy soft-affinity soft-affinity-group
+openstack server group show soft-anti-affinity-group || openstack server group create --policy soft-anti-affinity soft-anti-affinity-group
+
+# Networking
+openstack network show test-network || openstack network create test-network
+openstack subnet show test-subnet || openstack subnet create --network test-network --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet
+openstack port show test-subnet-gw || openstack port create --network test-network --fixed-ip subnet=test-subnet,ip-address=192.168.1.1 test-subnet-gw
+openstack router show test-router || (openstack router create test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
+
+# Add SSH and ICMP to default security group
+SECGROUP=$(openstack security group list | grep default | grep $(openstack project show test-project -f value -c id) | awk '{print $2}')
+openstack security group rule list $SECGROUP | grep 22:22 || openstack security group rule create $SECGROUP --protocol tcp --dst-port 22:22 --remote-ip 0.0.0.0/0
+openstack security group rule list $SECGROUP | grep icmp || openstack security group rule create $SECGROUP --protocol icmp

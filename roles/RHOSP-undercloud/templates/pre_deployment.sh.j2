@@ -3,11 +3,13 @@
 source /home/stack/stackrc
 
 # Auto source and completion
+if [ ! -f /usr/share/bash-completion/completions/openstack ]; then
 {% if RHOSP_version == 13.0 %}
-openstack complete 2>/dev/null | sudo tee /usr/share/bash-completion/completions/openstack
+  openstack complete 2>/dev/null | sudo tee /usr/share/bash-completion/completions/openstack
 {% else %}
-openstack complete 2>/dev/null | sed '1d;$d' | sudo tee /usr/share/bash-completion/completions/openstack
+  openstack complete 2>/dev/null | sed '1d;$d' | sudo tee /usr/share/bash-completion/completions/openstack
 {% endif %}
+fi
 
 if ! grep -Fxq "source /home/stack/stackrc" /home/stack/.bashrc; then
   echo "source /home/stack/stackrc" >> /home/stack/.bashrc
