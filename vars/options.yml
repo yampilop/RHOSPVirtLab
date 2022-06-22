@@ -41,9 +41,9 @@ interfaces:
             interface: nic5
   computesriov:
     ControlPlane: nic2
-    External: nic3
+    External: nic3v0
     Sriov:
-      - device: nic4
+      - device: nic3
         numvfs: 8
   cephstorage:
     ControlPlane: nic2
@@ -58,7 +58,7 @@ ComputeSriovProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  physicaldevmappings: 'sriov1:eno4'
+  physicaldevmappings: 'sriov1:eno3'
   dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
@@ -73,7 +73,7 @@ ComputeSriovProperties:
       address:
         domain: "0000"
         bus: "85"
-        slot: "10"
+        slot: "1.*"
         function: ".*"
       network: 'sriov1'
       trusted: true

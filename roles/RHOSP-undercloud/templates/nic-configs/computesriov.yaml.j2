@@ -243,11 +243,20 @@ resources:
                         next_hop:
                           get_param: ExternalInterfaceDefaultRoute
                 members:
+{% if 'v' in interfaces.computesriov.External %}
+                - type: sriov_vf
+                  device: {{ interfaces.computesriov.External.split('v')[0] }}
+                  vfid: {{ interfaces.computesriov.External.split('v')[1] }}
+                  mtu:
+                    get_param: ExternalMtu
+                  primary: true
+{% else %}
                 - type: interface
                   name: {{ interfaces.computesriov.External }}
                   mtu:
                     get_param: ExternalMtu
                   primary: true
+{% endif %}
 {% for sriovif in interfaces.computesriov.Sriov %}
               - type: sriov_pf
                 name: {{ sriovif.device }}
