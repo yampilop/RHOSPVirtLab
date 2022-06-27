@@ -261,7 +261,7 @@ resources:
               - type: sriov_pf
                 name: {{ sriovif.device }}
                 numvfs: {{ sriovif.numvfs }}
-                promisc: false
+                promisc: true
                 use_dhcp: false
                 nm_controlled: true
                 mtu:

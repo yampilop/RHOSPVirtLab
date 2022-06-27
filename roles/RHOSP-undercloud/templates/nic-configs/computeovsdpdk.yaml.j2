@@ -167,7 +167,7 @@ resources:
           params:
             $network_config:
               network_config:
-              - type: ovs_bridge
+              - type: ovs_user_bridge
                 name: br-vlans
                 mtu:
                   get_attr: [MinViableMtu, value]
@@ -228,7 +228,7 @@ resources:
                   routes:
                     list_concat_unique:
                       - get_param: TenantInterfaceRoutes
-              - type: ovs_bridge
+              - type: ovs_user_bridge
                 name: br-ex
                 mtu:
                   get_param: ExternalMtu
@@ -243,12 +243,23 @@ resources:
                         next_hop:
                           get_param: ExternalInterfaceDefaultRoute
                 members:
+{% if interfaces.computeovsdpdk.External is mapping %}
+                - type: ovs_dpdk_port
+                  name: {{ interfaces.computeovsdpdk.External.name }}
+                  members:
+                  - type: interface
+                    name: {{ interfaces.computeovsdpdk.External.interface }}
+                    mtu:
+                      get_param: ExternalMtu
+                    primary: true
+{% else %}
                 - type: interface
                   name: {{ interfaces.computeovsdpdk.External }}
                   mtu:
                     get_param: ExternalMtu
                   primary: true
-{% if interfaces.computeovsdpdk.DpdkBonds is defined %}
+{% endif %}
+{% if (interfaces.computeovsdpdk.DpdkBonds is defined) and (interfaces.computeovsdpdk.DpdkBonds|length > 0) %}
               - type: ovs_user_bridge
                 name: br-dpdk
                 use_dhcp: false
