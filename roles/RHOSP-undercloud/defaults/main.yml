@@ -37,16 +37,18 @@ interfaces:
     ControlPlane: nic1
     External: nic2
   computeovsdpdk:
-    ControlPlane: nic2
-    External: 
-      name: dpdk0
+    ControlPlane:
+      name: dpdk-ctlplane
+      interface: nic2
+    External:
+      name: dpdk-external
       interface: nic3
     DpdkBonds:
       - name: dpdkbond0
         ports:
-          - name: dpdk1
+          - name: dpdk0
             interface: nic4
-          - name: dpdk2
+          - name: dpdk1
             interface: nic5
   computesriov:
     ControlPlane: nic2
