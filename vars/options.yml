@@ -1,12 +1,20 @@
 ---
+
+# RHOSP version
 RHOSP_version: 16.2
+
+# Cleaning and creating parameters
 cleanup: False
+
+# overcloud parameters
 external_if: eno1
 overcloud_ip: 10.0.0.254
 forwarded_ports:
   - 80
   - 6080
   - 5000
+
+# dns and ntp servers
 dns_servers:
   - '8.8.8.8'
   - '8.8.4.4'
@@ -15,6 +23,8 @@ ntp_servers:
   - '1.pool.ntp.org'
   - '2.pool.ntp.org'
   - '3.pool.ntp.org'
+
+# vlans to use in the network-data
 network_data_vlans:
   External: 10
   InternalApi: 20
@@ -22,6 +32,8 @@ network_data_vlans:
   StorageMgmt: 40
   Tenant: 50
   Management: 60
+
+# interfaces to use in each nic-config
 interfaces:
   controller:
     ControlPlane: nic1
@@ -49,14 +61,24 @@ interfaces:
     Sriov:
       - device: nic3
         numvfs: 8
+  computeovshwoffload:
+    ControlPlane: nic2
+    External: nic3v0
+    Sriov:
+      - device: nic3
+        numvfs: 8
   cephstorage:
     ControlPlane: nic2
     External: nic3
   computehci:
     ControlPlane: nic2
     External: nic3
+
+# All computes default properties
 BridgeMappings: 'datacentre:br-ex'
 NetworkVlanRanges: 'datacentre:1:1000,sriov1:11:19'
+
+# ComputeSriov default properties
 ComputeSriovProperties:
   isolcpus: '8-19'
   hugepagesz: '1GB'
@@ -81,6 +103,30 @@ ComputeSriovProperties:
         function: ".*"
       network: 'sriov1'
       trusted: true
+
+# ComputeOvsHwOffload default properties
+ComputeOvsHwOffloadProperties:
+  isolcpus: '8-19'
+  hugepagesz: '1GB'
+  hugepages: 32
+  kernelargs: 'iommu=pt intel_iommu=on'
+  physicaldevmappings: 'offload1:eno4'
+  dedicatedcpus: '8-19'
+  sharedcpus: '4-7'
+  hostmemory: 8192
+  pcipassthrough:
+    - vendor_id: 8086
+      product_id: 1528
+      address: '0000:85:00.0'
+      network: 'offload1'
+      trusted: true
+    - vendor_id: 8086
+      product_id: 1515
+      address: '0000:85:10.*'
+      network: 'offload1'
+      trusted: true
+
+# ComputeOvsDpdk default properties
 ComputeOvsDpdkProperties:
   isolcpus: '6-23,30-47'
   hugepagesz: '1GB'
@@ -93,6 +139,10 @@ ComputeOvsDpdkProperties:
   memorychannels: '4'
   ovsdpdkcorelist: '0,24,1,25'
   ovspmdcorelist: '2,26,3,27'
+
+# CephStorage default properties
 CephStorageProperties:
   devices: ['/dev/sdb']
+
+# Octavia parameters
 DeployOctavia: False

@@ -23,7 +23,7 @@ parameter_defaults:
     NovaComputeCpuDedicatedSet: "{{ ComputeSriovProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeSriovProperties.sharedcpus }}"
     NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}
-
+    
     NovaPCIPassthrough:
 {% for passt in ComputeSriovProperties.pcipassthrough %}
       - vendor_id: "{{ passt.vendor_id }}"
@@ -56,4 +56,22 @@ parameter_defaults:
     NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkProperties.sharedcpus }}"
     OvsPmdCoreList: "{{ ComputeOvsDpdkProperties.ovspmdcorelist}}"
     OvsEnableDpdk: true
+  
+  ComputeOvsHwOffloadParameters:
+    IsolCpusList: '{{ ComputeOvsHwOffloadProperties.isolcpus }}'
+    KernelArgs: "default_hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepages={{ ComputeOvsHwOffloadProperties.hugepages }} {{ ComputeOvsHwOffloadProperties.kernelargs }} isolcpus={{ ComputeOvsHwOffloadProperties.isolcpus }}"
+    OvsHwOffload: true
+    TunedProfileName: "cpu-partitioning"
+    NovaComputeCpuDedicatedSet: "{{ ComputeOvsHwOffloadProperties.dedicatedcpus }}"
+    NovaComputeCpuSharedSet: "{{ ComputeOvsHwOffloadProperties.sharedcpus }}"
+    NovaReservedHostMemory: {{ ComputeOvsHwOffloadProperties.hostmemory }}
+    
+    NovaPCIPassthrough:
+{% for passt in ComputeOvsHwOffloadProperties.pcipassthrough %}
+      - vendor_id: "{{ passt.vendor_id }}"
+        product_id: "{{ passt.product_id }}"
+        address: {{ passt.address }}
+        physical_network: "{{ passt.network }}"
+{% endfor %}
+    NeutronPhysicalDevMappings: "{{ ComputeOvsHwOffloadProperties.physicaldevmappings }}"
 

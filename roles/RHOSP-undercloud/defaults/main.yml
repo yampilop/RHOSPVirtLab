@@ -4,6 +4,7 @@
 # RHOSP version
 RHOSP_version: 16.2
 
+# Cleaning and creating parameters
 create: True
 
 # overcloud parameters
@@ -52,9 +53,15 @@ interfaces:
             interface: nic5
   computesriov:
     ControlPlane: nic2
-    External: nic3
+    External: nic3v0
     Sriov:
-      - device: nic4
+      - device: nic3
+        numvfs: 8
+  computeovshwoffload:
+    ControlPlane: nic2
+    External: nic3v0
+    Sriov:
+      - device: nic3
         numvfs: 8
   cephstorage:
     ControlPlane: nic2
@@ -89,6 +96,28 @@ ComputeSriovProperties:
       network: 'sriov1'
       trusted: true
 
+# ComputeOvsHwOffload default properties
+ComputeOvsHwOffloadProperties:
+  isolcpus: '8-19'
+  hugepagesz: '1GB'
+  hugepages: 32
+  kernelargs: 'iommu=pt intel_iommu=on'
+  physicaldevmappings: 'offload1:eno4'
+  dedicatedcpus: '8-19'
+  sharedcpus: '4-7'
+  hostmemory: 8192
+  pcipassthrough:
+    - vendor_id: 8086
+      product_id: 1528
+      address: '0000:85:00.0'
+      network: 'offload1'
+      trusted: true
+    - vendor_id: 8086
+      product_id: 1515
+      address: '0000:85:10.*'
+      network: 'offload1'
+      trusted: true
+
 # ComputeOvsDpdk default properties
 ComputeOvsDpdkProperties:
   isolcpus: '6-23,30-47'
@@ -108,7 +137,7 @@ CephStorageProperties:
   devices: ['/dev/sdb']
 
 # Octavia parameters
-DeployOctavia: false
+DeployOctavia: False
 
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
