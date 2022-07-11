@@ -110,7 +110,6 @@
     get_checksum: False
     get_md5: False
   register: data_disk_file
-  when: item.data_disk_size is defined and item.data_disk_size > 0
   loop: "{{ vms }}"
 
 - name: STORAGE - Create root disk file
@@ -122,14 +121,22 @@
 
 - name: STORAGE - Create data disk file
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_data.qcow2 --capacity {{ item.item.data_disk_size }} --allocation {{ item.item.data_disk_size }} --prealloc-metadata --format qcow2"
-  when: not item.stat.exists
+  when: not item.stat.exists and item.item.data_disk_size is defined and item.item.data_disk_size > 0
   loop: "{{ data_disk_file.results }}"
   become: yes
 
-- name: STORAGE - Set permissions to disk files
+- name: STORAGE - Set permissions to root disk files
   file:
     path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
     mode: "777"
+  loop: "{{ vms }}"
+  become: yes
+
+- name: STORAGE - Set permissions to data disk files
+  file:
+    path: "{{ pool_location }}/{{ item.name }}_data.qcow2"
+    mode: "777"
+  when: item.data_disk_size is defined and item.data_disk_size > 0
   loop: "{{ vms }}"
   become: yes
 

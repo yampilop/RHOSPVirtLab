@@ -35,13 +35,13 @@ network_data_vlans:
 
 # interfaces to use in each nic-config
 interfaces:
-  controller:
+  VirtualController:
     ControlPlane: nic1
     External: nic2
-  compute:
+  VirtualCompute:
     ControlPlane: nic1
     External: nic2
-  computeovsdpdk:
+  VirtualComputeOvsDpdk:
     ControlPlane:
       name: dpdk-ctlplane
       interface: nic2
@@ -55,22 +55,48 @@ interfaces:
             interface: nic4
           - name: dpdk1
             interface: nic5
-  computesriov:
-    ControlPlane: nic2
-    External: nic3v0
-    Sriov:
-      - device: nic3
-        numvfs: 8
-  computeovshwoffload:
-    ControlPlane: nic2
-    External: nic3v0
-    Sriov:
-      - device: nic3
-        numvfs: 8
-  cephstorage:
+  VirtualCephStorage:
     ControlPlane: nic2
     External: nic3
-  computehci:
+  VirtualComputeHCI:
+    ControlPlane: nic2
+    External: nic3
+  Controller:
+    ControlPlane: nic1
+    External: nic2
+  Compute:
+    ControlPlane: nic1
+    External: nic2
+  ComputeOvsDpdk:
+    ControlPlane:
+      name: dpdk-ctlplane
+      interface: nic2
+    External:
+      name: dpdk-external
+      interface: nic3
+    DpdkBonds:
+      - name: dpdkbond0
+        ports:
+          - name: dpdk0
+            interface: nic4
+          - name: dpdk1
+            interface: nic5
+  ComputeSriov:
+    ControlPlane: nic2
+    External: nic3v0
+    Sriov:
+      - device: nic3
+        numvfs: 8
+  ComputeOvsHwOffload:
+    ControlPlane: nic2
+    External: nic3v0
+    Sriov:
+      - device: nic3
+        numvfs: 8
+  CephStorage:
+    ControlPlane: nic2
+    External: nic3
+  ComputeHCI:
     ControlPlane: nic2
     External: nic3
 
