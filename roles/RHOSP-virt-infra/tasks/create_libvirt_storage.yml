@@ -96,7 +96,7 @@
   when: item.stat.exists == false
   loop: "{{ files_output.results  }}"
 
-- name: STORAGE - Check if the disk file exists
+- name: STORAGE - Check if the root disk file exists
   stat:
     path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
     get_checksum: False
@@ -104,12 +104,27 @@
   register: disk_file
   loop: "{{ vms }}"
 
-- name: STORAGE - Create disk file
+- name: STORAGE - Check if the data disk file exists
+  stat:
+    path: "{{ pool_location }}/{{ item.name }}_data.qcow2"
+    get_checksum: False
+    get_md5: False
+  register: data_disk_file
+  when: item.data_disk_size is defined and item.data_disk_size > 0
+  loop: "{{ vms }}"
+
+- name: STORAGE - Create root disk file
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --allocation {{ item.item.disk_size }} --prealloc-metadata --format qcow2"
   when: not item.stat.exists
   loop: "{{ disk_file.results }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
+
+- name: STORAGE - Create data disk file
+  command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_data.qcow2 --capacity {{ item.item.data_disk_size }} --allocation {{ item.item.data_disk_size }} --prealloc-metadata --format qcow2"
+  when: not item.stat.exists
+  loop: "{{ data_disk_file.results }}"
+  become: yes
 
 - name: STORAGE - Set permissions to disk files
   file:

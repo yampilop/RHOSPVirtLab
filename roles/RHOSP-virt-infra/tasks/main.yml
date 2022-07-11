@@ -6,6 +6,9 @@
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
+- name: Verify vms and physical profiles
+  import_tasks: tasks/profiles.yml
+
 - name: Ensure the ssh directory exists
   file:
     path: "/home/{{ ansible_user }}/.ssh"

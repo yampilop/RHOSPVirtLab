@@ -2,14 +2,12 @@
 networks:
   - name: RHOSPVirtLab_ctlplane
     bridge: br-ctlplane
-    forward: bridge
-    hypervisor_if: eno2
+    forward: false
     mac_suffix: '00'
     ipv4: false
   - name: RHOSPVirtLab_external
     bridge: br-external
-    forward: bridge
-    hypervisor_if: eno3
+    forward: nat
     mac_suffix: '05'
     ipv4:
       address: '10.0.0.1'

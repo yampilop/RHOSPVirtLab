@@ -1,3 +1,6 @@
+{% set dpdk_count = ((vms | selectattr("profile", "equalto", "vcomputeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count)) %}
+{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count)) %}
+
 resource_registry:
 {% for ocrole in overcloud_roles %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.nic_configs }}
@@ -7,15 +10,55 @@ parameter_defaults:
   NetworkDeploymentActions: ['CREATE','UPDATE']
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
-
+  
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
   NeutronFlatNetworks: "*"
-
+  
   NeutronNetworkVLANRanges: "{{ NetworkVlanRanges }}"
   NeutronTunnelTypes: 'geneve'
   NeutronNetworkType: 'geneve,vlan'
+  
+  NovaSchedulerDefaultFilters:
+    - AvailabilityZoneFilter
+    - ComputeFilter
+    - ComputeCapabilitiesFilter
+    - ImagePropertiesFilter
+    - ServerGroupAntiAffinityFilter
+    - ServerGroupAffinityFilter
+    - AggregateInstanceExtraSpecsFilter
+    - NUMATopologyFilter
+    - PciPassthroughFilter
 
+{% if dpdk_count > 0 %}
+  ComputeOvsDpdkParameters:
+    KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkProperties.hugepages }} {{ ComputeOvsDpdkProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkProperties.isolcpus }}"
+    TunedProfileName: "cpu-partitioning"
+    IsolCpusList: "{{ ComputeOvsDpdkProperties.isolcpus }}"
+    NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
+    NovaReservedHostMemory: {{ ComputeOvsDpdkProperties.hostmemory }}
+    OvsDpdkSocketMemory: "{{ ComputeOvsDpdkProperties.socketmemory }}"
+    OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkProperties.memorychannels }}"
+    OvsDpdkCoreList: "{{ ComputeOvsDpdkProperties.ovsdpdkcorelist }}"
+    NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkProperties.sharedcpus }}"
+    OvsPmdCoreList: "{{ ComputeOvsDpdkProperties.ovspmdcorelist}}"
+    OvsEnableDpdk: true
+  
+  VirtualComputeOvsDpdkParameters:
+    KernelArgs: "default_hugepagesz={{ VirtualComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ VirtualComputeOvsDpdkProperties.hugepagesz }} hugepages={{ VirtualComputeOvsDpdkProperties.hugepages }} {{ VirtualComputeOvsDpdkProperties.kernelargs }} isolcpus={{ VirtualComputeOvsDpdkProperties.isolcpus }}"
+    TunedProfileName: "cpu-partitioning"
+    IsolCpusList: "{{ VirtualComputeOvsDpdkProperties.isolcpus }}"
+    NovaComputeCpuDedicatedSet: "{{ VirtualComputeOvsDpdkProperties.dedicatedcpus }}"
+    NovaReservedHostMemory: {{ VirtualComputeOvsDpdkProperties.hostmemory }}
+    OvsDpdkSocketMemory: "{{ VirtualComputeOvsDpdkProperties.socketmemory }}"
+    OvsDpdkMemoryChannels: "{{ VirtualComputeOvsDpdkProperties.memorychannels }}"
+    OvsDpdkCoreList: "{{ VirtualComputeOvsDpdkProperties.ovsdpdkcorelist }}"
+    NovaComputeCpuSharedSet: "{{ VirtualComputeOvsDpdkProperties.sharedcpus }}"
+    OvsPmdCoreList: "{{ VirtualComputeOvsDpdkProperties.ovspmdcorelist}}"
+    OvsEnableDpdk: true
+{% endif %}
+
+{% if sriov_count > 0 %}
   ComputeSriovParameters:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
@@ -32,30 +75,6 @@ parameter_defaults:
         physical_network: "{{ passt.network }}"
 {% endfor %}
     NeutronPhysicalDevMappings: "{{ ComputeSriovProperties.physicaldevmappings }}"
-
-  NovaSchedulerDefaultFilters:
-    - AvailabilityZoneFilter
-    - ComputeFilter
-    - ComputeCapabilitiesFilter
-    - ImagePropertiesFilter
-    - ServerGroupAntiAffinityFilter
-    - ServerGroupAffinityFilter
-    - AggregateInstanceExtraSpecsFilter
-    - NUMATopologyFilter
-    - PciPassthroughFilter
-
-  ComputeOvsDpdkParameters:
-    KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkProperties.hugepages }} {{ ComputeOvsDpdkProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkProperties.isolcpus }}"
-    TunedProfileName: "cpu-partitioning"
-    IsolCpusList: "{{ ComputeOvsDpdkProperties.isolcpus }}"
-    NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
-    NovaReservedHostMemory: {{ ComputeOvsDpdkProperties.hostmemory }}
-    OvsDpdkSocketMemory: "{{ ComputeOvsDpdkProperties.socketmemory }}"
-    OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkProperties.memorychannels }}"
-    OvsDpdkCoreList: "{{ ComputeOvsDpdkProperties.ovsdpdkcorelist }}"
-    NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkProperties.sharedcpus }}"
-    OvsPmdCoreList: "{{ ComputeOvsDpdkProperties.ovspmdcorelist}}"
-    OvsEnableDpdk: true
   
   ComputeOvsHwOffloadParameters:
     IsolCpusList: '{{ ComputeOvsHwOffloadProperties.isolcpus }}'
@@ -74,4 +93,4 @@ parameter_defaults:
         physical_network: "{{ passt.network }}"
 {% endfor %}
     NeutronPhysicalDevMappings: "{{ ComputeOvsHwOffloadProperties.physicaldevmappings }}"
-
+{% endif %}

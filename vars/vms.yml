@@ -13,9 +13,9 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
-  - name: controller0
-    title: 'RHOSPVirtLab Controller 0'
-    profile: 'control'
+  - name: vcontroller0
+    title: 'RHOSPVirtLab Virtual Controller 0'
+    profile: 'vcontrol'
     memory: 8388608
     vcpus: 2
     bmcport: 6231
@@ -26,9 +26,9 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: controller1
-    title: 'RHOSPVirtLab Controller 1'
-    profile: 'control'
+  - name: vcontroller1
+    title: 'RHOSPVirtLab Virtual Controller 1'
+    profile: 'vcontrol'
     memory: 8388608
     vcpus: 2
     bmcport: 6232
@@ -39,9 +39,9 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: controller2
-    title: 'RHOSPVirtLab Controller 2'
-    profile: 'control'
+  - name: vcontroller2
+    title: 'RHOSPVirtLab Virtual Controller 2'
+    profile: 'vcontrol'
     memory: 8388608
     vcpus: 2
     bmcport: 6233
@@ -52,27 +52,29 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: compute0
-    title: 'RHOSPVirtLab Compute 0'
-    profile: 'compute'
+  - name: vcompute0
+    title: 'RHOSPVirtLab Virtual Compute 0'
+    profile: 'vcompute'
     memory: 31457280
     vcpus: 10
     bmcport: 6234
     mac: '0c:1f:0d:12:00'
     disk_size: 53687091200
+    data_disk_size: 0
     backing_store: ''
     cdrom: ''
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: compute1
-    title: 'RHOSPVirtLab Compute 1'
-    profile: 'compute'
+  - name: vcompute1
+    title: 'RHOSPVirtLab Virtual Compute 1'
+    profile: 'vcompute'
     memory: 31457280
     vcpus: 10
     bmcport: 6235
     mac: '0c:1f:0d:12:01'
     disk_size: 53687091200
+    data_disk_size: 0
     backing_store: ''
     cdrom: ''
     nics:

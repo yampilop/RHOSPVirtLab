@@ -2,24 +2,41 @@
 # vars file for RHOSP-undercloud
 
 overcloud_roles:
+  # Virtual roles
+  - name: VirtualController
+    profile: vcontrol
+    nic_configs: vcontroller.yaml
+  - name: VirtualCompute
+    profile: vcompute
+    nic_configs: vcompute.yaml
+  - name: VirtualComputeOvsDpdk
+    profile: vcomputeovsdpdk
+    nic_configs: vcomputeovsdpdk.yaml
+  - name: VirtualCephStorage
+    profile: vcephstorage
+    nic_configs: vcephstorage.yaml
+  - name: VirtualComputeHCI
+    profile: vcomputehci
+    nic_configs: vcomputehci.yaml
+  # Physical roles
   - name: Controller
     profile: control
     nic_configs: controller.yaml
   - name: Compute
     profile: compute
     nic_configs: compute.yaml
-  - name: ComputeSriov
-    profile: computesriov
-    nic_configs: computesriov.yaml
   - name: ComputeOvsDpdk
     profile: computeovsdpdk
     nic_configs: computeovsdpdk.yaml
+  - name: ComputeSriov
+    profile: computesriov
+    nic_configs: computesriov.yaml
   - name: ComputeOvsHwOffload
     profile: computeovshwoffload
     nic_configs: computeovshwoffload.yaml
   - name: CephStorage
-    profile: ceph-storage
-    nic_configs: ceph-storage.yaml
+    profile: cephstorage
+    nic_configs: cephstorage.yaml
   - name: ComputeHCI
     profile: computehci
     nic_configs: computehci.yaml

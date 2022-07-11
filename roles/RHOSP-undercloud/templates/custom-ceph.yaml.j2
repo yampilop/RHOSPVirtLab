@@ -1,5 +1,5 @@
-{% set ceph_count = ((vms | selectattr("profile", "equalto", "ceph-storage") | list | count) + (physical | selectattr("profile", "equalto", "ceph-storage") | list | count)) %}
-{% set hci_count = ((vms | selectattr("profile", "equalto", "computehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
 
 parameter_defaults:
 {% if ceph_count + hci_count < 3 %}

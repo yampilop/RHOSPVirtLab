@@ -213,7 +213,7 @@ resources:
                           get_param: ControlPlaneDefaultRoute
                 members:
                 - type: interface
-                  name: {{ interfaces.computehci.ControlPlane }}
+                  name: {{ interfaces.ComputeHCI.ControlPlane }}
                   mtu:
                     get_attr: [MinViableMtu, value]
                   # force the MAC address of the bridge to this interface
@@ -278,7 +278,7 @@ resources:
                           get_param: ExternalInterfaceDefaultRoute
                 members:
                 - type: interface
-                  name: {{ interfaces.computehci.External }}
+                  name: {{ interfaces.ComputeHCI.External }}
                   mtu:
                     get_param: ExternalMtu
                   primary: true

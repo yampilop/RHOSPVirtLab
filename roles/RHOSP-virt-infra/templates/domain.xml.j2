@@ -43,6 +43,13 @@
 {% endif %}
       <target dev="sda" bus="sata"/>
     </disk>
+{% if item.data_disk_size is defined and item.data_disk_size > 0 %}
+    <disk type="file" device="disk">
+      <driver name="qemu" type="qcow2"/>
+      <source file="{{ pool_location }}/{{ item.name }}_data.qcow2"/>
+      <target dev="sdb" bus="sata"/>
+    </disk>
+{% endif %}
 {% if item.cdrom != '' %}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>

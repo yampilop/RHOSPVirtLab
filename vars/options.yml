@@ -139,6 +139,18 @@ ComputeOvsDpdkProperties:
   memorychannels: '4'
   ovsdpdkcorelist: '0,24,1,25'
   ovspmdcorelist: '2,26,3,27'
+VirtualComputeOvsDpdkProperties:
+  isolcpus: '6-23,30-47'
+  hugepagesz: '1GB'
+  hugepages: 32
+  kernelargs: 'iommu=pt intel_iommu=on'
+  dedicatedcpus: '6-23,30-47'
+  sharedcpus: '4-5,28-29'
+  hostmemory: 4096
+  socketmemory: '4096,4096'
+  memorychannels: '4'
+  ovsdpdkcorelist: '0,24,1,25'
+  ovspmdcorelist: '2,26,3,27'
 
 # CephStorage default properties
 CephStorageProperties:

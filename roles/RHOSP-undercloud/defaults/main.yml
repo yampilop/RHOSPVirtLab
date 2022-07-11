@@ -31,13 +31,13 @@ network_data_vlans:
 
 # interfaces to use in each nic-config
 interfaces:
-  controller:
+  VirtualController:
     ControlPlane: nic1
     External: nic2
-  compute:
+  VirtualCompute:
     ControlPlane: nic1
     External: nic2
-  computeovsdpdk:
+  VirtualComputeOvsDpdk:
     ControlPlane:
       name: dpdk-ctlplane
       interface: nic2
@@ -51,22 +51,48 @@ interfaces:
             interface: nic4
           - name: dpdk1
             interface: nic5
-  computesriov:
-    ControlPlane: nic2
-    External: nic3v0
-    Sriov:
-      - device: nic3
-        numvfs: 8
-  computeovshwoffload:
-    ControlPlane: nic2
-    External: nic3v0
-    Sriov:
-      - device: nic3
-        numvfs: 8
-  cephstorage:
+  VirtualCephStorage:
     ControlPlane: nic2
     External: nic3
-  computehci:
+  VirtualComputeHCI:
+    ControlPlane: nic2
+    External: nic3
+  Controller:
+    ControlPlane: nic1
+    External: nic2
+  Compute:
+    ControlPlane: nic1
+    External: nic2
+  ComputeOvsDpdk:
+    ControlPlane:
+      name: dpdk-ctlplane
+      interface: nic2
+    External:
+      name: dpdk-external
+      interface: nic3
+    DpdkBonds:
+      - name: dpdkbond0
+        ports:
+          - name: dpdk0
+            interface: nic4
+          - name: dpdk1
+            interface: nic5
+  ComputeSriov:
+    ControlPlane: nic2
+    External: nic3v0
+    Sriov:
+      - device: nic3
+        numvfs: 8
+  ComputeOvsHwOffload:
+    ControlPlane: nic2
+    External: nic3v0
+    Sriov:
+      - device: nic3
+        numvfs: 8
+  CephStorage:
+    ControlPlane: nic2
+    External: nic3
+  ComputeHCI:
     ControlPlane: nic2
     External: nic3
 
@@ -131,6 +157,18 @@ ComputeOvsDpdkProperties:
   memorychannels: '4'
   ovsdpdkcorelist: '0,24,1,25'
   ovspmdcorelist: '2,26,3,27'
+VirtualComputeOvsDpdkProperties:
+  isolcpus: '6-23,30-47'
+  hugepagesz: '1GB'
+  hugepages: 32
+  kernelargs: 'iommu=pt intel_iommu=on'
+  dedicatedcpus: '6-23,30-47'
+  sharedcpus: '4-5,28-29'
+  hostmemory: 4096
+  socketmemory: '4096,4096'
+  memorychannels: '4'
+  ovsdpdkcorelist: '0,24,1,25'
+  ovspmdcorelist: '2,26,3,27'
 
 # CephStorage default properties
 CephStorageProperties:
@@ -154,9 +192,9 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
-  - name: controller0
-    title: 'RHOSPVirtLab Controller 0'
-    profile: 'control'
+  - name: vcontroller0
+    title: 'RHOSPVirtLab Virtual Controller 0'
+    profile: 'vcontrol'
     memory: 8388608
     vcpus: 2
     bmcport: 6231
@@ -167,14 +205,15 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: compute0
-    title: 'RHOSPVirtLab Compute 0'
-    profile: 'compute'
+  - name: vcompute0
+    title: 'RHOSPVirtLab Virtual Compute 0'
+    profile: 'vcompute'
     memory: 6291456
     vcpus: 4
     bmcport: 6234
     mac: '0c:1f:0d:12:00'
     disk_size: 53687091200
+    data_disk_size: 0
     backing_store: ''
     cdrom: ''
     nics:
@@ -188,14 +227,12 @@ physical: []
 networks:
   - name: RHOSPVirtLab_ctlplane
     bridge: br-ctlplane
-    forward: bridge
-    hypervisor_if: eno2
+    forward: false
     mac_suffix: '00'
     ipv4: false
   - name: RHOSPVirtLab_external
     bridge: br-external
-    forward: bridge
-    hypervisor_if: eno3
+    forward: nat
     mac_suffix: '05'
     ipv4:
       address: '10.0.0.1'

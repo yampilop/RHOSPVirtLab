@@ -189,18 +189,18 @@ resources:
                         next_hop:
                           get_param: ControlPlaneDefaultRoute
                 members:
-{% if interfaces.computeovsdpdk.ControlPlane is mapping %}
+{% if interfaces.ComputeOvsDpdk.ControlPlane is mapping %}
                 - type: ovs_dpdk_port
-                  name: {{ interfaces.computeovsdpdk.ControlPlane.name }}
+                  name: {{ interfaces.ComputeOvsDpdk.ControlPlane.name }}
                   members:
                   - type: interface
-                    name: {{ interfaces.computeovsdpdk.ControlPlane.interface }}
+                    name: {{ interfaces.ComputeOvsDpdk.ControlPlane.interface }}
                     mtu:
                       get_attr: [MinViableMtu, value]
                     primary: true
 {% else %}
                 - type: interface
-                  name: {{ interfaces.computeovsdpdk.ControlPlane }}
+                  name: {{ interfaces.ComputeOvsDpdk.ControlPlane }}
                   mtu:
                     get_attr: [MinViableMtu, value]
                   # force the MAC address of the bridge to this interface
@@ -254,28 +254,28 @@ resources:
                         next_hop:
                           get_param: ExternalInterfaceDefaultRoute
                 members:
-{% if interfaces.computeovsdpdk.External is mapping %}
+{% if interfaces.ComputeOvsDpdk.External is mapping %}
                 - type: ovs_dpdk_port
-                  name: {{ interfaces.computeovsdpdk.External.name }}
+                  name: {{ interfaces.ComputeOvsDpdk.External.name }}
                   members:
                   - type: interface
-                    name: {{ interfaces.computeovsdpdk.External.interface }}
+                    name: {{ interfaces.ComputeOvsDpdk.External.interface }}
                     mtu:
                       get_param: ExternalMtu
                     primary: true
 {% else %}
                 - type: interface
-                  name: {{ interfaces.computeovsdpdk.External }}
+                  name: {{ interfaces.ComputeOvsDpdk.External }}
                   mtu:
                     get_param: ExternalMtu
                   primary: true
 {% endif %}
-{% if (interfaces.computeovsdpdk.DpdkBonds is defined) and (interfaces.computeovsdpdk.DpdkBonds|length > 0) %}
+{% if (interfaces.ComputeOvsDpdk.DpdkBonds is defined) and (interfaces.ComputeOvsDpdk.DpdkBonds|length > 0) %}
               - type: ovs_user_bridge
                 name: br-dpdk
                 use_dhcp: false
                 members:
-{% for dpdkbond in interfaces.computeovsdpdk.DpdkBonds %}
+{% for dpdkbond in interfaces.ComputeOvsDpdk.DpdkBonds %}
                 - type: ovs_dpdk_bond
                   name: {{ dpdkbond.name }}
                   mtu: 9000
