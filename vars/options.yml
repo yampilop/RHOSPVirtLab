@@ -42,19 +42,11 @@ interfaces:
     ControlPlane: nic1
     External: nic2
   VirtualComputeOvsDpdk:
-    ControlPlane:
-      name: dpdk-ctlplane
-      interface: nic2
+    ControlPlane: nic2
     External:
       name: dpdk-external
       interface: nic3
-    DpdkBonds:
-      - name: dpdkbond0
-        ports:
-          - name: dpdk0
-            interface: nic4
-          - name: dpdk1
-            interface: nic5
+    DpdkBonds: []
   VirtualCephStorage:
     ControlPlane: nic2
     External: nic3
@@ -68,9 +60,7 @@ interfaces:
     ControlPlane: nic1
     External: nic2
   ComputeOvsDpdk:
-    ControlPlane:
-      name: dpdk-ctlplane
-      interface: nic2
+    ControlPlane: nic2
     External:
       name: dpdk-external
       interface: nic3
@@ -158,25 +148,25 @@ ComputeOvsDpdkProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  dedicatedcpus: '6-23,30-47'
-  sharedcpus: '4-5,28-29'
-  hostmemory: 4096
+  dedicatedcpus: '8-23,32-47'
+  sharedcpus: '6-7,30-31'
+  hostmemory: 8192
   socketmemory: '4096,4096'
   memorychannels: '4'
-  ovsdpdkcorelist: '0,24,1,25'
-  ovspmdcorelist: '2,26,3,27'
+  ovsdpdkcorelist: '2,26,3,27'
+  ovspmdcorelist: '4,28,5,29'
 VirtualComputeOvsDpdkProperties:
-  isolcpus: '6-23,30-47'
+  isolcpus: '6-14'
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  dedicatedcpus: '6-23,30-47'
-  sharedcpus: '4-5,28-29'
+  dedicatedcpus: '8-14'
+  sharedcpus: '6-7'
   hostmemory: 4096
   socketmemory: '4096,4096'
   memorychannels: '4'
-  ovsdpdkcorelist: '0,24,1,25'
-  ovspmdcorelist: '2,26,3,27'
+  ovsdpdkcorelist: '2,3'
+  ovspmdcorelist: '4,5'
 
 # CephStorage default properties
 CephStorageProperties:

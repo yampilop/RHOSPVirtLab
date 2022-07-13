@@ -15,7 +15,7 @@ vms:
       RHOSPVirtLab_management: '192.168.250.10'
   - name: vcontroller0
     title: 'RHOSPVirtLab Virtual Controller 0'
-    profile: 'vcontrol'
+    profile: 'vcontroller'
     memory: 8388608
     vcpus: 2
     bmcport: 6231
@@ -28,7 +28,7 @@ vms:
       RHOSPVirtLab_external: ''
   - name: vcontroller1
     title: 'RHOSPVirtLab Virtual Controller 1'
-    profile: 'vcontrol'
+    profile: 'vcontroller'
     memory: 8388608
     vcpus: 2
     bmcport: 6232
@@ -41,7 +41,7 @@ vms:
       RHOSPVirtLab_external: ''
   - name: vcontroller2
     title: 'RHOSPVirtLab Virtual Controller 2'
-    profile: 'vcontrol'
+    profile: 'vcontroller'
     memory: 8388608
     vcpus: 2
     bmcport: 6233
