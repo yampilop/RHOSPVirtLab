@@ -9,9 +9,6 @@ overcloud_roles:
   - name: VirtualCompute
     profile: vcompute
     nic_configs: vcompute.yaml
-  - name: VirtualComputeOvsDpdk
-    profile: vcomputeovsdpdk
-    nic_configs: vcomputeovsdpdk.yaml
   - name: VirtualCephStorage
     profile: vcephstorage
     nic_configs: vcephstorage.yaml

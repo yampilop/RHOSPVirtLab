@@ -1,4 +1,4 @@
-{% set dpdk_count = ((vms | selectattr("profile", "equalto", "vcomputeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count)) %}
+{% set dpdk_count = (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) %}
 {% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count)) %}
 
 resource_registry:
@@ -42,19 +42,6 @@ parameter_defaults:
     OvsDpdkCoreList: "{{ ComputeOvsDpdkProperties.ovsdpdkcorelist }}"
     NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkProperties.sharedcpus }}"
     OvsPmdCoreList: "{{ ComputeOvsDpdkProperties.ovspmdcorelist}}"
-    OvsEnableDpdk: true
-  
-  VirtualComputeOvsDpdkParameters:
-    KernelArgs: "default_hugepagesz={{ VirtualComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ VirtualComputeOvsDpdkProperties.hugepagesz }} hugepages={{ VirtualComputeOvsDpdkProperties.hugepages }} {{ VirtualComputeOvsDpdkProperties.kernelargs }} isolcpus={{ VirtualComputeOvsDpdkProperties.isolcpus }}"
-    TunedProfileName: "cpu-partitioning"
-    IsolCpusList: "{{ VirtualComputeOvsDpdkProperties.isolcpus }}"
-    NovaComputeCpuDedicatedSet: "{{ VirtualComputeOvsDpdkProperties.dedicatedcpus }}"
-    NovaReservedHostMemory: {{ VirtualComputeOvsDpdkProperties.hostmemory }}
-    OvsDpdkSocketMemory: "{{ VirtualComputeOvsDpdkProperties.socketmemory }}"
-    OvsDpdkMemoryChannels: "{{ VirtualComputeOvsDpdkProperties.memorychannels }}"
-    OvsDpdkCoreList: "{{ VirtualComputeOvsDpdkProperties.ovsdpdkcorelist }}"
-    NovaComputeCpuSharedSet: "{{ VirtualComputeOvsDpdkProperties.sharedcpus }}"
-    OvsPmdCoreList: "{{ VirtualComputeOvsDpdkProperties.ovspmdcorelist}}"
     OvsEnableDpdk: true
 {% endif %}
 

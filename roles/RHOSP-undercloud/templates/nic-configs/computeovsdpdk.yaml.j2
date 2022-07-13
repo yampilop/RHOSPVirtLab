@@ -192,12 +192,12 @@ resources:
 {% if interfaces.ComputeOvsDpdk.ControlPlane is mapping %}
                 - type: ovs_dpdk_port
                   name: {{ interfaces.ComputeOvsDpdk.ControlPlane.name }}
+                  mtu:
+                    get_attr: [MinViableMtu, value]
+                  primary: true
                   members:
                   - type: interface
                     name: {{ interfaces.ComputeOvsDpdk.ControlPlane.interface }}
-                    mtu:
-                      get_attr: [MinViableMtu, value]
-                    primary: true
 {% else %}
                 - type: interface
                   name: {{ interfaces.ComputeOvsDpdk.ControlPlane }}
@@ -257,12 +257,12 @@ resources:
 {% if interfaces.ComputeOvsDpdk.External is mapping %}
                 - type: ovs_dpdk_port
                   name: {{ interfaces.ComputeOvsDpdk.External.name }}
+                  mtu:
+                    get_param: ExternalMtu
+                  primary: true
                   members:
                   - type: interface
                     name: {{ interfaces.ComputeOvsDpdk.External.interface }}
-                    mtu:
-                      get_param: ExternalMtu
-                    primary: true
 {% else %}
                 - type: interface
                   name: {{ interfaces.ComputeOvsDpdk.External }}
