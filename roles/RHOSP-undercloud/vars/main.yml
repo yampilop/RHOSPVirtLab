@@ -4,7 +4,7 @@
 overcloud_roles:
   # Virtual roles
   - name: VirtualController
-    profile: vcontrol
+    profile: vcontroller
     nic_configs: vcontroller.yaml
   - name: VirtualCompute
     profile: vcompute
@@ -20,7 +20,7 @@ overcloud_roles:
     nic_configs: vcomputehci.yaml
   # Physical roles
   - name: Controller
-    profile: control
+    profile: controller
     nic_configs: controller.yaml
   - name: Compute
     profile: compute
