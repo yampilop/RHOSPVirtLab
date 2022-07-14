@@ -10,6 +10,7 @@ parameter_defaults:
   NetworkDeploymentActions: ['CREATE','UPDATE']
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
+  ControlPlaneDefaultRoute: 192.168.24.1
   
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
@@ -35,12 +36,16 @@ parameter_defaults:
     KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkProperties.hugepages }} {{ ComputeOvsDpdkProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
     IsolCpusList: "{{ ComputeOvsDpdkProperties.isolcpus }}"
-    NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
     NovaReservedHostMemory: {{ ComputeOvsDpdkProperties.hostmemory }}
     OvsDpdkSocketMemory: "{{ ComputeOvsDpdkProperties.socketmemory }}"
     OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkProperties.memorychannels }}"
     OvsDpdkCoreList: "{{ ComputeOvsDpdkProperties.ovsdpdkcorelist }}"
+{% if RHOSP_version == 13.0 %}
+    NovaVcpuPinSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
+{% else %}
+    NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkProperties.sharedcpus }}"
+{% endif %}
     OvsPmdCoreList: "{{ ComputeOvsDpdkProperties.ovspmdcorelist}}"
     OvsEnableDpdk: true
 {% endif %}
@@ -50,8 +55,12 @@ parameter_defaults:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
+{% if RHOSP_version == 13.0 %}
+    NovaVcpuPinSet: "{{ ComputeSriovProperties.dedicatedcpus }}"
+{% else %}
     NovaComputeCpuDedicatedSet: "{{ ComputeSriovProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeSriovProperties.sharedcpus }}"
+{% endif %}
     NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}
     
     NovaPCIPassthrough:
@@ -68,8 +77,12 @@ parameter_defaults:
     KernelArgs: "default_hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepages={{ ComputeOvsHwOffloadProperties.hugepages }} {{ ComputeOvsHwOffloadProperties.kernelargs }} isolcpus={{ ComputeOvsHwOffloadProperties.isolcpus }}"
     OvsHwOffload: true
     TunedProfileName: "cpu-partitioning"
+{% if RHOSP_version == 13.0 %}
+    NovaVcpuPinSet: "{{ ComputeOvsHwOffloadProperties.dedicatedcpus }}"
+{% else %}
     NovaComputeCpuDedicatedSet: "{{ ComputeOvsHwOffloadProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeOvsHwOffloadProperties.sharedcpus }}"
+{% endif %}
     NovaReservedHostMemory: {{ ComputeOvsHwOffloadProperties.hostmemory }}
     
     NovaPCIPassthrough:

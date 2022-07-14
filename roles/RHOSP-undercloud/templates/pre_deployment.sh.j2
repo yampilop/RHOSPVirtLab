@@ -29,13 +29,24 @@ openstack baremetal node list
 openstack overcloud node introspect --all-manageable --provide
 openstack baremetal node list
 {% if RHOSP_version == 13.0 %}
-sudo docker login registry.redhat.io --username {{ rh_username }} --password {{ rh_password }}
+{% if rh_serviceaccount and rh_token %}
+sudo docker login registry.redhat.io --username '{{ rh_serviceaccount }}' --password '{{ rh_token }}'
+{% else %}
+sudo docker login registry.redhat.io --username '{{ rh_username }}' --password '{{ rh_password }}'
+{% endif %}
 sudo openstack overcloud container image prepare \
---output-env-file /home/stack/templates/overcloud-images.yaml \
---tag-from-label {version}-{release} \
+-e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-ovs-dpdk.yaml
+-e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-sriov.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-ovn-dvr-ha.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/octavia.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \
+--set ceph_namespace=registry.redhat.io/rhceph \
+--set ceph_image=rhceph-3-rhel7 \
 --namespace=registry.redhat.io/rhosp13 \
 --prefix=openstack- \
 --push-destination=192.168.24.1:8787 \
+--tag-from-label {version}-{release} \
+--output-env-file /home/stack/templates/overcloud-images.yaml \
 --output-images-file /home/stack/local_registry_images.yaml
 sudo openstack overcloud container image upload \
 --config-file /home/stack/local_registry_images.yaml \

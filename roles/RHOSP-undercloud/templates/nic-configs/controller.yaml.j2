@@ -1,5 +1,8 @@
-
+{% if RHOSP_version == 13.0 %}
+heat_template_version: queens
+{% else %}
 heat_template_version: rocky
+{% endif %}
 description: >
   Software Config to drive os-net-config to configure VLANs for the Controller role.
 parameters:
