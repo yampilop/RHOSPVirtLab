@@ -35,7 +35,7 @@ sudo docker login registry.redhat.io --username '{{ rh_serviceaccount }}' --pass
 sudo docker login registry.redhat.io --username '{{ rh_username }}' --password '{{ rh_password }}'
 {% endif %}
 sudo openstack overcloud container image prepare \
--e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-ovs-dpdk.yaml
+-e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-ovs-dpdk.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-sriov.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-ovn-dvr-ha.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/services-docker/octavia.yaml \
