@@ -9,3 +9,8 @@
     msg: Please check your physical.yaml file and make sure the profiles chosen are the non virtual ones.
   when: item.profile.startswith('v')
   loop: "{{ physical }}"
+
+- name: PROFILES - Check only one type of controllers is used
+  fail:
+    msg: Using Controller and VirtualControllers at the same time is not allowed.
+  when: ((vms | selectattr("profile", "equalto", "vcontroller") | list | count) > 0) and ((physical | selectattr("profile", "equalto", "controller") | list | count) > 0)
