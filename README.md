@@ -38,6 +38,12 @@ sudo reboot
 
 The user from which you will execute the lab needs to have `sudo` **permissions enabled with no password**.
 
+To achieve that, assuming your username is **admin**, you need to create a file `/etc/sudoers.d/admin` with the following content:
+
+```
+admin ALL=(ALL) NOPASSWD:ALL
+```
+
 ## Install required and useful packages
 
 ```bash
@@ -99,6 +105,11 @@ You will write the credentials in the following format:
 ```yml
 rh_username: '<USERNAME>'
 rh_password: '<PASSWORD>'
+```
+
+To avoid your credentials to be written in text files, you can use the following format:
+
+```yml
 rh_pool: '<POOL_ID_TO_ATTACH_SUBSCRIPTIONS>'
 rh_orgid: '<ORG_ID>'
 rh_activationkey: '<ACTIVATION_KEY>'
@@ -107,12 +118,14 @@ rh_token: '<TOKEN>'
 ```
 
 `rh_pool` is optional to be used instead of autoattach.
-`rh_orgid` and `rh_activationkey` are optional to be used in the case an Activation Key is created for subscription-manager.
-`rh_serviceaccount` and `rh_token` are optional to be used in the case a Registry Service Account is created to use with the container registry (in order not to use the credentials in plain text files).
+`rh_orgid` and `rh_activationkey` are used in the case an Activation Key is created for subscription-manager.
+`rh_serviceaccount` and `rh_token` are used in the case a Registry Service Account is created to use with the container registry (in order not to use the credentials in plain text files).
 
 ## Clean the installation
 
-To start/restart the installation from scratch, you need to edit the options.yml file and set `cleanup: True` instead of `False`.
+To start/restart the installation from scratch, you can edit the options.yml file and set `cleanup: True` instead of `False`.
+
+You can also add `--extra-vars "cleanup=True|bool" to the ansible-playbook command.
 
 ## Execute the Ansible Playbook
 
@@ -138,6 +151,25 @@ If you want to customize the default environment created by the playbook, you ne
 - vars/options.yml (Customizable parameters like the version of RHOSP to deploy, the cleanup parameter, etc.)
 
 You also can add to vars/options.yml any value overriding the default values from the roles.
+
+The available profiles for VMs are:
+
+- vcontroller
+- vcompute
+- vcephstorage
+- vcomputehci
+
+The available profiles for Physical machines are:
+
+- controller
+- compute
+- computeovsdpdk
+- computesriov
+- computeovshwoffload
+- cephstorage
+- computehci
+
+For the case of vcephstorage or vcomputehci you can add a second virtual disk to the VM inserting the following line in the vms element: `data_disk_size: <SIZE_IN_BYTES>`.
 
 ## Last steps
 
