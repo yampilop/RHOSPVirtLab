@@ -67,10 +67,12 @@ parameter_defaults:
 {% for passt in ComputeSriovProperties.pcipassthrough %}
       - vendor_id: "{{ passt.vendor_id }}"
         product_id: "{{ passt.product_id }}"
+{% if passt.address is defined %}
         address: {{ passt.address }}
+{% endif %}
         physical_network: "{{ passt.network }}"
 {% endfor %}
-    NeutronPhysicalDevMappings: "{{ ComputeSriovProperties.physicaldevmappings }}"
+    NeutronPhysicalDevMappings: {{ ComputeSriovProperties.physicaldevmappings }}
   
   ComputeOvsHwOffloadParameters:
     IsolCpusList: '{{ ComputeOvsHwOffloadProperties.isolcpus }}'
@@ -89,8 +91,10 @@ parameter_defaults:
 {% for passt in ComputeOvsHwOffloadProperties.pcipassthrough %}
       - vendor_id: "{{ passt.vendor_id }}"
         product_id: "{{ passt.product_id }}"
+{% if passt.address is defined %}
         address: {{ passt.address }}
+{% endif %}
         physical_network: "{{ passt.network }}"
 {% endfor %}
-    NeutronPhysicalDevMappings: "{{ ComputeOvsHwOffloadProperties.physicaldevmappings }}"
+    NeutronPhysicalDevMappings: {{ ComputeOvsHwOffloadProperties.physicaldevmappings }}
 {% endif %}
