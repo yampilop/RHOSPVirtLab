@@ -1,9 +1,9 @@
+#/bin/bash
+
 {% set dpdk_count = (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) %}
 {% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count)) %}
 {% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | list | count)) %}
 {% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
-
-#/bin/bash
 
 source /home/stack/stackrc
 date
@@ -33,11 +33,7 @@ time openstack overcloud deploy \
 {% endif %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml \
 {% if sriov_count > 0 %}
-{% if RHOSP_version == 13.0 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-sriov.yaml \
-{% else %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml \
-{% endif %}
 {% endif %}
 {% if DeployOctavia %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
