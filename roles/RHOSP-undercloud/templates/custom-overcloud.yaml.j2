@@ -24,6 +24,5 @@ parameter_defaults:
 {% if (rh_pool is defined) %}
     rhsm_pool_ids: "{{ rh_pool }}"
 {% endif %}
-    rhsm_release: "{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
     rhsm_repos: {{ RHOSP_version_supported[RHOSP_version].repos }}
 {% endif %}
