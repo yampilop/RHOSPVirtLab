@@ -149,6 +149,9 @@ CephStorageProperties:
 # Octavia parameters
 DeployOctavia: False
 
+# Subscription manager parameters
+RegisterNodes: False
+
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud

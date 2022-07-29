@@ -12,3 +12,17 @@ parameter_defaults:
   {{ ocrole.name }}SchedulerHints:
     'capabilities:node': '{{ ocrole.profile }}%index%'
 {% endfor %}
+{% if RegisterNodes %}
+  RhsmVars:
+{% if (rh_orgid is not defined) or (rh_activationkey is not defined) %}
+    rhsm_username: "{{ rh_username }}"
+    rhsm_password: "{{ rh_password }}"
+{% else %}
+    rhsm_org_id: "{{ rh_orgid }}"
+    rhsm_activation_key: "{{ rh_activationkey }}"
+{% endif %}
+{% if (rh_pool is defined) %}
+    rhsm_pool_ids: "{{ rh_pool }}"
+{% endif %}
+    rhsm_release: "{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
+{% endif %}

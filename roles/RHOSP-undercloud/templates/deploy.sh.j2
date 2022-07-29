@@ -46,6 +46,8 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
 -e /home/stack/templates/custom-ceph.yaml \
 {% endif %}
+{% if RegisterNodes %}
+-e /usr/share/openstack-tripleo-heat-templates/environments/rhsm.yaml \
+{% endif %}
 -e /home/stack/templates/custom-overcloud.yaml
 date
-
