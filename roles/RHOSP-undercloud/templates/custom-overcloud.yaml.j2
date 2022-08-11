@@ -25,6 +25,9 @@ parameter_defaults:
     rhsm_pool_ids: "{{ rh_pool }}"
 {% endif %}
     rhsm_repos: {{ RHOSP_version_supported[RHOSP_version].repos }}
+{% if RHOSP_version != 13.0 %}
+    rhsm_release: {{ RHOSP_version_supported[RHOSP_version].rhel_release }}
+{% endif %}
 {% endif %}
   DockerInsecureRegistryAddress:
   - undercloud.ctlplane.localdomain:8787
