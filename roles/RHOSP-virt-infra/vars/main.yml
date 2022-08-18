@@ -3,6 +3,26 @@
 
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 
+RHEL_version_supported:
+  "7.9":
+    packages:
+      - libvirt
+      - libvirt-bash-completion
+      - libguestfs-tools
+      - ipmitool
+      - python27-python-pip
+      - python-lxml
+      - libvirt-python
+  "8.4":
+    packages:
+      - libvirt
+      - libvirt-bash-completion
+      - libguestfs-tools
+      - ipmitool
+      - "@python36"
+      - python3-lxml
+      - python3-libvirt
+
 RHOSP_version_supported:
   16.2:
     rhel_image:

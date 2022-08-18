@@ -1,6 +1,10 @@
 ---
 # vars file for RHOSP-undercloud
 
+RHEL_version_supported:
+  "7.9":
+  "8.4":
+
 overcloud_roles:
   # Virtual roles
   - name: VirtualController

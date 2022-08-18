@@ -1,6 +1,11 @@
 ---
 # tasks file for RHOSP-undercloud
 
+- name: Verify the OS Version is supported
+  fail:
+    msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
+  when: RHEL_version_supported[ansible_distribution_version] is not defined
+
 - name: Verify the RHOSP version selected is supported
   fail:
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."

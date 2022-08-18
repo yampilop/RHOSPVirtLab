@@ -10,15 +10,17 @@ Currently supported RHOSP versions:
 
 ## Assumptions
 
-This document assumes that you run a **RHEL 8.4** installation in your server. The steps for other OS versions may differ from the exposed here.
+This document assumes that you run a **RHEL 8.4** or **RHEL 7.9** installation in your server. The steps for other OS versions may differ from the exposed here.
 
 Your server must fulfill the following **minimum requirements**:
 
   * CPU: 16 cores
-  * RAM: 64GB
+  * RAM: 128GB
   * Disk: 350GB of free space
 
 Your server needs to be registered and attached to a valid pool. To do that:
+
+- On **RHEL 8.4**:
 
 ```bash
 sudo subscription-manager register
@@ -34,6 +36,23 @@ sudo dnf update -y
 sudo reboot
 ```
 
+- On **RHEL 7.9**:
+
+```bash
+sudo subscription-manager register
+sudo subscription-manager list --available --all
+(select a valid available pool)
+sudo subscription-manager attach --pool=<POOL_ID>
+sudo subscription-manager repos --disable=*
+sudo subscription-manager repos --enable=rhel-7-server-rpms \
+--enable=rhel-7-server-extras-rpms \
+--enable=rhel-7-server-ansible-2.9-rpms \
+--enable=rhel-7-server-satellite-client-6-rpms \
+--enable rhel-server-rhscl-7-rpms
+sudo yum update -y
+sudo reboot
+```
+
 ### Local user configuration
 
 The user from which you will execute the lab needs to have `sudo` **permissions enabled with no password**.
@@ -46,8 +65,16 @@ admin ALL=(ALL) NOPASSWD:ALL
 
 ## Install required and useful packages
 
+- On **RHEL 8.4**:
+
 ```bash
 sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete python3-netaddr rhel-system-roles tmux tcpdump
+```
+
+- On **RHEL 7.9**:
+
+```bash
+sudo yum -y install git ansible vim wget bash-completion rhel-system-roles tmux tcpdump python-netaddr python-argcomplete
 ```
 
 ## Pull the repo
@@ -64,7 +91,7 @@ Clone the repository and enter the directory.
 git clone https://github.com/yampilop/RHOSPVirtLab.git
 cd RHOSPVirtLab
 git fetch
-git switch rhel-hypervisor
+git checkout rhel-hypervisor
 ```
 
 ## Initial configurations

@@ -1,6 +1,11 @@
 ---
 # tasks file for RHOSP-virt-infra
 
+- name: Verify the OS Version is supported
+  fail:
+    msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
+  when: RHEL_version_supported[ansible_distribution_version] is not defined
+
 - name: Verify the RHOSP version selected is supported
   fail:
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
@@ -25,15 +30,8 @@
     ssh_public_key: "{{ lookup('file', '/home/{{ ansible_user }}/.ssh/id_rsa.pub') }}"
 
 - name: Ensure packages are installed
-  dnf:
-    name:
-      - libvirt
-      - libvirt-bash-completion
-      - libguestfs-tools
-      - ipmitool
-      - "@python36"
-      - python3-lxml
-      - python3-libvirt
+  yum:
+    name: "{{ RHEL_version_supported[ansible_distribution_version].packages }}"
     state: present
   become: yes
 
