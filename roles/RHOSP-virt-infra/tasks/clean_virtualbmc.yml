@@ -1,10 +1,10 @@
 - name: VIRTUALBMC - Get node states
-  shell: "/usr/local/bin/vbmc list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
+  shell: "{{ RHEL_version_supported[ansible_distribution_version].vbmc_path }} list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
   register: vbmc_status
   loop: "{{ vms }}"
   changed_when: False
 
 - name: VIRTUALBMC - Delete nodes
-  command: "/usr/local/bin/vbmc delete {{ item.item.name }}"
+  command: "{{ RHEL_version_supported[ansible_distribution_version].vbmc_path }} delete {{ item.item.name }}"
   when: item.stdout
   loop: "{{ vbmc_status.results }}"

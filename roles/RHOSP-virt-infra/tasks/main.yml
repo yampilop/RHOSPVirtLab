@@ -64,9 +64,8 @@
 
 - name: Install packages from pip
   pip:
-    name:
-      - virtualbmc
-      - netaddr
+    name: "{{ RHOSP_version_supported[RHOSP_version].pip }}"
+  when: RHOSP_version_supported[RHOSP_version].pip is defined
 
 - name: VIRTUALBMC - Create VirtualBMC systemd unit
   template:
@@ -88,6 +87,19 @@
     state: started
     enabled: yes
   become: yes
+
+- name: FIREWALLD - Ensure libvirt zone exists
+  firewalld:
+    zone: libvirt
+    state: present
+    permanent: yes
+  become: yes
+  register: firewalld_create_zone
+
+- name: FIREWALLD - Reload firewall after creating the zone
+  command: "firewall-cmd --reload"
+  become: yes
+  when: firewalld_create_zone.changed
 
 - name: Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
