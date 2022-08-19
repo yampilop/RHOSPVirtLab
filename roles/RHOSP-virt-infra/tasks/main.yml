@@ -64,12 +64,13 @@
 
 - name: Install packages from pip
   pip:
-    name: "{{ RHOSP_version_supported[RHOSP_version].pip }}"
-  when: RHOSP_version_supported[RHOSP_version].pip is defined
+    name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
+    executable: "pip3"
+  when: RHEL_version_supported[ansible_distribution_version].pip is defined
 
 - name: VIRTUALBMC - Create VirtualBMC systemd unit
   template:
-    src: "vbmcd.service"
+    src: "vbmcd.service.j2"
     dest: "/etc/systemd/system/vbmcd.service"
     owner: root
     group: root

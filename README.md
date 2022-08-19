@@ -6,7 +6,7 @@ Currently supported RHOSP versions:
 
 - 16.2 (default)
 - 16.1
-- 13.0 (still not fully supported by the templates)
+- 13.0
 
 ## Assumptions
 
@@ -46,8 +46,8 @@ sudo subscription-manager attach --pool=<POOL_ID>
 sudo subscription-manager repos --disable=*
 sudo subscription-manager repos --enable=rhel-7-server-rpms \
 --enable=rhel-7-server-extras-rpms \
+--enable=rhel-7-server-optional-rpms \
 --enable=rhel-7-server-ansible-2.9-rpms \
---enable=rhel-7-server-satellite-client-6-rpms \
 --enable=rhel-7-server-openstack-13-rpms
 sudo yum update -y
 sudo reboot
@@ -74,7 +74,7 @@ sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete pyt
 - On **RHEL 7.9**:
 
 ```bash
-sudo yum -y install git ansible vim wget bash-completion rhel-system-roles tmux tcpdump python-netaddr python-argcomplete
+sudo yum -y install git ansible vim wget bash-completion rhel-system-roles tmux tcpdump
 ```
 
 ## Pull the repo

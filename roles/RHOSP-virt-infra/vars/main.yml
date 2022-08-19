@@ -10,11 +10,19 @@ RHEL_version_supported:
       - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      - python2-virtualbmc
-      - python-lxml
+      - python3-pip
+      - python3-devel
+      - libvirt-devel
       - libvirt-python
+      - python-lxml
+      - gcc
       - python2-jinja2
-    vbmc_path: "/usr/bin/vbmc"
+    pip:
+      - virtualbmc
+      - netaddr
+      - argcomplete
+    vbmc_path: "/usr/local/bin/vbmc"
+    vbmcd_path: "/usr/local/bin/vbmcd"
   "8.4":
     packages:
       - libvirt
@@ -28,6 +36,7 @@ RHEL_version_supported:
       - virtualbmc
       - netaddr
     vbmc_path: "/usr/local/bin/vbmc"
+    vbmcd_path: "/usr/local/bin/vbmcd"
 
 RHOSP_version_supported:
   16.2:
