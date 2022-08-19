@@ -102,6 +102,15 @@
   become: yes
   when: firewalld_create_zone.changed
 
+- name: FIREWALLD - Ensure libvirt network interfaces belong to libvirt zone
+  firewalld:
+    zone: libvirt
+    interface: "{{ item.bridge }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ networks }}"
+
 - name: Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
   when: cleanup
