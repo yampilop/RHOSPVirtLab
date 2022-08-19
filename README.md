@@ -152,7 +152,7 @@ rh_token: '<TOKEN>'
 
 To start/restart the installation from scratch, you can edit the options.yml file and set `cleanup: True` instead of `False`.
 
-You can also add `--extra-vars "cleanup=True|bool" to the ansible-playbook command.
+You can also add `--extra-vars "cleanup=True"` to the ansible-playbook command.
 
 ## Execute the Ansible Playbook
 
