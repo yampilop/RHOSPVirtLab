@@ -11,6 +11,7 @@ create: True
 # overcloud parameters
 external_if: eno1
 overcloud_ip: 10.0.0.254
+forward_network: RHOSPVirtLab_external
 forwarded_ports:
   - 80
   - 6080

@@ -95,12 +95,13 @@
     state: present
     permanent: yes
   become: yes
+  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
   register: firewalld_create_zone
 
 - name: FIREWALLD - Reload firewall after creating the zone
   command: "firewall-cmd --reload"
   become: yes
-  when: firewalld_create_zone.changed
+  when: firewalld_create_zone.changed and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
 
 - name: FIREWALLD - Ensure libvirt network interfaces belong to libvirt zone
   firewalld:
@@ -110,6 +111,17 @@
     immediate: yes
     state: enabled
   loop: "{{ networks }}"
+  when: (item.name != forward_network) and (item.forward != 'bridge') and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+
+- name: FIREWALLD - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
+  firewalld:
+    zone: public
+    interface: "{{ item.bridge }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ networks }}"
+  when: ((item.name == forward_network) or (item.forward == 'bridge')) and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
 
 - name: Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
@@ -205,7 +217,7 @@
   import_tasks: create_virtualbmc.yml
   when: create
 
-- name: Enable masquerade in the firewall to allow external traffic
+- name: FIREWALLD - Enable masquerade in the firewall to allow external traffic
   firewalld:
     zone: "{{ item }}"
     masquerade: yes
@@ -218,7 +230,7 @@
     - libvirt
   become: yes
 
-- name: Set port forwarding rules
+- name: FIREWALLD - Set port forwarding rules
   firewalld:
     rich_rule: rule family=ipv4 forward-port port={{ item }} protocol=tcp to-port={{ item }} to-addr={{ overcloud_ip }}
     zone: public
@@ -226,6 +238,7 @@
     immediate: yes
     state: enabled
   loop: "{{ forwarded_ports }}"
+  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
 
 - name: Create stack alias to connect to undercloud
   lineinfile:
