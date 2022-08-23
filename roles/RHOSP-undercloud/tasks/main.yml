@@ -27,7 +27,7 @@
 
 - name: REPOSITORIES - Enable the needed repositories only
   rhsm_repository:
-    name: "{{ RHOSP_version_supported[RHOSP_version].repos }}"
+    name: "{{ RHOSP_version_supported[RHOSP_version].undercloud_repos }}"
     purge: yes
 
 - name: MODULES - Enable and configure modules
@@ -46,7 +46,7 @@
     name:
       - vim
       - wget
-      - bash-completion 
+      - bash-completion
     state: latest
 
 - name: PACKAGES - Update all packages

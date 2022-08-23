@@ -49,7 +49,15 @@ RHOSP_version_supported:
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
-    repos:
+    undercloud_repos:
+      - rhel-8-for-x86_64-baseos-rpms
+      - rhel-8-for-x86_64-appstream-rpms
+      - rhel-8-for-x86_64-highavailability-rpms
+      - ansible-2.9-for-rhel-8-x86_64-rpms
+      - openstack-16.2-for-rhel-8-x86_64-rpms
+      - fast-datapath-for-rhel-8-x86_64-rpms
+      - rhceph-4-tools-for-rhel-8-x86_64-rpms
+    nodes_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms
       - rhel-8-for-x86_64-highavailability-rpms
@@ -72,7 +80,16 @@ RHOSP_version_supported:
       name: 'rhel-8.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.2'
-    repos:
+    undercloud_repos:
+      - rhel-8-for-x86_64-baseos-rpms
+      - rhel-8-for-x86_64-appstream-rpms
+      - rhel-8-for-x86_64-highavailability-rpms
+      - ansible-2.9-for-rhel-8-x86_64-rpms
+      - openstack-16.1-for-rhel-8-x86_64-rpms
+      - fast-datapath-for-rhel-8-x86_64-rpms
+      - advanced-virt-for-rhel-8-x86_64-rpms
+      - rhceph-4-tools-for-rhel-8-x86_64-rpms
+    nodes_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms
       - rhel-8-for-x86_64-highavailability-rpms
@@ -99,12 +116,21 @@ RHOSP_version_supported:
       name: 'rhel-7.9-x86_64-kvm.qcow2'
       main_partition: '/dev/sda1'
     rhel_release: '7.9'
-    repos:
+    undercloud_repos:
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms
       - rhel-7-server-rh-common-rpms
       - rhel-ha-for-rhel-7-server-rpms
       - rhel-7-server-openstack-13-rpms
+      - rhel-7-server-rhceph-3-tools-rpms
+    nodes_repos:
+      - rhel-7-server-rpms
+      - rhel-7-server-extras-rpms
+      - rhel-7-server-rh-common-rpms
+      - rhel-ha-for-rhel-7-server-rpms
+      - rhel-7-server-openstack-13-rpms
+      - rhel-7-server-rhceph-3-osd-rpms
+      - rhel-7-server-rhceph-3-mon-rpms
       - rhel-7-server-rhceph-3-tools-rpms
     modules: []
     packages:
