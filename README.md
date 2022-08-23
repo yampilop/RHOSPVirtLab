@@ -90,8 +90,6 @@ Clone the repository and enter the directory.
 ```bash
 git clone https://github.com/yampilop/RHOSPVirtLab.git
 cd RHOSPVirtLab
-git fetch
-git checkout rhel-hypervisor
 ```
 
 ## Initial configurations
