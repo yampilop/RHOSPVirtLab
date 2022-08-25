@@ -42,11 +42,11 @@ interfaces:
     ControlPlane: nic1
     External: nic2
   VirtualCephStorage:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   VirtualComputeHCI:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   Controller:
     ControlPlane: nic1
     External: nic2
@@ -54,10 +54,10 @@ interfaces:
     ControlPlane: nic1
     External: nic2
   ComputeOvsDpdk:
-    ControlPlane: nic2
+    ControlPlane: nic1
     External:
       name: dpdk-external
-      interface: nic3
+      interface: nic2
     DpdkBonds:
       - name: dpdkbond0
         ports:
@@ -66,23 +66,23 @@ interfaces:
           - name: dpdk1
             interface: nic5
   ComputeSriov:
-    ControlPlane: nic2
-    External: nic3v0
+    ControlPlane: nic1
+    External: nic2v0
     Sriov:
-      - device: nic3
+      - device: nic2
         numvfs: 8
   ComputeOvsHwOffload:
-    ControlPlane: nic2
-    External: nic3v0
+    ControlPlane: nic1
+    External: nic2v0
     Sriov:
-      - device: nic3
+      - device: nic2
         numvfs: 8
   CephStorage:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   ComputeHCI:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
