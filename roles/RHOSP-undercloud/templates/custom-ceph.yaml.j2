@@ -9,7 +9,10 @@ parameter_defaults:
 {% endif %}
   CephPoolDefaultPgNum: 64
   CephAnsibleDisksConfig:
-    devices: {{ CephStorageProperties.devices }}
+    devices: 
+{% for device in CephStorageProperties.devices %}
+    - {{ device }}
+{% endfor %}
     osd_scenario: lvm
     osd_objectstore: bluestore
   CephPools:
