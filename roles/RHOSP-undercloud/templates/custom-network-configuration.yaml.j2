@@ -71,7 +71,7 @@ parameter_defaults:
 {% if passt.address is mapping %}
         address: 
 {% for key,val in passt.address.iteritems() %}
-          - {{ key }}: '{{ val }}'
+          {{ key }}: '{{ val }}'
 {% endfor %}
 {% else %}
         address: {{ passt.address }}
@@ -102,7 +102,7 @@ parameter_defaults:
 {% if passt.address is mapping %}
         address: 
 {% for key,val in passt.address.iteritems() %}
-          - {{ key }}: '{{ val }}'
+          {{ key }}: '{{ val }}'
 {% endfor %}
 {% else %}
         address: {{ passt.address }}

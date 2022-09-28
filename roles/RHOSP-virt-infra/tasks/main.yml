@@ -62,6 +62,12 @@
     - NetworkManager
     - firewalld
 
+- name: Update pip
+  pip:
+    name: pip
+    executable: "pip3"
+    state: latest
+
 - name: Install packages from pip
   pip:
     name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
