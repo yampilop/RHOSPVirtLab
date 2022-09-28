@@ -74,7 +74,7 @@ sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete pyt
 - On **RHEL 7.9**:
 
 ```bash
-sudo yum -y install git ansible vim wget bash-completion rhel-system-roles tmux tcpdump
+sudo yum -y install git ansible vim wget bash-completion python2-netaddr rhel-system-roles tmux tcpdump
 ```
 
 ## Pull the repo
