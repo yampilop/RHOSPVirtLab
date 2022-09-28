@@ -68,7 +68,14 @@ parameter_defaults:
       - vendor_id: "{{ passt.vendor_id }}"
         product_id: "{{ passt.product_id }}"
 {% if passt.address is defined %}
+{% if passt.address is mapping %}
+        address: 
+{% for key,val in passt.address.iteritems() %}
+          - {{ key }}: '{{ val }}'
+{% endfor %}
+{% else %}
         address: {{ passt.address }}
+{% endif %}
 {% endif %}
         physical_network: "{{ passt.network }}"
 {% endfor %}
@@ -92,7 +99,14 @@ parameter_defaults:
       - vendor_id: "{{ passt.vendor_id }}"
         product_id: "{{ passt.product_id }}"
 {% if passt.address is defined %}
+{% if passt.address is mapping %}
+        address: 
+{% for key,val in passt.address.iteritems() %}
+          - {{ key }}: '{{ val }}'
+{% endfor %}
+{% else %}
         address: {{ passt.address }}
+{% endif %}
 {% endif %}
         physical_network: "{{ passt.network }}"
 {% endfor %}
