@@ -1,7 +1,7 @@
 ---
 
 # RHOSP version
-RHOSP_version: 16.2
+RHOSP_version: 17.0
 
 # Cleaning and creating parameters
 cleanup: False
