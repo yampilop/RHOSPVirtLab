@@ -4,7 +4,8 @@ Virtual lab to setup a Red Hat OpenStack Platform test installation over a RHEL 
 
 Currently supported RHOSP versions:
 
-- 16.2 (default)
+- 17.0 (default)
+- 16.2
 - 16.1
 - 13.0
 
