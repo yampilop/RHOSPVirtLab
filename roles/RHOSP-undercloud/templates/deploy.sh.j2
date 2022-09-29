@@ -11,8 +11,13 @@ time openstack overcloud deploy \
 --log-file overcloud_deployment.log \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
 --stack overcloud \
--r /home/stack/templates/roles_data.yaml \
 -n /home/stack/templates/network_data.yaml \
+{% if RHOSP_version == 17.0 %}
+-e /home/stack/templates/overcloud-baremetal-deployed.yaml \
+-e /home/stack/templates/overcloud-networks-deployed.yaml \
+-e /home/stack/templates/overcloud-vip-deployed.yaml \
+{% endif %}
+-r /home/stack/templates/roles_data.yaml \
 -e /home/stack/templates/node-info.yaml \
 {% if RHOSP_version != 13.0 %}
 -e /home/stack/templates/containers-prepare-parameter.yaml \

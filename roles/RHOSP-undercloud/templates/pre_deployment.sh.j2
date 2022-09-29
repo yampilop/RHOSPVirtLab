@@ -57,3 +57,9 @@ sudo openstack tripleo container image prepare \
 -e /home/stack/templates/containers-prepare-parameter.yaml \
 --output-env-file /home/stack/templates/overcloud-images.yaml
 {% endif %}
+
+{% if RHOSP_version == 17.0 %}
+openstack overcloud network provision --output /home/stack/templates/overcloud-networks-deployed.yaml /home/stack/templates/network_data.yaml
+openstack overcloud network vip provision --output /home/stack/templates/overcloud-vip-deployed.yaml /usr/share/openstack-tripleo-heat-templates/network-data-samples/vip-data-default-network-isolation.yaml
+openstack overcloud node provision --network-config --output /home/stack/templates/overcloud-baremetal-deployed.yaml /home/stack/templates/node-info.yaml
+{% endif %}
