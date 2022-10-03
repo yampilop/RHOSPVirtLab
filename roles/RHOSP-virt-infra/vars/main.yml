@@ -19,6 +19,7 @@ RHEL_version_supported:
       - python-lxml
       - gcc
       - python2-jinja2
+      - edk2-ovmf
     pip:
       - virtualbmc
       - netaddr
@@ -32,6 +33,7 @@ RHEL_version_supported:
       - "@python36"
       - python3-lxml
       - python3-libvirt
+      - edk2-ovmf
     pip:
       - virtualbmc
       - netaddr

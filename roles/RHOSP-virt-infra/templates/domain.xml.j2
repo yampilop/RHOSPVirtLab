@@ -11,12 +11,14 @@
   <vcpu placement="static">{{ item.vcpus }}</vcpu>
   <os>
     <type arch="x86_64" machine="q35">hvm</type>
+    <loader readonly="yes" secure="yes" type="pflash">/usr/share/edk2/ovmf/OVMF_CODE.secboot.fd</loader>
     <bootmenu enable="no"/>
   </os>
   <features>
     <acpi/>
     <apic/>
     <vmport state="off"/>
+    <smm state="on"/>
   </features>
 {% if 'compute' in item.profile %}
   <cpu mode="host-passthrough" check="partial"/>
