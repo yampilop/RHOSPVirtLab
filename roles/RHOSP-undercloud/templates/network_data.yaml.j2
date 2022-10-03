@@ -1,3 +1,4 @@
+{% if RHOSP_version != 17.0 %}
 - name: Storage
   vip: true
   vlan: {{ network_data_vlans.Storage }}
@@ -59,3 +60,92 @@
   ipv6_subnet: 'fd00:fd00:fd00:6000::/64'
   ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:6000::10', 'end': 'fd00:fd00:fd00:6000:ffff:ffff:ffff:fffe'}]
   mtu: 1500
+{% else %}
+- name: Storage
+  name_lower: storage
+  vip: true
+  mtu: 1500
+  subnets:
+    storage_subnet:
+      ip_subnet: 172.16.1.0/24
+      allocation_pools:
+        - start: 172.16.1.4
+          end: 172.16.1.250
+      vlan: 30
+    storage_subnet_ipv6:
+      ipv6_subnet: fd00:fd00:fd00:3000::/64
+      ipv6_allocation_pools:
+        - start: fd00:fd00:fd00:3000::10
+          end: fd00:fd00:fd00:3000:ffff:ffff:ffff:fffe
+      vlan: 30
+- name: StorageMgmt
+  name_lower: storage_mgmt
+  vip: true
+  mtu: 1500
+  subnets:
+    storage_mgmt_subnet:
+      ip_subnet: 172.16.3.0/24
+      allocation_pools:
+        - start: 172.16.3.4
+          end: 172.16.3.250
+      vlan: 40
+    storage_mgmt_subnet_ipv6:
+      ipv6_subnet: fd00:fd00:fd00:4000::/64
+      ipv6_allocation_pools:
+        - start: fd00:fd00:fd00:4000::10
+          end: fd00:fd00:fd00:4000:ffff:ffff:ffff:fffe
+      vlan: 40
+- name: InternalApi
+  name_lower: internal_api
+  vip: true
+  mtu: 1500
+  subnets:
+    internal_api_subnet:
+      ip_subnet: 172.16.2.0/24
+      allocation_pools:
+        - start: 172.16.2.4
+          end: 172.16.2.250
+      vlan: 20
+    internal_api_subnet_ipv6:
+      ipv6_subnet: fd00:fd00:fd00:2000::/64
+      ipv6_allocation_pools:
+        - start: fd00:fd00:fd00:2000::10
+          end: fd00:fd00:fd00:2000:ffff:ffff:ffff:fffe
+      vlan: 20
+- name: Tenant
+  vip: false  # Tenant network does not use VIPs
+  mtu: 1500
+  name_lower: tenant
+  subnets:
+    tenant_subnet:
+      ip_subnet: 172.16.0.0/24
+      allocation_pools:
+        - start: 172.16.0.4
+          end: 172.16.0.250
+      vlan: 50
+    tenant_subnet_ipv6:
+      ipv6_subnet: fd00:fd00:fd00:5000::/64
+      ipv6_allocation_pools:
+        - start: fd00:fd00:fd00:5000::10
+          end: fd00:fd00:fd00:5000:ffff:ffff:ffff:fffe
+      vlan: 50
+- name: External
+  name_lower: external
+  vip: true
+  mtu: 1500
+  subnets:
+    external_subnet:
+      ip_subnet: 10.0.0.0/24
+      allocation_pools:
+        - start: 10.0.0.4
+          end: 10.0.0.250
+      gateway_ip: 10.0.0.1
+      vlan: 10
+    external_subnet_ipv6:
+      ipv6_subnet: 2001:db8:fd00:1000::/64
+      ipv6_allocation_pools:
+        - start: 2001:db8:fd00:1000::10
+          end: 2001:db8:fd00:1000:ffff:ffff:ffff:fffe
+      gateway_ipv6: 2001:db8:fd00:1000::1
+      vlan: 10
+{% endif %}

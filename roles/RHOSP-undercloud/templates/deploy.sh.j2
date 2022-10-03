@@ -7,6 +7,9 @@
 
 source /home/stack/stackrc
 date
+{% if RHOSP_version == 17.0 %}
+time openstack overcloud node provision -y --stack overcloud --network-config --output /home/stack/templates/overcloud-baremetal-deployed.yaml /home/stack/templates/node-info.yaml
+{% endif %}
 time openstack overcloud deploy \
 --log-file overcloud_deployment.log \
 --templates /usr/share/openstack-tripleo-heat-templates/ \

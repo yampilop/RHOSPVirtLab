@@ -126,6 +126,7 @@
     - network_data.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
+    - vip_data.yaml
 
 - name: TEMPLATES - Prepare roles_data.yaml depending on the version
   template:
@@ -141,6 +142,14 @@
     owner: stack
     group: stack
   loop: "{{ overcloud_roles }}"
+
+- name: TEMPLATES - RHOSP 17.0 general nic-config file
+  copy:
+    src: "templates/nic-configs/nic-config.j2"
+    dest: "/home/stack/templates/nic-configs/nic-config.j2"
+    owner: stack
+    group: stack
+  when: RHOSP_version == 17.0
 
 - name: SCRIPTS - Prepare the scripts
   template:
