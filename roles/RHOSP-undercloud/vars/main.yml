@@ -71,12 +71,12 @@ RHOSP_version_supported:
       - '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.0-x86_64.tar'
       - '/usr/share/rhosp-director-images/ironic-python-agent-latest-17.0-x86_64.tar'
     container_image_prepare:
-      ceph_alertmanager_tag: 4.6
+      ceph_alertmanager_tag: latest
       ceph_grafana_image: rhceph-5-dashboard-rhel8
       ceph_grafana_tag: latest
       ceph_image: rhceph-5-rhel8
       ceph_node_exporter_tag: v4.6
-      ceph_prometheus_tag: 4.6
+      ceph_prometheus_tag: latest
       namespace: registry.redhat.io/rhosp-rhel9
   16.2:
     rhel_image:
