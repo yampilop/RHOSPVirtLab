@@ -142,6 +142,7 @@
     owner: stack
     group: stack
   loop: "{{ overcloud_roles }}"
+  when: RHOSP_version != 17.0
 
 - name: TEMPLATES - RHOSP 17.0 general nic-config file
   copy:

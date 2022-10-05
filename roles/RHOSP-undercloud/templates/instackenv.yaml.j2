@@ -9,7 +9,7 @@ nodes:
         physical_network: ctlplane
 {% endif %}
     name: "{{ vm.name }}"
-    capabilities: "node:{{ vm.name }},boot_option:local"
+    capabilities: "node:{{ vm.name }},boot_option:local,boot_mode:uefi"
     cpu: {{ vm.vcpus }}
     memory: {{ (vm.memory / 1024) | int }}
     disk: {{ (vm.disk_size / 1073741824) | int }}
@@ -31,7 +31,7 @@ nodes:
         physical_network: ctlplane
 {% endif %}
     name: "{{ node.name }}"
-    capabilities: "{{ ["node:" ~ node.name, "boot_option:local", node.capabilities, "boot_mode:uefi"] | join(',') }}"
+    capabilities: "{{ ["node:" ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
     cpu: {{ node.cpus }}
     memory: {{ (node.memory / 1024) | int }}
     disk: {{ (node.disk_size / 1073741824) | int }}
