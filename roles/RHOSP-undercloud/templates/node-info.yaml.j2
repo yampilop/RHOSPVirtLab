@@ -14,19 +14,19 @@ parameter_defaults:
 - name: {{ ocrole.name }}
   count: {{ count }}
   defaults:
-#    networks:
-#    - network: ctlplane
-#      vif: true
-#    - network: storage
-#      subnet: storage_subnet
-#    - network: storage_mgmt
-#      subnet: storage_mgmt_subnet
-#    - network: internal_api
-#      subnet: internal_api_subnet
-#    - network: tenant
-#      subnet: tenant_subnet
-#    - network: external
-#      subnet: external_subnet
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+      subnet: storage_subnet
+    - network: storage_mgmt
+      subnet: storage_mgmt_subnet
+    - network: internal_api
+      subnet: internal_api_subnet
+    - network: tenant
+      subnet: tenant_subnet
+    - network: external
+      subnet: external_subnet
     network_config:
       network_config_update: true
       template: /home/stack/templates/nic-configs/nic-config.j2
