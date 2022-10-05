@@ -11,14 +11,14 @@
   <vcpu placement="static">{{ item.vcpus }}</vcpu>
   <os>
     <type arch="x86_64" machine="q35">hvm</type>
-    <loader readonly="yes" secure="yes" type="pflash">/usr/share/edk2/ovmf/OVMF_CODE.secboot.fd</loader>
+    <loader readonly='yes' secure='no' type='pflash'>/usr/share/edk2/ovmf/OVMF_CODE.secboot.fd</loader>
+    <nvram template='/usr/share/edk2/ovmf/OVMF_VARS.fd'>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
     <bootmenu enable="no"/>
   </os>
   <features>
     <acpi/>
     <apic/>
     <vmport state="off"/>
-    <smm state="on"/>
   </features>
 {% if 'compute' in item.profile %}
   <cpu mode="host-passthrough" check="partial"/>
