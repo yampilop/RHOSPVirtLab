@@ -24,16 +24,20 @@ openstack overcloud image upload --image-path /home/stack/images/
 openstack image list --fit-width
 
 {% if RHOSP_version == 17.0 %}
+# Provision networks and vips
 openstack overcloud network provision -y --output /home/stack/templates/overcloud-networks-deployed.yaml /home/stack/templates/network_data.yaml
 openstack overcloud network vip provision -y --stack overcloud --output /home/stack/templates/overcloud-vip-deployed.yaml /home/stack/templates/vip_data.yaml
 {% endif %}
 
+# Prepare baremetal nodes
 openstack overcloud node import /home/stack/templates/instackenv.yaml
 openstack baremetal node list
 openstack baremetal node list -f value -c Name -c 'Power State' | grep 'power on' | grep 'manageable' | awk {'system("openstack baremetal node power off "$1)'}
 openstack baremetal node list
 openstack overcloud node introspect --all-manageable --provide
 openstack baremetal node list
+
+# Prepare images
 {% if RHOSP_version == 13.0 %}
 {% if rh_serviceaccount and rh_token %}
 sudo docker login registry.redhat.io --username '{{ rh_serviceaccount }}' --password '{{ rh_token }}'
@@ -62,4 +66,9 @@ sudo openstack tripleo container image prepare \
 -r /home/stack/templates/roles_data.yaml \
 -e /home/stack/templates/containers-prepare-parameter.yaml \
 --output-env-file /home/stack/templates/overcloud-images.yaml
+{% endif %}
+
+{% if RHOSP_version == 17.0 %}
+# Provision nodes
+openstack overcloud node provision -y --stack overcloud --network-config --output /home/stack/templates/overcloud-baremetal-deployed.yaml /home/stack/templates/node-info.yaml
 {% endif %}

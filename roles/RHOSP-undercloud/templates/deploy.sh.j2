@@ -7,9 +7,6 @@
 
 source /home/stack/stackrc
 date
-{% if RHOSP_version == 17.0 %}
-time openstack overcloud node provision -y --stack overcloud --network-config --output /home/stack/templates/overcloud-baremetal-deployed.yaml /home/stack/templates/node-info.yaml
-{% endif %}
 time openstack overcloud deploy \
 --log-file overcloud_deployment.log \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
@@ -21,14 +18,18 @@ time openstack overcloud deploy \
 -e /home/stack/templates/overcloud-vip-deployed.yaml \
 {% endif %}
 -r /home/stack/templates/roles_data.yaml \
+{% if RHOSP_version != 17.0 %}
 -e /home/stack/templates/node-info.yaml \
+{% endif %}
 {% if RHOSP_version != 13.0 %}
 -e /home/stack/templates/containers-prepare-parameter.yaml \
 {% endif %}
 -e /home/stack/templates/overcloud-images.yaml \
+{% if RHOSP_version != 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
+{% endif %}
 {% if ((RHOSP_version == 13.0) and (dpdk_count + sriov_count > 0)) %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/host-config-and-reboot.yaml \
 {% endif %}
