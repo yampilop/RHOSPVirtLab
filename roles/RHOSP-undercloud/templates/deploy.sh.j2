@@ -25,8 +25,8 @@ time openstack overcloud deploy \
 -e /home/stack/templates/containers-prepare-parameter.yaml \
 {% endif %}
 -e /home/stack/templates/overcloud-images.yaml \
-{% if RHOSP_version != 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
+{% if RHOSP_version != 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
 {% endif %}
