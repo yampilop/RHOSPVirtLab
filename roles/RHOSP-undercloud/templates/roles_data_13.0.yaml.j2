@@ -5,6 +5,8 @@
 
 {% set controller_count = (physical | selectattr("profile", "equalto", "controller") | list | count) %}
 {% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | list | count) %}
+{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | list | count) %}
+{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | list | count) %}
 
 ###############################################################################
 ###############################################################################
@@ -191,6 +193,7 @@
     - OS::TripleO::Services::Zaqar
     - OS::TripleO::Services::Ptp
 {% endif %}
+{% if vcompute_count > 0 %}
 ###############################################################################
 # Role: VirtualCompute                                                        #
 ###############################################################################
@@ -266,6 +269,7 @@
     - OS::TripleO::Services::OVNController
     - OS::TripleO::Services::OVNMetadataAgent
     - OS::TripleO::Services::Ptp
+{% endif %}
 {% if ceph_count > 0 %}
 ###############################################################################
 # Role: VirtualCephStorage                                                    #
@@ -567,6 +571,7 @@
     - OS::TripleO::Services::Zaqar
     - OS::TripleO::Services::Ptp
 {% endif %}
+{% if compute_count > 0 %}
 ###############################################################################
 # Role: Compute                                                               #
 ###############################################################################
@@ -642,6 +647,7 @@
     - OS::TripleO::Services::OVNController
     - OS::TripleO::Services::OVNMetadataAgent
     - OS::TripleO::Services::Ptp
+{% endif %}
 {% if dpdk_count > 0 %}
 ###############################################################################
 # Role: ComputeOvsDpdk                                                        #
