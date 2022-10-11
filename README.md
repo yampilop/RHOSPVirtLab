@@ -49,7 +49,8 @@ sudo subscription-manager repos --enable=rhel-7-server-rpms \
 --enable=rhel-7-server-extras-rpms \
 --enable=rhel-7-server-optional-rpms \
 --enable=rhel-7-server-ansible-2.9-rpms \
---enable=rhel-7-server-openstack-13-rpms
+--enable=rhel-7-server-openstack-13-rpms \
+--enable=rhel-7-server-supplementary-rpms
 sudo yum update -y
 sudo reboot
 ```
