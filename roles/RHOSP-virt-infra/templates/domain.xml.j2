@@ -11,7 +11,7 @@
   <vcpu placement="static">{{ item.vcpus }}</vcpu>
   <os>
     <type arch="x86_64" machine="q35">hvm</type>
-{% if item.name != 'undercloud' %}
+{% if RHOSP_version_supported[RHOSP_version].uefi %}
     <loader readonly='yes' secure='no' type='pflash'>{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_CODE.secboot.fd</loader>
     <nvram template='{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_VARS.fd'>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
 {% endif %}
