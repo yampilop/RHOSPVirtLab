@@ -1,7 +1,7 @@
 {% if RHOSP_version_supported[RHOSP_version].uefi %}
 {% set vm_capabilities='boot_mode:uefi' %}
 {% else %}
-{% set vm_capabilities='' %}
+{% set vm_capabilities='boot_mode:bios' %}
 {% endif %}
 nodes:
 {% for vm in vms if not vm.profile == 'undercloud' %}
