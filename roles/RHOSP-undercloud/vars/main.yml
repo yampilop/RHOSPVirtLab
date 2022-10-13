@@ -2,8 +2,8 @@
 # vars file for RHOSP-undercloud
 
 RHEL_version_supported:
-  "7.9":
-  "8.4":
+  '7.9':
+  '8.4':
 
 overcloud_roles:
   # Virtual roles
@@ -43,12 +43,49 @@ overcloud_roles:
     nic_configs: computehci.yaml
 
 RHOSP_version_supported:
+  17.0:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-9/9.0.0/BaseOS/x86_64/images/rhel-guest-image-9.0-20220420.0.x86_64.qcow2'
+      name: 'rhel-9.0-x86_64-kvm.qcow2'
+      main_partition: '/dev/sda3'
+    rhel_release: '9.0'
+    uefi: true
+    undercloud_repos:
+      - rhel-9-for-x86_64-baseos-eus-rpms
+      - rhel-9-for-x86_64-appstream-eus-rpms
+      - rhel-9-for-x86_64-highavailability-eus-rpms
+      - openstack-17-for-rhel-9-x86_64-rpms
+      - fast-datapath-for-rhel-9-x86_64-rpms
+    nodes_repos:
+      - rhel-9-for-x86_64-baseos-eus-rpms
+      - rhel-9-for-x86_64-appstream-eus-rpms
+      - rhel-9-for-x86_64-highavailability-eus-rpms
+      - openstack-17-for-rhel-9-x86_64-rpms
+      - fast-datapath-for-rhel-9-x86_64-rpms
+    modules: []
+    packages:
+      - python3-argcomplete
+      - python3-tripleoclient
+      - rhosp-director-images-uefi-x86_64
+      - rhosp-director-images-ipa-x86_64
+    images_directories:
+      - '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.0-x86_64.tar'
+      - '/usr/share/rhosp-director-images/ironic-python-agent-latest-17.0-x86_64.tar'
+    container_image_prepare:
+      ceph_alertmanager_tag: latest
+      ceph_grafana_image: rhceph-5-dashboard-rhel8
+      ceph_grafana_tag: latest
+      ceph_image: rhceph-5-rhel8
+      ceph_node_exporter_tag: v4.6
+      ceph_prometheus_tag: latest
+      namespace: registry.redhat.io/rhosp-rhel9
   16.2:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
+    uefi: false
     undercloud_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms
@@ -74,12 +111,24 @@ RHOSP_version_supported:
       - python3-tripleoclient
       - ceph-ansible
       - rhosp-director-images
+    images_directories:
+      - '/usr/share/rhosp-director-images/overcloud-full-latest-16.2.tar'
+      - '/usr/share/rhosp-director-images/ironic-python-agent-latest-16.2.tar'
+    container_image_prepare:
+      ceph_alertmanager_tag: v4.6
+      ceph_grafana_image: rhceph-4-dashboard-rhel8
+      ceph_grafana_tag: 4
+      ceph_image: rhceph-4-rhel8
+      ceph_node_exporter_tag: v4.6
+      ceph_prometheus_tag: v4.6
+      namespace: registry.redhat.io/rhosp-rhel8
   16.1:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.2.0/BaseOS/x86_64/images/rhel-guest-image-8.2-290.x86_64.qcow2'
       name: 'rhel-8.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.2'
+    uefi: false
     undercloud_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms
@@ -110,12 +159,24 @@ RHOSP_version_supported:
       - python3-tripleoclient
       - ceph-ansible
       - rhosp-director-images
+    images_directories:
+      - '/usr/share/rhosp-director-images/overcloud-full-latest-16.1.tar'
+      - '/usr/share/rhosp-director-images/ironic-python-agent-latest-16.1.tar'
+    container_image_prepare:
+      ceph_alertmanager_tag: 4.1
+      ceph_grafana_image: rhceph-4-dashboard-rhel8
+      ceph_grafana_tag: 4
+      ceph_image: rhceph-4-rhel8
+      ceph_node_exporter_tag: v4.1
+      ceph_prometheus_tag: 4.1
+      namespace: registry.redhat.io/rhosp-rhel8
   13.0:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-7/7.9/Server/x86_64/images/rhel-guest-image-7.9-30.x86_64.qcow2'
       name: 'rhel-7.9-x86_64-kvm.qcow2'
       main_partition: '/dev/sda1'
     rhel_release: '7.9'
+    uefi: false
     undercloud_repos:
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms
@@ -138,3 +199,14 @@ RHOSP_version_supported:
       - ceph-ansible
       - rhosp-director-images
       - rhosp-director-images-ipa
+    images_directories:
+      - '/usr/share/rhosp-director-images/overcloud-full-latest-13.0.tar'
+      - '/usr/share/rhosp-director-images/ironic-python-agent-latest-13.0.tar'
+    container_image_prepare:
+      ceph_alertmanager_tag: ''
+      ceph_grafana_image: ''
+      ceph_grafana_tag: ''
+      ceph_image: ''
+      ceph_node_exporter_tag: ''
+      ceph_prometheus_tag: ''
+      namespace: ''

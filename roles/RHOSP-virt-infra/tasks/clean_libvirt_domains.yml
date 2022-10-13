@@ -22,3 +22,14 @@
     name: "{{ item.name }}"
   when: item.name in all_vms.list_vms
   loop: "{{ vms }}"
+  ignore_errors: yes
+  register: undefine_result
+
+- name: DOMAINS - Undefine the domain if fails
+  shell: "virsh undefine --nvram {{ item.name }}"
+  when: 
+    - item.name in all_vms.list_vms
+    - undefine_result is defined
+    - undefine_result.failed
+    - (undefine_result.results | selectattr("item.name", "equalto", item.name) | list | first).failed
+  loop: "{{ vms }}"

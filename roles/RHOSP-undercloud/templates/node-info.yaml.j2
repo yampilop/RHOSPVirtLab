@@ -1,5 +1,46 @@
+{% if RHOSP_version != 17.0 %}
+
 parameter_defaults:
 {% for ocrole in overcloud_roles %}
   Overcloud{{ ocrole.name }}Flavor: baremetal
   {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | list | count) }}
 {% endfor %}
+
+{% else %}
+
+{% for ocrole in overcloud_roles %}
+{% set count=(vms | selectattr("profile", "equalto", ocrole.profile) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | list | count) %}
+{% if count > 0 %}
+- name: {{ ocrole.name }}
+  count: {{ count }}
+  defaults:
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+      subnet: storage_subnet
+    - network: storage_mgmt
+      subnet: storage_mgmt_subnet
+    - network: internal_api
+      subnet: internal_api_subnet
+    - network: tenant
+      subnet: tenant_subnet
+    - network: external
+      subnet: external_subnet
+    network_config:
+      network_config_update: true
+      template: /home/stack/templates/nic-configs/nic-config.j2
+      default_route_network:
+      - external
+    swap_size_mb: 8192
+  instances:
+{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile)) %}
+  - name: {{ vm.name }}
+{% endfor %}
+{% for pm in (physical | selectattr("profile", "equalto", ocrole.profile)) %}
+  - name: {{ pm.name }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% endif %}

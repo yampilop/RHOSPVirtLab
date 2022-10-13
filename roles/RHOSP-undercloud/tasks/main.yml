@@ -1,11 +1,6 @@
 ---
 # tasks file for RHOSP-undercloud
 
-- name: Verify the OS Version is supported
-  fail:
-    msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
-  when: RHEL_version_supported[ansible_distribution_version] is not defined
-
 - name: Verify the RHOSP version selected is supported
   fail:
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
@@ -99,9 +94,7 @@
     owner: stack
     group: stack
     remote_src: yes
-  loop:
-    - "/usr/share/rhosp-director-images/overcloud-full-latest-{{ RHOSP_version }}.tar"
-    - "/usr/share/rhosp-director-images/ironic-python-agent-latest-{{ RHOSP_version }}.tar"
+  loop: "{{ RHOSP_version_supported[RHOSP_version].images_directories }}"
 
 - name: IMAGES - Download images for testing
   get_url:
@@ -129,11 +122,18 @@
   loop:
     - instackenv.yaml
     - node-info.yaml
-    - roles_data.yaml
     - custom-overcloud.yaml
     - network_data.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
+    - vip_data.yaml
+
+- name: TEMPLATES - Prepare roles_data.yaml depending on the version
+  template:
+    src: "roles_data_{{ RHOSP_version }}.yaml.j2"
+    dest: "/home/stack/templates/roles_data.yaml"
+    owner: stack
+    group: stack
 
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
@@ -142,6 +142,15 @@
     owner: stack
     group: stack
   loop: "{{ overcloud_roles }}"
+  when: RHOSP_version != 17.0
+
+- name: TEMPLATES - RHOSP 17.0 general nic-config file
+  copy:
+    src: "templates/nic-configs/nic-config.j2"
+    dest: "/home/stack/templates/nic-configs/nic-config.j2"
+    owner: stack
+    group: stack
+  when: RHOSP_version == 17.0
 
 - name: SCRIPTS - Prepare the scripts
   template:

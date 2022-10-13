@@ -4,22 +4,22 @@ parameter_defaults:
     set:
       ceph_alertmanager_image: ose-prometheus-alertmanager
       ceph_alertmanager_namespace: registry.redhat.io/openshift4
-      ceph_alertmanager_tag: 4.1
-      ceph_grafana_image: rhceph-4-dashboard-rhel8
+      ceph_alertmanager_tag: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.ceph_alertmanager_tag }}
+      ceph_grafana_image: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.ceph_grafana_image }}
       ceph_grafana_namespace: registry.redhat.io/rhceph
-      ceph_grafana_tag: 4
-      ceph_image: rhceph-4-rhel8
+      ceph_grafana_tag: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.ceph_grafana_tag }}
+      ceph_image: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.ceph_image }}
       ceph_namespace: registry.redhat.io/rhceph
       ceph_node_exporter_image: ose-prometheus-node-exporter
       ceph_node_exporter_namespace: registry.redhat.io/openshift4
-      ceph_node_exporter_tag: v4.1
+      ceph_node_exporter_tag: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.ceph_node_exporter_tag }}
       ceph_prometheus_image: ose-prometheus
       ceph_prometheus_namespace: registry.redhat.io/openshift4
-      ceph_prometheus_tag: 4.1
+      ceph_prometheus_tag: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.ceph_prometheus_tag }}
       ceph_tag: latest
       name_prefix: openstack-
       name_suffix: ''
-      namespace: registry.redhat.io/rhosp-rhel8
+      namespace: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.namespace }}
       neutron_driver: ovn
       rhel_containers: false
       tag: '{{ RHOSP_version }}'

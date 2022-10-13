@@ -1,10 +1,12 @@
 {% set dpdk_count = (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) %}
 {% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count)) %}
 
+{% if RHOSP_version != 17.0 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.nic_configs }}
 {% endfor %}
+{% endif %}
 
 parameter_defaults:
   NetworkDeploymentActions: ['CREATE','UPDATE']
@@ -70,7 +72,7 @@ parameter_defaults:
 {% if passt.address is defined %}
 {% if passt.address is mapping %}
         address: 
-{% for key,val in passt.address.iteritems() %}
+{% for key,val in passt.address.items() %}
           {{ key }}: '{{ val }}'
 {% endfor %}
 {% else %}
@@ -101,7 +103,7 @@ parameter_defaults:
 {% if passt.address is defined %}
 {% if passt.address is mapping %}
         address: 
-{% for key,val in passt.address.iteritems() %}
+{% for key,val in passt.address.items() %}
           {{ key }}: '{{ val }}'
 {% endfor %}
 {% else %}
