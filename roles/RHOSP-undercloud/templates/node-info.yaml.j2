@@ -29,7 +29,7 @@ parameter_defaults:
       subnet: external_subnet
     network_config:
       network_config_update: true
-      template: /home/stack/templates/nic-configs/nic-config.j2
+      template: /home/stack/templates/nic-configs/{{ ocrole.profile }}.j2
       default_route_network:
       - external
     swap_size_mb: 8192

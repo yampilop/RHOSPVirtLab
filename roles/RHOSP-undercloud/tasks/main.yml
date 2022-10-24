@@ -144,12 +144,13 @@
   loop: "{{ overcloud_roles }}"
   when: RHOSP_version != 17.0
 
-- name: TEMPLATES - RHOSP 17.0 general nic-config file
-  copy:
+- name: TEMPLATES - RHOSP 17.0 nic-config files
+  template:
     src: "templates/nic-configs/nic-config.j2"
-    dest: "/home/stack/templates/nic-configs/nic-config.j2"
+    dest: "/home/stack/templates/nic-configs/{{ item.profile }}.j2"
     owner: stack
     group: stack
+  loop: "{{ overcloud_roles }}"
   when: RHOSP_version == 17.0
 
 - name: SCRIPTS - Prepare the scripts

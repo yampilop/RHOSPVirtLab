@@ -1,4 +1,4 @@
----
+{% raw %}---
 {% set mtu_list = [ctlplane_mtu] %}
 {% for network in role_networks %}
 {% if network != 'External' %}
@@ -7,8 +7,13 @@
 {% endfor %}
 {% set min_viable_mtu = mtu_list | max %}
 network_config:
+{% endraw %}
+{% if item.name == 'ComputeOvsDpdk' %}
+- type: ovs_user_bridge
+{% else %}
 - type: ovs_bridge
-  name: br-vlans
+{% endif %}
+{% raw %}  name: br-vlans
   mtu: {{ min_viable_mtu }}
   use_dhcp: false
   dns_servers: {{ ctlplane_dns_nameservers }}
@@ -18,8 +23,9 @@ network_config:
   routes: {{ ctlplane_host_routes }}
   members:
   - type: interface
-    name: nic1
-    mtu: {{ min_viable_mtu }}
+{% endraw %}
+    name: {{ interfaces[item.name].ControlPlane }}
+{% raw %}    mtu: {{ min_viable_mtu }}
     # force the MAC address of the bridge to this interface
     primary: true
 {% for network in role_networks %}
@@ -33,16 +39,73 @@ network_config:
     routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
 {% endif %}
 {% endfor %}
+{% endraw %}
+{% if item.name == 'ComputeOvsDpdk' %}
+- type: ovs_user_bridge
+{% else %}
 - type: ovs_bridge
-  name: br-ex
+{% endif %}
+{% raw %}  name: br-ex
   mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
   use_dhcp: false
   addresses:
   - ip_netmask: {{ lookup('vars', networks_lower['External'] ~ '_ip') }}/{{ lookup('vars', networks_lower['External'] ~ '_cidr') }}
   routes: {{ lookup('vars', networks_lower['External'] ~ '_host_routes') }}
   members:
+{% endraw %}
+{% if 'v' in interfaces[item.name].External %}
+  - type: sriov_vf
+    device: {{ interfaces[item.name].External.split('v')[0] }}
+    vfid: {{ interfaces[item.name].External.split('v')[1] }}
+{% elif interfaces[item.name].External is mapping %}
+  - type: ovs_dpdk_port
+    name: {{ interfaces[item.name].External.name }}
+    members:
+    - type: interface
+      name: {{ interfaces[item.name].External.interface }}
+{% else %}
   - type: interface
-    name: nic2
-    mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
+    name: {{ interfaces[item.name].External }}
+{% endif %}
+{% raw %}    mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
     # force the MAC address of the bridge to this interface
     primary: true
+{% endraw %}
+{% if interfaces[item.name].Sriov is defined %}
+{% for sriovif in interfaces[item.name].Sriov %}
+- type: sriov_pf
+  name: {{ sriovif.device }}
+  numvfs: {{ sriovif.numvfs }}
+  promisc: true
+  use_dhcp: false
+  nm_controlled: true
+{% raw %}  mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
+{% endraw %}
+  defroute: false
+{% endfor %}
+{% endif %}
+{% if (interfaces[item.name].DpdkBonds is defined) and (interfaces[item.name].DpdkBonds|length > 0) %}
+- type: ovs_user_bridge
+  name: br-dpdk
+  use_dhcp: false
+  members:
+{% for dpdkbond in interfaces[item.name].DpdkBonds %}
+  - type: ovs_dpdk_bond
+    name: {{ dpdkbond.name }}
+    mtu: 9000
+    rx_queue: 1
+    ovs_extra:
+{% for port in dpdkbond.ports %}
+      - set Interface {{ port.name }} options:n_rxq_desc=4096
+      - set Interface {{ port.name }} options:n_txq_desc=4096
+{% endfor %}
+    members:
+{% for port in dpdkbond.ports %}
+    - type: ovs_dpdk_port
+      name: {{ port.name }}
+      members:
+      - type: interface
+        name: {{ port.interface }}
+{% endfor %}
+{% endfor %}
+{% endif %}
