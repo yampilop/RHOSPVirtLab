@@ -22,7 +22,7 @@
   description: |
     Controller role that has all the controler services loaded and handles
     Database, Messaging and Network functions.
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - primary
     - controller
@@ -219,7 +219,7 @@
 - name: VirtualCompute
   description: |
     Basic Compute Node role
-  CountDefault: 1
+  CountDefault: 0
   # Create external Neutron bridge (unset if using ML2/OVS without DVR)
   tags:
     - external_bridge
@@ -305,7 +305,7 @@
 - name: VirtualCephStorage
   description: |
     Ceph OSD Storage node role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     Storage:
       subnet: storage_subnet
@@ -353,7 +353,7 @@
 - name: VirtualComputeHCI
   description: |
     Compute Node role hosting Ceph OSD too
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - external_bridge
   networks:
@@ -439,7 +439,7 @@
   description: |
     Controller role that has all the controler services loaded and handles
     Database, Messaging and Network functions.
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - primary
     - controller
@@ -636,7 +636,7 @@
 - name: Compute
   description: |
     Basic Compute Node role
-  CountDefault: 1
+  CountDefault: 0
   # Create external Neutron bridge (unset if using ML2/OVS without DVR)
   tags:
     - external_bridge
@@ -722,7 +722,7 @@
 - name: ComputeOvsDpdk
   description: |
     Compute OvS DPDK Role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     External:
       subnet: external_subnet
@@ -794,7 +794,7 @@
 - name: ComputeSriov
   description: |
     Compute SR-IOV Role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     External:
       subnet: external_subnet
@@ -864,7 +864,7 @@
 - name: ComputeOvsHwOffload
   description: |
     Compute OvS HwOffload Role
-  CountDefault: 1
+  CountDefault: 0
   # Create external Neutron bridge (unset if using ML2/OVS without DVR)
   tags:
     - external_bridge
@@ -949,7 +949,7 @@
 - name: CephStorage
   description: |
     Ceph OSD Storage node role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     Storage:
       subnet: storage_subnet
@@ -997,7 +997,7 @@
 - name: ComputeHCI
   description: |
     Compute Node role hosting Ceph OSD too
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - external_bridge
   networks:

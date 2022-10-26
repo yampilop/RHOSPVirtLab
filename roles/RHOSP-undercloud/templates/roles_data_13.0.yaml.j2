@@ -22,7 +22,7 @@
   description: |
     Controller role that has all the controler services loaded and handles
     Database, Messaging and Network functions.
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - primary
     - controller
@@ -200,7 +200,7 @@
 - name: VirtualCompute
   description: |
     Basic Compute Node role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     - External
     - InternalApi
@@ -281,7 +281,7 @@
     - Storage
     - StorageMgmt
   uses_deprecated_params: False
-  CountDefault: 1
+  CountDefault: 0
   HostnameFormatDefault: '%stackname%-vcephstorage-%index%'
   deprecated_nic_config_name: 'vcephstorage.yaml'
   # CephOSD present so serial has to be 1
@@ -329,7 +329,7 @@
     - Storage
     - StorageMgmt
   disable_upgrade_deployment: True
-  CountDefault: 1
+  CountDefault: 0
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcomputehci-%index%'
   deprecated_nic_config_name: 'vcomputehci.yaml'
@@ -400,7 +400,7 @@
   description: |
     Controller role that has all the controler services loaded and handles
     Database, Messaging and Network functions.
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - primary
     - controller
@@ -578,7 +578,7 @@
 - name: Compute
   description: |
     Basic Compute Node role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     - External
     - InternalApi
@@ -655,7 +655,7 @@
 - name: ComputeOvsDpdk
   description: |
     Compute OvS DPDK Role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     - External
     - InternalApi
@@ -722,7 +722,7 @@
 - name: ComputeSriov
   description: |
     Compute SR-IOV Role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     - External
     - InternalApi
@@ -789,7 +789,7 @@
 - name: ComputeOvsHwOffload
   description: |
     Compute OvS HwOffload Role
-  CountDefault: 1
+  CountDefault: 0
   networks:
     - External
     - InternalApi
@@ -862,7 +862,7 @@
     - Storage
     - StorageMgmt
   uses_deprecated_params: False
-  CountDefault: 1
+  CountDefault: 0
   HostnameFormatDefault: '%stackname%-cephstorage-%index%'
   deprecated_nic_config_name: 'cephstorage.yaml'
   # CephOSD present so serial has to be 1
@@ -910,7 +910,7 @@
     - Storage
     - StorageMgmt
   disable_upgrade_deployment: True
-  CountDefault: 1
+  CountDefault: 0
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computehci-%index%'
   deprecated_nic_config_name: 'computehci.yaml'

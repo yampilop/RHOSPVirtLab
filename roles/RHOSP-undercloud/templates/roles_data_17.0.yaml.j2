@@ -22,7 +22,7 @@
   description: |
     Controller role that has all the controler services loaded and handles
     Database, Messaging and Network functions.
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - primary
     - controller
@@ -206,7 +206,7 @@
 - name: VirtualCompute
   description: |
     Basic Compute Node role
-  CountDefault: 1
+  CountDefault: 0
   # Create external Neutron bridge (unset if using ML2/OVS without DVR)
   tags:
     - compute
@@ -295,7 +295,7 @@
   tags:
     - ceph
     - storage
-  CountDefault: 1
+  CountDefault: 0
   networks:
     Storage:
       subnet: storage_subnet
@@ -342,7 +342,7 @@
 - name: VirtualComputeHCI
   description: |
     Compute Node role hosting Ceph OSD too
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - compute
   networks:
@@ -428,7 +428,7 @@
   description: |
     Controller role that has all the controler services loaded and handles
     Database, Messaging and Network functions.
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - primary
     - controller
@@ -612,7 +612,7 @@
 - name: Compute
   description: |
     Basic Compute Node role
-  CountDefault: 1
+  CountDefault: 0
   # Create external Neutron bridge (unset if using ML2/OVS without DVR)
   tags:
     - compute
@@ -697,7 +697,7 @@
 - name: ComputeOvsDpdk
   description: |
     Compute OvS DPDK Role
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - compute
     - dpdk
@@ -771,7 +771,7 @@
 - name: ComputeSriov
   description: |
     Compute SR-IOV Role
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - compute
   networks:
@@ -841,7 +841,7 @@
 - name: ComputeOvsHwOffload
   description: |
     Compute OvS HwOffload Role
-  CountDefault: 1
+  CountDefault: 0
   # Create external Neutron bridge (unset if using ML2/OVS without DVR)
   tags:
     - compute
@@ -925,7 +925,7 @@
 - name: CephStorage
   description: |
     Ceph OSD Storage node role
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - ceph
     - storage
@@ -975,7 +975,7 @@
 - name: ComputeHCI
   description: |
     Compute Node role hosting Ceph OSD too
-  CountDefault: 1
+  CountDefault: 0
   tags:
     - compute
   networks:
