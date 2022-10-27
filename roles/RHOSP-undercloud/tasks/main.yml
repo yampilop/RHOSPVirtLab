@@ -164,3 +164,4 @@
     - pre_deployment.sh
     - deploy.sh
     - post_deployment.sh
+    - undeploy.sh
