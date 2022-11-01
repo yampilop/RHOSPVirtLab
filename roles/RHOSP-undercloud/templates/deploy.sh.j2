@@ -6,6 +6,14 @@
 {% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
 
 source /home/stack/stackrc
+{% if RHOSP_version == 17.0 and ceph_count > 0 %}
+openstack overcloud ceph deploy \
+/home/stack/templates/overcloud-baremetal-deployed.yaml \
+-o /home/stack/templates/deployed_ceph.yaml \
+--roles-data /home/stack/templates/roles_data.yaml \
+--container-image-prepare /home/stack/templates/containers-prepare-parameter.yaml
+{% endif %}
+
 date
 time openstack overcloud deploy \
 --log-file overcloud_deployment.log \
@@ -49,10 +57,17 @@ time openstack overcloud deploy \
 {% endif %}
 -e /home/stack/templates/custom-network-configuration.yaml \
 {% if (ceph_count + hci_count) > 0 %}
+{% if RHOSP_version == 17.0 %}
+-e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
+-e /home/stack/templates/deployed-ceph.yaml \
+{% else %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
+{% endif %}
 -e /home/stack/templates/custom-ceph.yaml \
 {% endif %}
 {% if RegisterNodes %}
