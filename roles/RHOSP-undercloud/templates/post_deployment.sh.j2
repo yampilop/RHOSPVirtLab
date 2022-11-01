@@ -14,7 +14,11 @@
 
 source ~/stackrc
 
+{% if RHOSP_version == 17.0 %}
+SERVERS=$(openstack baremetal node list -f value -c Name)
+{% else %}
 SERVERS=$(openstack server list -f value -c Name)
+{% endif %}
 
 source /home/stack/overcloudrc
 

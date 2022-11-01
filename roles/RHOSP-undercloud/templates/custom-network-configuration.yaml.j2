@@ -64,23 +64,7 @@ parameter_defaults:
     NovaComputeCpuSharedSet: "{{ ComputeSriovProperties.sharedcpus }}"
 {% endif %}
     NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}
-    
-    NovaPCIPassthrough:
-{% for passt in ComputeSriovProperties.pcipassthrough %}
-      - vendor_id: "{{ passt.vendor_id }}"
-        product_id: "{{ passt.product_id }}"
-{% if passt.address is defined %}
-{% if passt.address is mapping %}
-        address: 
-{% for key,val in passt.address.items() %}
-          {{ key }}: '{{ val }}'
-{% endfor %}
-{% else %}
-        address: {{ passt.address }}
-{% endif %}
-{% endif %}
-        physical_network: "{{ passt.network }}"
-{% endfor %}
+    NovaPCIPassthrough: {{ ComputeSriovProperties.pcipassthrough }}
     NeutronPhysicalDevMappings: {{ ComputeSriovProperties.physicaldevmappings }}
   
   ComputeOvsHwOffloadParameters:
@@ -95,22 +79,6 @@ parameter_defaults:
     NovaComputeCpuSharedSet: "{{ ComputeOvsHwOffloadProperties.sharedcpus }}"
 {% endif %}
     NovaReservedHostMemory: {{ ComputeOvsHwOffloadProperties.hostmemory }}
-    
-    NovaPCIPassthrough:
-{% for passt in ComputeOvsHwOffloadProperties.pcipassthrough %}
-      - vendor_id: "{{ passt.vendor_id }}"
-        product_id: "{{ passt.product_id }}"
-{% if passt.address is defined %}
-{% if passt.address is mapping %}
-        address: 
-{% for key,val in passt.address.items() %}
-          {{ key }}: '{{ val }}'
-{% endfor %}
-{% else %}
-        address: {{ passt.address }}
-{% endif %}
-{% endif %}
-        physical_network: "{{ passt.network }}"
-{% endfor %}
+    NovaPCIPassthrough: {{ ComputeOvsHwOffloadProperties.pcipassthrough }}
     NeutronPhysicalDevMappings: {{ ComputeOvsHwOffloadProperties.physicaldevmappings }}
 {% endif %}
