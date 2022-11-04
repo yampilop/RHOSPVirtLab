@@ -113,7 +113,7 @@ ComputeOvsHwOffloadProperties:
   hostmemory: 8192
   pcipassthrough:
     - devname: ens1f1
-      network: 'sriov1'
+      network: 'offload1'
       trusted: true
 
 # ComputeOvsDpdk default properties
