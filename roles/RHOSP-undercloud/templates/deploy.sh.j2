@@ -9,7 +9,7 @@ source /home/stack/stackrc
 {% if RHOSP_version == 17.0 and ceph_count > 0 %}
 openstack overcloud ceph deploy \
 /home/stack/templates/overcloud-baremetal-deployed.yaml \
--o /home/stack/templates/deployed_ceph.yaml \
+-o /home/stack/templates/deployed-ceph.yaml \
 --roles-data /home/stack/templates/roles_data.yaml \
 --container-image-prepare /home/stack/templates/containers-prepare-parameter.yaml
 {% endif %}
