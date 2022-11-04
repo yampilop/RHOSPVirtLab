@@ -48,16 +48,14 @@ interfaces:
     ControlPlane: nic1
     External: nic2
   Controller:
-    ControlPlane: nic1
-    External: nic2
+    ControlPlane: nic2
+    External: nic3
   Compute:
-    ControlPlane: nic1
-    External: nic2
+    ControlPlane: nic2
+    External: nic3
   ComputeOvsDpdk:
-    ControlPlane: nic1
-    External:
-      name: dpdk-external
-      interface: nic2
+    ControlPlane: nic2
+    External: nic3
     DpdkBonds:
       - name: dpdkbond0
         ports:
@@ -66,23 +64,23 @@ interfaces:
           - name: dpdk1
             interface: nic5
   ComputeSriov:
-    ControlPlane: nic1
-    External: nic2v0
+    ControlPlane: nic2
+    External: nic3v0
     Sriov:
-      - device: nic2
+      - device: nic3
         numvfs: 8
   ComputeOvsHwOffload:
-    ControlPlane: nic1
-    External: nic2v0
+    ControlPlane: nic2
+    External: nic3v0
     Sriov:
-      - device: nic2
+      - device: nic3
         numvfs: 8
   CephStorage:
-    ControlPlane: nic1
-    External: nic2
+    ControlPlane: nic2
+    External: nic3
   ComputeHCI:
-    ControlPlane: nic1
-    External: nic2
+    ControlPlane: nic2
+    External: nic3
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
@@ -94,23 +92,12 @@ ComputeSriovProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  physicaldevmappings: 'sriov1:eno3'
+  physicaldevmappings: 'sriov1:ens1f1'
   dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:
-    - vendor_id: 8086
-      product_id: 1528
-      address: '0000:85:00.0'
-      network: 'sriov1'
-      trusted: true
-    - vendor_id: 8086
-      product_id: 1515
-      address:
-        domain: "0000"
-        bus: "85"
-        slot: "1.*"
-        function: ".*"
+    - devname: ens1f1
       network: 'sriov1'
       trusted: true
 
@@ -120,20 +107,13 @@ ComputeOvsHwOffloadProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  physicaldevmappings: 'offload1:eno4'
+  physicaldevmappings: 'offload1:ens1f1'
   dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:
-    - vendor_id: 8086
-      product_id: 1528
-      address: '0000:85:00.0'
-      network: 'offload1'
-      trusted: true
-    - vendor_id: 8086
-      product_id: 1515
-      address: '0000:85:10.*'
-      network: 'offload1'
+    - devname: ens1f1
+      network: 'sriov1'
       trusted: true
 
 # ComputeOvsDpdk default properties

@@ -7,7 +7,7 @@
 network_config:
 {% endraw %}
 {% if item.name == 'ComputeOvsDpdk' %}
-- type: ovs_user_bridge
+- type: linux_bridge
 {% else %}
 - type: ovs_bridge
 {% endif %}
@@ -37,7 +37,7 @@ network_config:
 {% endfor %}
 {% endraw %}
 {% if item.name == 'ComputeOvsDpdk' %}
-- type: ovs_user_bridge
+- type: linux_bridge
 {% else %}
 - type: ovs_bridge
 {% endif %}
@@ -53,12 +53,6 @@ network_config:
   - type: sriov_vf
     device: {{ interfaces[item.name].External.split('v')[0] }}
     vfid: {{ interfaces[item.name].External.split('v')[1] }}
-{% elif interfaces[item.name].External is mapping %}
-  - type: ovs_dpdk_port
-    name: {{ interfaces[item.name].External.name }}
-    members:
-    - type: interface
-      name: {{ interfaces[item.name].External.interface }}
 {% else %}
   - type: interface
     name: {{ interfaces[item.name].External }}

@@ -170,7 +170,7 @@ resources:
           params:
             $network_config:
               network_config:
-              - type: ovs_user_bridge
+              - type: linux_bridge
                 name: br-vlans
                 mtu:
                   get_attr: [MinViableMtu, value]
@@ -192,23 +192,12 @@ resources:
                         next_hop:
                           get_param: ControlPlaneDefaultRoute
                 members:
-{% if interfaces.ComputeOvsDpdk.ControlPlane is mapping %}
-                - type: ovs_dpdk_port
-                  name: {{ interfaces.ComputeOvsDpdk.ControlPlane.name }}
-                  mtu:
-                    get_attr: [MinViableMtu, value]
-                  primary: true
-                  members:
-                  - type: interface
-                    name: {{ interfaces.ComputeOvsDpdk.ControlPlane.interface }}
-{% else %}
                 - type: interface
                   name: {{ interfaces.ComputeOvsDpdk.ControlPlane }}
                   mtu:
                     get_attr: [MinViableMtu, value]
                   # force the MAC address of the bridge to this interface
                   primary: true
-{% endif %}
                 - type: vlan
                   mtu:
                     get_param: StorageMtu
@@ -242,7 +231,7 @@ resources:
                   routes:
                     list_concat_unique:
                       - get_param: TenantInterfaceRoutes
-              - type: ovs_user_bridge
+              - type: linux_bridge
                 name: br-ex
                 mtu:
                   get_param: ExternalMtu
@@ -257,22 +246,11 @@ resources:
                         next_hop:
                           get_param: ExternalInterfaceDefaultRoute
                 members:
-{% if interfaces.ComputeOvsDpdk.External is mapping %}
-                - type: ovs_dpdk_port
-                  name: {{ interfaces.ComputeOvsDpdk.External.name }}
-                  mtu:
-                    get_param: ExternalMtu
-                  primary: true
-                  members:
-                  - type: interface
-                    name: {{ interfaces.ComputeOvsDpdk.External.interface }}
-{% else %}
                 - type: interface
                   name: {{ interfaces.ComputeOvsDpdk.External }}
                   mtu:
                     get_param: ExternalMtu
                   primary: true
-{% endif %}
 {% if (interfaces.ComputeOvsDpdk.DpdkBonds is defined) and (interfaces.ComputeOvsDpdk.DpdkBonds|length > 0) %}
               - type: ovs_user_bridge
                 name: br-dpdk

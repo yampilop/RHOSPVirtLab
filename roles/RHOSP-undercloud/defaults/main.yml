@@ -38,22 +38,20 @@ interfaces:
     ControlPlane: nic1
     External: nic2
   VirtualCephStorage:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   VirtualComputeHCI:
+    ControlPlane: nic1
+    External: nic2
+  Controller:
     ControlPlane: nic2
     External: nic3
-  Controller:
-    ControlPlane: nic1
-    External: nic2
   Compute:
-    ControlPlane: nic1
-    External: nic2
+    ControlPlane: nic2
+    External: nic3
   ComputeOvsDpdk:
     ControlPlane: nic2
-    External:
-      name: dpdk-external
-      interface: nic3
+    External: nic3
     DpdkBonds:
       - name: dpdkbond0
         ports:
@@ -90,19 +88,12 @@ ComputeSriovProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  physicaldevmappings: 'sriov1:eno4'
+  physicaldevmappings: 'sriov1:ens1f1'
   dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:
-    - vendor_id: 8086
-      product_id: 1528
-      address: '0000:85:00.0'
-      network: 'sriov1'
-      trusted: true
-    - vendor_id: 8086
-      product_id: 1515
-      address: '0000:85:10.*'
+    - devname: ens1f1
       network: 'sriov1'
       trusted: true
 
@@ -112,20 +103,13 @@ ComputeOvsHwOffloadProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  physicaldevmappings: 'offload1:eno4'
+  physicaldevmappings: 'offload1:ens1f1'
   dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
   pcipassthrough:
-    - vendor_id: 8086
-      product_id: 1528
-      address: '0000:85:00.0'
-      network: 'offload1'
-      trusted: true
-    - vendor_id: 8086
-      product_id: 1515
-      address: '0000:85:10.*'
-      network: 'offload1'
+    - devname: ens1f1
+      network: 'sriov1'
       trusted: true
 
 # ComputeOvsDpdk default properties
