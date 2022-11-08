@@ -7,7 +7,7 @@
 
 source /home/stack/stackrc
 {% if RHOSP_version == 17.0 and ceph_count > 0 %}
-openstack overcloud ceph deploy \
+openstack overcloud ceph deploy -y \
 /home/stack/templates/overcloud-baremetal-deployed.yaml \
 -o /home/stack/templates/deployed-ceph.yaml \
 --roles-data /home/stack/templates/roles_data.yaml \
@@ -75,3 +75,7 @@ time openstack overcloud deploy \
 {% endif %}
 -e /home/stack/templates/custom-overcloud.yaml
 date
+
+{% if RHOSP_version == 17.0 and ceph_count > 0 %}
+sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' templates/deployed_ceph.yaml
+{% endif %}
