@@ -94,8 +94,14 @@ network_config:
     - type: ovs_dpdk_port
       name: {{ port.name }}
       members:
+{% if 'v' in port.interface %}
+      - type: sriov_vf
+        device: {{ port.interface.split('v')[0] }}
+        vfid: {{ port.interface.split('v')[1] }}
+{% else %}
       - type: interface
         name: {{ port.interface }}
+{% endif %}
 {% endfor %}
 {% endfor %}
 {% endif %}

@@ -63,6 +63,19 @@ interfaces:
             interface: nic4
           - name: dpdk1
             interface: nic5
+  ComputeOvsDpdkSriov:
+    ControlPlane: nic2
+    External: nic3v0
+    Sriov:
+      - device: nic3
+        numvfs: 8
+    DpdkBonds:
+      - name: dpdkbond0
+        ports:
+          - name: dpdk0
+            interface: nic3v1
+          - name: dpdk1
+            interface: nic3v2
   ComputeSriov:
     ControlPlane: nic2
     External: nic3v0
@@ -129,6 +142,25 @@ ComputeOvsDpdkProperties:
   memorychannels: '4'
   ovsdpdkcorelist: '2,26,3,27'
   ovspmdcorelist: '4,28,5,29'
+
+# ComputeOvsDpdkSriov default properties
+ComputeOvsDpdkSriovProperties:
+  isolcpus: '6-23,30-47'
+  hugepagesz: '1GB'
+  hugepages: 32
+  kernelargs: 'iommu=pt intel_iommu=on'
+  dedicatedcpus: '8-23,32-47'
+  sharedcpus: '6-7,30-31'
+  hostmemory: 8192
+  socketmemory: '4096,4096'
+  memorychannels: '4'
+  ovsdpdkcorelist: '2,26,3,27'
+  ovspmdcorelist: '4,28,5,29'
+  physicaldevmappings: 'sriov1:ens1f1'
+  pcipassthrough:
+    - devname: ens1f1
+      network: 'sriov1'
+      trusted: true
 
 # CephStorage default properties
 CephStorageProperties:

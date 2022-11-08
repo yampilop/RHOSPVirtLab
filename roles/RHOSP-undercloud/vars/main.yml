@@ -29,6 +29,9 @@ overcloud_roles:
   - name: ComputeOvsDpdk
     profile: computeovsdpdk
     nic_configs: computeovsdpdk.yaml
+  - name: ComputeOvsDpdkSriov
+    profile: computeovsdpdksriov
+    nic_configs: computeovsdpdksriov.yaml
   - name: ComputeSriov
     profile: computesriov
     nic_configs: computesriov.yaml

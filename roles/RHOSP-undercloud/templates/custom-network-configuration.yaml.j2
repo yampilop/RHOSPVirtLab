@@ -33,6 +33,27 @@ parameter_defaults:
     - NUMATopologyFilter
     - PciPassthroughFilter
 
+{% if dpdk_count + sriov_count > 0 %}
+  ComputeOvsDpdkSriovParameters:
+    KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkSriovProperties.hugepages }} {{ ComputeOvsDpdkSriovProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkSriovProperties.isolcpus }}"
+    TunedProfileName: "cpu-partitioning"
+    IsolCpusList: "{{ ComputeOvsDpdkSriovProperties.isolcpus }}"
+    NovaReservedHostMemory: {{ ComputeOvsDpdkSriovProperties.hostmemory }}
+    OvsDpdkSocketMemory: "{{ ComputeOvsDpdkSriovProperties.socketmemory }}"
+    OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkSriovProperties.memorychannels }}"
+    OvsDpdkCoreList: "{{ ComputeOvsDpdkSriovProperties.ovsdpdkcorelist }}"
+{% if RHOSP_version == 13.0 %}
+    NovaVcpuPinSet: "{{ ComputeOvsDpdkSriovProperties.dedicatedcpus }}"
+{% else %}
+    NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkSriovProperties.dedicatedcpus }}"
+    NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkSriovProperties.sharedcpus }}"
+{% endif %}
+    OvsPmdCoreList: "{{ ComputeOvsDpdkSriovProperties.ovspmdcorelist}}"
+    OvsEnableDpdk: true
+    NovaPCIPassthrough: {{ ComputeOvsDpdkSriovProperties.pcipassthrough }}
+    NeutronPhysicalDevMappings: {{ ComputeOvsDpdkSriovProperties.physicaldevmappings }}
+{% endif %}
+
 {% if dpdk_count > 0 %}
   ComputeOvsDpdkParameters:
     KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkProperties.hugepages }} {{ ComputeOvsDpdkProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkProperties.isolcpus }}"

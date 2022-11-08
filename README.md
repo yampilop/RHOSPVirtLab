@@ -191,6 +191,7 @@ The available profiles for Physical machines are:
 - controller
 - compute
 - computeovsdpdk
+- computeovsdpdksriov
 - computesriov
 - computeovshwoffload
 - cephstorage
