@@ -270,6 +270,7 @@ resources:
 {% for port in dpdkbond.ports %}
                   - type: ovs_dpdk_port
                     name: {{ port.name }}
+                    driver: {{ port.driver }}
                     members:
                     - type: interface
                       name: {{ port.interface }}

@@ -57,8 +57,10 @@ interfaces:
         ports:
           - name: dpdk0
             interface: nic4
+            driver: vfio-pci
           - name: dpdk1
             interface: nic5
+            driver: vfio-pci
   ComputeOvsDpdkSriov:
     ControlPlane: nic2
     External: nic3v0
@@ -70,8 +72,10 @@ interfaces:
         ports:
           - name: dpdk0
             interface: nic3v1
+            driver: vfio-pci
           - name: dpdk1
             interface: nic3v2
+            driver: vfio-pci
   ComputeSriov:
     ControlPlane: nic2
     External: nic3v0

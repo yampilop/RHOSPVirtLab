@@ -93,6 +93,7 @@ network_config:
 {% for port in dpdkbond.ports %}
     - type: ovs_dpdk_port
       name: {{ port.name }}
+      driver: {{ port.driver }}
       members:
 {% if 'v' in port.interface %}
       - type: sriov_vf
