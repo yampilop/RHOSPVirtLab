@@ -1,5 +1,5 @@
-{% set dpdk_count = (physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count)) %}
+{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
+{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
 
 {% if RHOSP_version != 17.0 %}
 resource_registry:
