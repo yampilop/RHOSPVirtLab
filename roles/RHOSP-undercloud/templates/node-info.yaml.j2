@@ -13,7 +13,7 @@ parameter_defaults:
 {% if count > 0 %}
 - name: {{ ocrole.name }}
   count: {{ count }}
-{% if 'Controller' in ocrole %}
+{% if 'Controller' in ocrole.name %}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
     extra_vars:
