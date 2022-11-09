@@ -6,7 +6,7 @@
 {% set min_viable_mtu = mtu_list | max %}
 network_config:
 {% endraw %}
-{% if item.name == 'ComputeOvsDpdk' %}
+{% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}
 - type: ovs_bridge
@@ -26,6 +26,7 @@ network_config:
 {% raw %}    mtu: {{ min_viable_mtu }}
     # force the MAC address of the bridge to this interface
     primary: true
+{% if 'Dpdk' not in item.name %}
 {% for network in role_networks if network != 'External' %}
   - type: vlan
     mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
@@ -35,8 +36,20 @@ network_config:
         {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
     routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
 {% endfor %}
+{% else %}
+{% for network in role_networks if network != 'External' %}
+- type: vlan
+  device: br-vlans
+  mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
+  vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
+  addresses:
+  - ip_netmask:
+      {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
+  routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
+{% endfor %}
+{% endif %}
 {% endraw %}
-{% if item.name == 'ComputeOvsDpdk' %}
+{% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}
 - type: ovs_bridge
@@ -49,18 +62,18 @@ network_config:
   routes: {{ lookup('vars', networks_lower['External'] ~ '_host_routes') }}
   members:
 {% endraw %}
-{% if 'v' in interfaces[item.name].External %}
+{% if ('Dpdk' not in item.name) and ('v' in interfaces[item.name].External) %}
   - type: sriov_vf
     device: {{ interfaces[item.name].External.split('v')[0] }}
     vfid: {{ interfaces[item.name].External.split('v')[1] }}
 {% else %}
   - type: interface
     name: {{ interfaces[item.name].External }}
-{% endif %}
 {% raw %}    mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
     # force the MAC address of the bridge to this interface
     primary: true
 {% endraw %}
+{% endif %}
 {% if interfaces[item.name].Sriov is defined %}
 {% for sriovif in interfaces[item.name].Sriov %}
 - type: sriov_pf
