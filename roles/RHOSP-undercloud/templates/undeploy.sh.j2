@@ -2,7 +2,7 @@
 
 source /home/stack/stackrc
 
-echo '[{"interface": "deploy", "step": "erase_devices_metadata"}]' > /home/stack/clean-steps.txt
+[ ! -f /home/stack/clean-steps.txt ] && echo '[{"interface": "deploy", "step": "erase_devices_metadata"}]' > /home/stack/clean-steps.txt
 
 {% if RHOSP_version == 17.0 %}
 # Delete the overcloud
@@ -13,25 +13,25 @@ openstack overcloud delete overcloud -y
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node undeploy "$1)}'
 metalsmith list
 openstack baremetal node list
-
-# Clean the nodes
-openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node manage "$1)}'
-openstack baremetal node list
-openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node clean --clean-steps clean-steps.txt "$1)}'
-openstack baremetal node list
-
-# Delete the ports (to avoid future duplicates)
-openstack port list -f value -c Name -c Status | grep DOWN | awk '{system("openstack port delete "$1)}'
-openstack port list
-openstack baremetal node list
 {% else %}
 # Delete the overcloud
 openstack overcloud delete overcloud -y
 openstack baremetal node list
+{% endif %}
 
 # Clean the nodes
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node manage "$1)}'
 openstack baremetal node list
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node clean --clean-steps clean-steps.txt "$1)}'
+openstack baremetal node list
+
+# Wait for the nodes to finish cleanning process or failing (timeout 10 minutes)
+timeout 600 bash -c -- 'while (openstack baremetal node list -f value -c Name -c "Provisioning State" | grep -Ev "failed|manageable"); do echo "Waiting for cleanning..."; sleep 5; done'
+openstack baremetal node list
+
+{% if RHOSP_version == 17.0 %}
+# Delete the ports (to avoid future duplicates)
+openstack port list -f value -c Name -c Status | grep DOWN | awk '{system("openstack port delete "$1)}'
+openstack port list
 openstack baremetal node list
 {% endif %}
