@@ -15,5 +15,5 @@ galaxy_info:
     - openstack
     - rhel
 
-dependencies:
-  - geerlingguy.swap
+dependencies: []
+#  - geerlingguy.swap

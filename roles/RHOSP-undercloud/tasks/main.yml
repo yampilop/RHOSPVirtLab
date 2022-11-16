@@ -9,6 +9,13 @@
 - name: Verify vms and physical profiles
   import_tasks: tasks/profiles.yml
 
+- name: Wait until cloud-init finishes to grant the sudo access with no password
+  raw: test -f /var/lib/cloud/instance/boot-finished
+  retries: 30
+  register: cmd_res
+  changed_when: false
+  until: cmd_res is success
+
 - name: Configure swap file on the undercloud
   include_role:
     name: geerlingguy.swap
