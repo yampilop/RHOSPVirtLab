@@ -34,6 +34,8 @@ parameter_defaults:
     rhsm_release: {{ RHOSP_version_supported[RHOSP_version].rhel_release }}
 {% endif %}
 {% endif %}
+{% if RHOSP_version == 13.0 %}
   DockerInsecureRegistryAddress:
   - undercloud.ctlplane.localdomain:8787
   - 192.168.24.1:8787
+{% endif %}
