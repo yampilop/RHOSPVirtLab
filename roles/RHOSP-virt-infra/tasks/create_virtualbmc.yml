@@ -7,8 +7,10 @@
 
 - name: VIRTUALBMC - Ensure node exists
   command: "{{ vbmc_path }} add --username admin --password admin --address 192.168.250.1 --port {{ item.item.bmcport }} {{ item.item.name }}"
-  when: not item.stdout
   loop: "{{ vbmc_status.results }}"
+  when:
+    - item.stdout is defined
+    - not item.stdout
 
 - name: VIRTUALBMC - Get node states again
   shell: "{{ vbmc_path }} list 2>/dev/null | grep running | awk '/{{ item.name }}/ {print $4,$8}'"
@@ -19,8 +21,10 @@
 
 - name: VIRTUALBMC - Start node
   command: "{{ vbmc_path }} start {{ item.item.name }}"
-  when: not item.stdout
   loop: "{{ vbmc_running.results }}"
+  when:
+    - item.stdout is defined
+    - not item.stdout
 
 - name: VIRTUALBMC - Get service facts
   service_facts:
