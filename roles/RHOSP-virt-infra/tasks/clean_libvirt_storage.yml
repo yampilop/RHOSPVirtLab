@@ -26,10 +26,13 @@
     path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
     state: absent
   loop: "{{ vms }}"
+  when: inventory_hostname in item.hypervisor
 
 - name: STORAGE - Delete the data disk file
   file:
     path: "{{ pool_location }}/{{ item.name }}_data.qcow2"
     state: absent
-  when: item.data_disk_size is defined and item.data_disk_size > 0
   loop: "{{ vms }}"
+  when:
+    - inventory_hostname in item.hypervisor
+    - item.data_disk_size is defined and item.data_disk_size > 0

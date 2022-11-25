@@ -44,6 +44,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   register: user_data
+  when: inventory_hostname == 'localhost'
 
 - name: STORAGE - Copy meta-data
   copy:
@@ -52,11 +53,14 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   register: meta_data
+  when: inventory_hostname == 'localhost'
 
 - name: STORAGE - Create undercloud-init.iso image with user-data and meta-data
   command: "genisoimage -output /home/{{ ansible_user }}/undercloud-init.iso -volid cidata -joliet -rock /home/{{ ansible_user }}/user-data /home/{{ ansible_user }}/meta-data"
-  when: user_data.changed or meta_data.changed
   register: overcloud_init
+  when:
+    - inventory_hostname == 'localhost'
+    - user_data.changed or meta_data.changed
 
 - name: STORAGE - Copy undercloud-init.iso to the pool location
   copy:
@@ -66,8 +70,10 @@
     owner: root
     group: root
   become: yes
-  when: overcloud_init.changed
   register: overcloud_init_pool
+  when:
+    - inventory_hostname == 'localhost'
+    - overcloud_init.changed
 
 - name: STORAGE - Download the rhel base image
   get_url:
@@ -81,6 +87,7 @@
   delay: 10
   register: result
   until: result is not failed
+  when: inventory_hostname == 'localhost'
 
 - name: STORAGE - Check if the needed image files exist
   stat:
@@ -89,12 +96,15 @@
   loop:
     - "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     - "undercloud-init.iso"
+  when: inventory_hostname == 'localhost'
 
 - name: STORAGE - Fail when any of the files does not exist
   fail:
     msg: "{{ item.item }} does not exist"
-  when: item.stat.exists == false
   loop: "{{ files_output.results  }}"
+  when:
+    - inventory_hostname == 'localhost'
+    - item.stat.exists == false
 
 - name: STORAGE - Check if the root disk file exists
   stat:
@@ -103,6 +113,7 @@
     get_md5: False
   register: disk_file
   loop: "{{ vms }}"
+  when: inventory_hostname in item.hypervisor
 
 - name: STORAGE - Check if the data disk file exists
   stat:
@@ -111,19 +122,23 @@
     get_md5: False
   register: data_disk_file
   loop: "{{ vms }}"
+  when: inventory_hostname in item.hypervisor
 
 - name: STORAGE - Create root disk file
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --allocation {{ item.item.disk_size }} --prealloc-metadata --format qcow2"
-  when: not item.stat.exists
   loop: "{{ disk_file.results }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
+  when: not item.stat.exists
 
 - name: STORAGE - Create data disk file
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_data.qcow2 --capacity {{ item.item.data_disk_size }} --allocation {{ item.item.data_disk_size }} --prealloc-metadata --format qcow2"
-  when: not item.stat.exists and item.item.data_disk_size is defined and item.item.data_disk_size > 0
   loop: "{{ data_disk_file.results }}"
   become: yes
+  when:
+    - not item.stat.exists
+    - item.item.data_disk_size is defined
+    - item.item.data_disk_size > 0
 
 - name: STORAGE - Set permissions to root disk files
   file:
@@ -131,14 +146,18 @@
     mode: "777"
   loop: "{{ vms }}"
   become: yes
+  when: inventory_hostname in item.hypervisor
 
 - name: STORAGE - Set permissions to data disk files
   file:
     path: "{{ pool_location }}/{{ item.name }}_data.qcow2"
     mode: "777"
-  when: item.data_disk_size is defined and item.data_disk_size > 0
   loop: "{{ vms }}"
   become: yes
+  when:
+    - inventory_hostname in item.hypervisor
+    - item.data_disk_size is defined
+    - item.data_disk_size > 0
 
 - name: STORAGE - Prepare backing stored disk files and resize root partition
   command: "virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"

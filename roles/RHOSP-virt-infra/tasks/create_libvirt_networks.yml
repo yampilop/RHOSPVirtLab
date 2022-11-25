@@ -5,6 +5,7 @@
     mode: "755"
     owner: root
     group: root
+  when: inventory_hostname == 'localhost'
 
 - name: NETWORKS - Add hook for libvirt networks (hack) in order to allow port-forwarding when the network is forwarding route
   template:
@@ -15,7 +16,9 @@
     group: root
   become: yes
   notify: HANDLER - restart libvirtd service
-  when: (networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first).forward == 'nat'
+  when:
+    - inventory_hostname == 'localhost'
+    - (networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first).forward == 'nat'
 
 - name: NETWORKS - Gather facts about libvirt networks
   community.libvirt.virt_net:
@@ -26,9 +29,11 @@
     command: define
     name: "{{ item.name }}"
     xml: "{{ lookup('template', 'network.xml.j2') }}"
-  when: ansible_libvirt_networks[item.name] is not defined
   loop: "{{ networks }}"
   become: yes
+  when:
+    - inventory_hostname in item.hypervisor
+    - ansible_libvirt_networks[item.name] is not defined
 
 - name: NETWORKS - Gather facts about libvirt networks again
   community.libvirt.virt_net:
@@ -38,14 +43,18 @@
   community.libvirt.virt_net:
     state: active
     name: "{{ item.name }}"
-  when: ansible_libvirt_networks[item.name]['state'] != 'active'
   loop: "{{ networks }}"
   become: yes
+  when:
+    - inventory_hostname in item.hypervisor
+    - ansible_libvirt_networks[item.name]['state'] != 'active'
 
 - name: NETWORKS - Enable autostart for the network
   community.libvirt.virt_net:
     autostart: yes
     name: "{{ item.name }}"
-  when: ansible_libvirt_networks[item.name]['autostart'] != 'yes'
   loop: "{{ networks }}"
   become: yes
+  when:
+    - inventory_hostname in item.hypervisor
+    - ansible_libvirt_networks[item.name]['autostart'] != 'yes'

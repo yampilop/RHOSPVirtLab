@@ -3,6 +3,7 @@
   register: vbmc_status
   loop: "{{ vms }}"
   changed_when: False
+  when: inventory_hostname in item.hypervisor
 
 - name: VIRTUALBMC - Ensure node exists
   command: "{{ vbmc_path }} add --username admin --password admin --address 192.168.250.1 --port {{ item.item.bmcport }} {{ item.item.name }}"
@@ -14,6 +15,7 @@
   register: vbmc_running
   loop: "{{ vms }}"
   changed_when: False
+  when: inventory_hostname in item.hypervisor
 
 - name: VIRTUALBMC - Start node
   command: "{{ vbmc_path }} start {{ item.item.name }}"
@@ -23,13 +25,31 @@
 - name: VIRTUALBMC - Get service facts
   service_facts:
 
-- name: VIRTUALBMC - Ensure port rules are configured to the firewall
+- name: VIRTUALBMC - Ensure port rules are configured to the firewall in libvirt zone
   firewalld:
     port: "{{ item.bmcport }}/udp"
     zone: "libvirt"
     permanent: yes
     immediate: yes
     state: enabled
-  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
   loop: "{{ vms }}"
   become: yes
+  when:
+    - inventory_hostname == 'localhost'
+    - ansible_facts.services['firewalld.service'] is defined
+    - ansible_facts.services['firewalld.service'].state == 'running'
+
+- name: VIRTUALBMC - Ensure port rules are configured to the firewall in public zone
+  firewalld:
+    port: "{{ item.bmcport }}/udp"
+    zone: "public"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ vms }}"
+  become: yes
+  when:
+    - inventory_hostname != 'localhost'
+    - inventory_hostname in item.hypervisor
+    - ansible_facts.services['firewalld.service'] is defined
+    - ansible_facts.services['firewalld.service'].state == 'running'

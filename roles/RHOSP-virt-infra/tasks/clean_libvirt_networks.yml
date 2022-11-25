@@ -6,12 +6,16 @@
   community.libvirt.virt_net:
     command: destroy
     name: "{{ item.name }}"
-  when: ansible_libvirt_networks[item.name] is defined
   loop: "{{ networks }}"
+  when:
+    - inventory_hostname in item.hypervisor
+    - ansible_libvirt_networks[item.name] is defined
 
 - name: NETWORKS - Undefine the network
   community.libvirt.virt_net:
     command: undefine
     name: "{{ item.name }}"
-  when: ansible_libvirt_networks[item.name] is defined
   loop: "{{ networks }}"
+  when:
+    - inventory_hostname in item.hypervisor
+    - ansible_libvirt_networks[item.name] is defined

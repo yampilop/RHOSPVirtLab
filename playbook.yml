@@ -7,9 +7,9 @@
     - vars/networks.yml
 
   pre_tasks:
-    - name: Set ansible_user to the current user
+    - name: Set ansible_user to the admin current user
       set_fact:
-        ansible_user: "{{ lookup('env','USER') }}"
+        ansible_user: admin
   
   roles:
     - role: RHOSP-virt-infra

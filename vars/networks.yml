@@ -1,11 +1,13 @@
 ---
 networks:
   - name: RHOSPVirtLab_ctlplane
+    hipervisor: localhost
     bridge: br-ctlplane
     forward: false
     mac_suffix: '00'
     ipv4: false
   - name: RHOSPVirtLab_external
+    hipervisor: localhost
     bridge: br-external
     forward: nat
     mac_suffix: '05'
@@ -14,6 +16,7 @@ networks:
       netmask: '255.255.255.0'
       dhcp: false
   - name: RHOSPVirtLab_management
+    hipervisor: localhost
     bridge: br-management
     forward: nat
     mac_suffix: '0f'
