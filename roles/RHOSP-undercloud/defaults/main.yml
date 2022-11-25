@@ -175,6 +175,7 @@ RegisterNodes: False
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud
+    hypervisor: localhost
     title: 'RHOSPVirtLab Undercloud'
     profile: 'undercloud'
     memory: 6291456
@@ -188,6 +189,7 @@ vms:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
   - name: vcontroller0
+    hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 0'
     profile: 'vcontroller'
     memory: 8388608
@@ -201,6 +203,7 @@ vms:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
   - name: vcompute0
+    hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Compute 0'
     profile: 'vcompute'
     memory: 6291456
@@ -221,11 +224,13 @@ physical: []
 # networks is a list to define the virtual networks to be created
 networks:
   - name: RHOSPVirtLab_ctlplane
+    hypervisor: localhost
     bridge: br-ctlplane
     forward: false
     mac_suffix: '00'
     ipv4: false
   - name: RHOSPVirtLab_external
+    hypervisor: localhost
     bridge: br-external
     forward: nat
     mac_suffix: '05'
@@ -234,6 +239,7 @@ networks:
       netmask: '255.255.255.0'
       dhcp: false
   - name: RHOSPVirtLab_management
+    hypervisor: localhost
     bridge: br-management
     forward: nat
     mac_suffix: '0f'

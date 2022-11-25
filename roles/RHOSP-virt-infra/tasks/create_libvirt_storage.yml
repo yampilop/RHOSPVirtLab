@@ -129,13 +129,16 @@
   loop: "{{ disk_file.results }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
-  when: not item.stat.exists
+  when:
+    - disk_file is defined
+    - not item.stat.exists
 
 - name: STORAGE - Create data disk file
   command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_data.qcow2 --capacity {{ item.item.data_disk_size }} --allocation {{ item.item.data_disk_size }} --prealloc-metadata --format qcow2"
   loop: "{{ data_disk_file.results }}"
   become: yes
   when:
+    - data_disk_file is defined
     - not item.stat.exists
     - item.item.data_disk_size is defined
     - item.item.data_disk_size > 0

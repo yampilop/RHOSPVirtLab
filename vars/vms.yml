@@ -1,7 +1,7 @@
 ---
 vms:
   - name: undercloud
-    hipervisor: localhost
+    hypervisor: localhost
     title: 'RHOSPVirtLab Undercloud'
     profile: 'undercloud'
     memory: 16777216
@@ -15,7 +15,7 @@ vms:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
   - name: vcontroller0
-    hipervisor: localhost
+    hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 0'
     profile: 'vcontroller'
     memory: 8388608
@@ -29,7 +29,7 @@ vms:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
   - name: vcontroller1
-    hipervisor: localhost
+    hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 1'
     profile: 'vcontroller'
     memory: 8388608
@@ -43,7 +43,7 @@ vms:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
   - name: vcontroller2
-    hipervisor: localhost
+    hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 2'
     profile: 'vcontroller'
     memory: 8388608
@@ -57,7 +57,7 @@ vms:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
   - name: vcompute0
-    hipervisor: localhost
+    hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Compute 0'
     profile: 'vcompute'
     memory: 31457280
@@ -72,7 +72,7 @@ vms:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
   - name: vcompute1
-    hipervisor: localhost
+    hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Compute 1'
     profile: 'vcompute'
     memory: 31457280
