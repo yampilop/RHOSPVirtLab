@@ -20,7 +20,11 @@ custom_env_files = /home/stack/templates/custom-undercloud-params.yaml
 enable_node_discovery = true
 #enable_nova = true
 #enable_novajoin = false
+{% if DCNLeafs | length > 0 %}
+enable_routed_networks = true
+{% else %}
 #enable_routed_networks = false
+{% endif %}
 #enable_swift_encryption = false
 #enable_telemetry = false
 #enable_tempest = true
@@ -42,7 +46,7 @@ enable_node_discovery = true
 local_interface = eth0
 local_ip = 192.168.24.1/24
 #local_mtu = 1500
-local_subnet = ctlplane-subnet
+local_subnet = {{ DefaultLeaf0.subnet.name }}
 #net_config_override = 
 #networks_file = <None>
 #output_dir = /builddir
@@ -50,7 +54,11 @@ overcloud_domain_name = localdomain
 #roles_file = <None>
 #scheduler_max_attempts = 30
 #service_principal =
-#subnets = ctlplane-subnet
+{% if DCNLeafs | length > 0 %}
+subnets = {{ DefaultLeaf0.subnet.name }},{% for leaf in DCNLeafs %}{{ leaf.subnet.name }}{% if not loop.last %},{% endif %}{%- endfor %}
+{% else %}
+#subnets = {{ DefaultLeaf0.subnet.name }}
+{% endif %}
 #templates =
 undercloud_admin_host = 192.168.24.3
 #undercloud_debug = true
@@ -60,18 +68,36 @@ undercloud_admin_host = 192.168.24.3
 #undercloud_log_file = install-undercloud.log
 undercloud_nameservers = {{ dns_servers | join(',') }}
 undercloud_ntp_servers = {{ ntp_servers | join(',') }}
+{% if DCNLeafs | length > 0 %}
+undercloud_public_host = 192.168.250.10
+{% else %}
 undercloud_public_host = 192.168.24.2
+{% endif %}
 #undercloud_service_certificate =
 #undercloud_timezone = <None>
 #undercloud_update_packages = false
 #upgrade_cleanup = false
-[ctlplane-subnet]
-cidr = 192.168.24.0/24
-dhcp_end = 192.168.24.55
+
+[{{ DefaultLeaf0.subnet.name }}]
+cidr = {{ DefaultLeaf0.subnet.cidr }}
+dhcp_end = {{ DefaultLeaf0.subnet.dhcp_end }}
 #dhcp_exclude =
-dhcp_start = 192.168.24.5
+dhcp_start = {{ DefaultLeaf0.subnet.dhcp_start }}
 #dns_nameservers =
-gateway = 192.168.24.1
+gateway = {{ DefaultLeaf0.subnet.gateway }}
 #host_routes = [{destination: 10.10.10.0/24, nexthop: 192.168.24.1}]
-inspection_iprange = 192.168.24.100,192.168.24.120
-masquerade = true
+inspection_iprange = {{ DefaultLeaf0.subnet.inspection_iprange }}
+masquerade = {{ DefaultLeaf0.subnet.masquerade }}
+
+{% for leaf in DCNLeafs %}
+[{{ leaf.subnet.name }}]
+cidr = {{ leaf.subnet.cidr }}
+dhcp_end = {{ leaf.subnet.dhcp_end }}
+#dhcp_exclude =
+dhcp_start = {{ leaf.subnet.dhcp_start }}
+#dns_nameservers =
+gateway = {{ leaf.subnet.gateway }}
+#host_routes = [{destination: 10.10.10.0/24, nexthop: 192.168.24.1}]
+inspection_iprange = {{ leaf.subnet.inspection_iprange }}
+masquerade = {{ leaf.subnet.masquerade }}
+{% endfor %}

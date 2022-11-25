@@ -213,3 +213,15 @@ RHOSP_version_supported:
       ceph_node_exporter_tag: ''
       ceph_prometheus_tag: ''
       namespace: ''
+
+DefaultLeaf0:
+  name: leaf0
+  subnet:
+    name: ctlplane-subnet
+    cidr: 192.168.24.0/24
+    dhcp_start: 192.168.24.5
+    dhcp_end: 192.168.24.55
+    inspection_iprange: 192.168.24.100,192.168.24.120
+    gateway: 192.168.24.1
+    masquerade: true
+  hypervisor: localhost

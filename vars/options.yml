@@ -175,3 +175,16 @@ DeployOctavia: False
 
 # Subscription manager parameters
 RegisterNodes: False
+
+# DCN leafs
+DCNLeafs: []
+  # - name: leaf1
+  #   subnet:
+  #     name: leaf1-subnet
+  #     cidr: 192.168.25.0/24
+  #     dhcp_start: 192.168.25.5
+  #     dhcp_end: 192.168.25.55
+  #     inspection_iprange: 192.168.25.100,192.168.25.120
+  #     gateway: 192.168.25.1
+  #     masquerade: true
+  #   hypervisor: localhost
