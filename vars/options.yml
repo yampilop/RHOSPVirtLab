@@ -187,4 +187,4 @@ DCNLeafs: []
   #     inspection_iprange: 192.168.25.100,192.168.25.120
   #     gateway: 192.168.25.1
   #     masquerade: true
-  #   hypervisor: localhost
+  #   hypervisor: <hypervisor_name>

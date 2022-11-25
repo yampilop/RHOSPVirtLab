@@ -214,6 +214,8 @@
   when: item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
 
+# TODO: Create task with routes to 192.168.250.10 pointing to the localhost hypervisor external_if IP address
+
 - name: Configure network using system role
   include_role:
     name: rhel-system-roles.network
