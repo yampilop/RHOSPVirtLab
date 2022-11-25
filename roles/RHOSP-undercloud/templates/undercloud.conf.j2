@@ -55,7 +55,7 @@ overcloud_domain_name = localdomain
 #scheduler_max_attempts = 30
 #service_principal =
 {% if DCNLeafs | length > 0 %}
-subnets = {{ DefaultLeaf0.subnet.name }},{% for leaf in DCNLeafs %}{{ leaf.subnet.name }}{% if not loop.last %},{% endif %}{%- endfor %}
+subnets = {{ DefaultLeaf0.subnet.name }},{% for leaf in DCNLeafs %}{{ leaf.subnet.name }}{% if not loop.last %},{% endif %}{% endfor %}
 {% else %}
 #subnets = {{ DefaultLeaf0.subnet.name }}
 {% endif %}

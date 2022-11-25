@@ -6,7 +6,7 @@
   when: inventory_hostname in item.hypervisor
 
 - name: VIRTUALBMC - Ensure node exists
-  command: "{{ vbmc_path }} add --username admin --password admin --address 192.168.250.1 --port {{ item.item.bmcport }} {{ item.item.name }}"
+  command: "{{ vbmc_path }} add --username admin --password admin --port {{ item.item.bmcport }} {{ item.item.name }}"
   loop: "{{ vbmc_status.results }}"
   when:
     - item.stdout is defined

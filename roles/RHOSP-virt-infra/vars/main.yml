@@ -20,6 +20,7 @@ RHEL_version_supported:
       - gcc
       - python2-jinja2
       - OVMF
+      - dhcp
     pip:
       - virtualbmc
       - netaddr
@@ -35,6 +36,7 @@ RHEL_version_supported:
       - python3-lxml
       - python3-libvirt
       - edk2-ovmf
+      - dhcp-relay
     pip:
       - virtualbmc
       - netaddr

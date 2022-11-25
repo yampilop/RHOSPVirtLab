@@ -265,6 +265,30 @@
     - ansible_facts.services['firewalld.service'] is defined
     - ansible_facts.services['firewalld.service'].state == 'running'
 
+- name: DHCRELAY - Create dhcrelay systemd unit
+  template:
+    src: "dhcrelay.service.j2"
+    dest: "/etc/systemd/system/dhcrelay.service"
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+  when: inventory_hostname != 'localhost'
+
+- name: DHCRELAY - Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: yes
+  when: inventory_hostname != 'localhost'
+
+- name: DHCRELAY - Enable and start dhcrelay service
+  service:
+    name: dhcrelay
+    state: started
+    enabled: yes
+  become: yes
+  when: inventory_hostname != 'localhost'
+
 - name: Create stack alias to connect to undercloud
   lineinfile:
     path: "/home/{{ ansible_user }}/.bashrc"
