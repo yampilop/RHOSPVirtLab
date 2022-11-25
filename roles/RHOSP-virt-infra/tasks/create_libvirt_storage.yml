@@ -130,7 +130,7 @@
   become: yes
   notify: HANDLER - Clean known_hosts file
   when:
-    - disk_file is defined
+    - disk_file.results is defined
     - not item.stat.exists
 
 - name: STORAGE - Create data disk file
@@ -138,7 +138,7 @@
   loop: "{{ data_disk_file.results }}"
   become: yes
   when:
-    - data_disk_file is defined
+    - data_disk_file.results is defined
     - not item.stat.exists
     - item.item.data_disk_size is defined
     - item.item.data_disk_size > 0
