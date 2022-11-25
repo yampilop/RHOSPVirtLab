@@ -22,7 +22,7 @@ nodes:
     pm_type: "ipmi"
     pm_user: "admin"
     pm_password: "admin"
-    pm_addr: "{% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hosts[vm.hypervisor].ansible_host }}{% endif %}"
+    pm_addr: "{% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}"
     pm_port: "{{ vm.bmcport }}"
 {% endfor %}
 
