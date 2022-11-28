@@ -11,7 +11,11 @@ nodes:
 {% else %}
   - ports:
       - address: '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
+{% if vm.hypervisor == 'localhost' %}
         physical_network: ctlplane
+{% else %}
+        physical_network: {{ (DCNLeafs | selectattr('hypervisor', 'search', vm.hypervisor) | list | first).subnet.name }}
+{% endif %}
 {% endif %}
     name: "{{ vm.name }}"
     capabilities: "{{ ["node:" ~ vm.name, "boot_option:local", vm_capabilities] | join(',') }}"
