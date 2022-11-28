@@ -214,8 +214,6 @@
   when: item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
 
-# TODO: Create task with routes to 192.168.250.10 pointing to the localhost hypervisor external_if IP address
-
 - name: Configure network using system role
   include_role:
     name: rhel-system-roles.network
@@ -275,13 +273,11 @@
     group: root
     mode: "0644"
   become: yes
-  when: inventory_hostname != 'localhost'
 
 - name: DHCRELAY - Reload systemd daemon
   systemd:
     daemon_reload: yes
   become: yes
-  when: inventory_hostname != 'localhost'
 
 - name: DHCRELAY - Enable and start dhcrelay service
   service:
@@ -289,7 +285,6 @@
     state: started
     enabled: yes
   become: yes
-  when: inventory_hostname != 'localhost'
 
 - name: Create stack alias to connect to undercloud
   lineinfile:

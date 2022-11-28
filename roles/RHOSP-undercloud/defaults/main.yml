@@ -229,9 +229,12 @@ networks:
   - name: RHOSPVirtLab_ctlplane
     hypervisor: localhost
     bridge: br-ctlplane
-    forward: false
+    forward: route
     mac_suffix: '00'
-    ipv4: false
+    ipv4:
+      address: '192.168.24.254'
+      netmask: '255.255.255.0'
+      dhcp: false
   - name: RHOSPVirtLab_external
     hypervisor: localhost
     bridge: br-external

@@ -34,6 +34,15 @@ openstack overcloud node import /home/stack/templates/instackenv.yaml
 openstack baremetal node list
 openstack baremetal node list -f value -c Name -c 'Power State' | grep 'power on' | grep 'manageable' | awk {'system("openstack baremetal node power off "$1)'}
 openstack baremetal node list
+
+{% if DCNLeafs | length > 0 %}
+# Set the right physica-network for the ports belonging to other leafs
+{% for vm in vms if not vm.hypervisor == 'localhost' %}
+openstack baremetal port set --physical-network {{ (DCNLeafs | selectattr('name', 'hypervisor', vm.hypervisor) | list | first).subnet.name }} $(openstack baremetal port list --node vcompute2 -f value -c UUID)
+{% endfor %}
+{% endif %}
+
+# Introspect baremetal nodes
 openstack overcloud node introspect --all-manageable --provide
 openstack baremetal node list
 

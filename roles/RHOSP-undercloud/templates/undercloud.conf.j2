@@ -69,11 +69,7 @@ undercloud_admin_host = 192.168.24.3
 #undercloud_log_file = install-undercloud.log
 undercloud_nameservers = {{ dns_servers | join(',') }}
 undercloud_ntp_servers = {{ ntp_servers | join(',') }}
-{% if DCNLeafs | length > 0 %}
-undercloud_public_host = 192.168.250.10
-{% else %}
 undercloud_public_host = 192.168.24.2
-{% endif %}
 #undercloud_service_certificate =
 #undercloud_timezone = <None>
 #undercloud_update_packages = false
