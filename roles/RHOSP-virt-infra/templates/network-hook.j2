@@ -12,7 +12,7 @@ internal_ip='{{ overcloud_ip }}'
 
 ports=( {{ forwarded_ports | join(' ') }} )
 
-external_update() {
+rules_update() {
   network_name="$1"
   action="$2"
   
@@ -35,19 +35,6 @@ external_update() {
   done
 }
 
-management_update() {
-  network_name="$1"
-  action="$2"
-
-  FORWARD="$iptables $action FORWARD -o br-management -j ACCEPT"
-
-  if [ -z "${DEBUG_RULES:-}" ]; then
-    `$FORWARD`
-  else
-    echo $FORWARD
-  fi
-}
-
 network_name="$1"
 network_task="$2"
 
@@ -55,39 +42,16 @@ if [ "${network_name}" = "RHOSPVirtLab_external" ]; then
 
   case "${network_task}" in
     started)
-      external_update ${network_name} " -I "
+      rules_update ${network_name} " -I "
     ;;
   
     stopped)
-      external_update ${network_name} " -D "
+      rules_update ${network_name} " -D "
     ;;
 
     updated)
-      external_update ${network_name} " -D "
-      external_update ${network_name} " -I "
-    ;;
-
-    *)
-      echo "network hook called with unexpected options $*" >&2
-    ;;
-  esac
-
-fi
-
-if [ "${network_name}" = "RHOSPVirtLab_management" ]; then
-
-  case "${network_task}" in
-    started)
-      management_update ${network_name} " -I "
-    ;;
-
-    stopped)
-      management_update ${network_name} " -D "
-    ;;
-
-    updated)
-      management_update ${network_name} " -D "
-      management_update ${network_name} " -I "
+      rules_update ${network_name} " -D "
+      rules_update ${network_name} " -I "
     ;;
 
     *)

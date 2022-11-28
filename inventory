@@ -1,6 +1,6 @@
 [infrastructure]
 localhost ansible_host=localhost ansible_connection=local ansible_become=yes
-# <hypervisor_name> ansible_host=<address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
+# <hypervisor_name> ansible_host=<address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no' hypervisor_external_if=eno1
 
 [openstack]
 undercloud ansible_host=192.168.250.10 ansible_user=stack ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no' swap_file_size_mb='8192'
