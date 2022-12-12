@@ -27,7 +27,7 @@ openstack overcloud image upload --image-path /home/stack/images/
 openstack image list --fit-width
 
 {% else %}
-{% set templates_dir="/home/stack/templates/{{ leaf.name }}" %}
+{% set templates_dir="/home/stack/templates/" ~ leaf.name %}
 {% endif %}
 
 {% if RHOSP_version == 17.0 %}

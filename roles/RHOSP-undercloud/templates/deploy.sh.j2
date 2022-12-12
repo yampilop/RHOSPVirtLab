@@ -8,7 +8,7 @@
 {% if leaf.name == 'overcloud' %}
 {% set templates_dir='/home/stack/templates' %}
 {% else %}
-{% set templates_dir="/home/stack/templates/{{ leaf.name }}" %}
+{% set templates_dir="/home/stack/templates/" ~ leaf.name %}
 {% endif %}
 
 source /home/stack/stackrc
