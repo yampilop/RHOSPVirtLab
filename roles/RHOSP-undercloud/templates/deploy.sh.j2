@@ -41,6 +41,9 @@ time openstack overcloud deploy \
 -e {{ templates_dir }}/overcloud-images.yaml \
 {% if DCNLeafs | length > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml \
+{% if leaf.name != 'overcloud' %}
+-e /home/stack/templates/overcloud-export.yaml
+{% endif %}
 {% endif %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 {% if RHOSP_version != 17.0 %}
@@ -87,4 +90,10 @@ date
 
 {% if RHOSP_version == 17.0 and ceph_count > 0 %}
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
+{% endif %}
+
+{% if (DCNLeafs | length > 0) and (leaf.name == 'overcloud') %}
+openstack overcloud export \
+--config-download-dir /var/lib/mistral/overcloud \
+--stack overcloud --output-file /home/stack/templates/overcloud-export.yaml
 {% endif %}
