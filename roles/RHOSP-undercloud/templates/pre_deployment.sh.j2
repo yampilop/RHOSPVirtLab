@@ -2,6 +2,9 @@
 
 source /home/stack/stackrc
 
+{% if leaf.name == 'overcloud' %}
+{% set templates_dir='/home/stack/templates' %}
+
 # Auto source and completion
 if [ ! -f /usr/share/bash-completion/completions/openstack ]; then
 {% if RHOSP_version == 13.0 or RHOSP_version == 17.0 %}
@@ -23,15 +26,18 @@ fi
 openstack overcloud image upload --image-path /home/stack/images/
 openstack image list --fit-width
 
+{% else %}
+{% set templates_dir="/home/stack/templates/{{ leaf.name }}" %}
+{% endif %}
+
 {% if RHOSP_version == 17.0 %}
 # Provision networks and vips
 openstack overcloud network provision -y --output /home/stack/templates/overcloud-networks-deployed.yaml /home/stack/templates/network_data.yaml
-openstack overcloud network vip provision -y --stack overcloud --output /home/stack/templates/overcloud-vip-deployed.yaml /home/stack/templates/vip_data.yaml
-# TODO: Add network vip provision for leafs
+openstack overcloud network vip provision -y --stack {{ leaf.name }} --output {{ templates_dir }}/overcloud-vip-deployed.yaml {{ templates_dir }}/vip_data.yaml
 {% endif %}
 
 # Prepare baremetal nodes
-openstack overcloud node import /home/stack/templates/instackenv.yaml
+openstack overcloud node import {{ templates_dir }}/instackenv.yaml
 openstack baremetal node list
 openstack baremetal node list -f value -c Name -c 'Power State' | grep 'power on' | grep 'manageable' | awk {'system("openstack baremetal node power off "$1)'}
 openstack baremetal node list
@@ -59,7 +65,7 @@ sudo openstack overcloud container image prepare \
 --prefix=openstack- \
 --push-destination=192.168.24.1:8787 \
 --tag-from-label {version}-{release} \
---output-env-file /home/stack/templates/overcloud-images.yaml \
+--output-env-file {{ templates_dir }}/overcloud-images.yaml \
 --output-images-file /home/stack/local_registry_images.yaml
 sudo openstack overcloud container image upload \
 --config-file /home/stack/local_registry_images.yaml \
@@ -67,16 +73,16 @@ sudo openstack overcloud container image upload \
 {% elif RHOSP_version == 17.0 %}
 sudo openstack tripleo container image prepare \
 -e /home/stack/containers-prepare-parameter.yaml \
---output-env-file /home/stack/templates/overcloud-images.yaml
+--output-env-file {{ templates_dir }}/overcloud-images.yaml
 {% else %}
 sudo openstack tripleo container image prepare \
--r /home/stack/templates/roles_data.yaml \
+-r {{ templates_dir }}/roles_data.yaml \
 -e /home/stack/containers-prepare-parameter.yaml \
---output-env-file /home/stack/templates/overcloud-images.yaml
+--output-env-file {{ templates_dir }}/overcloud-images.yaml
 {% endif %}
 
 {% if RHOSP_version == 17.0 %}
 # Provision nodes
-openstack overcloud node provision -y --stack overcloud --network-config --output /home/stack/templates/overcloud-baremetal-deployed.yaml /home/stack/templates/node-info.yaml
+openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 # TODO: Add node provision for leafs
 {% endif %}

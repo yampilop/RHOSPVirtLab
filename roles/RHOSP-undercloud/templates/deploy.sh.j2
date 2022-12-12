@@ -38,7 +38,10 @@ time openstack overcloud deploy \
 {% if RHOSP_version != 13.0 %}
 -e /home/stack/containers-prepare-parameter.yaml \
 {% endif %}
--e /home/stack/templates/overcloud-images.yaml \
+-e {{ templates_dir }}/overcloud-images.yaml \
+{% if DCNLeafs | length > 0 %}
+-e /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml \
+{% endif %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
 {% if RHOSP_version != 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \

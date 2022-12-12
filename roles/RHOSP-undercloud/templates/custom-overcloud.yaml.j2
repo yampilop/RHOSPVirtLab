@@ -1,17 +1,33 @@
 parameter_defaults:
+{% if leaf.name == 'overcloud' %}
+{% if DCNLeafs | length > 0 %}
+  NovaComputeAvailabilityZone: {{ leaf.name }}
+  NovaCrossAZAttach: false
+  CinderStorageAvailabilityZone: {{ leaf.name }}
+  ControllerExtraConfig:
+    nova::scheduler::filter::scheduler_host_subset_size: '999'
+    horizon::keystone_multidomain_support: true
+    nova::availability_zone::default_schedule_zone: {{ leaf.name }}
+  VirtualControllerExtraConfig:
+    nova::scheduler::filter::scheduler_host_subset_size: '999'
+    horizon::keystone_multidomain_support: true
+    nova::availability_zone::default_schedule_zone: {{ leaf.name }}
+{% else %}
   ControllerExtraConfig:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
     horizon::keystone_multidomain_support: true
   VirtualControllerExtraConfig:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
     horizon::keystone_multidomain_support: true
+{% endif %}
+  PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
+{% endif %}
 {% if RHOSP_version != 17.0 %}
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
-  PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% for ocrole in overcloud_roles %}
   {{ ocrole.name }}SchedulerHints:
-    'capabilities:node': '{{ ocrole.profile }}%index%'
+    'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}-%index%'
 {% endfor %}
 {% endif %}
 {% if RegisterNodes %}

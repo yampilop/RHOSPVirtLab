@@ -30,14 +30,14 @@ nodes:
     pm_port: "{{ vm.bmcport }}"
 {% endfor %}
 
-{% for node in physical %}
+{% for node in physical if node.leaf == leaf.name %}
 {% if RHOSP_version == 13.0 %}
   - mac: 
       - '{{ node.mac }}'
 {% else %}
   - ports:
       - address: '{{ node.mac }}'
-        physical_network: ctlplane
+        physical_network: {{ leaf.subnet.name }}
 {% endif %}
     name: "{{ node.name }}"
     capabilities: "{{ ["node:" ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
