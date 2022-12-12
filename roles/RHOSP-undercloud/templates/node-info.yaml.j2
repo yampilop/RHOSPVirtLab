@@ -3,7 +3,7 @@
 parameter_defaults:
 {% for ocrole in overcloud_roles %}
   Overcloud{{ ocrole.name }}Flavor: baremetal
-  {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | list | count) }}
+  {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
 {% endfor %}
 {% if DCNLeafs | length > 0 %}
   GlanceBackend: swift
@@ -12,7 +12,7 @@ parameter_defaults:
 {% else %}
 
 {% for ocrole in overcloud_roles %}
-{% set count=(vms | selectattr("profile", "equalto", ocrole.profile) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | list | count) %}
+{% set count=(vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) %}
 {% if count > 0 %}
 - name: {{ ocrole.name }}
   count: {{ count }}
@@ -50,10 +50,10 @@ parameter_defaults:
       - external
     swap_size_mb: 8192
   instances:
-{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile)) %}
+{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
   - name: {{ vm.name }}
 {% endfor %}
-{% for pm in (physical | selectattr("profile", "equalto", ocrole.profile)) %}
+{% for pm in (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name)) %}
   - name: {{ pm.name }}
 {% endfor %}
 {% endif %}
