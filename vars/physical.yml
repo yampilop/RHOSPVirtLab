@@ -1,6 +1,7 @@
 ---
 #physical:
 #  - name: computeovsdpdk0
+#    leaf: overcloud
 #    title: 'RHOSPVirtLab Physical Compute DPDK 0'
 #    profile: 'computeovsdpdk'
 #    memory: 4194304
@@ -14,6 +15,7 @@
 #    mac: '52:54:00:24:61:07'
 #    disk_size: 53687091200
 #  - name: computeovsdpdk1
+#    leaf: overcloud
 #    title: 'RHOSPVirtLab Physical Compute DPDK 1'
 #    profile: 'computeovsdpdk'
 #    memory: 4194304
