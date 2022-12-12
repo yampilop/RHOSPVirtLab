@@ -215,7 +215,7 @@ RHOSP_version_supported:
       namespace: ''
 
 DefaultLeaf0:
-  name: leaf0
+  name: overcloud
   subnet:
     name: ctlplane-subnet
     cidr: 192.168.24.0/24
