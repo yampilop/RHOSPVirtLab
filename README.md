@@ -55,6 +55,8 @@ sudo yum update -y
 sudo reboot
 ```
 
+Repeat this in all your hypervisors when you use a DCN configuration.
+
 ### Local user configuration
 
 The user from which you will execute the lab needs to have username **admin** and `sudo` **permissions enabled with no password**. To achieve that you need to create a file `/etc/sudoers.d/admin` with the following content:
@@ -77,18 +79,6 @@ Then copy that key to all your other hypervisors with:
 
 ```bash
 ssh-copy-id admin@<hypervisor_address>
-```
-
-#### Inventory for DCN configuration
-
-You need to add all your hypervisors in the `./inventory` file in the following way:
-
-```
-[infrastructure]
-localhost ansible_host=localhost ansible_connection=local ansible_become=yes
-<hypervisor1_name> ansible_host=<hypervisor1_address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
-<hypervisor2_name> ansible_host=<hypervisor2_address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
-...
 ```
 
 ## Install required and useful packages
@@ -123,6 +113,18 @@ cd RHOSPVirtLab
 ```
 
 ## Initial configurations
+
+#### Inventory for DCN configuration
+
+You need to add all your hypervisors in the `./inventory` file in the following way:
+
+```
+[infrastructure]
+localhost ansible_host=localhost ansible_connection=local ansible_become=yes
+<hypervisor1_name> ansible_host=<hypervisor1_address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
+<hypervisor2_name> ansible_host=<hypervisor2_address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
+...
+```
 
 ### Test user and ansible installation
 
