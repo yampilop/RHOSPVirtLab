@@ -1,36 +1,42 @@
 #/bin/bash
 
-{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | list | count)) %}
-{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
+{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+
+{% if leaf.name == 'overcloud' %}
+{% set templates_dir='/home/stack/templates' %}
+{% else %}
+{% set templates_dir="/home/stack/templates/{{ leaf.name }}" %}
+{% endif %}
 
 source /home/stack/stackrc
 {% if RHOSP_version == 17.0 and ceph_count > 0 %}
 openstack overcloud ceph deploy -y \
-/home/stack/templates/overcloud-baremetal-deployed.yaml \
--o /home/stack/templates/deployed-ceph.yaml \
---roles-data /home/stack/templates/roles_data.yaml \
---container-image-prepare /home/stack/templates/containers-prepare-parameter.yaml
+{{ templates_dir }}/overcloud-baremetal-deployed.yaml \
+-o {{ templates_dir }}/deployed-ceph.yaml \
+--roles-data {{ templates_dir }}/roles_data.yaml \
+--container-image-prepare /home/stack/containers-prepare-parameter.yaml
 {% endif %}
 
 date
 time openstack overcloud deploy \
 --log-file overcloud_deployment.log \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
---stack overcloud \
+--stack {{ leaf.name }} \
 -n /home/stack/templates/network_data.yaml \
 {% if RHOSP_version == 17.0 %}
--e /home/stack/templates/overcloud-baremetal-deployed.yaml \
--e /home/stack/templates/overcloud-networks-deployed.yaml \
--e /home/stack/templates/overcloud-vip-deployed.yaml \
+-e {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
+-e {{ templates_dir }}/overcloud-networks-deployed.yaml \
+-e {{ templates_dir }}/overcloud-vip-deployed.yaml \
 {% endif %}
--r /home/stack/templates/roles_data.yaml \
+-r {{ templates_dir }}/roles_data.yaml \
 {% if RHOSP_version != 17.0 %}
--e /home/stack/templates/node-info.yaml \
+-e {{ templates_dir }}/node-info.yaml \
 {% endif %}
 {% if RHOSP_version != 13.0 %}
--e /home/stack/templates/containers-prepare-parameter.yaml \
+-e /home/stack/containers-prepare-parameter.yaml \
 {% endif %}
 -e /home/stack/templates/overcloud-images.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
@@ -55,27 +61,27 @@ time openstack overcloud deploy \
 {% if DeployOctavia %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
 {% endif %}
--e /home/stack/templates/custom-network-configuration.yaml \
+-e {{ templates_dir }}/custom-network-configuration.yaml \
 {% if (ceph_count + hci_count) > 0 %}
 {% if RHOSP_version == 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
--e /home/stack/templates/deployed-ceph.yaml \
+-e {{ templates_dir }}/deployed-ceph.yaml \
 {% else %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
 {% endif %}
--e /home/stack/templates/custom-ceph.yaml \
+-e {{ templates_dir }}/custom-ceph.yaml \
 {% endif %}
 {% if RegisterNodes %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/rhsm.yaml \
 {% endif %}
--e /home/stack/templates/custom-overcloud.yaml
+-e {{ templates_dir }}/custom-overcloud.yaml
 date
 
 {% if RHOSP_version == 17.0 and ceph_count > 0 %}
-sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' /home/stack/templates/deployed-ceph.yaml
+sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}

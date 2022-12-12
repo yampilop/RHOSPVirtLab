@@ -8,6 +8,7 @@ source /home/stack/stackrc
 # Delete the overcloud
 metalsmith list
 openstack overcloud delete overcloud -y
+# TODO: Delete all leafs stacks
 
 # Undeploy the nodes
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node undeploy "$1)}'
@@ -16,6 +17,7 @@ openstack baremetal node list
 {% else %}
 # Delete the overcloud
 openstack overcloud delete overcloud -y
+# TODO: Delete all leafs stacks
 openstack baremetal node list
 {% endif %}
 

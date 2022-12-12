@@ -27,6 +27,7 @@ openstack image list --fit-width
 # Provision networks and vips
 openstack overcloud network provision -y --output /home/stack/templates/overcloud-networks-deployed.yaml /home/stack/templates/network_data.yaml
 openstack overcloud network vip provision -y --stack overcloud --output /home/stack/templates/overcloud-vip-deployed.yaml /home/stack/templates/vip_data.yaml
+# TODO: Add network vip provision for leafs
 {% endif %}
 
 # Prepare baremetal nodes
@@ -65,16 +66,17 @@ sudo openstack overcloud container image upload \
 --verbose
 {% elif RHOSP_version == 17.0 %}
 sudo openstack tripleo container image prepare \
--e /home/stack/templates/containers-prepare-parameter.yaml \
+-e /home/stack/containers-prepare-parameter.yaml \
 --output-env-file /home/stack/templates/overcloud-images.yaml
 {% else %}
 sudo openstack tripleo container image prepare \
 -r /home/stack/templates/roles_data.yaml \
--e /home/stack/templates/containers-prepare-parameter.yaml \
+-e /home/stack/containers-prepare-parameter.yaml \
 --output-env-file /home/stack/templates/overcloud-images.yaml
 {% endif %}
 
 {% if RHOSP_version == 17.0 %}
 # Provision nodes
 openstack overcloud node provision -y --stack overcloud --network-config --output /home/stack/templates/overcloud-baremetal-deployed.yaml /home/stack/templates/node-info.yaml
+# TODO: Add node provision for leafs
 {% endif %}

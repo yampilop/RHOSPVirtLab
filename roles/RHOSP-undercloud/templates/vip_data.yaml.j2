@@ -1,15 +1,15 @@
 - network: storage_mgmt
-  dns_name: overcloud
+  dns_name: {{ leaf.name }}
   subnet: storage_mgmt_subnet
 - network: internal_api
-  dns_name: overcloud
+  dns_name: {{ leaf.name }}
   subnet: internal_api_subnet
 - network: storage
-  dns_name: overcloud
+  dns_name: {{ leaf.name }}
   subnet: storage_subnet
 - network: external
-  dns_name: overcloud
+  dns_name: {{ leaf.name }}
   subnet: external_subnet
   ip_address: {{ overcloud_ip }}
 - network: ctlplane
-  dns_name: overcloud
+  dns_name: {{ leaf.name }}

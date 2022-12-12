@@ -1,12 +1,12 @@
-{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | list | count)) %}
-{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
+{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 
-{% set controller_count = (physical | selectattr("profile", "equalto", "controller") | list | count) %}
-{% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | list | count) %}
-{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | list | count) %}
-{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | list | count) %}
+{% set controller_count = (physical | selectattr("profile", "equalto", "controller") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
+{% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
+{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
+{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
 
 ###############################################################################
 ###############################################################################

@@ -4,7 +4,7 @@
 {% set vm_capabilities='boot_mode:bios' %}
 {% endif %}
 nodes:
-{% for vm in vms if not vm.profile == 'undercloud' %}
+{% for vm in vms if (not vm.profile == 'undercloud') and (vm.hypervisor == leaf.hypervisor) %}
 {% if RHOSP_version == 13.0 %}
   - mac: 
       - '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
@@ -14,7 +14,7 @@ nodes:
 {% if vm.hypervisor == 'localhost' %}
         physical_network: ctlplane
 {% else %}
-        physical_network: {{ (DCNLeafs | selectattr('hypervisor', 'search', vm.hypervisor) | list | first).subnet.name }}
+        physical_network: {{ leaf.subnet.name }}
 {% endif %}
 {% endif %}
     name: "{{ vm.name }}"

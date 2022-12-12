@@ -5,6 +5,9 @@ parameter_defaults:
   Overcloud{{ ocrole.name }}Flavor: baremetal
   {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | list | count) }}
 {% endfor %}
+{% if DCNLeafs | length > 0 %}
+  GlanceBackend: swift
+{% endif %}
 
 {% else %}
 
