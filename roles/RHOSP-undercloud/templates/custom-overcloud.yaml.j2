@@ -27,7 +27,7 @@ parameter_defaults:
     swap_size_megabytes: '8192'
 {% for ocrole in overcloud_roles %}
   {{ ocrole.name }}SchedulerHints:
-    'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}-%index%'
+    'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
 {% endfor %}
 {% endif %}
 {% if RegisterNodes %}
