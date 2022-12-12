@@ -12,6 +12,7 @@
     owner: stack
     group: stack
   loop:
+    - instackenv.yaml
     - node-info.yaml
     - custom-overcloud.yaml
     - custom-network-configuration.yaml
@@ -33,5 +34,5 @@
     owner: stack
     group: stack
   loop:
+    - pre_deployment.sh
     - deploy.sh
-    - undeploy.sh
