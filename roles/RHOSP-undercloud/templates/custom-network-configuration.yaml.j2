@@ -13,6 +13,9 @@ parameter_defaults:
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
   ControlPlaneDefaultRoute: {{ leaf.subnet.gateway }}
+  ControlPlaneSubnet: {{ leaf.subnet.name }}
+  VipSubnetMap:
+    ctlplane: {{ DefaultLeaf0.subnet.name }}
   
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
@@ -32,6 +35,10 @@ parameter_defaults:
     - AggregateInstanceExtraSpecsFilter
     - NUMATopologyFilter
     - PciPassthroughFilter
+
+{% if DCNLeafs | length > 0 %}
+
+{% endif %}
 
 {% if dpdk_count + sriov_count > 0 %}
   ComputeOvsDpdkSriovParameters:
