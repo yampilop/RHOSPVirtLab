@@ -73,9 +73,6 @@ sudo openstack tripleo container image prepare \
 --output-env-file {{ templates_dir }}/overcloud-images.yaml
 {% else %}
 sudo openstack tripleo container image prepare \
-{% if leaf.name != DefaultLeaf0.name %}
---environment-directory {{ templates_dir }} \
-{% endif %}
 -r {{ templates_dir }}/roles_data.yaml \
 {% if leaf.name == DefaultLeaf0.name %}
 -e /home/stack/templates/overcloud-export.yaml \
