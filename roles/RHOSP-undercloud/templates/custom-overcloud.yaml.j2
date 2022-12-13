@@ -1,5 +1,5 @@
 parameter_defaults:
-{% if leaf.name == 'overcloud' %}
+{% if leaf.name == DefaultLeaf0.name %}
 {% if DCNLeafs | length > 0 %}
   NovaComputeAvailabilityZone: {{ leaf.name }}
   NovaCrossAZAttach: false
@@ -22,6 +22,7 @@ parameter_defaults:
 {% endif %}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% else %}
+  NovaAZAttach: false
   NovaComputeAvailabilityZone: {{ leaf.name }}
   RootStackName: {{ DefaultLeaf0.name }}
 {% endif %}

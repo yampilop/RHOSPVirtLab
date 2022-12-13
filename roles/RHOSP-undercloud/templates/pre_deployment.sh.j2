@@ -2,7 +2,7 @@
 
 source /home/stack/stackrc
 
-{% if leaf.name == 'overcloud' %}
+{% if leaf.name == DefaultLeaf0.name %}
 {% set templates_dir='/home/stack/templates' %}
 
 # Auto source and completion
@@ -74,7 +74,7 @@ sudo openstack tripleo container image prepare \
 {% else %}
 sudo openstack tripleo container image prepare \
 -r {{ templates_dir }}/roles_data.yaml \
-{% if leaf.name == 'overcloud' %}
+{% if leaf.name == DefaultLeaf0.name %}
 -e /home/stack/templates/overcloud-export.yaml \
 {% endif %}
 -e /home/stack/containers-prepare-parameter.yaml \

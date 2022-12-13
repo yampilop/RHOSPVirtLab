@@ -5,7 +5,7 @@
 {% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 {% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 
-{% if leaf.name == 'overcloud' %}
+{% if leaf.name == DefaultLeaf0.name %}
 {% set templates_dir='/home/stack/templates' %}
 {% else %}
 {% set templates_dir="/home/stack/templates/" ~ leaf.name %}
@@ -41,11 +41,12 @@ time openstack overcloud deploy \
 -e {{ templates_dir }}/overcloud-images.yaml \
 {% if DCNLeafs | length > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml \
-{% if leaf.name != 'overcloud' %}
+{% if leaf.name != DefaultLeaf0.name %}
 -e /home/stack/templates/overcloud-export.yaml
 {% endif %}
 {% endif %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
+{% if leaf.name == DefaultLeaf0.name %}
 {% if RHOSP_version != 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
@@ -63,6 +64,7 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml \
 {% if sriov_count > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml \
+{% endif %}
 {% endif %}
 {% if DeployOctavia %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
@@ -88,9 +90,9 @@ time openstack overcloud deploy \
 -e {{ templates_dir }}/custom-overcloud.yaml
 date
 
-{% if leaf.name != 'overcloud' %}
+{% if leaf.name != DefaultLeaf0.name %}
 {% raw %}
-TRIPLEO_PLAN_NAME=overcloud \
+ANSIBLE_HOST_KEY_CHECKING=false TRIPLEO_PLAN_NAME=overcloud \
 ansible -i /usr/bin/tripleo-ansible-inventory \
 nova_api[0] -b -a \
 "{{ container_cli }} exec -it nova_api \
@@ -102,7 +104,7 @@ nova-manage cell_v2 discover_hosts --by-service --verbose"
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}
 
-{% if (DCNLeafs | length > 0) and (leaf.name == 'overcloud') %}
+{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) %}
 sudo chmod -R +rx /var/lib/mistral/overcloud/
 openstack overcloud export \
 --config-download-dir /var/lib/mistral/overcloud \
