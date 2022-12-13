@@ -297,10 +297,10 @@
     daemon_reload: yes
   become: yes
 
-- name: DHCRELAY - Enable and start dhcrelay service
+- name: DHCRELAY - Enable and (re)start dhcrelay service
   service:
     name: dhcrelay
-    state: started
+    state: restarted
     enabled: yes
   become: yes
 

@@ -7,11 +7,7 @@ source /home/stack/stackrc
 
 # Auto source and completion
 if [ ! -f /usr/share/bash-completion/completions/openstack ]; then
-{% if RHOSP_version == 13.0 or RHOSP_version == 17.0 %}
   openstack complete 2>/dev/null | sudo tee /usr/share/bash-completion/completions/openstack
-{% else %}
-  openstack complete 2>/dev/null | sed '1d;$d' | sudo tee /usr/share/bash-completion/completions/openstack
-{% endif %}
 fi
 
 if ! grep -Fxq "source /home/stack/stackrc" /home/stack/.bashrc; then
@@ -46,6 +42,7 @@ openstack baremetal node list
 openstack overcloud node introspect --all-manageable --provide
 openstack baremetal node list
 
+
 # Prepare images
 {% if RHOSP_version == 13.0 %}
 {% if rh_serviceaccount and rh_token %}
@@ -77,6 +74,9 @@ sudo openstack tripleo container image prepare \
 {% else %}
 sudo openstack tripleo container image prepare \
 -r {{ templates_dir }}/roles_data.yaml \
+{% if leaf.name == 'overcloud' %}
+-e /home/stack/templates/overcloud-export.yaml \
+{% endif %}
 -e /home/stack/containers-prepare-parameter.yaml \
 --output-env-file {{ templates_dir }}/overcloud-images.yaml
 {% endif %}

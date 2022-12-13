@@ -88,11 +88,22 @@ time openstack overcloud deploy \
 -e {{ templates_dir }}/custom-overcloud.yaml
 date
 
+{% if leaf.name != 'overcloud' %}
+{% raw %}
+TRIPLEO_PLAN_NAME=overcloud \
+ansible -i /usr/bin/tripleo-ansible-inventory \
+nova_api[0] -b -a \
+"{{ container_cli }} exec -it nova_api \
+nova-manage cell_v2 discover_hosts --by-service --verbose"
+{% endraw %}
+{% endif %}
+
 {% if RHOSP_version == 17.0 and ceph_count > 0 %}
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}
 
 {% if (DCNLeafs | length > 0) and (leaf.name == 'overcloud') %}
+sudo chmod -R +rx /var/lib/mistral/overcloud/
 openstack overcloud export \
 --config-download-dir /var/lib/mistral/overcloud \
 --stack overcloud --output-file /home/stack/templates/overcloud-export.yaml

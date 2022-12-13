@@ -21,6 +21,9 @@ parameter_defaults:
     horizon::keystone_multidomain_support: true
 {% endif %}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
+{% else %}
+  NovaComputeAvailabilityZone: {{ leaf.name }}
+  RootStackName: {{ DefaultLeaf0.name }}
 {% endif %}
 {% if RHOSP_version != 17.0 %}
   AllNodesExtraConfig:
