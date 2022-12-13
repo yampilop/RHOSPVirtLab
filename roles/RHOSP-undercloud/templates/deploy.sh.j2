@@ -107,6 +107,7 @@ sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdat
 {% endif %}
 
 {% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) %}
+rm /home/stack/templates/overcloud-export.yaml
 sudo chmod -R +rx /var/lib/mistral/overcloud/
 openstack overcloud export \
 --config-download-dir /var/lib/mistral/overcloud \
