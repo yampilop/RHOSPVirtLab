@@ -46,7 +46,7 @@ time openstack overcloud deploy \
 {% if DCNLeafs | length > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml \
 {% if leaf.name != DefaultLeaf0.name %}
--e /home/stack/templates/overcloud-export.yaml
+-e /home/stack/templates/overcloud-export.yaml \
 {% endif %}
 {% endif %}
 {% if leaf.name == DefaultLeaf0.name %}
