@@ -22,10 +22,12 @@ openstack overcloud ceph deploy -y \
 
 date
 time openstack overcloud deploy \
---log-file overcloud_deployment.log \
+--log-file {{ leaf.name }}_deployment.log \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
 --stack {{ leaf.name }} \
+{% if leaf.name == DefaultLeaf0.name %}
 -n /home/stack/templates/network_data.yaml \
+{% endif %}
 {% if RHOSP_version == 17.0 %}
 -e {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
 -e {{ templates_dir }}/overcloud-networks-deployed.yaml \
@@ -35,8 +37,10 @@ time openstack overcloud deploy \
 {% if RHOSP_version != 17.0 %}
 -e {{ templates_dir }}/node-info.yaml \
 {% endif %}
+{% if leaf.name == DefaultLeaf0.name %}
 {% if RHOSP_version != 13.0 %}
 -e /home/stack/containers-prepare-parameter.yaml \
+{% endif %}
 {% endif %}
 -e {{ templates_dir }}/overcloud-images.yaml \
 {% if DCNLeafs | length > 0 %}
@@ -45,7 +49,9 @@ time openstack overcloud deploy \
 -e /home/stack/templates/overcloud-export.yaml
 {% endif %}
 {% endif %}
+{% if leaf.name == DefaultLeaf0.name %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
+{% endif %}
 {% if leaf.name == DefaultLeaf0.name %}
 {% if RHOSP_version != 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
@@ -69,7 +75,9 @@ time openstack overcloud deploy \
 {% if DeployOctavia %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
 {% endif %}
+{% if leaf.name == DefaultLeaf0.name %}
 -e {{ templates_dir }}/custom-network-configuration.yaml \
+{% endif %}
 {% if (ceph_count + hci_count) > 0 %}
 {% if RHOSP_version == 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml \
