@@ -25,9 +25,7 @@ time openstack overcloud deploy \
 --log-file {{ leaf.name }}_deployment.log \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
 --stack {{ leaf.name }} \
-{% if leaf.name == DefaultLeaf0.name %}
 -n /home/stack/templates/network_data.yaml \
-{% endif %}
 {% if RHOSP_version == 17.0 %}
 -e {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
 -e {{ templates_dir }}/overcloud-networks-deployed.yaml \
