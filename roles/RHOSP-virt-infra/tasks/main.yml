@@ -250,8 +250,8 @@
     network_connections: "{{ network_connections + [connection] }}"
   vars:
     connection:
-      name: "{{ hypervisor_external_if }}"
-      interface_name: "{{ hypervisor_external_if }}"
+      name: "{{ external_if }}"
+      interface_name: "{{ external_if }}"
       type: ethernet
       autoconnect: yes
       state: up
