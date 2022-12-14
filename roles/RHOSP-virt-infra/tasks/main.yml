@@ -232,6 +232,34 @@
             gateway: "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
   when: inventory_hostname != 'localhost'
 
+- name: Register localhost routes
+  set_fact:
+    localhost_routes: |-
+      [
+      {% for leaf in DCNLeafs %}
+        {
+          "network": "{{ leaf.subnet.cidr.split('/')[0] }}",
+          "prefix": "{{ leaf.subnet.cidr.split('/')[1] }}",
+          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+        },
+      {% endfor %}
+      ]
+
+- name: Define network configuration for the public interface of the localhost hypervisor and add static route
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ hypervisor_external_if }}"
+      interface_name: "{{ hypervisor_external_if }}"
+      type: ethernet
+      autoconnect: yes
+      state: up
+      ip:
+        dhcp4: yes
+        route: "{{ localhost_routes }}"
+  when: inventory_hostname == 'localhost'
+
 - name: Configure network using system role
   include_role:
     name: rhel-system-roles.network
