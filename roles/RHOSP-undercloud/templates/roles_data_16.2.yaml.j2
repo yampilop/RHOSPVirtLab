@@ -8,6 +8,12 @@
 {% set compute_count = (physical | selectattr("profile", "equalto", "compute") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
 {% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
 
+{% if leaf.name != 'overcloud' %}
+{% set name = '_' ~ leaf.name %}
+{% else %}
+{% set name = '' %}
+{% endif %}
+
 ###############################################################################
 ###############################################################################
 # VIRTUAL MACHINES ROLES                                                      #
@@ -225,13 +231,13 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcompute-%index%'
   RoleParametersDefault:
@@ -308,9 +314,9 @@
   CountDefault: 0
   networks:
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   uses_deprecated_params: False
   HostnameFormatDefault: '%stackname%-vcephstorage-%index%'
   deprecated_nic_config_name: 'vcephstorage.yaml'
@@ -358,15 +364,15 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcomputehci-%index%'
   deprecated_nic_config_name: 'vcomputehci.yaml'
@@ -642,13 +648,13 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-compute-%index%'
   RoleParametersDefault:
@@ -725,13 +731,13 @@
   CountDefault: 0
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdk-%index%'
   deprecated_nic_config_name: 'computeovsdpdk.yaml'
@@ -800,13 +806,13 @@
     - dpdk
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdksriov-%index%'
   deprecated_nic_config_name: 'computeovsdpdksriov.yaml'
@@ -875,13 +881,13 @@
   CountDefault: 0
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computesriov-%index%'
   deprecated_nic_config_name: 'computesriov.yaml'
@@ -948,13 +954,13 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovshwoffload-%index%'
   RoleParametersDefault:
@@ -1030,9 +1036,9 @@
   CountDefault: 0
   networks:
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   uses_deprecated_params: False
   HostnameFormatDefault: '%stackname%-cephstorage-%index%'
   deprecated_nic_config_name: 'cephstorage.yaml'
@@ -1080,15 +1086,15 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computehci-%index%'
   deprecated_nic_config_name: 'computehci.yaml'
