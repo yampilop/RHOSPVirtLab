@@ -71,15 +71,3 @@ RHOSP_version_supported:
       main_partition: '/dev/sda1'
     rhel_release: '7.9'
     uefi: false
-
-DefaultLeaf0:
-  name: overcloud
-  subnet:
-    name: ctlplane-subnet
-    cidr: 192.168.24.0/24
-    dhcp_start: 192.168.24.5
-    dhcp_end: 192.168.24.55
-    inspection_iprange: 192.168.24.100,192.168.24.120
-    gateway: 192.168.24.254
-    masquerade: false
-  hypervisor: localhost

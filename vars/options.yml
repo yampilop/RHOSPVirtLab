@@ -24,14 +24,42 @@ ntp_servers:
   - '2.pool.ntp.org'
   - '3.pool.ntp.org'
 
-# vlans to use in the network-data
-network_data_vlans:
-  External: 10
-  InternalApi: 20
-  Storage: 30
-  StorageMgmt: 40
-  Tenant: 50
-  Management: 60
+# Default leaf configuration
+DefaultLeaf0:
+  name: overcloud
+  hypervisor: localhost
+  subnet:
+    name: ctlplane-subnet
+    cidr: 192.168.24.0/24
+    dhcp_start: 192.168.24.5
+    dhcp_end: 192.168.24.55
+    inspection_iprange: 192.168.24.100,192.168.24.120
+    gateway: 192.168.24.254
+    masquerade: false
+  networks:
+    Tenant:
+      prefix: '172.16.0'
+      vlan: 10
+      network: RHOSPVirtLab_ctlplane
+    Storage:
+      prefix: '172.16.1'
+      vlan: 20
+      network: RHOSPVirtLab_ctlplane
+    InternalApi:
+      prefix: '172.16.2'
+      vlan: 30
+      network: RHOSPVirtLab_ctlplane
+    StorageMgmt:
+      prefix: '172.16.3'
+      vlan: 40
+      network: RHOSPVirtLab_ctlplane
+    External:
+      prefix: '10.0.0'
+      network: RHOSPVirtLab_external
+    Management:
+      prefix: '10.0.1'
+      vlan: 60
+      network: RHOSPVirtLab_ctlplane
 
 # interfaces to use in each nic-config
 interfaces:
@@ -179,6 +207,7 @@ RegisterNodes: False
 # DCN leafs
 DCNLeafs: []
   # - name: leaf1
+  #   hypervisor: <hypervisor_name>
   #   subnet:
   #     name: leaf1-subnet
   #     cidr: 192.168.25.0/24
@@ -187,4 +216,27 @@ DCNLeafs: []
   #     inspection_iprange: 192.168.25.100,192.168.25.120
   #     gateway: 192.168.25.1
   #     masquerade: true
-  #   hypervisor: <hypervisor_name>
+  #   networks:
+  #     Tenant:
+  #       prefix: '172.17.0'
+  #       vlan: 10
+  #       network: RHOSPVirtLab_ctlplane
+  #     Storage:
+  #       prefix: '172.17.1'
+  #       vlan: 20
+  #       network: RHOSPVirtLab_ctlplane
+  #     InternalApi:
+  #       prefix: '172.17.2'
+  #       vlan: 30
+  #       network: RHOSPVirtLab_ctlplane
+  #     StorageMgmt:
+  #       prefix: '172.17.3'
+  #       vlan: 40
+  #       network: RHOSPVirtLab_ctlplane
+  #     External:
+  #       prefix: '10.1.0'
+  #       network: RHOSPVirtLab_external
+  #     Management:
+  #       prefix: '10.1.1'
+  #       vlan: 60
+  #       network: RHOSPVirtLab_ctlplane
