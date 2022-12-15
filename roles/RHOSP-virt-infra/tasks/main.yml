@@ -258,6 +258,7 @@
       state: up
       ip:
         dhcp4: no
+        auto6: no
         address:
           - "{{ item.0.networks[item.1].prefix ~ '.1/24' }}"
   when:
@@ -266,6 +267,24 @@
   with_nested:
     - "{{ DCNLeafs }}"
     - "{{ DefaultLeaf0.networks.keys() | list }}"
+
+- name: Register DCN hypervisor routes
+  set_fact:
+    hypervisor_routes: |-
+      [
+        {
+          "network": "{{ DefaultLeaf0.subnet.cidr.split('/')[0] }}",
+          "prefix": "{{ DefaultLeaf0.subnet.cidr.split('/')[1] }}",
+          "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
+        },
+      {% for network in (DefaultLeaf0.networks.keys() | list) %}
+        {
+          "network": "{{ DefaultLeaf0.networks[network].prefix ~ '.0' }}",
+          "prefix": "24",
+          "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
+        },
+      {% endfor %}
+      ]
 
 - name: Define network configuration for the public interface of the DCN hypervisors and add static route
   set_fact:
@@ -279,10 +298,7 @@
       state: up
       ip:
         dhcp4: yes
-        route:
-          - network: 192.168.24.0
-            prefix: 24
-            gateway: "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
+        route: "{{ hypervisor_routes }}"
   when: inventory_hostname != 'localhost'
 
 - name: Register localhost routes
@@ -295,9 +311,15 @@
           "prefix": "{{ leaf.subnet.cidr.split('/')[1] }}",
           "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
         },
+      {% for network in (leaf.networks.keys() | list) %}
+        {
+          "network": "{{ leaf.networks[network].prefix ~ '.0' }}",
+          "prefix": "24",
+          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+        },
+      {% endfor %}
       {% endfor %}
       ]
-# TODO: Add routes for the other leafs networks
 
 - name: Define network configuration for the public interface of the localhost hypervisor and add static route
   set_fact:
