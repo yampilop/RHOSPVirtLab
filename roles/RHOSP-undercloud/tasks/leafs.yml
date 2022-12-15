@@ -26,6 +26,24 @@
     owner: stack
     group: stack
 
+- name: "TEMPLATES - Prepare the nic-configs templates for {{ leaf.name }}"
+  template:
+    src: "nic-configs/{{ item.nic_configs }}.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/nic-configs/{{ item.nic_configs }}"
+    owner: stack
+    group: stack
+  loop: "{{ overcloud_roles }}"
+  when: RHOSP_version != 17.0
+
+- name: "TEMPLATES - RHOSP 17.0 nic-config files for {{ leaf.name }}"
+  template:
+    src: "templates/nic-configs/nic-config.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/nic-configs/{{ item.profile }}.j2"
+    owner: stack
+    group: stack
+  loop: "{{ overcloud_roles }}"
+  when: RHOSP_version == 17.0
+
 - name: SCRIPTS - Prepare the scripts
   template:
     src: "{{ item }}.j2"
