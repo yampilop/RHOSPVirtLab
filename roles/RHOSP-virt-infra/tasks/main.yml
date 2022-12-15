@@ -133,7 +133,9 @@
     immediate: yes
     state: enabled
   loop: "{{ networks }}"
-  when: (item.name != forward_network) and (item.forward != 'bridge') and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+  when:
+    - item.hypervisor == inventory_hostname
+    - (item.name != forward_network) and (item.forward != 'bridge') and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
 
 - name: FIREWALLD - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
   firewalld:
@@ -143,7 +145,9 @@
     immediate: yes
     state: enabled
   loop: "{{ networks }}"
-  when: ((item.name == forward_network) or (item.forward == 'bridge')) and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+  when:
+    - item.hypervisor == inventory_hostname
+    - ((item.name == forward_network) or (item.forward == 'bridge')) and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
 
 - name: Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
@@ -180,7 +184,9 @@
       autoconnect: yes
       ip: "{% if item.ipv4 %}{{ ip }}{% else %}{{ noip }}{% endif %}"
       state: up
-  when: item.forward == 'bridge' and item.hypervisor_if is defined
+  when:
+    - item.hypervisor == inventory_hostname
+    - item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
 
 - name: Define hypervisor interfaces
@@ -196,7 +202,9 @@
         dhcp4: no
         auto6: no
       state: up
-  when: item.forward == 'bridge' and item.hypervisor_if is defined
+  when:
+    - item.hypervisor == inventory_hostname
+    - item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
 
 - name: Define network configuration for interfaces bridged to libvirt
@@ -211,8 +219,50 @@
       port_type: bridge
       autoconnect: yes
       state: up
-  when: item.forward == 'bridge' and item.hypervisor_if is defined
+  when:
+    - item.hypervisor == inventory_hostname
+    - item.forward == 'bridge' and item.hypervisor_if is defined
   loop: "{{ networks }}"
+
+- name: Define network configuration for vlans belonging to libvirt bridges in localhost
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ networks[DefaultLeaf0.networks[item].network].bridge }}.{{ DefaultLeaf0.networks[item].vlan }}"
+      type: vlan
+      vlan_id: "{{ DefaultLeaf0.networks[item].vlan }}"
+      parent: "{{ networks[DefaultLeaf0.networks[item].network].bridge }}"
+      autoconnect: yes
+      state: up
+      ip:
+        dhcp4: no
+        address:
+          - "{{ DefaultLeaf0.networks[item] ~ 1/24 }}"
+  when:
+    - inventory_hostname == 'localhost'
+    - DefaultLeaf0.networks[item].vlan is defined
+  loop: "{{ DefaultLeaf0.networks.keys() | list }}"
+
+- name: Define network configuration for vlans belonging to libvirt bridges in the leafs
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ networks[item.0.networks[item.1].network].bridge }}.{{ item.0.networks[item.1].vlan }}"
+      type: vlan
+      vlan_id: "{{ item.0.networks[item.1].vlan }}"
+      parent: "{{ networks[item.0.networks[item.1].network].bridge }}"
+      autoconnect: yes
+      state: up
+      ip:
+        dhcp4: no
+        address:
+          - "{{ item.0.networks[item.1] ~ 1/24 }}"
+  when:
+    - item.0.hypervisor == inventory_hostname
+    - item.0.networks[item.1].vlan is defined
+  loop: "{{ DCNLeafs | product(DefaultLeaf0.networks.keys() | list) }}"
 
 - name: Define network configuration for the public interface of the DCN hypervisors and add static route
   set_fact:
@@ -244,6 +294,7 @@
         },
       {% endfor %}
       ]
+# TODO: Add routes for the other leafs networks
 
 - name: Define network configuration for the public interface of the localhost hypervisor and add static route
   set_fact:
@@ -319,18 +370,21 @@
     group: root
     mode: "0644"
   become: yes
+  when: cleanup and not create
 
 - name: DHCRELAY - Reload systemd daemon
   systemd:
     daemon_reload: yes
   become: yes
+  when: cleanup and not create
 
 - name: DHCRELAY - Enable and (re)start dhcrelay service
   service:
     name: dhcrelay
-    state: "{% if cleanup and not create %}stopped{% else %}restarted{% endif %}"
-    enabled: "{% if cleanup and not create %}no{% else %}yes{% endif %}"
+    state: restarted
+    enabled: yes
   become: yes
+  when: cleanup and not create
 
 - name: Create stack alias to connect to undercloud
   lineinfile:
