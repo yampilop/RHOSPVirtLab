@@ -11,7 +11,9 @@ It's tested to work on a Red Hat Enterprise Linux version 8.4 system. Requires a
 Role Variables
 --------------
 
-RHOSP_version: **16.2**|16.1|13.0
+# TODO: Update
+
+RHOSP_version: **17.0**|16.2|16.1|13.0
   This variable sets the version of RHOSP to install.
 
 overcloud_ip: 10.0.0.254
@@ -23,14 +25,10 @@ dns_servers: ['8.8.8.8','8.8.4.4']
 ntp_servers: ['0.pool.ntp.org','1.pool.ntp.org','2.pool.ntp.org','3.pool.ntp.org']
   List of servers to use for NTP syncronization.
 
-network_data_vlans: {External: 10, InternalApi: 20, Storage: 30, StorageMgmt: 40, Tenant: 50, Management: 60}
-  VLAN IDs to use in the network-data template
+DefaultLeaf0: ...
+  Default parameters to configure the default leaf 0
 
 interfaces:
-  controller: {ControlPlane: nic1, Vlans: nic2, External: nic3}
-  compute: {ControlPlane: nic1, Vlans: nic2, External: nic3}
-  computesriov: {ControlPlane: nic1, Vlans: nic2, External: nic3}
-
   Interfaces to use in each nic-configs template.
 
 ComputeSriovProperties:
@@ -97,7 +95,6 @@ physical: []
 networks: []
   List of the virtual networks created. The role considers the defaults for RHOSP-virt-infra role:
     - RHOSPVirtLab_ctlplane
-    - RHOSPVirtLab_vlans
     - RHOSPVirtLab_external
     - RHOSPVirtLab_management
 
