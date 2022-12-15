@@ -229,16 +229,16 @@
     network_connections: "{{ network_connections + [connection] }}"
   vars:
     connection:
-      name: "{{ networks[DefaultLeaf0.networks[item].network].bridge }}.{{ DefaultLeaf0.networks[item].vlan }}"
+      name: "{{ ( networks | selectattr("name", "equalto", DefaultLeaf0.networks[item].network) | list | first ).bridge }}.{{ DefaultLeaf0.networks[item].vlan }}"
       type: vlan
       vlan_id: "{{ DefaultLeaf0.networks[item].vlan }}"
-      parent: "{{ networks[DefaultLeaf0.networks[item].network].bridge }}"
+      parent: "{{ ( networks | selectattr("name", "equalto", DefaultLeaf0.networks[item].network) | list | first ).bridge }}"
       autoconnect: yes
       state: up
       ip:
         dhcp4: no
         address:
-          - "{{ DefaultLeaf0.networks[item] ~ 1/24 }}"
+          - "{{ DefaultLeaf0.networks[item].prefix ~ '1/24' }}"
   when:
     - inventory_hostname == 'localhost'
     - DefaultLeaf0.networks[item].vlan is defined
@@ -249,16 +249,16 @@
     network_connections: "{{ network_connections + [connection] }}"
   vars:
     connection:
-      name: "{{ networks[item.0.networks[item.1].network].bridge }}.{{ item.0.networks[item.1].vlan }}"
+      name: "{{ ( networks | selectattr("name", "equalto", item.0.networks[item.1].network) | list | first ).bridge }}.{{ item.0.networks[item.1].vlan }}"
       type: vlan
       vlan_id: "{{ item.0.networks[item.1].vlan }}"
-      parent: "{{ networks[item.0.networks[item.1].network].bridge }}"
+      parent: "{{ ( networks | selectattr("name", "equalto", item.0.networks[item.1].network) | list | first ).bridge }}"
       autoconnect: yes
       state: up
       ip:
         dhcp4: no
         address:
-          - "{{ item.0.networks[item.1] ~ 1/24 }}"
+          - "{{ item.0.networks[item.1].prefix ~ '1/24' }}"
   when:
     - item.0.hypervisor == inventory_hostname
     - item.0.networks[item.1].vlan is defined
