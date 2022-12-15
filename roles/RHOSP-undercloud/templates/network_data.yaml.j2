@@ -154,7 +154,7 @@
           end: {{ DefaultLeaf0.networks.InternalApi.prefix }}.250
       vlan: {{ DefaultLeaf0.networks.InternalApi.vlan | default(1) }}
 {% for leaf in DCNLeafs %}
-    internal_api_{{ leaf.name }}:
+    internal_api_subnet_{{ leaf.name }}:
       ip_subnet: {{ leaf.networks.InternalApi.prefix }}.0/24
       allocation_pools:
         - start: {{ leaf.networks.InternalApi.prefix }}.4
@@ -173,7 +173,7 @@
           end: {{ DefaultLeaf0.networks.Tenant.prefix }}.250
       vlan: {{ DefaultLeaf0.networks.Tenant.vlan | default(1) }}
 {% for leaf in DCNLeafs %}
-    tenant_{{ leaf.name }}:
+    tenant_subnet_{{ leaf.name }}:
       ip_subnet: {{ leaf.networks.Tenant.prefix }}.0/24
       allocation_pools:
         - start: {{ leaf.networks.Tenant.prefix }}.4
@@ -193,7 +193,7 @@
       gateway_ip: {{ DefaultLeaf0.networks.External.prefix }}.1
       vlan: {{ DefaultLeaf0.networks.External.vlan | default(1) }}
 {% for leaf in DCNLeafs %}
-    external_{{ leaf.name }}:
+    external_subnet_{{ leaf.name }}:
       ip_subnet: {{ leaf.networks.External.prefix }}.0/24
       allocation_pools:
         - start: {{ leaf.networks.External.prefix }}.4
