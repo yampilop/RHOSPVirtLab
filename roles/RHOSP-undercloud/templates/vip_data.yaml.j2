@@ -1,15 +1,21 @@
+{% if leaf.name != 'overcloud' %}
+{% set name = '_' ~ leaf.name %}
+{% else %}
+{% set name = '' %}
+{% endif %}
+
 - network: storage_mgmt
   dns_name: {{ leaf.name }}
-  subnet: storage_mgmt_subnet
+  subnet: storage_mgmt_subnet{{ name }}
 - network: internal_api
   dns_name: {{ leaf.name }}
-  subnet: internal_api_subnet
+  subnet: internal_api_subnet{{ name }}
 - network: storage
   dns_name: {{ leaf.name }}
-  subnet: storage_subnet
+  subnet: storage_subnet{{ name }}
 - network: external
   dns_name: {{ leaf.name }}
-  subnet: external_subnet
+  subnet: external_subnet{{ name }}
   ip_address: {{ overcloud_ip }}
 - network: ctlplane
   dns_name: {{ leaf.name }}

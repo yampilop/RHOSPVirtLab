@@ -31,8 +31,10 @@ parameter_defaults:
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
 {% for ocrole in overcloud_roles %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
   {{ ocrole.name }}SchedulerHints:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
+{% endif %}
 {% endfor %}
 {% endif %}
 {% if RegisterNodes %}

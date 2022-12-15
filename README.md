@@ -198,6 +198,8 @@ The playbook sets up the following environment:
 
 ![Network diagram](images/network_diagram.png)
 
+# TODO: Add an image showing DCN Deployment configuration
+
 ### Customizing the environment
 
 If you want to customize the default environment created by the playbook, you need to edit the files:
@@ -226,6 +228,8 @@ The available profiles for Physical machines are:
 - computeovshwoffload
 - cephstorage
 - computehci
+
+# TODO: Add explanation about DCNLeafs configuration
 
 For the case of vcephstorage or vcomputehci you can add a second virtual disk to the VM inserting the following line in the vms element: `data_disk_size: <SIZE_IN_BYTES>`.
 

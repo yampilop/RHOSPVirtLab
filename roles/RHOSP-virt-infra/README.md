@@ -13,6 +13,8 @@ Requires rhel-system-roles package installed.
 Role Variables
 --------------
 
+# TODO: Update
+
 RHOSP_version: **16.2**|16.1|13.0
   This variable sets the version of RHOSP to install.
 

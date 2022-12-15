@@ -2,8 +2,10 @@
 
 parameter_defaults:
 {% for ocrole in overcloud_roles %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
   Overcloud{{ ocrole.name }}Flavor: baremetal
   {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
+{% endif %}
 {% endfor %}
 {% if DCNLeafs | length > 0 %}
   GlanceBackend: swift
@@ -12,8 +14,7 @@ parameter_defaults:
 {% else %}
 
 {% for ocrole in overcloud_roles %}
-{% set count=(vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) %}
-{% if count > 0 %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
 - name: {{ ocrole.name }}
   count: {{ count }}
 {% if 'Controller' in ocrole.name %}
@@ -58,5 +59,4 @@ parameter_defaults:
 {% endfor %}
 {% endif %}
 {% endfor %}
-
 {% endif %}
