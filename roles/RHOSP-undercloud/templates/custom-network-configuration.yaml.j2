@@ -4,7 +4,13 @@
 {% if RHOSP_version != 17.0 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if leaf.hypervisor == 'localhost' %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.nic_configs }}
+{% else %}
+  OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.nic_configs }}
+{% endif %}
+{% endif %}
 {% endfor %}
 {% endif %}
 
@@ -35,7 +41,9 @@ parameter_defaults:
 
 {% if DCNLeafs | length > 0 %}
 {% for ocrole in overcloud_roles %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
+{% endif %}
 {% endfor %}
 {% endif %}
 
