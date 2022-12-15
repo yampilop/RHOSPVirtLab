@@ -7,9 +7,6 @@ parameter_defaults:
   {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
 {% endif %}
 {% endfor %}
-{% if DCNLeafs | length > 0 %}
-  GlanceBackend: swift
-{% endif %}
 
 {% else %}
 

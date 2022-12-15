@@ -1,6 +1,7 @@
 parameter_defaults:
 {% if leaf.name == DefaultLeaf0.name %}
 {% if DCNLeafs | length > 0 %}
+  GlanceBackend: swift
   NovaComputeAvailabilityZone: {{ leaf.name }}
   NovaCrossAZAttach: false
   CinderStorageAvailabilityZone: {{ leaf.name }}
