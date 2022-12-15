@@ -186,7 +186,7 @@
       state: up
   when:
     - item.hypervisor == inventory_hostname
-    - item.forward == 'bridge' and item.hypervisor_if is defined
+    - item.forward == 'bridge'
   loop: "{{ networks }}"
 
 - name: Define hypervisor interfaces
@@ -237,8 +237,9 @@
       state: up
       ip:
         dhcp4: no
+        auto6: no
         address:
-          - "{{ DefaultLeaf0.networks[item].prefix ~ '1/24' }}"
+          - "{{ DefaultLeaf0.networks[item].prefix ~ '.1/24' }}"
   when:
     - inventory_hostname == 'localhost'
     - DefaultLeaf0.networks[item].vlan is defined
@@ -258,11 +259,13 @@
       ip:
         dhcp4: no
         address:
-          - "{{ item.0.networks[item.1].prefix ~ '1/24' }}"
+          - "{{ item.0.networks[item.1].prefix ~ '.1/24' }}"
   when:
     - item.0.hypervisor == inventory_hostname
     - item.0.networks[item.1].vlan is defined
-  loop: "{{ DCNLeafs | product(DefaultLeaf0.networks.keys() | list) }}"
+  with_nested:
+    - "{{ DCNLeafs }}"
+    - "{{ DefaultLeaf0.networks.keys() | list }}"
 
 - name: Define network configuration for the public interface of the DCN hypervisors and add static route
   set_fact:

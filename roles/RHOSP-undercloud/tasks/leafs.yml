@@ -1,9 +1,12 @@
 - name: "LEAFS - Create directories for {{ leaf.name }}"
   file:
-    path: "/home/stack/templates/{{ leaf.name }}"
+    path: "/home/stack/templates/{{ item }}"
     owner: stack
     group: stack
     state: directory
+  loop:
+    - "{{ leaf.name }}"
+    - "{{ leaf.name }}/nic-configs"
 
 - name: "TEMPLATES - Prepare templates for {{ leaf.name }}"
   template:

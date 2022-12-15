@@ -81,7 +81,7 @@ networks:
   - name: RHOSPVirtLab_ctlplane
     hypervisor: localhost
     bridge: br-ctlplane
-    forward: route
+    forward: bridge
     mac_suffix: '00'
     ipv4:
       address: '192.168.24.254'
