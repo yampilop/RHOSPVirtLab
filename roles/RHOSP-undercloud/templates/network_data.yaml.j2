@@ -1,50 +1,43 @@
-{% if RHOSP_version != 17.0 %}
+{% if RHOSP_version == 13.0 %}
 - name: Storage
   vip: true
-  vlan: {{ network_data_vlans.Storage }}
+  vlan: {{ DefaultLeaf0.networks.Storage.vlan | default(1) }}
   name_lower: storage
-  ip_subnet: '172.16.1.0/24'
-  allocation_pools: [{'start': '172.16.1.4', 'end': '172.16.1.250'}]
-  ipv6_subnet: 'fd00:fd00:fd00:3000::/64'
-  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:3000::10', 'end': 'fd00:fd00:fd00:3000:ffff:ffff:ffff:fffe'}]
+  ip_subnet: '{{ DefaultLeaf0.networks.Storage.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ DefaultLeaf0.networks.Storage.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.Storage.prefix }}.250'}]
+  gateway_ip: '{{ DefaultLeaf0.networks.Storage.prefix }}.1'
   mtu: 1500
 - name: StorageMgmt
   name_lower: storage_mgmt
   vip: true
-  vlan: {{ network_data_vlans.StorageMgmt }}
-  ip_subnet: '172.16.3.0/24'
-  allocation_pools: [{'start': '172.16.3.4', 'end': '172.16.3.250'}]
-  ipv6_subnet: 'fd00:fd00:fd00:4000::/64'
-  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:4000::10', 'end': 'fd00:fd00:fd00:4000:ffff:ffff:ffff:fffe'}]
+  vlan: {{ DefaultLeaf0.networks.StorageMgmt.vlan | default(1) }}
+  ip_subnet: '{{ DefaultLeaf0.networks.StorageMgmt.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ DefaultLeaf0.networks.StorageMgmt.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.StorageMgmt.prefix }}.250'}]
+  gateway_ip: '{{ DefaultLeaf0.networks.StorageMgmt.prefix }}.1'
   mtu: 1500
 - name: InternalApi
   name_lower: internal_api
   vip: true
-  vlan: {{ network_data_vlans.InternalApi }}
-  ip_subnet: '172.16.2.0/24'
-  allocation_pools: [{'start': '172.16.2.4', 'end': '172.16.2.250'}]
-  ipv6_subnet: 'fd00:fd00:fd00:2000::/64'
-  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:2000::10', 'end': 'fd00:fd00:fd00:2000:ffff:ffff:ffff:fffe'}]
+  vlan: {{ DefaultLeaf0.networks.InternalApi.vlan | default(1) }}
+  ip_subnet: '{{ DefaultLeaf0.networks.InternalApi.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ DefaultLeaf0.networks.InternalApi.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.InternalApi.prefix }}.250'}]
+  gateway_ip: '{{ DefaultLeaf0.networks.InternalApi.prefix }}.1'
   mtu: 1500
 - name: Tenant
   vip: false  # Tenant network does not use VIPs
   name_lower: tenant
-  vlan: {{ network_data_vlans.Tenant }}
-  ip_subnet: '172.16.0.0/24'
-  allocation_pools: [{'start': '172.16.0.4', 'end': '172.16.0.250'}]
-  ipv6_subnet: 'fd00:fd00:fd00:5000::/64'
-  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:5000::10', 'end': 'fd00:fd00:fd00:5000:ffff:ffff:ffff:fffe'}]
+  vlan: {{ DefaultLeaf0.networks.Tenant.vlan | default(1) }}
+  ip_subnet: '{{ DefaultLeaf0.networks.Tenant.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ DefaultLeaf0.networks.Tenant.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.Tenant.prefix }}.250'}]
+  gateway_ip: '{{ DefaultLeaf0.networks.Tenant.prefix }}.1'
   mtu: 1500
 - name: External
   vip: true
   name_lower: external
-  vlan: {{ network_data_vlans.External }}
-  ip_subnet: '10.0.0.0/24'
-  allocation_pools: [{'start': '10.0.0.4', 'end': '10.0.0.99'}]
-  gateway_ip: '10.0.0.1'
-  ipv6_subnet: '2001:db8:fd00:1000::/64'
-  ipv6_allocation_pools: [{'start': '2001:db8:fd00:1000::10', 'end': '2001:db8:fd00:1000:ffff:ffff:ffff:fffe'}]
-  gateway_ipv6: '2001:db8:fd00:1000::1'
+  vlan: {{ DefaultLeaf0.networks.External.vlan | default(1) }}
+  ip_subnet: '{{ DefaultLeaf0.networks.External.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ DefaultLeaf0.networks.External.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.External.prefix }}.99'}]
+  gateway_ip: '{{ DefaultLeaf0.networks.External.prefix }}.1'
   mtu: 1500
 - name: Management
   # Management network is enabled by default for backwards-compatibility, but
@@ -52,14 +45,64 @@
   enabled: true
   vip: false  # Management network does not use VIPs
   name_lower: management
-  vlan: {{ network_data_vlans.Management }}
-  ip_subnet: '10.0.1.0/24'
-  allocation_pools: [{'start': '10.0.1.4', 'end': '10.0.1.250'}]
-  gateway_ip: '10.0.1.1'
-  gateway_ipv6: 'fd00:fd00:fd00:6000::1'
-  ipv6_subnet: 'fd00:fd00:fd00:6000::/64'
-  ipv6_allocation_pools: [{'start': 'fd00:fd00:fd00:6000::10', 'end': 'fd00:fd00:fd00:6000:ffff:ffff:ffff:fffe'}]
+  vlan: {{ DefaultLeaf0.networks.Management.vlan | default(1) }}
+  ip_subnet: '{{ DefaultLeaf0.networks.Management.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ DefaultLeaf0.networks.Management.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.Management.prefix }}.250'}]
+  gateway_ip: '{{ DefaultLeaf0.networks.Management.prefix }}.1'
   mtu: 1500
+{% for leaf in DCNLeafs %}
+- name: Storage_{{ leaf.name }}
+  vip: true
+  vlan: {{ leaf.networks.Storage.vlan | default(1) }}
+  name_lower: storage_{{ leaf.name }}
+  ip_subnet: '{{ leaf.networks.Storage.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ leaf.networks.Storage.prefix }}.4', 'end': '{{ leaf.networks.Storage.prefix }}.250'}]
+  gateway_ip: '{{ leaf.networks.Storage.prefix }}.1'
+  mtu: 1500
+- name: StorageMgmt_{{ leaf.name }}
+  name_lower: storage_mgmt_{{ leaf.name }}
+  vip: true
+  vlan: {{ leaf.networks.StorageMgmt.vlan | default(1) }}
+  ip_subnet: '{{ leaf.networks.StorageMgmt.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ leaf.networks.StorageMgmt.prefix }}.4', 'end': '{{ leaf.networks.StorageMgmt.prefix }}.250'}]
+  gateway_ip: '{{ leaf.networks.StorageMgmt.prefix }}.1'
+  mtu: 1500
+- name: InternalApi_{{ leaf.name }}
+  name_lower: internal_api_{{ leaf.name }}
+  vip: true
+  vlan: {{ leaf.networks.InternalApi.vlan | default(1) }}
+  ip_subnet: '{{ leaf.networks.InternalApi.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ leaf.networks.InternalApi.prefix }}.4', 'end': '{{ leaf.networks.InternalApi.prefix }}.250'}]
+  gateway_ip: '{{ leaf.networks.InternalApi.prefix }}.1'
+  mtu: 1500
+- name: Tenant_{{ leaf.name }}
+  vip: false  # Tenant network does not use VIPs
+  name_lower: tenant_{{ leaf.name }}
+  vlan: {{ leaf.networks.Tenant.vlan | default(1) }}
+  ip_subnet: '{{ leaf.networks.Tenant.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ leaf.networks.Tenant.prefix }}.4', 'end': '{{ leaf.networks.Tenant.prefix }}.250'}]
+  gateway_ip: '{{ leaf.networks.Tenant.prefix }}.1'
+  mtu: 1500
+- name: External_{{ leaf.name }}
+  vip: true
+  name_lower: external_{{ leaf.name }}
+  vlan: {{ leaf.networks.External.vlan | default(1) }}
+  ip_subnet: '{{ leaf.networks.External.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ leaf.networks.External.prefix }}.4', 'end': '{{ leaf.networks.External.prefix }}.99'}]
+  gateway_ip: '{{ leaf.networks.External.prefix }}.1'
+  mtu: 1500
+- name: Management_{{ leaf.name }}
+  # Management network is enabled by default for backwards-compatibility, but
+  # is not included in any roles by default. Add to role definitions to use.
+  enabled: true
+  vip: false  # Management network does not use VIPs
+  name_lower: management_{{ leaf.name }}
+  vlan: {{ leaf.networks.Management.vlan | default(1) }}
+  ip_subnet: '{{ leaf.networks.Management.prefix }}.0/24'
+  allocation_pools: [{'start': '{{ leaf.networks.Management.prefix }}.4', 'end': '{{ leaf.networks.Management.prefix }}.250'}]
+  gateway_ip: '{{ leaf.networks.Management.prefix }}.1'
+  mtu: 1500
+{% endfor %}
 {% else %}
 - name: Storage
   name_lower: storage
@@ -67,85 +110,94 @@
   mtu: 1500
   subnets:
     storage_subnet:
-      ip_subnet: 172.16.1.0/24
+      ip_subnet: {{ DefaultLeaf0.networks.Storage.prefix }}.0/24
       allocation_pools:
-        - start: 172.16.1.4
-          end: 172.16.1.250
-      vlan: {{ network_data_vlans.Storage }}
-    storage_subnet_ipv6:
-      ipv6_subnet: fd00:fd00:fd00:3000::/64
-      ipv6_allocation_pools:
-        - start: fd00:fd00:fd00:3000::10
-          end: fd00:fd00:fd00:3000:ffff:ffff:ffff:fffe
-      vlan: {{ network_data_vlans.Storage }}
+        - start: {{ DefaultLeaf0.networks.Storage.prefix }}.4
+          end: {{ DefaultLeaf0.networks.Storage.prefix }}.250
+      vlan: {{ DefaultLeaf0.networks.Storage.vlan | default(1) }}
+{% for leaf in DCNLeafs %}
+    storage_subnet_{{ leaf.name }}:
+      ip_subnet: {{ leaf.networks.Storage.prefix }}.0/24
+      allocation_pools:
+        - start: {{ leaf.networks.Storage.prefix }}.4
+          end: {{ leaf.networks.Storage.prefix }}.250
+      vlan: {{ leaf.networks.Storage.vlan | default(1) }}
+{% endfor %}
 - name: StorageMgmt
   name_lower: storage_mgmt
   vip: true
   mtu: 1500
   subnets:
     storage_mgmt_subnet:
-      ip_subnet: 172.16.3.0/24
+      ip_subnet: {{ DefaultLeaf0.networks.StorageMgmt.prefix }}.0/24
       allocation_pools:
-        - start: 172.16.3.4
-          end: 172.16.3.250
-      vlan: {{ network_data_vlans.StorageMgmt }}
-    storage_mgmt_subnet_ipv6:
-      ipv6_subnet: fd00:fd00:fd00:4000::/64
-      ipv6_allocation_pools:
-        - start: fd00:fd00:fd00:4000::10
-          end: fd00:fd00:fd00:4000:ffff:ffff:ffff:fffe
-      vlan: {{ network_data_vlans.StorageMgmt }}
+        - start: {{ DefaultLeaf0.networks.StorageMgmt.prefix }}.4
+          end: {{ DefaultLeaf0.networks.StorageMgmt.prefix }}.250
+      vlan: {{ DefaultLeaf0.networks.StorageMgmt.vlan | default(1) }}
+{% for leaf in DCNLeafs %}
+    storage_mgmt_subnet_{{ leaf.name }}:
+      ip_subnet: {{ leaf.networks.StorageMgmt.prefix }}.0/24
+      allocation_pools:
+        - start: {{ leaf.networks.StorageMgmt.prefix }}.4
+          end: {{ leaf.networks.StorageMgmt.prefix }}.250
+      vlan: {{ leaf.networks.StorageMgmt.vlan | default(1) }}
+{% endfor %}
 - name: InternalApi
   name_lower: internal_api
   vip: true
   mtu: 1500
   subnets:
     internal_api_subnet:
-      ip_subnet: 172.16.2.0/24
+      ip_subnet: {{ DefaultLeaf0.networks.InternalApi.prefix }}.0/24
       allocation_pools:
-        - start: 172.16.2.4
-          end: 172.16.2.250
-      vlan: {{ network_data_vlans.InternalApi }}
-    internal_api_subnet_ipv6:
-      ipv6_subnet: fd00:fd00:fd00:2000::/64
-      ipv6_allocation_pools:
-        - start: fd00:fd00:fd00:2000::10
-          end: fd00:fd00:fd00:2000:ffff:ffff:ffff:fffe
-      vlan: {{ network_data_vlans.InternalApi }}
+        - start: {{ DefaultLeaf0.networks.InternalApi.prefix }}.4
+          end: {{ DefaultLeaf0.networks.InternalApi.prefix }}.250
+      vlan: {{ DefaultLeaf0.networks.InternalApi.vlan | default(1) }}
+{% for leaf in DCNLeafs %}
+    internal_api_{{ leaf.name }}:
+      ip_subnet: {{ leaf.networks.InternalApi.prefix }}.0/24
+      allocation_pools:
+        - start: {{ leaf.networks.InternalApi.prefix }}.4
+          end: {{ leaf.networks.InternalApi.prefix }}.250
+      vlan: {{ leaf.networks.InternalApi.vlan | default(1) }}
+{% endfor %}
 - name: Tenant
   vip: false  # Tenant network does not use VIPs
   mtu: 1500
   name_lower: tenant
   subnets:
     tenant_subnet:
-      ip_subnet: 172.16.0.0/24
+      ip_subnet: {{ DefaultLeaf0.networks.Tenant.prefix }}.0/24
       allocation_pools:
-        - start: 172.16.0.4
-          end: 172.16.0.250
-      vlan: {{ network_data_vlans.Tenant }}
-    tenant_subnet_ipv6:
-      ipv6_subnet: fd00:fd00:fd00:5000::/64
-      ipv6_allocation_pools:
-        - start: fd00:fd00:fd00:5000::10
-          end: fd00:fd00:fd00:5000:ffff:ffff:ffff:fffe
-      vlan: {{ network_data_vlans.Tenant }}
+        - start: {{ DefaultLeaf0.networks.Tenant.prefix }}.4
+          end: {{ DefaultLeaf0.networks.Tenant.prefix }}.250
+      vlan: {{ DefaultLeaf0.networks.Tenant.vlan | default(1) }}
+{% for leaf in DCNLeafs %}
+    tenant_{{ leaf.name }}:
+      ip_subnet: {{ leaf.networks.Tenant.prefix }}.0/24
+      allocation_pools:
+        - start: {{ leaf.networks.Tenant.prefix }}.4
+          end: {{ leaf.networks.Tenant.prefix }}.250
+      vlan: {{ leaf.networks.Tenant.vlan | default(1) }}
+{% endfor %}
 - name: External
   name_lower: external
   vip: true
   mtu: 1500
   subnets:
     external_subnet:
-      ip_subnet: 10.0.0.0/24
+      ip_subnet: {{ DefaultLeaf0.networks.External.prefix }}.0/24
       allocation_pools:
-        - start: 10.0.0.4
-          end: 10.0.0.250
-      gateway_ip: 10.0.0.1
-      vlan: {{ network_data_vlans.External }}
-    external_subnet_ipv6:
-      ipv6_subnet: 2001:db8:fd00:1000::/64
-      ipv6_allocation_pools:
-        - start: 2001:db8:fd00:1000::10
-          end: 2001:db8:fd00:1000:ffff:ffff:ffff:fffe
-      gateway_ipv6: 2001:db8:fd00:1000::1
-      vlan: {{ network_data_vlans.External }}
+        - start: {{ DefaultLeaf0.networks.External.prefix }}.4
+          end: {{ DefaultLeaf0.networks.External.prefix }}.250
+      gateway_ip: {{ DefaultLeaf0.networks.External.prefix }}.1
+      vlan: {{ DefaultLeaf0.networks.External.vlan | default(1) }}
+{% for leaf in DCNLeafs %}
+    external_{{ leaf.name }}:
+      ip_subnet: {{ leaf.networks.External.prefix }}.0/24
+      allocation_pools:
+        - start: {{ leaf.networks.External.prefix }}.4
+          end: {{ leaf.networks.External.prefix }}.250
+      vlan: {{ leaf.networks.External.vlan | default(1) }}
+{% endfor %}
 {% endif %}
