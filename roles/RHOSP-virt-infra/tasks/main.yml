@@ -328,8 +328,8 @@
 - name: DHCRELAY - Enable and (re)start dhcrelay service
   service:
     name: dhcrelay
-    state: restarted
-    enabled: yes
+    state: "{% if cleanup and not create %}stopped{% else %}restarted{% endif %}"
+    enabled: "{% if cleanup and not create %}no{% else %}yes{% endif %}"
   become: yes
 
 - name: Create stack alias to connect to undercloud
