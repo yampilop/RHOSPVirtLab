@@ -41,7 +41,7 @@ parameters:
     description: IP address/subnet on the storage network
     type: string
   StorageNetworkVlanID:
-    default: {{ network_data_vlans.Storage }}
+    default: {{ leaf.networks.Storage.vlan | default(1) }}
     description: Vlan ID for the storage network traffic.
     type: number
   StorageMtu:
@@ -63,7 +63,7 @@ parameters:
     description: IP address/subnet on the storage_mgmt network
     type: string
   StorageMgmtNetworkVlanID:
-    default: {{ network_data_vlans.StorageMgmt }}
+    default: {{ leaf.networks.StorageMgmt.vlan | default(1) }}
     description: Vlan ID for the storage_mgmt network traffic.
     type: number
   StorageMgmtMtu:
