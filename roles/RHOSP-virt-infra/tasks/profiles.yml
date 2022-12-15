@@ -3,3 +3,9 @@
     msg: Please check your vms.yaml file and make sure the profiles chosen are the virtual ones.
   when: (item.name != 'undercloud') and (not item.profile.startswith('v'))
   loop: "{{ vms }}"
+
+# TODO:
+# - Change file name for something more generic
+# - Add checks for resources (cpu and memory) to avoid leaving the host without enough
+# - Add checks for minimal resources for undercloud and controllers
+# - Add checks for ctlplane network type as bridge when using DNCLeafs
