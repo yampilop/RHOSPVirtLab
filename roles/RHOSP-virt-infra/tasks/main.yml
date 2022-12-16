@@ -165,6 +165,9 @@
   import_tasks: clean_libvirt_networks.yml
   when: cleanup
 
+# TODO: Move network tasks to a new file to be able to filter them by create parameter
+# TODO: Create a file with tasks to clean the created networking config
+
 - name: Define bridges for networks linked with the hypervisor
   set_fact:
     network_connections: "{{ network_connections + [connection] }}"
@@ -186,7 +189,7 @@
       state: up
   when:
     - item.hypervisor == inventory_hostname
-    - (item.forward == 'bridge') or (item.forward == 'open')
+    - (item.forward == 'bridge')
   loop: "{{ networks }}"
 
 - name: Define hypervisor interfaces
