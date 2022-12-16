@@ -18,7 +18,6 @@
     - instackenv.yaml
     - node-info.yaml
     - custom-overcloud.yaml
-    - network_data.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
     - vip_data.yaml
