@@ -7,9 +7,9 @@ After=network-online.target
 [Service]
 Type=notify
 {% if inventory_hostname == 'localhost' %}
-ExecStart=/usr/sbin/dhcrelay -d --no-pid 192.168.24.1 192.168.24.5 -iu br-ctlplane -id {{ external_if }}
+ExecStart=/usr/sbin/dhcrelay -d 192.168.24.1 192.168.24.5 -iu br-ctlplane -id {{ external_if }}
 {% else %}
-ExecStart=/usr/sbin/dhcrelay -d --no-pid {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -id br-ctlplane -U {{ hypervisor_external_if }}
+ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -id br-ctlplane -U {{ hypervisor_external_if }}
 {% endif %}
 StandardError=null
 

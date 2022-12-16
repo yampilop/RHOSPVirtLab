@@ -135,7 +135,7 @@
   loop: "{{ networks }}"
   when:
     - item.hypervisor == inventory_hostname
-    - (item.name != forward_network) and (item.forward != 'bridge') and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+    - (item.name != forward_network) and (item.forward != 'bridge') and (item.forward != 'open') and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
 
 - name: FIREWALLD - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
   firewalld:
@@ -147,7 +147,7 @@
   loop: "{{ networks }}"
   when:
     - item.hypervisor == inventory_hostname
-    - ((item.name == forward_network) or (item.forward == 'bridge')) and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
+    - ((item.name == forward_network) or (item.forward == 'bridge') or (item.forward == 'open')) and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
 
 - name: Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
@@ -186,7 +186,7 @@
       state: up
   when:
     - item.hypervisor == inventory_hostname
-    - item.forward == 'bridge'
+    - (item.forward == 'bridge') or (item.forward == 'open')
   loop: "{{ networks }}"
 
 - name: Define hypervisor interfaces
@@ -204,7 +204,7 @@
       state: up
   when:
     - item.hypervisor == inventory_hostname
-    - item.forward == 'bridge' and item.hypervisor_if is defined
+    - (item.forward == 'bridge') or (item.forward == 'open') and (item.hypervisor_if is defined)
   loop: "{{ networks }}"
 
 - name: Define network configuration for interfaces bridged to libvirt
@@ -221,7 +221,7 @@
       state: up
   when:
     - item.hypervisor == inventory_hostname
-    - item.forward == 'bridge' and item.hypervisor_if is defined
+    - (item.forward == 'bridge') or (item.forward == 'open') and (item.hypervisor_if is defined)
   loop: "{{ networks }}"
 
 - name: Define network configuration for vlans belonging to libvirt bridges in localhost
