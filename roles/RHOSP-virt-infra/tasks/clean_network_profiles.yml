@@ -26,23 +26,6 @@
     - (item.forward == 'bridge') or (item.forward == 'open') and (item.hypervisor_if is defined)
   loop: "{{ networks }}"
 
-- name: NETWORKING - Delete network configuration for interfaces bridged to libvirt
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.hypervisor_if }}"
-      interface_name: "{{ item.hypervisor_if }}"
-      type: ethernet
-      controller: "{{ item.bridge }}"
-      port_type: bridge
-      autoconnect: yes
-      state: absent
-  when:
-    - item.hypervisor == inventory_hostname
-    - (item.forward == 'bridge') or (item.forward == 'open') and (item.hypervisor_if is defined)
-  loop: "{{ networks }}"
-
 - name: NETWORKING - Delete network configuration for vlans belonging to libvirt bridges in localhost
   set_fact:
     network_connections: "{{ network_connections + [connection] }}"
