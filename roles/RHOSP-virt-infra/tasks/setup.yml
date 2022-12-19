@@ -46,25 +46,26 @@
       - kvm
     append: yes
 
-- name: SETUP - Ensure required sockets are disabled and stopped
+- name: SETUP - Ensure required sockets are disabled, stopped and masked
   systemd:
     name: "{{ item }}"
     state: stopped
+    masked: yes
     enabled: no
   become: yes
   loop:
     - libvirtd.socket
 
 - name: SETUP - Ensure required services are enabled and running
-  service:
+  systemd:
     name: "{{ item }}"
     state: started
     enabled: yes
   become: yes
   loop:
-    - libvirtd
-    - NetworkManager
-    - firewalld
+    - libvirtd.service
+    - NetworkManager.service
+    - firewalld.service
 
 - name: SETUP - Update pip
   pip:

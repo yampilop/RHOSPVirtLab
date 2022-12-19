@@ -38,10 +38,7 @@
     state: enabled
   loop: "{{ vms }}"
   become: yes
-  when:
-    - inventory_hostname == 'localhost'
-    - ansible_facts.services['firewalld.service'] is defined
-    - ansible_facts.services['firewalld.service'].state == 'running'
+  when: inventory_hostname == 'localhost'
 
 - name: VIRTUALBMC - Ensure port rules are configured to the firewall in public zone
   firewalld:
@@ -55,5 +52,3 @@
   when:
     - inventory_hostname != 'localhost'
     - inventory_hostname in item.hypervisor
-    - ansible_facts.services['firewalld.service'] is defined
-    - ansible_facts.services['firewalld.service'].state == 'running'

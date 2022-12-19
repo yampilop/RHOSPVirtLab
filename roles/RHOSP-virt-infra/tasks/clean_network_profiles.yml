@@ -26,37 +26,6 @@
     - (item.forward == 'bridge') or (item.forward == 'open') and (item.hypervisor_if is defined)
   loop: "{{ networks }}"
 
-- name: NETWORKING - Delete network configuration for vlans belonging to libvirt bridges in localhost
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ ( networks | selectattr('name', 'equalto', DefaultLeaf0.networks[item].network) | list | first ).bridge }}.{{ DefaultLeaf0.networks[item].vlan }}"
-      type: vlan
-      vlan_id: "{{ DefaultLeaf0.networks[item].vlan }}"
-      state: absent
-  when:
-    - inventory_hostname == 'localhost'
-    - DefaultLeaf0.networks[item].vlan is defined
-  loop: "{{ DefaultLeaf0.networks.keys() | list }}"
-
-- name: NETWORKING - Delete network configuration for vlans belonging to libvirt bridges in the leafs
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ ( networks | selectattr('name', 'equalto', item.0.networks[item.1].network) | list | first ).bridge }}.{{ item.0.networks[item.1].vlan }}"
-      type: vlan
-      vlan_id: "{{ item.0.networks[item.1].vlan }}"
-      autoconnect: yes
-      state: absent
-  when:
-    - item.0.hypervisor == inventory_hostname
-    - item.0.networks[item.1].vlan is defined
-  with_nested:
-    - "{{ DCNLeafs }}"
-    - "{{ DefaultLeaf0.networks.keys() | list }}"
-
 - name: NETWORKING - Define only the network configuration for the public interface of the DCN hypervisors without static routes
   set_fact:
     network_connections: "{{ network_connections + [connection] }}"
