@@ -8,6 +8,8 @@
 - name: SETUP - Make the hypervisor setup
   import_tasks: tasks/setup.yml
 
+# Cleanup process
+
 - name: DHCRELAY - Clean DHCP relay
   import_tasks: clean_dhcrelay.yml
   when: cleanup
@@ -36,6 +38,12 @@
   import_tasks: clean_libvirt_networks.yml
   when: cleanup
 
+# Create process
+
+- name: NETWORKING - Create network profiles
+  import_tasks: create_network_profiles.yml
+  when: create
+
 - name: LIBVIRT - Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
   when: create
@@ -50,10 +58,6 @@
 
 - name: VIRTUALBMC - Configure VirtualBMC
   import_tasks: create_virtualbmc.yml
-  when: create
-
-- name: NETWORKING - Create network profiles
-  import_tasks: create_network_profiles.yml
   when: create
 
 - name: FIREWALL - Configure firewall
