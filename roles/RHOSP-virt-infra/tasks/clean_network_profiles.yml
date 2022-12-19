@@ -9,7 +9,7 @@
       state: absent
   when:
     - item.hypervisor == inventory_hostname
-    - (item.forward == 'bridge')
+    - (item.forward == 'bridge') or (item.forward == 'open')
   loop: "{{ networks }}"
 
 - name: NETWORKING - Delete hypervisor interfaces
