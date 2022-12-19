@@ -170,7 +170,7 @@
   when: inventory_hostname == 'localhost'
 
 - name: NETWORKING - Configure network using system role
-  include_role:
+  import_role:
     name: rhel-system-roles.network
   vars:
     network_allow_restart: yes
