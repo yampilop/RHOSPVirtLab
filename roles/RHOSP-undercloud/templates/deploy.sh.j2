@@ -35,10 +35,8 @@ time openstack overcloud deploy \
 {% if RHOSP_version != 17.0 %}
 -e {{ templates_dir }}/node-info.yaml \
 {% endif %}
-{% if leaf.name == DefaultLeaf0.name %}
 {% if RHOSP_version != 13.0 %}
 -e /home/stack/containers-prepare-parameter.yaml \
-{% endif %}
 {% endif %}
 -e {{ templates_dir }}/overcloud-images.yaml \
 {% if DCNLeafs | length > 0 %}
