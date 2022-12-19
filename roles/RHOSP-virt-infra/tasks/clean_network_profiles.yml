@@ -33,6 +33,7 @@
     connection:
       name: "{{ ( networks | selectattr('name', 'equalto', DefaultLeaf0.networks[item].network) | list | first ).bridge }}.{{ DefaultLeaf0.networks[item].vlan }}"
       type: vlan
+      vlan_id: "{{ DefaultLeaf0.networks[item].vlan }}"
       state: absent
   when:
     - inventory_hostname == 'localhost'
@@ -46,6 +47,7 @@
     connection:
       name: "{{ ( networks | selectattr('name', 'equalto', item.0.networks[item.1].network) | list | first ).bridge }}.{{ item.0.networks[item.1].vlan }}"
       type: vlan
+      vlan_id: "{{ item.0.networks[item.1].vlan }}"
       autoconnect: yes
       state: absent
   when:
