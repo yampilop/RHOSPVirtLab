@@ -55,6 +55,7 @@
   become: yes
   loop:
     - libvirtd.socket
+    - libvirtd-ro.socket
 
 - name: SETUP - Ensure required services are enabled and running
   systemd:

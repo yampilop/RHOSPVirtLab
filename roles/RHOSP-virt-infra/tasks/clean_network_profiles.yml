@@ -25,7 +25,7 @@
       persistent_state: absent
   when:
     - item.hypervisor == inventory_hostname
-    - (item.forward == 'bridge') or (item.forward == 'open') and (item.hypervisor_if is defined)
+    - ((item.forward == 'bridge') or (item.forward == 'open')) and (item.hypervisor_if is defined)
   loop: "{{ networks }}"
 
 - name: NETWORKING - Define only the network configuration for the public interface of the DCN hypervisors without static routes
