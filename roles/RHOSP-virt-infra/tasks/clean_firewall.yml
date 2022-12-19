@@ -1,0 +1,12 @@
+- name: FIREWALL - Clean port forwarding rules
+  firewalld:
+    rich_rule: rule family=ipv4 forward-port port={{ item }} protocol=tcp to-port={{ item }} to-addr={{ overcloud_ip }}
+    zone: public
+    permanent: yes
+    immediate: yes
+    state: disabled
+  loop: "{{ forwarded_ports }}"
+  when:
+    - inventory_hostname == 'localhost'
+    - ansible_facts.services['firewalld.service'] is defined
+    - ansible_facts.services['firewalld.service'].state == 'running'

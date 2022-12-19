@@ -1,0 +1,6 @@
+- name: DHCRELAY - Disable and stop dhcrelay service
+  service:
+    name: dhcrelay
+    state: stopped
+    enabled: no
+  become: yes

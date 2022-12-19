@@ -30,3 +30,4 @@ networks:
         start: '192.168.250.100'
         end: '192.168.250.254'
         hosts: true
+# TODO: Remove the posibility to select forward type, make the best setup always

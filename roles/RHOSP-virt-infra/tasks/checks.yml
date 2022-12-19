@@ -1,0 +1,23 @@
+- name: CHECKS - Verify the OS Version is supported
+  fail:
+    msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
+  when:
+    - inventory_hostname == 'localhost'
+    - RHEL_version_supported[ansible_distribution_version] is not defined
+
+- name: CHECKS - Verify the RHOSP version selected is supported
+  fail:
+    msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
+  when:
+    - inventory_hostname == 'localhost'
+    - RHOSP_version_supported[RHOSP_version] is not defined
+
+- name: CHECKS - Check all vms profiles are virtual
+  fail:
+    msg: Please check your vms.yaml file and make sure the profiles chosen are the virtual ones.
+  when: (item.name != 'undercloud') and (not item.profile.startswith('v'))
+  loop: "{{ vms }}"
+
+# TODO:
+# - Add checks for resources (cpu and memory) to avoid leaving the host without enough
+# - Add checks for minimal resources for undercloud and controllers

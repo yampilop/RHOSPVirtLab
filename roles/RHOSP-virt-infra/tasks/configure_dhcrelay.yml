@@ -1,0 +1,20 @@
+- name: DHCRELAY - Create dhcrelay systemd unit
+  template:
+    src: "dhcrelay.service.j2"
+    dest: "/etc/systemd/system/dhcrelay.service"
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+
+- name: DHCRELAY - Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: DHCRELAY - Enable and start dhcrelay service
+  service:
+    name: dhcrelay
+    state: started
+    enabled: yes
+  become: yes
