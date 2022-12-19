@@ -1,31 +1,3 @@
-- name: NETWORKING - Delete bridges for networks linked with the hypervisor
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.bridge }}"
-      interface_name: "{{ item.bridge }}"
-      type: bridge
-      state: absent
-  when:
-    - item.hypervisor == inventory_hostname
-    - (item.forward == 'bridge') or (item.forward == 'open')
-  loop: "{{ networks }}"
-
-- name: NETWORKING - Delete hypervisor interfaces
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.hypervisor_if }}"
-      interface_name: "{{ item.hypervisor_if }}"
-      type: ethernet
-      state: absent
-  when:
-    - item.hypervisor == inventory_hostname
-    - (item.forward == 'bridge') or (item.forward == 'open') and (item.hypervisor_if is defined)
-  loop: "{{ networks }}"
-
 - name: NETWORKING - Define only the network configuration for the public interface of the DCN hypervisors without static routes
   set_fact:
     network_connections: "{{ network_connections + [connection] }}"
@@ -53,6 +25,13 @@
       ip:
         dhcp4: yes
   when: inventory_hostname == 'localhost'
+
+- name: NETWORKING - Delete all other interfaces
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      persistent_state: absent
 
 - name: NETWORKING - Configure network using system role
   import_role:
