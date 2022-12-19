@@ -266,7 +266,7 @@ networks:
   - name: RHOSPVirtLab_external
     hypervisor: localhost
     bridge: br-external
-    forward: nat
+    forward: bridge
     mac_suffix: '05'
     ipv4:
       address: '10.0.0.1'
