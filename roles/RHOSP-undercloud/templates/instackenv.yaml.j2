@@ -37,7 +37,11 @@ nodes:
 {% else %}
   - ports:
       - address: '{{ node.mac }}'
+{% if node.leaf == 'overcloud' %}
+        physical_network: ctlplane
+{% else %}
         physical_network: {{ leaf.subnet.name }}
+{% endif %}
 {% endif %}
     name: "{{ leaf.name ~ '-' ~ vm.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
