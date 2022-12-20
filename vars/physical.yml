@@ -10,7 +10,7 @@
 #    pm_user: "admin"
 #    pm_password: "admin"
 #    pm_addr: "192.168.122.1"
-#    pm_port: "6230"
+#    pm_port: "623"
 #    capabilities: 'boot_mode:bios'
 #    mac: '52:54:00:24:61:07'
 #    disk_size: 53687091200
@@ -23,8 +23,8 @@
 #    pm_type: "ipmi"
 #    pm_user: "admin"
 #    pm_password: "admin"
-#    pm_addr: "192.168.122.1"
-#    pm_port: "6231"
+#    pm_addr: "192.168.122.2"
+#    pm_port: "623"
 #    capabilities: 'boot_mode:bios'
 #    mac: '52:54:00:25:18:57'
 #    disk_size: 53687091200
