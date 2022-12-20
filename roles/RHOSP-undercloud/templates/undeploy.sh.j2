@@ -9,7 +9,7 @@ source /home/stack/stackrc
 metalsmith list
 {% for leaf in DCNLeafs %}
 openstack overcloud delete {{ leaf.name }} -y
-{% endif %}
+{% endfor %}
 openstack overcloud delete overcloud -y
 
 # Undeploy the nodes
@@ -20,7 +20,7 @@ openstack baremetal node list
 # Delete the overcloud
 {% for leaf in DCNLeafs %}
 openstack overcloud delete {{ leaf.name }} -y
-{% endif %}
+{% endfor %}
 openstack overcloud delete overcloud -y
 openstack baremetal node list
 {% endif %}
