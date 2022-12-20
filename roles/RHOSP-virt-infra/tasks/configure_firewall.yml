@@ -1,29 +1,3 @@
-# TODO: Confirm that is not necessary and delete the tasks
-# - name: FIREWALL - Ensure libvirt zone exists
-#   firewalld:
-#     zone: libvirt
-#     state: present
-#     permanent: yes
-#   become: yes
-#   register: firewalld_create_zone
-
-# - name: FIREWALL - Reload firewall after creating the zone
-#   command: "firewall-cmd --reload"
-#   become: yes
-#   when: firewalld_create_zone.changed
-
-# - name: FIREWALL - Ensure libvirt network interfaces belong to libvirt zone
-#   firewalld:
-#     zone: libvirt
-#     interface: "{{ item.bridge }}"
-#     permanent: yes
-#     immediate: yes
-#     state: enabled
-#   loop: "{{ networks }}"
-#   when:
-#     - item.hypervisor == inventory_hostname
-#     - (item.name != forward_network) and (item.forward != 'bridge') and (item.forward != 'open')
-
 - name: FIREWALL - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
   firewalld:
     zone: public

@@ -6,16 +6,14 @@ The role creates a virtual infrastructure for Red Hat OpenStack Platform.
 Requirements
 ------------
 
-It's tested to work on a Red Hat Enterprise Linux version 8.4 system.
+It's tested to work on a Red Hat Enterprise Linux version 8.4 or 7.9 system.
 
 Requires rhel-system-roles package installed.
 
 Role Variables
 --------------
 
-# TODO: Update
-
-RHOSP_version: **16.2**|16.1|13.0
+RHOSP_version: **17.0**|16.2|16.1|13.0
   This variable sets the version of RHOSP to install.
 
 cleanup: **False**|True
@@ -30,20 +28,32 @@ external_if: eno1
 overcloud_ip: 10.0.0.254
   This variable sets the overcloud virtual IP (used for example to access Horizon)
 
+forward_network: RHOSPVirtLab_external
+  This variable sets the network the forwarded ports will be attached to.
+
 forwarded_ports: [80,6080,5000]
   List of ports to be forwarded to the overcloud IP (enabling access to Horizon using the hypervisor IP address)
 
-vms: []
-  List of the virtual machines to be created, in the format:
+DefaultLeaf0:
+  Default parameters to configure the default leaf 0.
+
+DCNLeafs:
+  Variable used to define leafs when making a DCN deployment.
+
+vms:
+  List of the virtual machines created, in the format:
+
 ```yaml
   - name: VM_NAME
+    hypervisor: HYPERVISOR_NAME
     title: 'VM_TITLE'
-    profile: 'undercloud'|'control'|'compute'
+    profile: 'PROFILE'
     memory: RAM_IN_KB
     vcpus: AMOUNT_OF_CPUS
     bmcport: VBMC_PORT_TO_ASSIGN
     mac: 'XX:XX:XX:XX:XX' (without the last octet)
     disk_size: DISK_SIZE_IN_KB
+    data_disk_size: DISK_SIZE_IN_KB
     backing_store: 'QCOW2_IMAGE' (image to use as base for the disk)
     cdrom: 'CDROM_IMAGE' (image to insert as cdrom, useful for cloud-init)
     nics:
@@ -51,47 +61,57 @@ vms: []
       NETWORK_NAME_2: 'IP_ADDRESS_2'
       ...
 ```
+
   By default the role creates:
     - undercloud
-    - controller0
-    - compute0
+    - vcontroller0
+    - vcompute0
 
-networks: []
-  List of the virtual networks to be created. The default values should work. You can replace or add the hypervisor_if values to set wich interfaces in the hypervisor are linked to each bridge (useful to connect physical nodes to the lab).
+  The profile value can be one of the following:
+    - vcontroller
+    - vcompute
+    - vcephstorage
+    - vcomputehci
+
+physical:
+  List of the physical machines to be connected to the lab, in the format:
+
 ```yaml
-networks:
-  - name: RHOSPVirtLab_ctlplane
-    bridge: br-ctlplane
-    forward: false
-    mac_suffix: '00'
-    ipv4: false
-    hypervisor_if: eno2
-  - name: RHOSPVirtLab_vlans
-    bridge: br-vlans
-    forward: false
-    mac_suffix: '01'
-    ipv4: false
-    hypervisor_if: eno3
-  - name: RHOSPVirtLab_external
-    bridge: br-external
-    forward: route
-    mac_suffix: '05'
-    ipv4:
-      address: '10.0.0.1'
-      netmask: '255.255.255.0'
-      dhcp: false
-  - name: RHOSPVirtLab_management
-    bridge: br-management
-    forward: nat
-    mac_suffix: '0f'
-    ipv4:
-      address: '192.168.250.1'
-      netmask: '255.255.255.0'
-      dhcp:
-        start: '192.168.250.100'
-        end: '192.168.250.254'
-        hosts: true
+  - name: MACHINE_NAME
+    leaf: LEAF_NAME
+    title: 'MACHINE_TITLE'
+    profile: 'PROFILE'
+    memory: RAM_IN_KB
+    cpus: AMOUNT_OF_CPUS
+    pm_type: "ipmi"|"redfish"|"ilo"|"idrac"
+    pm_user: "PM_USER_NAME"
+    pm_password: "PM_PASSWORD"
+    pm_addr: "PM_IP_ADDRESS"
+    pm_port: "623"|"PM_PORT_IF_DIFFERENT_FROM_DEFAULT"
+    mac: 'XX:XX:XX:XX:XX:XX' (full MAC address of the ctlplane interface)
+    capabilities: 'LIST_OF_CAPABILITIES'
+    disk_size: DISK_SIZE_IN_KB
 ```
+
+  The role considers no physical machines by default.
+
+  The profile value can be one of the following:
+    - controller
+    - compute
+    - computeovsdpdk
+    - computeovsdpdksriov
+    - computesriov
+    - computeovshwoffload
+    - cephstorage
+    - computehci
+
+networks:
+  List of the virtual networks created. The default values are:
+    - RHOSPVirtLab_ctlplane
+    - RHOSPVirtLab_external
+    - RHOSPVirtLab_management
+
+  If you will add physical nodes, you need to define `hypervisor_if: {{ifname}}` parameter on `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` networks, setting the interfaces that will be attached to the bridges. Make sure those interfaces are configured as trunks with a native vlan in the switch.
 
 Example Playbook
 ----------------
