@@ -3,7 +3,6 @@
 
 - name: CHECKS - Perform some checks
   import_tasks: tasks/checks.yml
-  when: inventory_hostname == 'localhost'
 
 - name: SETUP - Make the hypervisor setup
   import_tasks: tasks/setup.yml

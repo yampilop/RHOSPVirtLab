@@ -18,6 +18,20 @@
   when: (item.name != 'undercloud') and (not item.profile.startswith('v'))
   loop: "{{ vms }}"
 
-# TODO:
-# - Add checks for resources (cpu and memory) to avoid leaving the host without enough
-# - Add checks for minimal resources for undercloud and controllers
+- name: CHECKS - Get total hypervisor memory planned
+  set_fact:
+    total_hypervisor_memory_mb: "{{ ((vms | selectattr('hypervisor', 'equalto', inventory_hostname) | list) | sum(attribute='memory')) / 1024 }}"
+
+- name: CHECKS - Check RAM usage wont be larger than the hypervisor capacity
+  fail:
+    msg: Please check your vms.yaml file and make sure the memory usage ({{ total_hypervisor_memory_mb | int }} MB) is not larger than the hypervisor capacity ({{ ansible_memory_mb.real.total | int }} MB) considering 8192 MB for the host.
+  when: total_hypervisor_memory_mb | int + 8192 > ansible_memory_mb.real.total | int
+
+- name: CHECKS - Get total hypervisor cpus planned
+  set_fact:
+    total_hypervisor_cpus: "{{ ((vms | selectattr('hypervisor', 'equalto', inventory_hostname) | list) | sum(attribute='vcpus')) }}"
+
+- name: CHECKS - Check CPU usage wont be larger than the hypervisor capacity
+  fail:
+    msg: Please check your vms.yaml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 4 CPUs for the host.
+  when: total_hypervisor_cpus | int + 4 > ansible_processor_vcpus | int
