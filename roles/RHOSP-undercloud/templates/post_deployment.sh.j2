@@ -38,7 +38,7 @@ openstack role add --project test-project --user test-admin --user-domain RHOSPV
 ################################################################################
 
 # External network
-openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
+openstack network show default-provider &>/dev/null || openstack network create --availability-zone-hint overcloud --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
 openstack subnet show default-provider-subnet &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext.ipv4.address }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet 
 
 # Flavors
@@ -84,7 +84,7 @@ done
 source /home/stack/{{ leaf.name }}rc
 
 # DCN {{ leaf.name }} external network
-openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre-{{ leaf.name }} default-provider-{{ leaf.name }}
+openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --availability-zone-hint {{ leaf.name }} --share --external --provider-network-type flat --provider-physical-network datacentre-{{ leaf.name }} default-provider-{{ leaf.name }}
 openstack subnet show default-provider-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext.ipv4.address }} --network default-provider-{{ leaf.name }} --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet-{{ leaf.name }}
 
 {% endfor %}
@@ -113,17 +113,17 @@ openstack server group show soft-affinity-group &>/dev/null || openstack server 
 openstack server group show soft-anti-affinity-group &>/dev/null || openstack server group create --policy soft-anti-affinity soft-anti-affinity-group
 
 # Networking
-openstack network show test-network &>/dev/null || openstack network create test-network
+openstack network show test-network &>/dev/null || openstack network create --availability-zone-hint overcloud test-network
 openstack subnet show test-subnet &>/dev/null || openstack subnet create --network test-network --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet
 openstack port show test-subnet-gw &>/dev/null || openstack port create --network test-network --fixed-ip subnet=test-subnet,ip-address=192.168.1.1 test-subnet-gw
-openstack router show test-router &>/dev/null || (openstack router create test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
+openstack router show test-router &>/dev/null || (openstack router create --availability-zone-hint overcloud test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
 
 {% for leaf in DCNLeafs %}
 # DCN {{ leaf.name }} networking
-openstack network show test-network-{{ leaf.name }} &>/dev/null || openstack network create test-network-{{ leaf.name }}
+openstack network show test-network-{{ leaf.name }} &>/dev/null || openstack network create --availability-zone-hint {{ leaf.name }} test-network-{{ leaf.name }}
 openstack subnet show test-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --network test-network-{{ leaf.name }} --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet-{{ leaf.name }}
 openstack port show test-subnet-{{ leaf.name }}-gw &>/dev/null || openstack port create --network test-network-{{ leaf.name }} --fixed-ip subnet=test-subnet-{{ leaf.name }},ip-address=192.168.1.1 test-subnet-{{ leaf.name }}-gw
-openstack router show test-router-{{ leaf.name }} &>/dev/null || (openstack router create test-router-{{ leaf.name }} && openstack router set --external-gateway default-provider-{{ leaf.name }} test-router-{{ leaf.name }} && openstack router add port test-router-{{ leaf.name }} test-subnet-{{ leaf.name }}-gw)
+openstack router show test-router-{{ leaf.name }} &>/dev/null || (openstack router create --availability-zone-hint {{ leaf.name }} test-router-{{ leaf.name }} && openstack router set --external-gateway default-provider-{{ leaf.name }} test-router-{{ leaf.name }} && openstack router add port test-router-{{ leaf.name }} test-subnet-{{ leaf.name }}-gw)
 {% endfor %}
 
 # Add SSH and ICMP to default security group
