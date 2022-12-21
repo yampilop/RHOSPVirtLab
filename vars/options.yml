@@ -137,7 +137,7 @@ ComputeSriovProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  physicaldevmappings: 'sriov1:ens1f1'
+  physicaldevmappings: 'datacentre:br-ex,sriov1:ens1f1'
   dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
@@ -152,7 +152,7 @@ ComputeOvsHwOffloadProperties:
   hugepagesz: '1GB'
   hugepages: 32
   kernelargs: 'iommu=pt intel_iommu=on'
-  physicaldevmappings: 'offload1:ens1f1'
+  physicaldevmappings: 'datacentre:br-ex,offload1:ens1f1'
   dedicatedcpus: '8-19'
   sharedcpus: '4-7'
   hostmemory: 8192
@@ -188,7 +188,7 @@ ComputeOvsDpdkSriovProperties:
   memorychannels: '4'
   ovsdpdkcorelist: '2,26,3,27'
   ovspmdcorelist: '4,28,5,29'
-  physicaldevmappings: 'sriov1:ens1f1'
+  physicaldevmappings: 'datacentre:br-ex,sriov1:ens1f1'
   pcipassthrough:
     - devname: ens1f1
       network: 'sriov1'

@@ -43,6 +43,7 @@ parameter_defaults:
 {% for ocrole in overcloud_roles %}
 {% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
+  {{ ocrole.name }}NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
 {% endif %}
 {% endfor %}
 {% endif %}
