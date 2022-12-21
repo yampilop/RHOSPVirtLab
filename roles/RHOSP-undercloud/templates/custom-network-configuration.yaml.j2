@@ -46,12 +46,13 @@ parameter_defaults:
   {{ ocrole.name }}NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
 {% endif %}
 {% endfor %}
-  VirtualControllerParameters:
-    OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
-  ControllerParameters:
-    OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+  OVNCMSOptions: "enable-chassis-as-gw"
   NeutronDefaultAvailabilityZones: "overcloud,{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}"
-  OVNAvailabilityZone: "overcloud,{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}"
+  OVNAvailabilityZone:
+    - 'overcloud'
+{% for leaf in DCNLeafs %}
+    - '{{ leaf.name }}'
+{% endfor %}
 {% endif %}
 
 {% if dpdk_count + sriov_count > 0 %}
