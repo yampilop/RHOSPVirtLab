@@ -53,7 +53,7 @@
     enabled: yes
   become: yes
   loop:
-    - libvirtd.socket
+    - "{% if ansible_distribution_version == '7.9' %}libvirtd.service{% else %}libvirtd.socket{% endif %}"
     - NetworkManager.service
     - firewalld.service
 
