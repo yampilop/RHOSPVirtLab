@@ -8,7 +8,7 @@
   loop: "{{ networks }}"
   when:
     - item.hypervisor == inventory_hostname
-    - (item.name == forward_network) or (item.forward == 'bridge') or (item.forward == 'open')
+    - (item.name == forward_network) or (item.forward == 'bridge')
 
 - name: FIREWALL - Enable masquerade in the firewall to allow external traffic
   firewalld:
