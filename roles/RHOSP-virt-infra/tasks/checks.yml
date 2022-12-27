@@ -33,5 +33,5 @@
 
 - name: CHECKS - Check CPU usage wont be larger than the hypervisor capacity
   fail:
-    msg: Please check your vms.yaml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 4 CPUs for the host.
-  when: total_hypervisor_cpus | int + 4 > ansible_processor_vcpus | int
+    msg: Please check your vms.yaml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 2 CPUs for the host.
+  when: total_hypervisor_cpus | int + 2 > ansible_processor_vcpus | int
