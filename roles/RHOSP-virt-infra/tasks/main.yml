@@ -11,7 +11,9 @@
 
 - name: DHCRELAY - Clean DHCP relay
   import_tasks: clean_dhcrelay.yml
-  when: cleanup and DCNLeafs | length > 0
+  when:
+    - cleanup
+    - DCNLeafs | length > 0
 
 - name: FIREWALL - Clean firewall
   import_tasks: clean_firewall.yml
@@ -65,4 +67,6 @@
 
 - name: DHCRELAY - Configure DHCP relay
   import_tasks: configure_dhcrelay.yml
-  when: create and DCNLeafs | length > 0
+  when:
+    - create
+    - DCNLeafs | length > 0
