@@ -8,7 +8,7 @@
 {% set compute_count = (physical | selectattr("profile", "equalto", "compute") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
 {% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
 
-{% if leaf.name != 'overcloud' %}
+{% if leaf.name != DefaultLeaf0.name %}
 {% set name = '_' ~ leaf.name %}
 {% else %}
 {% set name = '' %}

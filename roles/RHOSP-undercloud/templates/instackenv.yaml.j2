@@ -37,7 +37,7 @@ nodes:
 {% else %}
   - ports:
       - address: '{{ node.mac }}'
-{% if node.leaf == 'overcloud' %}
+{% if node.leaf == DefaultLeaf0.name %}
         physical_network: ctlplane
 {% else %}
         physical_network: {{ leaf.subnet.name }}
