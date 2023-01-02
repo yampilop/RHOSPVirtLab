@@ -200,6 +200,9 @@ DeployOctavia: False
 # Subscription manager parameters
 RegisterNodes: False
 
+# Low Memory Usage parameters
+LowMemUsage: True
+
 # DCN leafs
 DCNLeafs: []
 

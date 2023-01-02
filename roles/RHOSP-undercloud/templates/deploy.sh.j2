@@ -64,6 +64,9 @@ time openstack overcloud deploy \
 {% if sriov_count > 0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml \
 {% endif %}
+{% if LowMemUsage and (leaf.name == DefaultLeaf0.name) %}
+-e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml \
+{% endif %}
 {% if DeployOctavia %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
 {% endif %}
