@@ -16,7 +16,7 @@ ExecStart=/usr/sbin/dhcrelay -d 192.168.24.1 192.168.24.5 -iu br-ctlplane -id {{
 {% if ansible_distribution_version == '7.9' %}
 ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -i br-ctlplane
 {% else %}
-ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -id br-ctlplane
+ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -id br-ctlplane -iu {{ hypervisor_external_if }}
 {% endif %}
 {% endif %}
 StandardError=null
