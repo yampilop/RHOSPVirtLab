@@ -325,7 +325,6 @@
       vlan: {{ leaf.networks.External.vlan | default(1) }}
 {% endfor %}
 - name: Management
-  enabled: true
   vip: false  # Management network does not use VIPs
   mtu: 1500
   name_lower: management

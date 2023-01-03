@@ -49,10 +49,10 @@ parameter_defaults:
     swap_size_mb: 8192
   instances:
 {% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
-  - name: {{ vm.name }}
+  - name: {{ leaf.name }}-{{ vm.name }}
 {% endfor %}
 {% for pm in (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name)) %}
-  - name: {{ pm.name }}
+  - name: {{ leaf.name }}-{{ pm.name }}
 {% endfor %}
 {% endif %}
 {% endfor %}
