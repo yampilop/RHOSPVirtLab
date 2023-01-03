@@ -16,7 +16,9 @@
 - network: external
   dns_name: {{ leaf.name }}
   subnet: external_subnet{{ name }}
+{% if leaf.name != DefaultLeaf0.name %}
   ip_address: {{ overcloud_ip }}
+{% endif %}
 - network: ctlplane
   dns_name: {{ leaf.name }}
   subnet: {{ leaf.subnet.name }}
