@@ -28,8 +28,7 @@ network_config:
     primary: true
 {% endraw %}
 {% if 'Dpdk' not in item.name %}
-{% raw %}
-{% for network in role_networks if network != 'External' %}
+{% raw %}{% for network in role_networks if network != 'External' %}
   - type: vlan
     mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
     vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
@@ -40,8 +39,7 @@ network_config:
 {% endfor %}
 {% endraw %}
 {% else %}
-{% raw %}
-{% for network in role_networks if network != 'External' %}
+{% raw %}{% for network in role_networks if network != 'External' %}
 - type: vlan
   device: br-vlans
   mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
