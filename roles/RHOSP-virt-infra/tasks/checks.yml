@@ -1,0 +1,37 @@
+- name: CHECKS - Verify the OS Version is supported
+  fail:
+    msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
+  when:
+    - inventory_hostname == 'localhost'
+    - RHEL_version_supported[ansible_distribution_version] is not defined
+
+- name: CHECKS - Verify the RHOSP version selected is supported
+  fail:
+    msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
+  when:
+    - inventory_hostname == 'localhost'
+    - RHOSP_version_supported[RHOSP_version] is not defined
+
+- name: CHECKS - Check all vms profiles are virtual
+  fail:
+    msg: Please check your vms.yaml file and make sure the profiles chosen are the virtual ones.
+  when: (item.name != 'undercloud') and (not item.profile.startswith('v'))
+  loop: "{{ vms }}"
+
+- name: CHECKS - Get total hypervisor memory planned
+  set_fact:
+    total_hypervisor_memory_mb: "{{ ((vms | selectattr('hypervisor', 'equalto', inventory_hostname) | list) | sum(attribute='memory')) / 1024 }}"
+
+- name: CHECKS - Check RAM usage wont be larger than the hypervisor capacity
+  fail:
+    msg: Please check your vms.yaml file and make sure the memory usage ({{ total_hypervisor_memory_mb | int }} MB) is not larger than the hypervisor capacity ({{ ansible_memory_mb.real.total | int }} MB) considering 8192 MB for the host.
+  when: total_hypervisor_memory_mb | int + 8192 > ansible_memory_mb.real.total | int
+
+- name: CHECKS - Get total hypervisor cpus planned
+  set_fact:
+    total_hypervisor_cpus: "{{ ((vms | selectattr('hypervisor', 'equalto', inventory_hostname) | list) | sum(attribute='vcpus')) }}"
+
+- name: CHECKS - Check CPU usage wont be larger than the hypervisor capacity
+  fail:
+    msg: Please check your vms.yaml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 2 CPUs for the host.
+  when: total_hypervisor_cpus | int + 2 > ansible_processor_vcpus | int

@@ -1,0 +1,66 @@
+- name: NETWORKING - Delete bridges for networks linked with the hypervisor
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ item.bridge }}"
+      interface_name: "{{ item.bridge }}"
+      type: bridge
+      state: down
+      persistent_state: absent
+  when:
+    - item.hypervisor == inventory_hostname
+    - item.forward == 'bridge'
+  loop: "{{ networks }}"
+
+- name: NETWORKING - Delete hypervisor interfaces
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ item.hypervisor_if }}"
+      interface_name: "{{ item.hypervisor_if }}"
+      type: ethernet
+      state: down
+      persistent_state: absent
+  when:
+    - item.hypervisor == inventory_hostname
+    - (item.forward == 'bridge') and (item.hypervisor_if is defined)
+  loop: "{{ networks }}"
+
+- name: NETWORKING - Define only the network configuration for the public interface of the DCN hypervisors without static routes
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ hypervisor_external_if }}"
+      interface_name: "{{ hypervisor_external_if }}"
+      type: ethernet
+      autoconnect: yes
+      state: up
+      ip:
+        dhcp4: yes
+  when: inventory_hostname != 'localhost'
+
+- name: NETWORKING - Define only the network configuration for the public interface of the localhost hypervisor without static routes
+  set_fact:
+    network_connections: "{{ network_connections + [connection] }}"
+  vars:
+    connection:
+      name: "{{ external_if }}"
+      interface_name: "{{ external_if }}"
+      type: ethernet
+      autoconnect: yes
+      state: up
+      ip:
+        dhcp4: yes
+  when: inventory_hostname == 'localhost'
+
+- name: NETWORKING - Configure network using system role
+  import_role:
+    name: rhel-system-roles.network
+  vars:
+    network_allow_restart: yes
+
+- name: NETWORKING - Gather facts again to get interfaces
+  setup:

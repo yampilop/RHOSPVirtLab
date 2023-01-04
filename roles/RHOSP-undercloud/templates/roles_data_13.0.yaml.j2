@@ -1,12 +1,18 @@
-{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | list | count)) %}
-{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
+{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 
-{% set controller_count = (physical | selectattr("profile", "equalto", "controller") | list | count) %}
-{% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | list | count) %}
-{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | list | count) %}
-{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | list | count) %}
+{% set controller_count = (physical | selectattr("profile", "equalto", "controller") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
+{% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
+{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
+{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
+
+{% if leaf.name != DefaultLeaf0.name %}
+{% set name = '_' ~ leaf.name %}
+{% else %}
+{% set name = '' %}
+{% endif %}
 
 ###############################################################################
 ###############################################################################
@@ -36,7 +42,7 @@
   # each, such as ['ControlPlane', 'External']
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcontroller-%index%'
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   uses_deprecated_params: True
   deprecated_param_extraconfig: 'controllerExtraConfig'
@@ -202,15 +208,15 @@
     Basic Compute Node role
   CountDefault: 0
   networks:
-    - External
-    - InternalApi
-    - Tenant
-    - Storage
-  default_route_networks: ['External','ControlPlane']
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcompute-%index%'
   RoleParametersDefault:
     TunedProfileName: "virtual-host"
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   uses_deprecated_params: True
   deprecated_param_image: 'NovaImage'
@@ -278,8 +284,8 @@
   description: |
     Ceph OSD Storage node role
   networks:
-    - Storage
-    - StorageMgmt
+    - Storage{{ name }}
+    - StorageMgmt{{ name }}
   uses_deprecated_params: False
   CountDefault: 0
   HostnameFormatDefault: '%stackname%-vcephstorage-%index%'
@@ -323,14 +329,14 @@
   description: |
     Compute Node role hosting Ceph OSD too
   networks:
-    - External
-    - InternalApi
-    - Tenant
-    - Storage
-    - StorageMgmt
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+    - StorageMgmt{{ name }}
   disable_upgrade_deployment: True
   CountDefault: 0
-  default_route_networks: ['External','ControlPlane']
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcomputehci-%index%'
   deprecated_nic_config_name: 'vcomputehci.yaml'
   RoleParametersDefault:
@@ -414,7 +420,7 @@
   # each, such as ['ControlPlane', 'External']
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-controller-%index%'
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   uses_deprecated_params: True
   deprecated_param_extraconfig: 'controllerExtraConfig'
@@ -580,15 +586,15 @@
     Basic Compute Node role
   CountDefault: 0
   networks:
-    - External
-    - InternalApi
-    - Tenant
-    - Storage
-  default_route_networks: ['External','ControlPlane']
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-compute-%index%'
   RoleParametersDefault:
     TunedProfileName: "virtual-host"
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   uses_deprecated_params: True
   deprecated_param_image: 'NovaImage'
@@ -657,11 +663,11 @@
     Compute OvS DPDK Role
   CountDefault: 0
   networks:
-    - External
-    - InternalApi
-    - Tenant
-    - Storage
-  default_route_networks: ['External','ControlPlane']
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdk-%index%'
   deprecated_nic_config_name: 'computeovsdpdk.yaml'
   disable_upgrade_deployment: True
@@ -727,15 +733,11 @@
     - compute
     - dpdk
   networks:
-    External:
-      subnet: external_subnet
-    InternalApi:
-      subnet: internal_api_subnet
-    Tenant:
-      subnet: tenant_subnet
-    Storage:
-      subnet: storage_subnet
-  default_route_networks: ['External','ControlPlane']
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdksriov-%index%'
   deprecated_nic_config_name: 'computeovsdpdksriov.yaml'
   RoleParametersDefault:
@@ -799,11 +801,11 @@
     Compute SR-IOV Role
   CountDefault: 0
   networks:
-    - External
-    - InternalApi
-    - Tenant
-    - Storage
-  default_route_networks: ['External','ControlPlane']
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-computesriov-%index%'
   deprecated_nic_config_name: 'computesriov.yaml'
   disable_upgrade_deployment: True
@@ -866,11 +868,11 @@
     Compute OvS HwOffload Role
   CountDefault: 0
   networks:
-    - External
-    - InternalApi
-    - Tenant
-    - Storage
-  default_route_networks: ['External','ControlPlane']
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovshwoffload-%index%'
   deprecated_nic_config_name: 'computeovshwoffload.yaml'
   disable_upgrade_deployment: True
@@ -934,8 +936,8 @@
   description: |
     Ceph OSD Storage node role
   networks:
-    - Storage
-    - StorageMgmt
+    - Storage{{ name }}
+    - StorageMgmt{{ name }}
   uses_deprecated_params: False
   CountDefault: 0
   HostnameFormatDefault: '%stackname%-cephstorage-%index%'
@@ -979,14 +981,14 @@
   description: |
     Compute Node role hosting Ceph OSD too
   networks:
-    - External
-    - InternalApi
-    - Tenant
-    - Storage
-    - StorageMgmt
+    - External{{ name }}
+    - InternalApi{{ name }}
+    - Tenant{{ name }}
+    - Storage{{ name }}
+    - StorageMgmt{{ name }}
   disable_upgrade_deployment: True
   CountDefault: 0
-  default_route_networks: ['External','ControlPlane']
+  default_route_networks: ['External{{ name }}','ControlPlane']
   HostnameFormatDefault: '%stackname%-computehci-%index%'
   deprecated_nic_config_name: 'computehci.yaml'
   RoleParametersDefault:

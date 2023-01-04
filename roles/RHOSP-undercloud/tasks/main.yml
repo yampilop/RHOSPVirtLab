@@ -57,28 +57,26 @@
     state: latest
   notify: HANDLER - Reboot the machine
 
-- name: CONFIGFILES - Create directories
+- name: CONFIGFILES - Create images directory
   file:
-    path: "/home/stack/{{ item }}"
+    path: "/home/stack/images"
     owner: stack
     group: stack
     state: directory
   loop:
     - images
-    - templates
-    - templates/nic-configs
 
 - name: CONFIGFILES - Set container images prepare file
   template:
     src: "containers-prepare-parameter.yaml.j2"
-    dest: "/home/stack/templates/containers-prepare-parameter.yaml"
+    dest: "/home/stack/containers-prepare-parameter.yaml"
     owner: stack
     group: stack
 
 - name: CONFIGFILES - Set custom undercloud parameters
   copy:
     src: "templates/custom-undercloud-params.yaml"
-    dest: "/home/stack/templates/custom-undercloud-params.yaml"
+    dest: "/home/stack/custom-undercloud-params.yaml"
     owner: stack
     group: stack
 
@@ -120,55 +118,15 @@
   register: result
   until: result is not failed
 
-- name: TEMPLATES - Prepare templates
-  template:
-    src: "{{ item }}.j2"
-    dest: "/home/stack/templates/{{ item }}"
-    owner: stack
-    group: stack
+- name: STACK - Import tasks for the main stack
+  include_tasks: tasks/overcloud.yml
   loop:
-    - instackenv.yaml
-    - node-info.yaml
-    - custom-overcloud.yaml
-    - network_data.yaml
-    - custom-network-configuration.yaml
-    - custom-ceph.yaml
-    - vip_data.yaml
+    - "{{ DefaultLeaf0 }}"
+  loop_control:
+    loop_var: leaf
 
-- name: TEMPLATES - Prepare roles_data.yaml depending on the version
-  template:
-    src: "roles_data_{{ RHOSP_version }}.yaml.j2"
-    dest: "/home/stack/templates/roles_data.yaml"
-    owner: stack
-    group: stack
-
-- name: TEMPLATES - Prepare the nic-configs templates
-  template:
-    src: "nic-configs/{{ item.nic_configs }}.j2"
-    dest: "/home/stack/templates/nic-configs/{{ item.nic_configs }}"
-    owner: stack
-    group: stack
-  loop: "{{ overcloud_roles }}"
-  when: RHOSP_version != 17.0
-
-- name: TEMPLATES - RHOSP 17.0 nic-config files
-  template:
-    src: "templates/nic-configs/nic-config.j2"
-    dest: "/home/stack/templates/nic-configs/{{ item.profile }}.j2"
-    owner: stack
-    group: stack
-  loop: "{{ overcloud_roles }}"
-  when: RHOSP_version == 17.0
-
-- name: SCRIPTS - Prepare the scripts
-  template:
-    src: "{{ item }}.j2"
-    dest: "/home/stack/{{ item }}"
-    mode: "755"
-    owner: stack
-    group: stack
-  loop:
-    - pre_deployment.sh
-    - deploy.sh
-    - post_deployment.sh
-    - undeploy.sh
+- name: DCN - Import tasks for each DCN Leaf
+  include_tasks: tasks/leafs.yml
+  loop: "{{ DCNLeafs }}"
+  loop_control:
+    loop_var: leaf

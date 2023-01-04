@@ -1,0 +1,33 @@
+- name: FIREWALL - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
+  firewalld:
+    zone: public
+    interface: "{{ item.bridge }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ networks }}"
+  when:
+    - item.hypervisor == inventory_hostname
+    - (item.name == forward_network) or (item.forward == 'bridge')
+
+- name: FIREWALL - Enable masquerade in the firewall to allow external traffic
+  firewalld:
+    zone: "{{ item }}"
+    masquerade: yes
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+    - public
+    - libvirt
+  become: yes
+
+- name: FIREWALL - Set port forwarding rules
+  firewalld:
+    rich_rule: rule family=ipv4 forward-port port={{ item }} protocol=tcp to-port={{ item }} to-addr={{ overcloud_ip }}
+    zone: public
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ forwarded_ports }}"
+  when: inventory_hostname == 'localhost'

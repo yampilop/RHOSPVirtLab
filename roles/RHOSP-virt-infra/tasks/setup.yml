@@ -1,0 +1,99 @@
+- name: SETUP - Ensure the ssh directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.ssh"
+    state: directory
+  when: inventory_hostname == 'localhost'
+
+- name: SETUP - Check if the ssh keypair exists
+  stat:
+    path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+  register: keypair
+  when: inventory_hostname == 'localhost'
+
+- name: SETUP - Create ssh key
+  openssh_keypair:
+    path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  when:
+    - inventory_hostname == 'localhost'
+    - not keypair.stat.exists
+
+- name: SETUP - Get ssh public key into variable
+  set_fact:
+    ssh_public_key: "{{ lookup('file', '/home/{{ ansible_user }}/.ssh/id_rsa.pub') }}"
+  when: inventory_hostname == 'localhost'
+
+- name: SETUP - Ensure packages are installed
+  yum:
+    name: "{{ RHEL_version_supported[ansible_distribution_version].packages }}"
+    state: present
+  become: yes
+
+- name: SETUP - Ensure the needed groups exist
+  group:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - libvirt
+    - kvm
+
+- name: SETUP - Ensure the user belongs to the proper groups
+  user:
+    name: "{{ ansible_user }}"
+    groups:
+      - libvirt
+      - kvm
+    append: yes
+
+- name: SETUP - Ensure required services are enabled and running
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  become: yes
+  loop:
+    - "{% if ansible_distribution_version == '7.9' %}libvirtd.service{% else %}libvirtd.socket{% endif %}"
+    - NetworkManager.service
+    - firewalld.service
+
+- name: SETUP - Update pip
+  pip:
+    name: pip
+    executable: "pip3"
+    state: latest
+
+- name: SETUP - Install packages from pip
+  pip:
+    name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
+    executable: "pip3"
+  when: RHEL_version_supported[ansible_distribution_version].pip is defined
+
+- name: SETUP - Create stack alias to connect to undercloud
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "alias stack='ssh stack@undercloud'"
+    insertafter: EOF
+    state: present
+  when: inventory_hostname == 'localhost'
+
+- name: SETUP - Create VirtualBMC systemd unit
+  template:
+    src: "vbmcd.service.j2"
+    dest: "/etc/systemd/system/vbmcd.service"
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+
+- name: SETUP - Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: SETUP - Enable and start vbmcd service
+  service:
+    name: vbmcd
+    state: started
+    enabled: yes
+  become: yes

@@ -1,254 +1,72 @@
 ---
 # tasks file for RHOSP-virt-infra
 
-- name: Verify the OS Version is supported
-  fail:
-    msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
-  when: RHEL_version_supported[ansible_distribution_version] is not defined
+- name: CHECKS - Perform some checks
+  import_tasks: tasks/checks.yml
 
-- name: Verify the RHOSP version selected is supported
-  fail:
-    msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
-  when: RHOSP_version_supported[RHOSP_version] is not defined
+- name: SETUP - Make the hypervisor setup
+  import_tasks: tasks/setup.yml
 
-- name: Verify vms profiles
-  import_tasks: tasks/profiles.yml
+# Cleanup process
 
-- name: Ensure the ssh directory exists
-  file:
-    path: "/home/{{ ansible_user }}/.ssh"
-    state: directory
+- name: DHCRELAY - Clean DHCP relay
+  import_tasks: clean_dhcrelay.yml
+  when:
+    - cleanup
+    - DCNLeafs | length > 0
 
-- name: Create ssh key
-  openssh_keypair:
-    path: "/home/{{ ansible_user }}/.ssh/id_rsa"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+- name: FIREWALL - Clean firewall
+  import_tasks: clean_firewall.yml
+  when: cleanup
 
-- name: Get ssh public key into variable
-  set_fact:
-    ssh_public_key: "{{ lookup('file', '/home/{{ ansible_user }}/.ssh/id_rsa.pub') }}"
+- name: NETWORKING - Clean network profiles
+  import_tasks: clean_network_profiles.yml
+  when: cleanup
 
-- name: Ensure packages are installed
-  yum:
-    name: "{{ RHEL_version_supported[ansible_distribution_version].packages }}"
-    state: present
-  become: yes
-
-- name: Ensure the needed groups exist
-  group:
-    name: "{{ item }}"
-    state: present
-  loop:
-    - libvirt
-    - kvm
-
-- name: Ensure the user belongs to the proper groups
-  user:
-    name: "{{ ansible_user }}"
-    groups:
-      - libvirt
-      - kvm
-    append: yes
-
-- name: Ensure required services are enabled and running
-  service:
-    name: "{{ item }}"
-    state: started
-    enabled: yes
-  become: yes
-  loop:
-    - libvirtd
-    - NetworkManager
-    - firewalld
-
-- name: Update pip
-  pip:
-    name: pip
-    executable: "pip3"
-    state: latest
-
-- name: Install packages from pip
-  pip:
-    name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
-    executable: "pip3"
-  when: RHEL_version_supported[ansible_distribution_version].pip is defined
-
-- name: VIRTUALBMC - Create VirtualBMC systemd unit
-  template:
-    src: "vbmcd.service.j2"
-    dest: "/etc/systemd/system/vbmcd.service"
-    owner: root
-    group: root
-    mode: "0644"
-  become: yes
-
-- name: VIRTUALBMC - Reload systemd daemon
-  systemd:
-    daemon_reload: yes
-  become: yes
-
-- name: VIRTUALBMC - Enable and start vbmcd service
-  service:
-    name: vbmcd
-    state: started
-    enabled: yes
-  become: yes
-
-- name: FIREWALLD - Ensure libvirt zone exists
-  firewalld:
-    zone: libvirt
-    state: present
-    permanent: yes
-  become: yes
-  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
-  register: firewalld_create_zone
-
-- name: FIREWALLD - Reload firewall after creating the zone
-  command: "firewall-cmd --reload"
-  become: yes
-  when: firewalld_create_zone.changed and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
-
-- name: FIREWALLD - Ensure libvirt network interfaces belong to libvirt zone
-  firewalld:
-    zone: libvirt
-    interface: "{{ item.bridge }}"
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop: "{{ networks }}"
-  when: (item.name != forward_network) and (item.forward != 'bridge') and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
-
-- name: FIREWALLD - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
-  firewalld:
-    zone: public
-    interface: "{{ item.bridge }}"
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop: "{{ networks }}"
-  when: ((item.name == forward_network) or (item.forward == 'bridge')) and (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
-
-- name: Clean VirtualBMC
+- name: VIRTUALBMC - Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
   when: cleanup
 
-- name: Clean libvirt domains
+- name: LIBVIRT - Clean libvirt domains
   import_tasks: clean_libvirt_domains.yml
   when: cleanup
 
-- name: Clean libvirt storage pools and images
+- name: LIBVIRT - Clean libvirt storage pools and images
   import_tasks: clean_libvirt_storage.yml
   when: cleanup
 
-- name: Clean libvirt networks
+- name: LIBVIRT - Clean libvirt networks
   import_tasks: clean_libvirt_networks.yml
   when: cleanup
 
-- name: Define bridges for networks linked with the hypervisor
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    ip:
-      dhcp4: no
-      auto6: no
-      address:
-        - "{% if item.ipv4 %}{{ (item.ipv4.address ~ '/' ~ item.ipv4.netmask) | ipaddr('host/prefix') }}{% endif %}"
-    noip:
-      dhcp4: no
-      auto6: no
-    connection:
-      name: "{{ item.bridge }}"
-      interface_name: "{{ item.bridge }}"
-      type: bridge
-      autoconnect: yes
-      ip: "{% if item.ipv4 %}{{ ip }}{% else %}{{ noip }}{% endif %}"
-      state: up
-  when: item.forward == 'bridge' and item.hypervisor_if is defined
-  loop: "{{ networks }}"
+# Create process
 
-- name: Define hypervisor interfaces
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.hypervisor_if }}"
-      interface_name: "{{ item.hypervisor_if }}"
-      type: ethernet
-      autoconnect: yes
-      ip:
-        dhcp4: no
-        auto6: no
-      state: up
-  when: item.forward == 'bridge' and item.hypervisor_if is defined
-  loop: "{{ networks }}"
+- name: NETWORKING - Create network profiles
+  import_tasks: create_network_profiles.yml
+  when: create
 
-- name: Define network configuration for interfaces bridged to libvirt
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.hypervisor_if }}"
-      interface_name: "{{ item.hypervisor_if }}"
-      type: ethernet
-      controller: "{{ item.bridge }}"
-      port_type: bridge
-      autoconnect: yes
-      state: up
-  when: item.forward == 'bridge' and item.hypervisor_if is defined
-  loop: "{{ networks }}"
-
-- name: Configure network using system role
-  include_role:
-    name: rhel-system-roles.network
-  vars:
-    network_allow_restart: yes
-
-- name: Gather facts again to get interfaces
-  setup:
-
-- name: Configure libvirt networks
+- name: LIBVIRT - Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
   when: create
 
-- name: Configure libvirt storage pools and images
+- name: LIBVIRT - Configure libvirt storage pools and images
   import_tasks: create_libvirt_storage.yml
   when: create
 
-- name: Configure libvirt domains
+- name: LIBVIRT - Configure libvirt domains
   import_tasks: create_libvirt_domains.yml
   when: create
 
-- name: Install and configure VirtualBMC
+- name: VIRTUALBMC - Configure VirtualBMC
   import_tasks: create_virtualbmc.yml
   when: create
 
-- name: FIREWALLD - Enable masquerade in the firewall to allow external traffic
-  firewalld:
-    zone: "{{ item }}"
-    masquerade: yes
-    permanent: yes
-    immediate: yes
-    state: enabled
-  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
-  loop:
-    - public
-    - libvirt
-  become: yes
+- name: FIREWALL - Configure firewall
+  import_tasks: configure_firewall.yml
+  when: create
 
-- name: FIREWALLD - Set port forwarding rules
-  firewalld:
-    rich_rule: rule family=ipv4 forward-port port={{ item }} protocol=tcp to-port={{ item }} to-addr={{ overcloud_ip }}
-    zone: public
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop: "{{ forwarded_ports }}"
-  when: (ansible_facts.services['firewalld.service'] is defined) and (ansible_facts.services['firewalld.service'].state == 'running')
-
-- name: Create stack alias to connect to undercloud
-  lineinfile:
-    path: "/home/{{ ansible_user }}/.bashrc"
-    line: "alias stack='ssh stack@undercloud'"
-    insertafter: EOF
-    state: present
+- name: DHCRELAY - Configure DHCP relay
+  import_tasks: configure_dhcrelay.yml
+  when:
+    - create
+    - DCNLeafs | length > 0

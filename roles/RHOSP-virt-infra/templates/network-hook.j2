@@ -7,6 +7,8 @@ iptables='/usr/sbin/iptables'
 
 external_if='{{ external_if }}'
 external_ip=`ip addr show dev ${external_if} | grep -o "inet [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"`
+forward_network='{{ forward_network }}'
+bridge='{{ (networks | selectattr("name", "equalto", forward_network) | list | first).bridge }}'
 
 internal_ip='{{ overcloud_ip }}'
 
@@ -16,7 +18,7 @@ rules_update() {
   network_name="$1"
   action="$2"
   
-  FORWARD="$iptables $action FORWARD -o br-external -j ACCEPT"
+  FORWARD="$iptables $action FORWARD -o $bridge -j ACCEPT"
   
   if [ -z "${DEBUG_RULES:-}" ]; then
     `$FORWARD`
@@ -38,7 +40,7 @@ rules_update() {
 network_name="$1"
 network_task="$2"
 
-if [ "${network_name}" = "RHOSPVirtLab_external" ]; then
+if [ "${network_name}" = "${forward_network}" ]; then
 
   case "${network_task}" in
     started)

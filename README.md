@@ -4,7 +4,7 @@ Virtual lab to setup a Red Hat OpenStack Platform test installation over a RHEL 
 
 Currently supported RHOSP versions:
 
-- 17.0 (default)
+- **17.0** (default)
 - 16.2
 - 16.1
 - 13.0
@@ -55,14 +55,30 @@ sudo yum update -y
 sudo reboot
 ```
 
+Repeat this in all your hypervisors when you use a DCN configuration.
+
 ### Local user configuration
 
-The user from which you will execute the lab needs to have `sudo` **permissions enabled with no password**.
-
-To achieve that, assuming your username is **admin**, you need to create a file `/etc/sudoers.d/admin` with the following content:
+The user from which you will execute the lab needs to have username **admin** and `sudo` **permissions enabled with no password**. To achieve that you need to create a file `/etc/sudoers.d/admin` with the following content:
 
 ```
 admin ALL=(ALL) NOPASSWD:ALL
+```
+
+Repeat that **admin** user setup in all your hypervisors when you use a DCN configuration.
+
+### DCN configuration
+
+In the main hypervisor (central) you need to create an ssh-key using the following command (use default options):
+
+```bash
+ssh-keygen
+```
+
+Then copy that key to all your other hypervisors with:
+
+```bash
+ssh-copy-id admin@<hypervisor_address>
 ```
 
 ## Install required and useful packages
@@ -78,6 +94,8 @@ sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete pyt
 ```bash
 sudo yum -y install git ansible vim wget bash-completion python2-netaddr rhel-system-roles tmux tcpdump
 ```
+
+Repeat this in all your hypervisors when you use a DCN configuration.
 
 ## Pull the repo
 
@@ -96,6 +114,18 @@ cd RHOSPVirtLab
 
 ## Initial configurations
 
+#### Inventory for DCN configuration
+
+You need to add all your hypervisors in the `./inventory` file in the following way:
+
+```
+[infrastructure]
+localhost ansible_host=localhost ansible_connection=local ansible_become=yes
+<hypervisor1_name> ansible_host=<hypervisor1_address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no' hypervisor_external_if=<hypervisor1_external_interface_name>
+<hypervisor2_name> ansible_host=<hypervisor2_address> ansible_user=admin ansible_become=yes ansible_ssh_extra_args='-o StrictHostKeyChecking=no' hypervisor_external_if=<hypervisor2_external_interface_name>
+...
+```
+
 ### Test user and ansible installation
 
 ```bash
@@ -110,6 +140,19 @@ hypervisor | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
+```
+
+For DCN deployments you need to see a similar output for all the hypervisors:
+
+```
+hypervisor_name | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/libexec/platform-python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+...
 ```
 
 ### Install requirements
@@ -168,36 +211,190 @@ The playbook sets up the following environment:
 
 ![Network diagram](images/network_diagram.png)
 
+## DCN Deployment
+
+When using DCN Leafs, the playbook sets up the following environment:
+
+![DCN leafs diagram](images/dcn_leafs_diagram.png)
+
 ### Customizing the environment
 
 If you want to customize the default environment created by the playbook, you need to edit the files:
 
-- vars/networks.yml (The virtual networks and their connection to the physical interfaces of the hypervisor)
-- vars/vms.yml (The VMs to be created in the hypervisor)
-- vars/physical.yml (The physical nodes to be added as baremetal nodes in the undercloud)
-- vars/options.yml (Customizable parameters like the version of RHOSP to deploy, the cleanup parameter, etc.)
+- `vars/networks.yml` (The virtual networks and their connection to the physical interfaces of the hypervisor)
+- `vars/vms.yml` (The VMs to be created in the hypervisors)
+- `vars/physical.yml` (The physical nodes to be added as baremetal nodes in the undercloud)
+- `vars/options.yml` (Customizable parameters like the version of RHOSP to deploy, the cleanup parameter, etc.)
 
 You also can add to vars/options.yml any value overriding the default values from the roles.
 
-The available profiles for VMs are:
+#### Customizing networks
 
-- vcontroller
-- vcompute
-- vcephstorage
-- vcomputehci
+- The default configuration should work for most cases.
+- If you will add physical nodes, you need to define `hypervisor_if: {{ifname}}` parameter on `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` networks, setting the interfaces that will be attached to the bridges. Make sure those interfaces are configured as trunks with a native vlan in the switch.
 
-The available profiles for Physical machines are:
+#### Customizing VMs
 
-- controller
-- compute
-- computeovsdpdk
-- computeovsdpdksriov
-- computesriov
-- computeovshwoffload
-- cephstorage
-- computehci
+- The default configuration considers an undercloud, 3 virtual controllers and 2 virtual compute nodes. Add or remove nodes making sure the following parameters are unique in each record:
+    - name
+    - bmcport
+    - mac (this is the base MAC address without the last byte)
+- Make sure you use only virtual profiles for the vms, or the playbook will fail. The available virtual profiles are:
+    - vcontroller
+    - vcompute
+    - vcephstorage
+    - vcomputehci
+- For the case of vcephstorage or vcomputehci you can add a second virtual disk to the VM with the parameter `data_disk_size: SIZE_IN_BYTES`.
+- Make sure you perform the calculations to use the hypervisor physical resources (CPU, RAM and DISK) properly, leaving some of them for the hypervisor itself (for example leaving 4 cpus and 16GB of RAM).
 
-For the case of vcephstorage or vcomputehci you can add a second virtual disk to the VM inserting the following line in the vms element: `data_disk_size: <SIZE_IN_BYTES>`.
+#### Customizing physical machines
+
+- The default configuration considers no physical nodes.
+- Make sure you use only physical profiles for the nodes, or the playbook will fail. The available profiles are:
+    - controller
+    - compute
+    - computeovsdpdk
+    - computeovsdpdksriov
+    - computesriov
+    - computeovshwoffload
+    - cephstorage
+    - computehci
+- Set the power management parameters matching your servers configuration.
+
+#### Customizing options
+
+This are the mandatory parameter you most probably need to customize:
+
+- Set the version you will install using the `RHOSP_version` parameter.
+- Set the `external_if` parameter to the hypervisor external interface name.
+- Set reachable and working servers in `dns_servers` and `ntp_servers`.
+- Set the proper interfaces names, specially for the physical roles, to avoid network configuration issues. For example:
+
+```yaml
+  ComputeSriov:
+    ControlPlane: ens1f0
+    External: ens1f1v0
+    Sriov:
+      - device: ens1f1
+        numvfs: 8
+```
+
+- Set the proper parameters for NFV roles in `ComputeSriovProperties`, `ComputeOvsHwOffloadProperties`, `ComputeOvsDpdkProperties` and/or `ComputeOvsDpdkSriovProperties`.
+- Choose to deploy Octavia with `DeployOctavia: True`.
+- Choose to register the nodes with `RegisterNodes: True`.
+
+#### DCNLeafs customization
+
+For DCN leafs you need the following customizations to the vars files:
+
+- `vars/networks.yml`:
+    - `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` should be `forward: bridge`. RHOSPVirtLab_management remains as `forward: nat`.
+    - Create `RHOSPVirtLab_ctlplane_{{leaf.name}}` and `RHOSPVirtLab_external_{{leaf.name}}` networks for every leaf, with `forward: bridge` and consistent configuration, for example:
+
+```yaml
+  - name: RHOSPVirtLab_ctlplane_leaf1
+    hypervisor: hypervisor_name
+    bridge: br-ctlplane
+    forward: bridge
+    mac_suffix: '00'
+    ipv4:
+      address: '192.168.25.1'
+      netmask: '255.255.255.0'
+      dhcp: false
+  - name: RHOSPVirtLab_external_leaf1
+    hypervisor: hypervisor_name
+    bridge: br-external
+    forward: bridge
+    mac_suffix: '05'
+    ipv4:
+      address: '10.1.0.1'
+      netmask: '255.255.255.0'
+      dhcp: false
+```
+
+    - Define `hypervisor_if: {{interface_name}}` for both networks if you plan to attach physical nodes to that leaf.
+
+- `vars/vms.yml`:
+    - Create vms with `hypervisor: {{hypervisorname}}`, consistent configuration and nics related to the proper networks, for example:
+
+```yaml
+  - name: vcompute0
+    hypervisor: hypervisor_name
+    title: 'RHOSPVirtLab Leaf1 Virtual Compute 0'
+    profile: 'vcompute'
+    memory: 92272640
+    vcpus: 26
+    bmcport: 6230
+    mac: '0c:1f:0d:12:02'
+    disk_size: 157374182400
+    data_disk_size: 0
+    backing_store: ''
+    cdrom: ''
+    nics:
+      RHOSPVirtLab_ctlplane_leaf1: ''
+      RHOSPVirtLab_external_leaf1: ''
+```
+
+- `vars/physical.yml`:
+    - Create physical nodes with `leaf: {{leaf.name}}` and the proper configuration, for example:
+
+```yaml
+  - name: computeovsdpdksriov0
+    leaf: leaf1
+    title: 'RHOSPVirtLab Compute OVS DPDK SR-IOV 0'
+    profile: 'computeovsdpdksriov'
+    memory: 263874784
+    cpus: 64
+    pm_type: "ipmi"
+    pm_user: "username"
+    pm_password: "password"
+    pm_addr: "XXX.XXX.XXX.XXX"
+    pm_port: "623"
+    mac: 'XX:XX:XX:XX:XX:XX'
+    capabilities: 'boot_mode:uefi'
+    disk_size: 599577434521
+```
+
+- `vars/options.yml`:
+    - Define your leafs using the `DCNLeafs` list with the proper format, for example:
+
+```yaml
+DCNLeafs:
+ - name: leaf1
+   hypervisor: hypervisor_name
+   subnet:
+     name: leaf1-subnet
+     cidr: 192.168.25.0/24
+     dhcp_start: 192.168.25.5
+     dhcp_end: 192.168.25.55
+     inspection_iprange: 192.168.25.100,192.168.25.120
+     gateway: 192.168.25.1
+     masquerade: false
+   networks:
+     Tenant:
+       prefix: '172.17.0'
+       vlan: 10
+       network: RHOSPVirtLab_ctlplane_leaf1
+     Storage:
+       prefix: '172.17.1'
+       vlan: 20
+       network: RHOSPVirtLab_ctlplane_leaf1
+     InternalApi:
+       prefix: '172.17.2'
+       vlan: 30
+       network: RHOSPVirtLab_ctlplane_leaf1
+     StorageMgmt:
+       prefix: '172.17.3'
+       vlan: 40
+       network: RHOSPVirtLab_ctlplane_leaf1
+     External:
+       prefix: '10.1.0'
+       network: RHOSPVirtLab_external_leaf1
+     Management:
+       prefix: '10.1.1'
+       vlan: 60
+       network: RHOSPVirtLab_ctlplane_leaf1
+```
 
 ## Last steps
 
@@ -251,6 +448,12 @@ For most cases it is available a script with all the common pre-deployment tasks
 
 If you want a customized experience, consider reviewing the script and executing the tasks manually.
 
+If you added DCN leafs, execute the corresponding `pre_deployment.sh` scripts:
+
+```bash
+/home/stack/templates/{{leaf.name}}/pre_deployment.sh
+```
+
 ### Deployment
 
 Execute the deployment script provided:
@@ -279,6 +482,12 @@ grep PASSWORD overcloudrc
 
 ```
 export OS_PASSWORD=XXXXXXXXXXXXXX
+```
+
+If you added DCN leafs, execute the corresponding `deploy.sh` scripts:
+
+```bash
+/home/stack/templates/{{leaf.name}}/deploy.sh
 ```
 
 ### Post-deployment actions

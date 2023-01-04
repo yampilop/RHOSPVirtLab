@@ -1,20 +1,24 @@
-{% if RHOSP_version_supported[RHOSP_version].uefi %}
+nodes:
+{% for vm in vms if (not vm.profile == 'undercloud') and (vm.hypervisor == leaf.hypervisor) %}
+{% if RHOSP_version_supported[RHOSP_version].uefi and vm.hypervisor == 'localhost' %}
 {% set vm_capabilities='boot_mode:uefi' %}
 {% else %}
 {% set vm_capabilities='boot_mode:bios' %}
 {% endif %}
-nodes:
-{% for vm in vms if not vm.profile == 'undercloud' %}
 {% if RHOSP_version == 13.0 %}
   - mac: 
       - '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
 {% else %}
   - ports:
       - address: '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
+{% if vm.hypervisor == 'localhost' %}
         physical_network: ctlplane
+{% else %}
+        physical_network: {{ leaf.subnet.name }}
 {% endif %}
-    name: "{{ vm.name }}"
-    capabilities: "{{ ["node:" ~ vm.name, "boot_option:local", vm_capabilities] | join(',') }}"
+{% endif %}
+    name: "{{ leaf.name ~ '-' ~ vm.name }}"
+    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ vm.name, "boot_option:local", vm_capabilities] | join(',') }}"
     cpu: {{ vm.vcpus }}
     memory: {{ (vm.memory / 1024) | int }}
     disk: {{ (vm.disk_size / 1073741824) | int }}
@@ -22,21 +26,25 @@ nodes:
     pm_type: "ipmi"
     pm_user: "admin"
     pm_password: "admin"
-    pm_addr: "192.168.250.1"
+    pm_addr: "{% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}"
     pm_port: "{{ vm.bmcport }}"
 {% endfor %}
 
-{% for node in physical %}
+{% for node in physical if node.leaf == leaf.name %}
 {% if RHOSP_version == 13.0 %}
   - mac: 
       - '{{ node.mac }}'
 {% else %}
   - ports:
       - address: '{{ node.mac }}'
+{% if node.leaf == DefaultLeaf0.name %}
         physical_network: ctlplane
+{% else %}
+        physical_network: {{ leaf.subnet.name }}
 {% endif %}
-    name: "{{ node.name }}"
-    capabilities: "{{ ["node:" ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
+{% endif %}
+    name: "{{ leaf.name ~ '-' ~ vm.name }}"
+    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
     cpu: {{ node.cpus }}
     memory: {{ (node.memory / 1024) | int }}
     disk: {{ (node.disk_size / 1073741824) | int }}

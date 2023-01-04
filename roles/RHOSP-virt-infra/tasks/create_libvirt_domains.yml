@@ -8,17 +8,21 @@
   community.libvirt.virt:
     command: define
     xml: "{{ lookup('template', 'domain.xml.j2') }}"
-  when: item.name not in all_vms.list_vms
   loop: "{{ vms }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
+  when:
+    - inventory_hostname in item.hypervisor
+    - item.name not in all_vms.list_vms
 
 - name: DOMAINS - Stop undercloud if undercloud-init.iso changed in order to reboot
   community.libvirt.virt:
     name: undercloud
     state: shutdown
   become: yes
-  when: overcloud_init_pool.changed
+  when:
+    - inventory_hostname == 'localhost'
+    - overcloud_init_pool.changed
 
 - name: DOMAINS - Wait for the undercloud to stop
   community.libvirt.virt:
@@ -29,13 +33,16 @@
   retries: 3
   delay: 15
   until: '"undercloud" not in running_vms.list_vms'
-  when: overcloud_init_pool.changed
+  when:
+    - inventory_hostname == 'localhost'
+    - overcloud_init_pool.changed
 
 - name: DOMAINS - Ensure undercloud domain is running
   community.libvirt.virt:
     name: undercloud
     state: running
   become: yes
+  when: inventory_hostname == 'localhost'
 
 - name: DOMAINS - Wait for the undercloud to start
   community.libvirt.virt:
@@ -46,6 +53,7 @@
   retries: 3
   delay: 15
   until: '"undercloud" in running_vms.list_vms'
+  when: inventory_hostname == 'localhost'
 
 - name: DOMAINS - Add management IPs entries to /etc/hosts on the local machines
   lineinfile:
@@ -53,6 +61,8 @@
     regexp: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
     line: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
     state: present
-  when: item.nics.RHOSPVirtLab_management is defined
   loop: "{{ vms }}"
   become: yes
+  when:
+    - inventory_hostname in item.hypervisor
+    - item.nics.RHOSPVirtLab_management is defined

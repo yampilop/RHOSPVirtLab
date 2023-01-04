@@ -1,15 +1,24 @@
+{% if leaf.name != DefaultLeaf0.name %}
+{% set name = '_' ~ leaf.name %}
+{% else %}
+{% set name = '' %}
+{% endif %}
+
 - network: storage_mgmt
-  dns_name: overcloud
-  subnet: storage_mgmt_subnet
+  dns_name: {{ leaf.name }}
+  subnet: storage_mgmt_subnet{{ name }}
 - network: internal_api
-  dns_name: overcloud
-  subnet: internal_api_subnet
+  dns_name: {{ leaf.name }}
+  subnet: internal_api_subnet{{ name }}
 - network: storage
-  dns_name: overcloud
-  subnet: storage_subnet
+  dns_name: {{ leaf.name }}
+  subnet: storage_subnet{{ name }}
 - network: external
-  dns_name: overcloud
-  subnet: external_subnet
+  dns_name: {{ leaf.name }}
+  subnet: external_subnet{{ name }}
+{% if leaf.name != DefaultLeaf0.name %}
   ip_address: {{ overcloud_ip }}
+{% endif %}
 - network: ctlplane
-  dns_name: overcloud
+  dns_name: {{ leaf.name }}
+  subnet: {{ leaf.subnet.name }}

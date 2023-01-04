@@ -1,12 +1,18 @@
-{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | list | count)) %}
-{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
+{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 
-{% set controller_count = (physical | selectattr("profile", "equalto", "controller") | list | count) %}
-{% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | list | count) %}
-{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | list | count) %}
-{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | list | count) %}
+{% set controller_count = (physical | selectattr("profile", "equalto", "controller") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
+{% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
+{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
+{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
+
+{% if leaf.name != DefaultLeaf0.name %}
+{% set name = '_' ~ leaf.name %}
+{% else %}
+{% set name = '' %}
+{% endif %}
 
 ###############################################################################
 ###############################################################################
@@ -46,7 +52,7 @@
   HostnameFormatDefault: '%stackname%-vcontroller-%index%'
   RoleParametersDefault:
     OVNCMSOptions: "enable-chassis-as-gw"
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   uses_deprecated_params: True
   deprecated_param_extraconfig: 'controllerExtraConfig'
@@ -225,18 +231,18 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcompute-%index%'
   RoleParametersDefault:
     TunedProfileName: "virtual-host"
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   # These deprecated_params only need to be used for existing roles and not for
   # composable roles.
@@ -308,9 +314,9 @@
   CountDefault: 0
   networks:
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   uses_deprecated_params: False
   HostnameFormatDefault: '%stackname%-vcephstorage-%index%'
   deprecated_nic_config_name: 'vcephstorage.yaml'
@@ -358,15 +364,15 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcomputehci-%index%'
   deprecated_nic_config_name: 'vcomputehci.yaml'
@@ -463,7 +469,7 @@
   HostnameFormatDefault: '%stackname%-controller-%index%'
   RoleParametersDefault:
     OVNCMSOptions: "enable-chassis-as-gw"
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   uses_deprecated_params: True
   deprecated_param_extraconfig: 'controllerExtraConfig'
@@ -642,18 +648,18 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-compute-%index%'
   RoleParametersDefault:
     TunedProfileName: "virtual-host"
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   # These deprecated_params only need to be used for existing roles and not for
   # composable roles.
@@ -725,13 +731,13 @@
   CountDefault: 0
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdk-%index%'
   deprecated_nic_config_name: 'computeovsdpdk.yaml'
@@ -800,13 +806,13 @@
     - dpdk
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdksriov-%index%'
   deprecated_nic_config_name: 'computeovsdpdksriov.yaml'
@@ -875,13 +881,13 @@
   CountDefault: 0
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computesriov-%index%'
   deprecated_nic_config_name: 'computesriov.yaml'
@@ -948,18 +954,18 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovshwoffload-%index%'
   RoleParametersDefault:
     TunedProfileName: "virtual-host"
-  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Deprecated & backward-compatible values
   # Set uses_deprecated_params to True if any deprecated params are used.
   # These deprecated_params only need to be used for existing roles and not for
   # composable roles.
@@ -1030,9 +1036,9 @@
   CountDefault: 0
   networks:
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   uses_deprecated_params: False
   HostnameFormatDefault: '%stackname%-cephstorage-%index%'
   deprecated_nic_config_name: 'cephstorage.yaml'
@@ -1080,15 +1086,15 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     InternalApi:
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     Tenant:
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     Storage:
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     StorageMgmt:
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computehci-%index%'
   deprecated_nic_config_name: 'computehci.yaml'

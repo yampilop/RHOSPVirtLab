@@ -7,6 +7,9 @@ source /home/stack/stackrc
 {% if RHOSP_version == 17.0 %}
 # Delete the overcloud
 metalsmith list
+{% for leaf in DCNLeafs %}
+openstack overcloud delete {{ leaf.name }} -y
+{% endfor %}
 openstack overcloud delete overcloud -y
 
 # Undeploy the nodes
@@ -15,6 +18,9 @@ metalsmith list
 openstack baremetal node list
 {% else %}
 # Delete the overcloud
+{% for leaf in DCNLeafs %}
+openstack overcloud delete {{ leaf.name }} -y
+{% endfor %}
 openstack overcloud delete overcloud -y
 openstack baremetal node list
 {% endif %}

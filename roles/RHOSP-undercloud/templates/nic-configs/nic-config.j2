@@ -26,8 +26,9 @@ network_config:
 {% raw %}    mtu: {{ min_viable_mtu }}
     # force the MAC address of the bridge to this interface
     primary: true
+{% endraw %}
 {% if 'Dpdk' not in item.name %}
-{% for network in role_networks if network != 'External' %}
+{% raw %}{% for network in role_networks if network != 'External' %}
   - type: vlan
     mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
     vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
@@ -36,8 +37,9 @@ network_config:
         {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
     routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
 {% endfor %}
+{% endraw %}
 {% else %}
-{% for network in role_networks if network != 'External' %}
+{% raw %}{% for network in role_networks if network != 'External' %}
 - type: vlan
   device: br-vlans
   mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
@@ -47,8 +49,8 @@ network_config:
       {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
   routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
 {% endfor %}
-{% endif %}
 {% endraw %}
+{% endif %}
 {% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}

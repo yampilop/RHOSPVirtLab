@@ -13,24 +13,29 @@
   community.libvirt.virt:
     command: destroy
     name: "{{ item.name }}"
-  when: item.name in running_vms.list_vms
   loop: "{{ vms }}"
+  when:
+    - inventory_hostname in item.hypervisor
+    - item.name in running_vms.list_vms
 
 - name: DOMAINS - Undefine the domain
   community.libvirt.virt:
     command: undefine
     name: "{{ item.name }}"
-  when: item.name in all_vms.list_vms
   loop: "{{ vms }}"
   ignore_errors: yes
   register: undefine_result
+  when:
+    - inventory_hostname in item.hypervisor
+    - item.name in all_vms.list_vms
 
-- name: DOMAINS - Undefine the domain if fails
+- name: DOMAINS - Undefine the domain if fails due to nvram (uefi)
   shell: "virsh undefine --nvram {{ item.name }}"
-  when: 
+  loop: "{{ vms }}"
+  when:
+    - inventory_hostname in item.hypervisor
     - item.name in all_vms.list_vms
     - undefine_result is defined
     - undefine_result.failed is defined
     - undefine_result.failed
     - (undefine_result.results | selectattr("item.name", "equalto", item.name) | list | first).failed
-  loop: "{{ vms }}"

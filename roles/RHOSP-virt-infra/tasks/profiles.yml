@@ -1,5 +1,0 @@
-- name: PROFILES - Check all vms profiles are virtual
-  fail:
-    msg: Please check your vms.yaml file and make sure the profiles chosen are the virtual ones.
-  when: (item.name != 'undercloud') and (not item.profile.startswith('v'))
-  loop: "{{ vms }}"

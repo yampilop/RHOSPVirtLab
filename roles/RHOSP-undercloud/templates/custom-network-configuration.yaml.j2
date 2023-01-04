@@ -1,10 +1,16 @@
-{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
+{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 
 {% if RHOSP_version != 17.0 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if leaf.hypervisor == 'localhost' %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.nic_configs }}
+{% else %}
+  OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.nic_configs }}
+{% endif %}
+{% endif %}
 {% endfor %}
 {% endif %}
 
@@ -12,7 +18,7 @@ parameter_defaults:
   NetworkDeploymentActions: ['CREATE','UPDATE']
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
-  ControlPlaneDefaultRoute: 192.168.24.1
+  ControlPlaneDefaultRoute: {{ leaf.subnet.gateway }}
   
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
@@ -32,6 +38,24 @@ parameter_defaults:
     - AggregateInstanceExtraSpecsFilter
     - NUMATopologyFilter
     - PciPassthroughFilter
+
+{% if DCNLeafs | length > 0 %}
+{% for ocrole in overcloud_roles %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+  {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
+  {{ ocrole.name }}Parameters:
+{% if leaf.name != 'overcloud' %}
+    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
+{% else %}
+    NeutronBridgeMappings: "datacentre:br-ex"
+{% endif %}
+{% endif %}
+{% endfor %}
+  VirtualControllerParameters:
+    OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+  ControllerParameters:
+    OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+{% endif %}
 
 {% if dpdk_count + sriov_count > 0 %}
   ComputeOvsDpdkSriovParameters:

@@ -2,17 +2,18 @@
 
 parameter_defaults:
 {% for ocrole in overcloud_roles %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
   Overcloud{{ ocrole.name }}Flavor: baremetal
-  {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | list | count) }}
+  {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
+{% endif %}
 {% endfor %}
 
 {% else %}
 
 {% for ocrole in overcloud_roles %}
-{% set count=(vms | selectattr("profile", "equalto", ocrole.profile) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | list | count) %}
-{% if count > 0 %}
+{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
 - name: {{ ocrole.name }}
-  count: {{ count }}
+  count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
 {% if 'Controller' in ocrole.name %}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
@@ -47,13 +48,12 @@ parameter_defaults:
       - external
     swap_size_mb: 8192
   instances:
-{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile)) %}
-  - name: {{ vm.name }}
+{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
+  - name: {{ leaf.name }}-{{ vm.name }}
 {% endfor %}
-{% for pm in (physical | selectattr("profile", "equalto", ocrole.profile)) %}
-  - name: {{ pm.name }}
+{% for pm in (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name)) %}
+  - name: {{ leaf.name }}-{{ pm.name }}
 {% endfor %}
 {% endif %}
 {% endfor %}
-
 {% endif %}

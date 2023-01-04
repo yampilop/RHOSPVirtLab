@@ -41,7 +41,7 @@ parameters:
     description: IP address/subnet on the storage network
     type: string
   StorageNetworkVlanID:
-    default: {{ network_data_vlans.Storage }}
+    default: {{ leaf.networks.Storage.vlan | default(1) }}
     description: Vlan ID for the storage network traffic.
     type: number
   StorageMtu:
@@ -63,7 +63,7 @@ parameters:
     description: IP address/subnet on the internal_api network
     type: string
   InternalApiNetworkVlanID:
-    default: {{ network_data_vlans.InternalApi }}
+    default: {{ leaf.networks.InternalApi.vlan | default(1) }}
     description: Vlan ID for the internal_api network traffic.
     type: number
   InternalApiMtu:
@@ -85,7 +85,7 @@ parameters:
     description: IP address/subnet on the tenant network
     type: string
   TenantNetworkVlanID:
-    default: {{ network_data_vlans.Tenant }}
+    default: {{ leaf.networks.Tenant.vlan | default(1) }}
     description: Vlan ID for the tenant network traffic.
     type: number
   TenantMtu:
@@ -107,7 +107,7 @@ parameters:
     description: IP address/subnet on the external network
     type: string
   ExternalNetworkVlanID:
-    default: {{ network_data_vlans.External }}
+    default: {{ leaf.networks.External.vlan | default(1) }}
     description: Vlan ID for the external network traffic.
     type: number
   ExternalMtu:
