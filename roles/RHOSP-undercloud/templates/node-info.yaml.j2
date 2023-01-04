@@ -47,6 +47,10 @@ parameter_defaults:
       default_route_network:
       - external
     swap_size_mb: 8192
+{% if leaf.name != DefaultLeaf0.name %}
+    image:
+      href: file:///var/lib/ironic/images/overcloud-full.raw
+{% endif %}
   instances:
 {% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
   - name: {{ leaf.name }}-{{ vm.name }}
