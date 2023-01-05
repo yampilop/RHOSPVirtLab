@@ -55,7 +55,7 @@ parameter_defaults:
     swap_size_mb: 8192
 {% if leaf.name != DefaultLeaf0.name %}
     image:
-      href: file:///var/lib/ironic/images/overcloud-full.raw
+      href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
 {% endif %}
