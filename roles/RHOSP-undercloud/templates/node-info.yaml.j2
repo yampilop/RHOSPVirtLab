@@ -10,6 +10,12 @@ parameter_defaults:
 
 {% else %}
 
+{% if node.leaf != DefaultLeaf0.name %}
+{% set name = "_" ~ leaf.name %}
+{% else %}
+{% set name = "" %}
+{% endif %}
+
 {% for ocrole in overcloud_roles %}
 {% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
 - name: {{ ocrole.name }}
@@ -32,15 +38,15 @@ parameter_defaults:
     - network: ctlplane
       vif: true
     - network: storage
-      subnet: storage_subnet
+      subnet: storage_subnet{{ name }}
     - network: storage_mgmt
-      subnet: storage_mgmt_subnet
+      subnet: storage_mgmt_subnet{{ name }}
     - network: internal_api
-      subnet: internal_api_subnet
+      subnet: internal_api_subnet{{ name }}
     - network: tenant
-      subnet: tenant_subnet
+      subnet: tenant_subnet{{ name }}
     - network: external
-      subnet: external_subnet
+      subnet: external_subnet{{ name }}
     network_config:
       network_config_update: true
       template: /home/stack/templates/nic-configs/{{ ocrole.profile }}.j2
@@ -50,6 +56,8 @@ parameter_defaults:
 {% if leaf.name != DefaultLeaf0.name %}
     image:
       href: file:///var/lib/ironic/images/overcloud-full.raw
+      kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
+      ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
 {% endif %}
   instances:
 {% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
