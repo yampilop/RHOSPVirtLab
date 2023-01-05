@@ -10,7 +10,7 @@ parameter_defaults:
 
 {% else %}
 
-{% if node.leaf != DefaultLeaf0.name %}
+{% if leaf.name != DefaultLeaf0.name %}
 {% set name = "_" ~ leaf.name %}
 {% else %}
 {% set name = "" %}
