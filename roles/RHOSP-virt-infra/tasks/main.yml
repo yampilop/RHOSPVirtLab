@@ -37,7 +37,9 @@
 
 - name: LIBVIRT - Clean libvirt networks
   import_tasks: clean_libvirt_networks.yml
-  when: cleanup
+  when:
+    - cleanup
+    - not create
 
 # Create process
 
