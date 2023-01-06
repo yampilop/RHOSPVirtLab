@@ -37,7 +37,7 @@ openstack baremetal node list
 
 {% if RHOSP_version == 17.0 %}
 # Delete the ports (to avoid future duplicates)
-openstack port list -f value -c Name -c Status | grep DOWN | awk '{system("openstack port delete "$1)}'
+openstack port list -f value -c ID -c Status | grep DOWN | awk '{system("openstack port delete "$1)}'
 openstack port list
 openstack baremetal node list
 {% endif %}
