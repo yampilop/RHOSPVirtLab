@@ -21,6 +21,7 @@ fi
 # Prepare the overcloud
 openstack overcloud image upload --image-path /home/stack/images/
 {% if RHOSP_version == 17.0 %}
+openstack overcloud image upload --image-path /home/stack/images/ --os-image-name overcloud-full.qcow2
 ls -al /var/lib/ironic/images/
 {% else %}
 openstack image list --fit-width
