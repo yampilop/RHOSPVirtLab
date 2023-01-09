@@ -21,7 +21,9 @@
 
 - name: NETWORKING - Clean network profiles
   import_tasks: clean_network_profiles.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - not create | bool
 
 - name: VIRTUALBMC - Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
@@ -37,9 +39,7 @@
 
 - name: LIBVIRT - Clean libvirt networks
   import_tasks: clean_libvirt_networks.yml
-  when:
-    - cleanup | bool
-    - not create | bool
+  when: cleanup | bool
 
 # Create process
 
