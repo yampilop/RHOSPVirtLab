@@ -59,6 +59,7 @@ vms:
     vcpus: AMOUNT_OF_CPUS
     bmcport: VBMC_PORT_TO_ASSIGN
     mac: 'XX:XX:XX:XX:XX' (without the last octet)
+    uefi: false
     disk_size: DISK_SIZE_IN_KB
     data_disk_size: DISK_SIZE_IN_KB
     backing_store: 'QCOW2_IMAGE' (image to use as base for the disk)

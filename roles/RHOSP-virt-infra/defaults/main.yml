@@ -67,6 +67,7 @@ vms:
     vcpus: 2
     bmcport: 6230
     mac: '0c:1f:0d:10:00'
+    uefi: false
     disk_size: 107374182400
     backing_store: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     cdrom: 'undercloud-init.iso'
@@ -81,6 +82,7 @@ vms:
     vcpus: 2
     bmcport: 6231
     mac: '0c:1f:0d:11:00'
+    uefi: false
     disk_size: 53687091200
     backing_store: ''
     cdrom: ''
@@ -95,6 +97,7 @@ vms:
     vcpus: 4
     bmcport: 6234
     mac: '0c:1f:0d:12:00'
+    uefi: false
     disk_size: 53687091200
     backing_store: ''
     cdrom: ''

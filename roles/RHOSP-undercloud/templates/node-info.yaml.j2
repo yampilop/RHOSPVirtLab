@@ -21,6 +21,11 @@ parameter_defaults:
 - name: {{ ocrole.name }}
   count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
 {% if 'Controller' in ocrole.name %}
+{% set uefi = false %}
+{% for vm in vms if (vm.profile == ocrole.profile and vm.uefi) %}
+{% set uefi = true %}
+{% endfor %}
+{% if uefi %}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
     extra_vars:
@@ -32,6 +37,7 @@ parameter_defaults:
         /home=1GB
         /srv=10GB
         /var=100%
+{% endif %}
 {% endif %}
   defaults:
     networks:
@@ -53,18 +59,26 @@ parameter_defaults:
       default_route_network:
       - external
     swap_size_mb: 8192
-{% if leaf.name != DefaultLeaf0.name %}
+  instances:
+{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
+  - name: {{ leaf.name }}-{{ vm.name }}
+{% if not vm.uefi %}
     image:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
+    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 9 }}
 {% endif %}
-  instances:
-{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
-  - name: {{ leaf.name }}-{{ vm.name }}
 {% endfor %}
 {% for pm in (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name)) %}
   - name: {{ leaf.name }}-{{ pm.name }}
+{% if 'boot_mode:uefi' not in pm.capabilities %}
+    image:
+      href: "file:///var/lib/ironic/images/overcloud-full.raw"
+      kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
+      ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
+    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 9 }}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endfor %}

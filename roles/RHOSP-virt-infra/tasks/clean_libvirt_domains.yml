@@ -23,19 +23,15 @@
     command: undefine
     name: "{{ item.name }}"
   loop: "{{ vms }}"
-  ignore_errors: yes
-  register: undefine_result
   when:
     - inventory_hostname in item.hypervisor
     - item.name in all_vms.list_vms
+    - not item.uefi
 
-- name: DOMAINS - Undefine the domain if fails due to nvram (uefi)
+- name: DOMAINS - Undefine the domain manually when uefi
   shell: "virsh undefine --nvram {{ item.name }}"
   loop: "{{ vms }}"
   when:
     - inventory_hostname in item.hypervisor
     - item.name in all_vms.list_vms
-    - undefine_result is defined
-    - undefine_result.failed is defined
-    - undefine_result.failed
-    - (undefine_result.results | selectattr("item.name", "equalto", item.name) | list | first).failed
+    - item.uefi

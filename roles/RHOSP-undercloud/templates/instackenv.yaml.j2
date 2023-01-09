@@ -1,6 +1,6 @@
 nodes:
 {% for vm in vms if (not vm.profile == 'undercloud') and (vm.hypervisor == leaf.hypervisor) %}
-{% if RHOSP_version_supported[RHOSP_version].uefi and vm.hypervisor == 'localhost' %}
+{% if vm.uefi %}
 {% set vm_capabilities='boot_mode:uefi' %}
 {% else %}
 {% set vm_capabilities='boot_mode:bios' %}

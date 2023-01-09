@@ -52,7 +52,6 @@ RHOSP_version_supported:
       name: 'rhel-9.0-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '9.0'
-    uefi: true
     undercloud_repos:
       - rhel-9-for-x86_64-baseos-eus-rpms
       - rhel-9-for-x86_64-appstream-eus-rpms
@@ -69,13 +68,13 @@ RHOSP_version_supported:
     packages:
       - python3-argcomplete
       - python3-tripleoclient
-      - rhosp-director-images-uefi-x86_64
       - rhosp-director-images-ipa-x86_64
       - rhosp-director-images-x86_64
+      - rhosp-director-images-uefi-x86_64
     images_directories:
-      - '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.0-x86_64.tar'
       - '/usr/share/rhosp-director-images/ironic-python-agent-latest-17.0-x86_64.tar'
       - '/usr/share/rhosp-director-images/overcloud-full-latest-17.0-x86_64.tar'
+      - '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.0-x86_64.tar'
     container_image_prepare:
       ceph_alertmanager_tag: latest
       ceph_grafana_image: rhceph-5-dashboard-rhel8
@@ -90,7 +89,6 @@ RHOSP_version_supported:
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
-    uefi: false
     undercloud_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms
@@ -133,7 +131,6 @@ RHOSP_version_supported:
       name: 'rhel-8.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.2'
-    uefi: false
     undercloud_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms
@@ -181,7 +178,6 @@ RHOSP_version_supported:
       name: 'rhel-7.9-x86_64-kvm.qcow2'
       main_partition: '/dev/sda1'
     rhel_release: '7.9'
-    uefi: false
     undercloud_repos:
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms

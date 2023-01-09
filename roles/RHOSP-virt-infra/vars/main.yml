@@ -49,25 +49,21 @@ RHOSP_version_supported:
       name: 'rhel-9.0-x86_64-kvm.qcow2'
       main_partition: '/dev/sda4'
     rhel_release: '9.0'
-    uefi: true
   16.2:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
-    uefi: false
   16.1:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.2.0/BaseOS/x86_64/images/rhel-guest-image-8.2-290.x86_64.qcow2'
       name: 'rhel-8.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.2'
-    uefi: false
   13.0:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-7/7.9/Server/x86_64/images/rhel-guest-image-7.9-30.x86_64.qcow2'
       name: 'rhel-7.9-x86_64-kvm.qcow2'
       main_partition: '/dev/sda1'
     rhel_release: '7.9'
-    uefi: false

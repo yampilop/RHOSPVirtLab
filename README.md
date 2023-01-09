@@ -326,6 +326,7 @@ For DCN leafs you need the following customizations to the vars files:
     vcpus: 26
     bmcport: 6230
     mac: '0c:1f:0d:12:02'
+    uefi: false
     disk_size: 157374182400
     data_disk_size: 0
     backing_store: ''
@@ -334,6 +335,7 @@ For DCN leafs you need the following customizations to the vars files:
       RHOSPVirtLab_ctlplane_leaf1: ''
       RHOSPVirtLab_external_leaf1: ''
 ```
+    - **Do not use `uefi: true` in DCN leafs VMs** because introspection and deployment won't work due to a tftp known problem with firewalld. 
 
 - `vars/physical.yml`:
     - Create physical nodes with `leaf: {{leaf.name}}` and the proper configuration, for example:
@@ -505,4 +507,12 @@ From a web browser, open the Overcloud Horizon Dashboard URL pointing to the hyp
 ![Dashboard](images/dashboard.png)
 
 ![Hypervisors](images/hypervisors.png)
+
+### Undeploy
+
+Execute the script to delete the stacks, undeploy and clean all the servers:
+
+```bash
+/home/stack/undeploy.sh
+```
 
