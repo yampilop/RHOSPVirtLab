@@ -12,63 +12,63 @@
 - name: DHCRELAY - Clean DHCP relay
   import_tasks: clean_dhcrelay.yml
   when:
-    - cleanup
+    - cleanup | bool
     - DCNLeafs | length > 0
 
 - name: FIREWALL - Clean firewall
   import_tasks: clean_firewall.yml
-  when: cleanup
+  when: cleanup | bool
 
 - name: NETWORKING - Clean network profiles
   import_tasks: clean_network_profiles.yml
-  when: cleanup
+  when: cleanup | bool
 
 - name: VIRTUALBMC - Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
-  when: cleanup
+  when: cleanup | bool
 
 - name: LIBVIRT - Clean libvirt domains
   import_tasks: clean_libvirt_domains.yml
-  when: cleanup
+  when: cleanup | bool
 
 - name: LIBVIRT - Clean libvirt storage pools and images
   import_tasks: clean_libvirt_storage.yml
-  when: cleanup
+  when: cleanup | bool
 
 - name: LIBVIRT - Clean libvirt networks
   import_tasks: clean_libvirt_networks.yml
   when:
-    - cleanup
-    - not create
+    - cleanup | bool
+    - not create | bool
 
 # Create process
 
 - name: NETWORKING - Create network profiles
   import_tasks: create_network_profiles.yml
-  when: create
+  when: create | bool
 
 - name: LIBVIRT - Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
-  when: create
+  when: create | bool
 
 - name: LIBVIRT - Configure libvirt storage pools and images
   import_tasks: create_libvirt_storage.yml
-  when: create
+  when: create | bool
 
 - name: LIBVIRT - Configure libvirt domains
   import_tasks: create_libvirt_domains.yml
-  when: create
+  when: create | bool
 
 - name: VIRTUALBMC - Configure VirtualBMC
   import_tasks: create_virtualbmc.yml
-  when: create
+  when: create | bool
 
 - name: FIREWALL - Configure firewall
   import_tasks: configure_firewall.yml
-  when: create
+  when: create | bool
 
 - name: DHCRELAY - Configure DHCP relay
   import_tasks: configure_dhcrelay.yml
   when:
-    - create
+    - create | bool
     - DCNLeafs | length > 0

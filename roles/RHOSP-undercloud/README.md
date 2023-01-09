@@ -145,15 +145,15 @@ Example Playbook
     - name: Wait for the undercloud to come up
       wait_for_connection:
         timeout: 120
-      when: create
+      when: create | bool
 
     - name: Gathering facts
       setup:
-      when: create
+      when: create | bool
 
   roles:
     - role: RHOSP-undercloud
-      when: create
+      when: create | bool
 ```
 
 License
