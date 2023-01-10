@@ -28,7 +28,7 @@ time openstack overcloud deploy \
 -n /home/stack/templates/network_data.yaml \
 {% if RHOSP_version == 17.0 %}
 -e {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
--e {{ templates_dir }}/overcloud-networks-deployed.yaml \
+-e /home/stack/templates/overcloud-networks-deployed.yaml \
 -e {{ templates_dir }}/overcloud-vip-deployed.yaml \
 {% endif %}
 -r {{ templates_dir }}/roles_data.yaml \
