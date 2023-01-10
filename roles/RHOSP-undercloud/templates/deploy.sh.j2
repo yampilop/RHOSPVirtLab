@@ -40,7 +40,9 @@ time openstack overcloud deploy \
 {% endif %}
 -e {{ templates_dir }}/overcloud-images.yaml \
 {% if DCNLeafs | length > 0 %}
+{% if RHOSP_version != 17.0 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml \
+{% endif %}
 {% if leaf.name != DefaultLeaf0.name %}
 -e /home/stack/templates/overcloud-export.yaml \
 {% endif %}
@@ -91,7 +93,7 @@ time openstack overcloud deploy \
 -e {{ templates_dir }}/custom-overcloud.yaml
 date
 
-{% if leaf.name != DefaultLeaf0.name %}
+{% if leaf.name != DefaultLeaf0.name and RHOSP_version != 17.0 %}
 {% raw %}
 ANSIBLE_HOST_KEY_CHECKING=false TRIPLEO_PLAN_NAME=overcloud \
 ansible -i /usr/bin/tripleo-ansible-inventory \
