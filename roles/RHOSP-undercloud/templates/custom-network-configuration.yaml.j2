@@ -19,6 +19,7 @@ parameter_defaults:
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
   ControlPlaneDefaultRoute: {{ leaf.subnet.gateway }}
+  ControlPlaneSubnet: {{ leaf.subnet.name }}
   
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
