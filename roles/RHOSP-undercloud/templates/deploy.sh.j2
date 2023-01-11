@@ -20,6 +20,15 @@ openstack overcloud ceph deploy -y \
 --container-image-prepare /home/stack/containers-prepare-parameter.yaml
 {% endif %}
 
+{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) %}
+# Uncomment the following after deploying the leafs
+# sudo rm /home/stack/templates/dcn_ceph_external.yaml
+# sudo -E openstack overcloud export ceph \
+# --stack {% for dcn_leaf in DCNLeafs %}{{ dcn_leaf.name }}{% endfor %} \
+# --config-download-dir /var/lib/mistral \
+# --output-file /home/stack/templates/dcn_ceph_external.yaml
+{% endif %}
+
 date
 time openstack overcloud deploy \
 --log-file {{ leaf.name }}_deployment.log \
@@ -96,6 +105,10 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/rhsm.yaml \
 {% endif %}
 -e {{ templates_dir }}/custom-overcloud.yaml
+{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) %}
+# Add the following after deploying the leafs
+# -e /home/stack/templates/dcn_ceph_external.yaml
+{% endif %}
 date
 
 {% if leaf.name != DefaultLeaf0.name and RHOSP_version != 17.0 %}
