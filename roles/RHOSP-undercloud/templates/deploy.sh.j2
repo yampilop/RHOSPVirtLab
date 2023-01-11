@@ -119,7 +119,7 @@ openstack overcloud export \
 --config-download-dir /var/lib/mistral/overcloud \
 --stack {{ leaf.name }} --output-file /home/stack/templates/overcloud-export.yaml
 {% if (ceph_count + hci_count) > 0 %}
-rm /home/stack/templates/{{ leaf.name }}_ceph_external.yaml
+sudo rm /home/stack/templates/{{ leaf.name }}_ceph_external.yaml
 sudo -E openstack overcloud export ceph \
 --stack {{ leaf.name }} \
 --config-download-dir /var/lib/mistral \
