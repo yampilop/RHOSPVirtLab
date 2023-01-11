@@ -10,6 +10,15 @@ parameter_defaults:
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
   GlanceBackendID: {{ leaf.name }}
   CephClusterName: {{ leaf.name }}
+  GlanceMultistoreConfig:
+{% for dcn_leaf in DCNLeafs %}
+    {{ dcn_leaf.name }}:
+      GlanceBackend: rbd
+      GlanceStoreDescription: '{{ dcn_leaf.name }} rbd glance store'
+      CephClusterName: {{ dcn_leaf.name }}
+      CephClientUserName: openstack
+      GlanceBackend: {{ dcn_leaf.name }}
+{% endfor %}
 {% else %}
   GlanceBackend: swift
   CinderStorageAvailabilityZone: {{ leaf.name }}
