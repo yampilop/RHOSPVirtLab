@@ -25,7 +25,5 @@ parameter_defaults:
     is_hci: true
 {% endif %}
 {% if DCNLeafs | length > 0 %}
-{% if leaf.name == DefaultLeaf0.name %}
   CephClusterName: {{ leaf.name }}
-{% endif %}
 {% endif %}

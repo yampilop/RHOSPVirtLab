@@ -4,7 +4,7 @@
 parameter_defaults:
 {% if leaf.name == DefaultLeaf0.name %}
 {% if DCNLeafs | length > 0 %}
-{% if ceph_count + hci_count > 0 %}
+{% if (ceph_count + hci_count) > 0 %}
   GlanceEnabledImportMethods: web-download,copy-image
   GlanceBackend: rbd
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
@@ -34,6 +34,19 @@ parameter_defaults:
 {% endif %}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% else %}
+{% if (ceph_count + hci_count) > 0 %}
+  GlanceEnabledImportMethods: web-download,copy-image
+  GlanceBackend: rbd
+  GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
+  GlanceBackendID: {{ leaf.name }}
+  GlanceMultistoreConfig:
+    {{ DefaultLeaf0.name }}:
+      GlanceBackend: rbd
+      GlanceStoreDescription: '{{ DefaultLeaf0.name }} rbd glance store'
+      CephClusterName: {{ DefaultLeaf0.name }}
+      GlanceRbdPoolName: images
+      CephClientUserName: openstack
+{% endif %}
   NovaAZAttach: false
   NovaComputeAvailabilityZone: {{ leaf.name }}
   RootStackName: {{ leaf.name }}

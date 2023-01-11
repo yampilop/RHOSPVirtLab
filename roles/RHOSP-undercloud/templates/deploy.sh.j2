@@ -81,9 +81,14 @@ time openstack overcloud deploy \
 -e {{ templates_dir }}/deployed-ceph.yaml \
 {% else %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \
+{% if leaf.name == DefaultLeaf0.name %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
+{% else %}
+-e /usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml \
+-e /home/stack/templates/{{ leaf.name }}_ceph_external.yaml \
+{% endif %}
 {% endif %}
 -e {{ templates_dir }}/custom-ceph.yaml \
 {% endif %}
@@ -103,7 +108,7 @@ nova-manage cell_v2 discover_hosts --by-service --verbose"
 {% endraw %}
 {% endif %}
 
-{% if RHOSP_version == 17.0 and ceph_count > 0 %}
+{% if RHOSP_version == 17.0 and (ceph_count + hci_count) > 0 %}
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}
 
@@ -112,5 +117,12 @@ rm /home/stack/templates/overcloud-export.yaml
 sudo chmod -R +rx /var/lib/mistral/overcloud/
 openstack overcloud export \
 --config-download-dir /var/lib/mistral/overcloud \
---stack overcloud --output-file /home/stack/templates/overcloud-export.yaml
+--stack {{ leaf.name }} --output-file /home/stack/templates/overcloud-export.yaml
+{% if (ceph_count + hci_count) > 0 %}
+rm /home/stack/templates/{{ leaf.name }}_ceph_external.yaml
+sudo -E openstack overcloud export ceph \
+--stack {{ leaf.name }} \
+--config-download-dir /var/lib/mistral \
+--output-file /home/stack/templates/{{ leaf.name }}_ceph_external.yaml
+{% endif %}
 {% endif %}
