@@ -24,7 +24,7 @@ openstack overcloud ceph deploy -y \
 # Uncomment the following after deploying the leafs
 # sudo rm /home/stack/templates/dcn_ceph_external.yaml
 # sudo -E openstack overcloud export ceph \
-# --stack {% for dcn_leaf in DCNLeafs %}{{ dcn_leaf.name }}{% endfor %} \
+# --stack {% for dcn_leaf in DCNLeafs %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
 # --config-download-dir /var/lib/mistral \
 # --output-file /home/stack/templates/dcn_ceph_external.yaml
 {% endif %}
