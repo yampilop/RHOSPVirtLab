@@ -38,7 +38,9 @@
     state: enabled
   loop: "{{ vms }}"
   become: yes
-  when: inventory_hostname == 'localhost'
+  when:
+    - inventory_hostname == 'localhost'
+    - ansible_distribution_version | int >= 8
 
 - name: VIRTUALBMC - Ensure port rules are configured to the firewall in public zone
   firewalld:

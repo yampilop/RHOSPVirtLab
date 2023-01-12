@@ -171,3 +171,27 @@
     - item.stat is defined
     - not item.stat.exists
     - item.item.backing_store != ''
+    - not ((ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16))
+
+- name: Download and unpack libguestfs binary appliance (unsupported workaround https://access.redhat.com/solutions/4073061)
+  unarchive:
+    src: "http://download.libguestfs.org/binaries/appliance/appliance-1.40.1.tar.xz"
+    dest: "/home/{{ ansible_user }}/"
+    remote_src: yes
+    mode: "0777"
+  when:
+    - item.stat is defined
+    - not item.stat.exists
+    - item.item.backing_store != ''
+    - (ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16)
+
+- name: STORAGE - Prepare backing stored disk files and resize root partition (unsupported workaround https://access.redhat.com/solutions/4073061)
+  command: "LIBGUESTFS_BACKEND=direct LIBGUESTFS_PATH=/home/{{ ansible_user }}/appliance/ virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
+  loop: "{{ disk_file.results }}"
+  become: yes
+  notify: HANDLER - Clean known_hosts file
+  when:
+    - item.stat is defined
+    - not item.stat.exists
+    - item.item.backing_store != ''
+    - (ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16)
