@@ -10,6 +10,7 @@ parameter_defaults:
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
   GlanceBackendID: {{ leaf.name }}
   CephClusterName: {{ leaf.name }}
+  GlanceRbdPoolName: images
 # Uncomment the following after deploying the leafs
 #  GlanceMultistoreConfig:
 {% for dcn_leaf in DCNLeafs %}
@@ -19,6 +20,7 @@ parameter_defaults:
 #      CephClusterName: {{ dcn_leaf.name }}
 #      CephClientUserName: openstack
 #      GlanceBackend: {{ dcn_leaf.name }}
+#      GlanceRbdPoolName: images
 {% endfor %}
 {% else %}
   GlanceBackend: swift
@@ -49,6 +51,7 @@ parameter_defaults:
   GlanceBackend: rbd
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
   GlanceBackendID: {{ leaf.name }}
+  GlanceRbdPoolName: images
   GlanceMultistoreConfig:
     {{ DefaultLeaf0.name }}:
       GlanceBackend: rbd
