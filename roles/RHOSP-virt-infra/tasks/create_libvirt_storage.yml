@@ -182,7 +182,10 @@
   when: (ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16)
 
 - name: STORAGE - Prepare backing stored disk files and resize root partition (unsupported workaround https://access.redhat.com/solutions/4073061)
-  command: "LIBGUESTFS_BACKEND=direct LIBGUESTFS_PATH=/home/{{ ansible_user }}/appliance virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
+  command: "virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
+  environment:
+    LIBGUESTFS_BACKEND: direct
+    LIBGUESTFS_PATH: "/home/{{ ansible_user }}/appliance"
   loop: "{{ disk_file.results }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
