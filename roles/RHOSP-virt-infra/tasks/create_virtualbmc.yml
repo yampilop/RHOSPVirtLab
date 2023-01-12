@@ -28,29 +28,3 @@
 
 - name: VIRTUALBMC - Get service facts
   service_facts:
-
-- name: VIRTUALBMC - Ensure port rules are configured to the firewall in libvirt zone
-  firewalld:
-    port: "{{ item.bmcport }}/udp"
-    zone: "libvirt"
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop: "{{ vms }}"
-  become: yes
-  when:
-    - inventory_hostname == 'localhost'
-    - ansible_distribution_version | int >= 8
-
-- name: VIRTUALBMC - Ensure port rules are configured to the firewall in public zone
-  firewalld:
-    port: "{{ item.bmcport }}/udp"
-    zone: "public"
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop: "{{ vms }}"
-  become: yes
-  when:
-    - inventory_hostname != 'localhost'
-    - inventory_hostname in item.hypervisor

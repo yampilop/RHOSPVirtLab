@@ -1,3 +1,16 @@
+- name: FIREWALLD - Ensure libvirt zone exists
+  firewalld:
+    zone: libvirt
+    state: present
+    permanent: yes
+  become: yes
+  register: firewalld_create_zone
+
+- name: FIREWALLD - Reload firewall after creating the zone
+  command: "firewall-cmd --reload"
+  become: yes
+  when: firewalld_create_zone.changed
+
 - name: FIREWALL - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
   firewalld:
     zone: public
@@ -9,6 +22,18 @@
   when:
     - item.hypervisor == inventory_hostname
     - (item.name == forward_network) or (item.forward == 'bridge')
+
+- name: FIREWALL - Ensure the other interfaces belong to libvirt zone
+  firewalld:
+    zone: libvirt
+    interface: "{{ item.bridge }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ networks }}"
+  when:
+    - item.hypervisor == inventory_hostname
+    - (item.name != forward_network) and (item.forward != 'bridge')
 
 - name: FIREWALL - Enable masquerade in the firewall to allow external traffic
   firewalld:
@@ -31,3 +56,28 @@
     state: enabled
   loop: "{{ forwarded_ports }}"
   when: inventory_hostname == 'localhost'
+
+- name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in libvirt zone for localhost
+  firewalld:
+    port: "{{ item.bmcport }}/udp"
+    zone: "libvirt"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ vms }}"
+  become: yes
+  when:
+    - inventory_hostname == 'localhost'
+
+- name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for leafs
+  firewalld:
+    port: "{{ item.bmcport }}/udp"
+    zone: "public"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ vms }}"
+  become: yes
+  when:
+    - inventory_hostname != 'localhost'
+    - inventory_hostname in item.hypervisor
