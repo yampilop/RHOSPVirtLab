@@ -11,6 +11,7 @@ parameter_defaults:
   GlanceBackendID: {{ leaf.name }}
   CephClusterName: {{ leaf.name }}
   GlanceRbdPoolName: images
+  CinderStorageAvailabilityZone: {{ leaf.name }}
 # Uncomment the following after deploying the leafs
 #  GlanceMultistoreConfig:
 {% for dcn_leaf in DCNLeafs %}
@@ -52,6 +53,7 @@ parameter_defaults:
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
   GlanceBackendID: {{ leaf.name }}
   GlanceRbdPoolName: images
+  CinderStorageAvailabilityZone: {{ leaf.name }}
   GlanceMultistoreConfig:
     {{ DefaultLeaf0.name }}:
       GlanceBackend: rbd
