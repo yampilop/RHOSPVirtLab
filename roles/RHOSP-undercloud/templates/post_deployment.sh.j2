@@ -7,6 +7,8 @@
 
 {% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
 {% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | list | count)) %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | list | count) + (physical | selectattr("profile", "equalto", "computehci") | list | count)) %}
 
 ################################################################################
 ### Default domain specifics ###################################################
@@ -47,8 +49,13 @@ openstack flavor show small_1_1_10 &>/dev/null || openstack flavor create --ram 
 openstack flavor show small_2_2_20_pinned &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --property hw:cpu_policy=dedicated --property hw:mem_page_size=large --public small_2_2_20_pinned
 
 # Images
+{% if (DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0) %}
+openstack image show '{{ rhel_image_name }}' &>/dev/null || (qemu-img convert -f qcow2 -O raw images/{{ rhel_image_file }} images/{{ rhel_image_file }}.raw && glance image-create --disk-format raw --container-format bare --name '{{ rhel_image_name }}' --file images/{{ rhel_image_file }}.raw --store {{ DCNLeaf0.name }} && glance image-import $(openstack image show '{{ rhel_image_name }}' -c id -f value) --stores {% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
+openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw images/cirros.qcow2 images/cirros.raw && glance image-create --disk-format raw --container-format bare --name CirrOS --file images/cirros.raw --store {{ DCNLeaf0.name }} && glance image-import $(openstack image show CirrOS -c id -f value) --stores {% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
+{% else %}
 openstack image show '{{ rhel_image_name }}' &>/dev/null || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
 openstack image show CirrOS &>/dev/null || openstack image create --disk-format qcow2 --file images/cirros.qcow2 --public CirrOS
+{% endif %}
 
 {% if DeployOctavia %}
 # Octavia configuration
