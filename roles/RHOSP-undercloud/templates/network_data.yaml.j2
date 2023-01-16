@@ -114,6 +114,7 @@
   allocation_pools: [{'start': '{{ DefaultLeaf0.networks.Storage.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.Storage.prefix }}.250'}]
   gateway_ip: '{{ DefaultLeaf0.networks.Storage.prefix }}.1'
   mtu: 1500
+{% if DCNLeafs | length > 0 %}
   subnets:
 {% for leaf in DCNLeafs %}
     storage_subnet_{{ leaf.name }}:
@@ -124,6 +125,7 @@
       gateway_ip: {{ leaf.networks.Storage.prefix }}.1
       vlan: {{ leaf.networks.Storage.vlan | default(1) }}
 {% endfor %}
+{% endif %}
 - name: StorageMgmt
   name_lower: storage_mgmt
   vip: true
@@ -132,6 +134,7 @@
   allocation_pools: [{'start': '{{ DefaultLeaf0.networks.StorageMgmt.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.StorageMgmt.prefix }}.250'}]
   gateway_ip: '{{ DefaultLeaf0.networks.StorageMgmt.prefix }}.1'
   mtu: 1500
+{% if DCNLeafs | length > 0 %}
   subnets:
 {% for leaf in DCNLeafs %}
     storage_mgmt_subnet_{{ leaf.name }}:
@@ -142,6 +145,7 @@
       gateway_ip: {{ leaf.networks.StorageMgmt.prefix }}.1
       vlan: {{ leaf.networks.StorageMgmt.vlan | default(1) }}
 {% endfor %}
+{% endif %}
 - name: InternalApi
   name_lower: internal_api
   vip: true
@@ -150,6 +154,7 @@
   allocation_pools: [{'start': '{{ DefaultLeaf0.networks.InternalApi.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.InternalApi.prefix }}.250'}]
   gateway_ip: '{{ DefaultLeaf0.networks.InternalApi.prefix }}.1'
   mtu: 1500
+{% if DCNLeafs | length > 0 %}
   subnets:
 {% for leaf in DCNLeafs %}
     internal_api_subnet_{{ leaf.name }}:
@@ -160,6 +165,7 @@
       gateway_ip: {{ leaf.networks.InternalApi.prefix }}.1
       vlan: {{ leaf.networks.InternalApi.vlan | default(1) }}
 {% endfor %}
+{% endif %}
 - name: Tenant
   vip: false  # Tenant network does not use VIPs
   name_lower: tenant
@@ -168,6 +174,7 @@
   allocation_pools: [{'start': '{{ DefaultLeaf0.networks.Tenant.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.Tenant.prefix }}.250'}]
   gateway_ip: '{{ DefaultLeaf0.networks.Tenant.prefix }}.1'
   mtu: 1500
+{% if DCNLeafs | length > 0 %}
   subnets:
 {% for leaf in DCNLeafs %}
     tenant_subnet_{{ leaf.name }}:
@@ -178,6 +185,7 @@
       gateway_ip: {{ leaf.networks.Tenant.prefix }}.1
       vlan: {{ leaf.networks.Tenant.vlan | default(1) }}
 {% endfor %}
+{% endif %}
 - name: External
   vip: true
   name_lower: external
@@ -186,6 +194,7 @@
   allocation_pools: [{'start': '{{ DefaultLeaf0.networks.External.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.External.prefix }}.99'}]
   gateway_ip: '{{ DefaultLeaf0.networks.External.prefix }}.1'
   mtu: 1500
+{% if DCNLeafs | length > 0 %}
   subnets:
 {% for leaf in DCNLeafs %}
     external_subnet_{{ leaf.name }}:
@@ -196,6 +205,7 @@
       gateway_ip: {{ leaf.networks.External.prefix }}.1
       vlan: {{ leaf.networks.External.vlan | default(1) }}
 {% endfor %}
+{% endif %}
 - name: Management
   # Management network is enabled by default for backwards-compatibility, but
   # is not included in any roles by default. Add to role definitions to use.
@@ -207,6 +217,7 @@
   allocation_pools: [{'start': '{{ DefaultLeaf0.networks.Management.prefix }}.4', 'end': '{{ DefaultLeaf0.networks.Management.prefix }}.250'}]
   gateway_ip: '{{ DefaultLeaf0.networks.Management.prefix }}.1'
   mtu: 1500
+{% if DCNLeafs | length > 0 %}
   subnets:
 {% for leaf in DCNLeafs %}
     management_subnet_{{ leaf.name }}:
@@ -217,6 +228,7 @@
       gateway_ip: {{ leaf.networks.Management.prefix }}.1
       vlan: {{ leaf.networks.Management.vlan | default(1) }}
 {% endfor %}
+{% endif %}
 {% else %}
 # RHOSP 17.0 version
 - name: Storage
