@@ -63,6 +63,73 @@ overcloud_roles:
     distributed: True
     max: 3
 
+roles_networks:
+  Controller:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  Compute:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeOvsDpdk:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeOvsDpdkSriov:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeSriov:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeOvsHwOffload:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  CephStorage:
+    - Storage
+    - StorageMgmt
+  ComputeHCI:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  DistributedCompute:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  DistributedComputeScaleOut:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  DistributedComputeHCI:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  DistributedComputeHCIScaleOut:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  CephAll:
+    - Storage
+    - StorageMgmt
+
 RHOSP_version_supported:
   17.0:
     rhel_image:

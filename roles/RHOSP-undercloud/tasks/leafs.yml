@@ -32,12 +32,14 @@
 
 - name: "TEMPLATES - Prepare the nic-configs templates for {{ leaf.name }}"
   template:
-    src: "nic-configs/{{ item.profile }}.yaml.j2"
+    src: "nic-configs/nic-config.yaml.j2"
     dest: "/home/stack/templates/{{ leaf.name }}/nic-configs/{{ item.profile }}.yaml"
     owner: stack
     group: stack
+  when:
+    - RHOSP_version != 17.0
+    - roles_count[DefaultLeaf0.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
-  when: RHOSP_version != 17.0
 
 - name: "TEMPLATES - RHOSP 17.0 nic-config files for {{ leaf.name }}"
   template:
@@ -45,8 +47,10 @@
     dest: "/home/stack/templates/{{ leaf.name }}/nic-configs/{{ item.profile }}.j2"
     owner: stack
     group: stack
+  when:
+    - RHOSP_version == 17.0
+    - roles_count[leaf.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
-  when: RHOSP_version == 17.0
 
 - name: SCRIPTS - Prepare the scripts
   template:
