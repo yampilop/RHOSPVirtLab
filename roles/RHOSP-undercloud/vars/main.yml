@@ -6,47 +6,58 @@ RHEL_version_supported:
   '8.4':
 
 overcloud_roles:
-  # Virtual roles
-  - name: VirtualController
-    profile: vcontroller
-    nic_configs: vcontroller.yaml
-  - name: VirtualCompute
-    profile: vcompute
-    nic_configs: vcompute.yaml
-  - name: VirtualCephStorage
-    profile: vcephstorage
-    nic_configs: vcephstorage.yaml
-  - name: VirtualComputeHCI
-    profile: vcomputehci
-    nic_configs: vcomputehci.yaml
-  # Physical roles
   - name: Controller
     profile: controller
-    nic_configs: controller.yaml
+    virtual: True
+    distributed: False
   - name: Compute
     profile: compute
-    nic_configs: compute.yaml
+    virtual: True
+    distributed: True
   - name: ComputeOvsDpdk
     profile: computeovsdpdk
-    nic_configs: computeovsdpdk.yaml
+    virtual: False
+    distributed: False
   - name: ComputeOvsDpdkSriov
     profile: computeovsdpdksriov
-    nic_configs: computeovsdpdksriov.yaml
+    virtual: False
+    distributed: False
   - name: ComputeSriov
     profile: computesriov
-    nic_configs: computesriov.yaml
+    virtual: False
+    distributed: False
   - name: ComputeOvsHwOffload
     profile: computeovshwoffload
-    nic_configs: computeovshwoffload.yaml
+    virtual: False
+    distributed: False
   - name: CephStorage
     profile: cephstorage
-    nic_configs: cephstorage.yaml
+    virtual: True
+    distributed: True
   - name: ComputeHCI
     profile: computehci
-    nic_configs: computehci.yaml
-  # DCN Virtual roles
-
-  # DCN Physical roles
+    virtual: True
+    distributed: True
+  - name: DistributedCompute
+    profile: distributedcompute
+    virtual: True
+    distributed: True
+  - name: DistributedComputeScaleOut
+    profile: distributedcomputescaleout
+    virtual: True
+    distributed: True
+  - name: DistributedComputeHCI
+    profile: distributedcomputehci
+    virtual: True
+    distributed: True
+  - name: DistributedComputeHCIScaleOut
+    profile: distributedcomputehciscaleout
+    virtual: True
+    distributed: True
+  - name: CephAll
+    profile: cephall
+    virtual: True
+    distributed: True
 
 RHOSP_version_supported:
   17.0:
