@@ -15,10 +15,10 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
-  - name: vcontroller0
+  - name: controller0
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 0'
-    profile: 'vcontroller'
+    profile: 'controller'
     memory: 8388608
     vcpus: 2
     bmcport: 6231
@@ -28,12 +28,13 @@ vms:
     backing_store: ''
     cdrom: ''
     nics:
+      RHOSPVirtLab_management: ''
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: vcontroller1
+  - name: controller1
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 1'
-    profile: 'vcontroller'
+    profile: 'controller'
     memory: 8388608
     vcpus: 2
     bmcport: 6232
@@ -43,12 +44,13 @@ vms:
     backing_store: ''
     cdrom: ''
     nics:
+      RHOSPVirtLab_management: ''
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: vcontroller2
+  - name: controller2
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 2'
-    profile: 'vcontroller'
+    profile: 'controller'
     memory: 8388608
     vcpus: 2
     bmcport: 6233
@@ -58,12 +60,13 @@ vms:
     backing_store: ''
     cdrom: ''
     nics:
+      RHOSPVirtLab_management: ''
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: vcompute0
+  - name: compute0
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Compute 0'
-    profile: 'vcompute'
+    profile: 'compute'
     memory: 31457280
     vcpus: 10
     bmcport: 6234
@@ -74,12 +77,13 @@ vms:
     backing_store: ''
     cdrom: ''
     nics:
+      RHOSPVirtLab_management: ''
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: vcompute1
+  - name: compute1
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Compute 1'
-    profile: 'vcompute'
+    profile: 'compute'
     memory: 31457280
     vcpus: 10
     bmcport: 6235
@@ -90,5 +94,6 @@ vms:
     backing_store: ''
     cdrom: ''
     nics:
+      RHOSPVirtLab_management: ''
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''

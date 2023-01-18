@@ -63,18 +63,6 @@ DefaultLeaf0:
 
 # interfaces to use in each nic-config
 interfaces:
-  VirtualController:
-    ControlPlane: nic1
-    External: nic2
-  VirtualCompute:
-    ControlPlane: nic1
-    External: nic2
-  VirtualCephStorage:
-    ControlPlane: nic1
-    External: nic2
-  VirtualComputeHCI:
-    ControlPlane: nic1
-    External: nic2
   Controller:
     ControlPlane: nic2
     External: nic3
@@ -84,30 +72,14 @@ interfaces:
   ComputeOvsDpdk:
     ControlPlane: nic2
     External: nic3
-    DpdkBonds:
-      - name: dpdkbond0
-        ports:
-          - name: dpdk0
-            interface: nic4
-            driver: vfio-pci
-          - name: dpdk1
-            interface: nic5
-            driver: vfio-pci
+    DpdkBonds: []
   ComputeOvsDpdkSriov:
     ControlPlane: nic2
     External: nic3v0
     Sriov:
       - device: nic3
         numvfs: 8
-    DpdkBonds:
-      - name: dpdkbond0
-        ports:
-          - name: dpdk0
-            interface: nic3v1
-            driver: vfio-pci
-          - name: dpdk1
-            interface: nic3v2
-            driver: vfio-pci
+    DpdkBonds: []
   ComputeSriov:
     ControlPlane: nic2
     External: nic3v0
@@ -124,6 +96,21 @@ interfaces:
     ControlPlane: nic2
     External: nic3
   ComputeHCI:
+    ControlPlane: nic2
+    External: nic3
+  DistributedCompute:
+    ControlPlane: nic2
+    External: nic3
+  DistributedComputeScaleOut:
+    ControlPlane: nic2
+    External: nic3
+  DistributedComputeHCI:
+    ControlPlane: nic2
+    External: nic3
+  DistributedComputeHCIScaleOut:
+    ControlPlane: nic2
+    External: nic3
+  CephAll:
     ControlPlane: nic2
     External: nic3
 
