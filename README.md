@@ -239,26 +239,14 @@ You also can add to vars/options.yml any value overriding the default values fro
     - name
     - bmcport
     - mac (this is the base MAC address without the last byte)
-- Make sure you use only virtual profiles for the vms, or the playbook will fail. The available virtual profiles are:
-    - vcontroller
-    - vcompute
-    - vcephstorage
-    - vcomputehci
-- For the case of vcephstorage or vcomputehci you can add a second virtual disk to the VM with the parameter `data_disk_size: SIZE_IN_BYTES`.
+- Make sure you use only virtual capable profiles for the vms, or the playbook will fail. The available virtual profiles are the ones with `virtual: True` in `overcloud_roles` variable from `roles/RHOSP-undercloud/vars/main.yml`
+- For the case of ceph or computehci related profiles, you can add a second virtual disk to the VM with the parameter `data_disk_size: SIZE_IN_BYTES`.
 - Make sure you perform the calculations to use the hypervisor physical resources (CPU, RAM and DISK) properly, leaving some of them for the hypervisor itself (for example leaving 4 cpus and 16GB of RAM).
+- Make sure you use only distributed capable profiles for the vms in leafs, or the playbook will fail. The available distributed profiles are the ones with `distributed: True` in `overcloud_roles` variable from `roles/RHOSP-undercloud/vars/main.yml`
 
 #### Customizing physical machines
 
 - The default configuration considers no physical nodes.
-- Make sure you use only physical profiles for the nodes, or the playbook will fail. The available profiles are:
-    - controller
-    - compute
-    - computeovsdpdk
-    - computeovsdpdksriov
-    - computesriov
-    - computeovshwoffload
-    - cephstorage
-    - computehci
 - Set the power management parameters matching your servers configuration.
 
 #### Customizing options
@@ -318,10 +306,10 @@ For DCN leafs you need the following customizations to the vars files:
     - Create vms with `hypervisor: {{hypervisorname}}`, consistent configuration and nics related to the proper networks, for example:
 
 ```yaml
-  - name: vcompute0
+  - name: compute0
     hypervisor: hypervisor_name
     title: 'RHOSPVirtLab Leaf1 Virtual Compute 0'
-    profile: 'vcompute'
+    profile: 'compute'
     memory: 92272640
     vcpus: 26
     bmcport: 6230
