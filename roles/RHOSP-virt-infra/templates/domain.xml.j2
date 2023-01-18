@@ -74,16 +74,21 @@
       <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
       <source bridge="{{ network.bridge }}"/>
       <model type="e1000e"/>
+{% if 'ctlplane' in network.name %}
+      <boot order="1"/>
+{% endif %}
     </interface>
 {% else %}
     <interface type="network">
       <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
       <source network="{{ network.name }}"/>
       <model type="e1000e"/>
+{% if 'ctlplane' in network.name %}
+      <boot order="1"/>
+{% endif %}
     </interface>
 {% endif %}
 {% endfor %}
-
     <console type="pty"/>
     <channel type="unix">
       <source mode="bind"/>
