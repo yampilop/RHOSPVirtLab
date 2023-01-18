@@ -23,6 +23,7 @@
     - custom-ceph.yaml
     - vip_data.yaml
 
+# TODO: Replace with a roles generation command in pre_deployment.sh
 - name: TEMPLATES - Prepare roles_data.yaml depending on the version
   template:
     src: "roles_data_{{ RHOSP_version }}.yaml.j2"

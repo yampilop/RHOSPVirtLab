@@ -1,14 +1,11 @@
-{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
-
 {% if RHOSP_version != 17.0 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
-{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
-{% if leaf.hypervisor == 'localhost' %}
-  OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.nic_configs }}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}
+{% if leaf.hypervisor == DefaultLeaf0.hypervisor %}
+  OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.profile }}.yaml
 {% else %}
-  OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.nic_configs }}
+  OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -42,7 +39,7 @@ parameter_defaults:
 
 {% if DCNLeafs | length > 0 %}
 {% for ocrole in overcloud_roles %}
-{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
   {{ ocrole.name }}Parameters:
 {% if leaf.name != 'overcloud' %}
@@ -58,7 +55,7 @@ parameter_defaults:
     OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
 {% endif %}
 
-{% if dpdk_count + sriov_count > 0 %}
+{% if roles_count[leaf.name]["ComputeOvsDpdkSriov"] > 0 %}
   ComputeOvsDpdkSriovParameters:
     KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkSriovProperties.hugepages }} {{ ComputeOvsDpdkSriovProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkSriovProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
@@ -79,7 +76,7 @@ parameter_defaults:
     NeutronPhysicalDevMappings: {{ ComputeOvsDpdkSriovProperties.physicaldevmappings }}
 {% endif %}
 
-{% if dpdk_count > 0 %}
+{% if roles_count[leaf.name]["ComputeOvsDpdk"] > 0 %}
   ComputeOvsDpdkParameters:
     KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkProperties.hugepages }} {{ ComputeOvsDpdkProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
@@ -98,7 +95,7 @@ parameter_defaults:
     OvsEnableDpdk: true
 {% endif %}
 
-{% if sriov_count > 0 %}
+{% if roles_count[leaf.name]["ComputeSriov"] > 0 %}
   ComputeSriovParameters:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
@@ -112,7 +109,9 @@ parameter_defaults:
     NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}
     NovaPCIPassthrough: {{ ComputeSriovProperties.pcipassthrough }}
     NeutronPhysicalDevMappings: {{ ComputeSriovProperties.physicaldevmappings }}
-  
+{% endif %}
+
+{% if roles_count[leaf.name]["ComputeOvsHwOffload"] > 0 %}
   ComputeOvsHwOffloadParameters:
     IsolCpusList: '{{ ComputeOvsHwOffloadProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepages={{ ComputeOvsHwOffloadProperties.hugepages }} {{ ComputeOvsHwOffloadProperties.kernelargs }} isolcpus={{ ComputeOvsHwOffloadProperties.isolcpus }}"

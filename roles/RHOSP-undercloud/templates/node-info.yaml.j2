@@ -2,9 +2,9 @@
 
 parameter_defaults:
 {% for ocrole in overcloud_roles %}
-{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}
   Overcloud{{ ocrole.name }}Flavor: baremetal
-  {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
+  {{ ocrole.name }}Count: {{ roles_count[leaf.name][ocrole.name] }}
 {% endif %}
 {% endfor %}
 
@@ -17,9 +17,9 @@ parameter_defaults:
 {% endif %}
 
 {% for ocrole in overcloud_roles %}
-{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if roles_count[leaf.name][ocrole.profile] > 0 %}
 - name: {{ ocrole.name }}
-  count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
+  count: {{ roles_count[leaf.name][ocrole.name] }}
 {% if 'Controller' in ocrole.name %}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
@@ -61,7 +61,7 @@ parameter_defaults:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
-    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 9 }}
+    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 1 }}
 {% endif %}
 {% endfor %}
 {% for pm in (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name)) %}
@@ -71,7 +71,7 @@ parameter_defaults:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
-    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 9 }}
+    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 1 }}
 {% endif %}
 {% endfor %}
 {% endif %}
