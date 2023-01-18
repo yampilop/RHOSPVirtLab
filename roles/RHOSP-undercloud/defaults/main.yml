@@ -269,7 +269,7 @@ networks:
     hypervisor: localhost
     bridge: br-ctlplane
     forward: bridge
-    mac_suffix: '00'
+    mac_suffix: '01'
     ipv4:
       address: '192.168.24.254'
       netmask: '255.255.255.0'
@@ -278,7 +278,7 @@ networks:
     hypervisor: localhost
     bridge: br-external
     forward: bridge
-    mac_suffix: '05'
+    mac_suffix: '02'
     ipv4:
       address: '10.0.0.1'
       netmask: '255.255.255.0'
@@ -287,7 +287,7 @@ networks:
     hypervisor: localhost
     bridge: br-management
     forward: nat
-    mac_suffix: '0f'
+    mac_suffix: '00'
     ipv4:
       address: '192.168.250.1'
       netmask: '255.255.255.0'

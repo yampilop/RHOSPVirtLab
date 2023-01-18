@@ -68,7 +68,7 @@
     </disk>
     <controller type="usb" model="qemu-xhci" ports="15"/>
 {% endif %}
-{% for network in networks if network.name in item.nics %}
+{% for network in networks  | sort(attribute='mac_suffix') if network.name in item.nics %}
 {% if network.forward == 'bridge' %}
     <interface type="bridge">
       <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
