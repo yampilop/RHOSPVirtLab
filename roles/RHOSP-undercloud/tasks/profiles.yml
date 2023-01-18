@@ -1,45 +1,51 @@
+- name: PROFILES - Calculate roles count to use in the entire playbook
+  set_fact:
+    roles_count: >-
+      {% for leaf in ([ DefaultLeaf0 ] + DCNLeafs) %}
+        {{ leaf.name }}:
+        {% for role in overcloud_roles %}
+          {{ role.name }}: {{ ((physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) }}
+        {% endfor %}
+      {% endfor %}
+
+# TODO: Delete
+- debug:
+    var: roles_count
+
 - name: PROFILES - Check all vms profiles are virtual
   fail:
-    msg: Please check your vms.yaml file and make sure the profiles chosen are the virtual ones.
-  when: (item.name != 'undercloud') and (not item.profile.startswith('v'))
+    msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for vms."
+  when:
+    - item.name != 'undercloud'
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).virtual | bool)
   loop: "{{ vms }}"
-
-- name: PROFILES - Check all physical machines profiles are regular
-  fail:
-    msg: Please check your physical.yaml file and make sure the profiles chosen are the non virtual ones.
-  when: item.profile.startswith('v')
-  loop: "{{ physical }}"
-
-- name: PROFILES - Check only one type of controllers is used
-  fail:
-    msg: Using Controller and VirtualControllers at the same time is not allowed.
-  when: ((vms | selectattr("profile", "equalto", "vcontroller") | list | count) > 0) and ((physical | selectattr("profile", "equalto", "controller") | list | count) > 0)
 
 - name: PROFILES - Check only the right profiles are used in vms for leafs
   fail:
-    msg: "ERROR in vm {{ item.1.name }}: Only these profiles can be used in leafs: 'vcompute, vdistributedcompute, vdistributedcomputescaleout, vdistributedcomputehci, vdistributedcomputehciscaleout, vcephall, vcephstorage"
+    msg: "ERROR in vm {{ item.1.name }}: Only distributed capable profiles can be used in leafs."
   when:
     - item.1.hypervisor == item.0.hypervisor
-    - item.1.profile not in ['vcompute', 'vdistributedcompute', 'vdistributedcomputescaleout', 'vdistributedcomputehci', 'vdistributedcomputehciscaleout', 'vcephall', 'vcephstorage']
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.1.profile) | list | first).distributed | bool)
   with_nested:
     - "{{ DCNLeafs }}"
     - "{{ vms }}"
 
 - name: PROFILES - Check only the right profiles are used in physical for leafs
   fail:
-    msg: "ERROR in physical {{ item.1.name }}: Only these profiles can be used in leafs: 'compute, distributedcompute, distributedcomputescaleout, distributedcomputehci, distributedcomputehciscaleout, cephall, cephstorage"
+    msg: "ERROR in physical {{ item.1.name }}: Only distributed capable profiles can be used in leafs."
   when:
     - item.1.leaf == item.0.name
-    - item.1.profile not in ['compute', 'distributedcompute', 'distributedcomputescaleout', 'distributedcomputehci', 'distributedcomputehciscaleout', 'cephall', 'cephstorage']
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.1.profile) | list | first).distributed | bool)
   with_nested:
     - "{{ DCNLeafs }}"
     - "{{ physical }}"
 
-- name: PROFILES - Check no more than 3 nodes use the roles (Virtual)DistributedCompute, (Virtual)DistributedComputeHCI and (Virtual)CephAll
+- name: PROFILES - Check no more than the max amount of nodes for a profile is used in each leaf
   fail:
-    msg: More than 3 nodes allowed for roles (Virtual)DistributedCompute, (Virtual)DistributedComputeHCI and (Virtual)CephAll in each leaf.
+    msg: "No more than {{ item.1.max }} nodes are allowed for the role {{ item.1.name }} in leaf {{ item.0.name }}."
   when:
-    - (vms | selectattr("profile", "equalto", 'v' ~ item.1) | selectattr("hypervisor", "equalto", item.0.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", item.1) | selectattr("leaf", "equalto", item.0.name) | list | count) > 3
+    - item.1.max is defined
+    - roles_count.(item.0.name).(item.1.name) > item.1.max
   with_nested:
-    - "{{ DCNLeafs }}"
-    - ['distributedcompute', 'distributedcomputehci', 'cephall']
+    - "{{ [ DefaultLeaf0 ] + DCNLeafs }}"
+    - overcloud_roles

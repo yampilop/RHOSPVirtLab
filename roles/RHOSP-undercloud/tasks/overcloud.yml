@@ -32,8 +32,8 @@
 
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
-    src: "nic-configs/{{ item.nic_configs }}.j2"
-    dest: "/home/stack/templates/nic-configs/{{ item.nic_configs }}"
+    src: "nic-configs/{{ item.profile }}.yaml.j2"
+    dest: "/home/stack/templates/nic-configs/{{ item.profile }}.yaml"
     owner: stack
     group: stack
   loop: "{{ overcloud_roles }}"

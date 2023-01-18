@@ -10,6 +10,7 @@ overcloud_roles:
     profile: controller
     virtual: True
     distributed: False
+    max: 3
   - name: Compute
     profile: compute
     virtual: True
@@ -42,6 +43,7 @@ overcloud_roles:
     profile: distributedcompute
     virtual: True
     distributed: True
+    max: 3
   - name: DistributedComputeScaleOut
     profile: distributedcomputescaleout
     virtual: True
@@ -50,6 +52,7 @@ overcloud_roles:
     profile: distributedcomputehci
     virtual: True
     distributed: True
+    max: 3
   - name: DistributedComputeHCIScaleOut
     profile: distributedcomputehciscaleout
     virtual: True
@@ -58,6 +61,7 @@ overcloud_roles:
     profile: cephall
     virtual: True
     distributed: True
+    max: 3
 
 RHOSP_version_supported:
   17.0:
