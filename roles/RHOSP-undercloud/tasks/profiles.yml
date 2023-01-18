@@ -1,16 +1,20 @@
 - name: PROFILES - Calculate roles count to use in the entire playbook
   set_fact:
-    roles_count: >-
-      {% for leaf in ([ DefaultLeaf0 ] + DCNLeafs) %}
+    roles_count: |-
+      {
+      {%- for leaf in ([ DefaultLeaf0 ] + DCNLeafs) %}
         {{ leaf.name }}:
-        {% for role in overcloud_roles %}
-          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) }}
-        {% endfor %}
-      {% endfor %}
+        {
+        {%- for role in overcloud_roles %}
+          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) }},
+        {%- endfor %}
+        },
+      {%- endfor %}
+      }
 
-# TODO: Delete
-- debug:
-    var: roles_count
+- name: PROFILES - Parse roles count fact
+  set_fact:
+    roles_count: "{{ roles_count | from_yaml }}"
 
 - name: PROFILES - Check all vms profiles are virtual
   fail:
