@@ -38,7 +38,7 @@ overcloud_roles:
   - name: ComputeHCI
     profile: computehci
     virtual: True
-    distributed: True
+    distributed: False
   - name: DistributedCompute
     profile: distributedcompute
     virtual: True

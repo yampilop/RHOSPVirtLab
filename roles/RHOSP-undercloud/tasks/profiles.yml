@@ -26,30 +26,26 @@
 
 - name: PROFILES - Check only the right profiles are used in vms for leafs
   fail:
-    msg: "ERROR in vm {{ item.1.name }}: Only distributed capable profiles can be used in leafs."
+    msg: "ERROR in vm {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.1.hypervisor == item.0.hypervisor
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.1.profile) | list | first).distributed | bool)
-  with_nested:
-    - "{{ DCNLeafs }}"
-    - "{{ vms }}"
+    - item.hypervisor != DefaultLeaf0.hypervisor
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
+  loop: "{{ vms }}"
 
 - name: PROFILES - Check only the right profiles are used in physical for leafs
   fail:
-    msg: "ERROR in physical {{ item.1.name }}: Only distributed capable profiles can be used in leafs."
+    msg: "ERROR in physical {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.1.leaf == item.0.name
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.1.profile) | list | first).distributed | bool)
-  with_nested:
-    - "{{ DCNLeafs }}"
-    - "{{ physical }}"
+    - item.leaf != DefaultLeaf0.name
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
+  loop: "{{ physical }}"
 
 - name: PROFILES - Check no more than the max amount of nodes for a profile is used in each leaf
   fail:
     msg: "No more than {{ item.1.max }} nodes are allowed for the role {{ item.1.name }} in leaf {{ item.0.name }}."
   when:
     - item.1.max is defined
-    - roles_count.(item.0.name).(item.1.name) > item.1.max
+    - roles_count[item.0.name][item.1.name] > item.1.max
   with_nested:
     - "{{ [ DefaultLeaf0 ] + DCNLeafs }}"
-    - overcloud_roles
+    - "{{ overcloud_roles }}"
