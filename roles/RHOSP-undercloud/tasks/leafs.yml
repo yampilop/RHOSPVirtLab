@@ -22,14 +22,6 @@
     - custom-ceph.yaml
     - vip_data.yaml
 
-# TODO: Replace with a roles generation command in pre_deployment.sh
-- name: "TEMPLATES - Prepare roles_data.yaml depending on the version for {{ leaf.name }}"
-  template:
-    src: "roles_data_{{ RHOSP_version }}.yaml.j2"
-    dest: "/home/stack/templates/{{ leaf.name }}/roles_data.yaml"
-    owner: stack
-    group: stack
-
 - name: "TEMPLATES - Prepare the nic-configs templates for {{ leaf.name }}"
   template:
     src: "nic-configs/nic-config.yaml.j2"
