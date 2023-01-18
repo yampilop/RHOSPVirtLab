@@ -30,7 +30,7 @@
     group: stack
   when:
     - RHOSP_version != 17.0
-    - roles_count[DefaultLeaf0.name][item.name] > 0
+    - roles_count[leaf.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
 
 - name: "TEMPLATES - RHOSP 17.0 nic-config files for {{ leaf.name }}"
