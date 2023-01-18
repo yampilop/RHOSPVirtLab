@@ -4,7 +4,7 @@
       {% for leaf in ([ DefaultLeaf0 ] + DCNLeafs) %}
         {{ leaf.name }}:
         {% for role in overcloud_roles %}
-          {{ role.name }}: {{ ((physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) }}
+          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) }}
         {% endfor %}
       {% endfor %}
 
