@@ -44,6 +44,9 @@ overcloud_roles:
   - name: ComputeHCI
     profile: computehci
     nic_configs: computehci.yaml
+  # DCN Virtual roles
+
+  # DCN Physical roles
 
 RHOSP_version_supported:
   17.0:

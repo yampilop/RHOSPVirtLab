@@ -1,3 +1,4 @@
+{% if leaf.name == DefaultLeaf0.name %}
 {% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 {% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
 {% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
@@ -7,12 +8,6 @@
 {% set vcontroller_count = (vms | selectattr("profile", "equalto", "vcontroller") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
 {% set compute_count = (physical | selectattr("profile", "equalto", "compute") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
 {% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
-
-{% if leaf.name != DefaultLeaf0.name %}
-{% set name = '_' ~ leaf.name %}
-{% else %}
-{% set name = '' %}
-{% endif %}
 
 ###############################################################################
 ###############################################################################
@@ -231,13 +226,13 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcompute-%index%'
   RoleParametersDefault:
@@ -314,9 +309,9 @@
   CountDefault: 0
   networks:
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
     StorageMgmt:
-      subnet: storage_mgmt_subnet{{ name }}
+      subnet: storage_mgmt_subnet
   uses_deprecated_params: False
   HostnameFormatDefault: '%stackname%-vcephstorage-%index%'
   deprecated_nic_config_name: 'vcephstorage.yaml'
@@ -358,25 +353,21 @@
 ###############################################################################
 - name: VirtualComputeHCI
   description: |
-{% if leaf.name == DefaultLeaf0.name %}
     Compute Node role hosting Ceph OSD too
-{% else %}
-    Distributed Compute Node role with Ceph, Cinder volume, and Glance.
-{% endif %}
   CountDefault: 0
   tags:
     - external_bridge
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
     StorageMgmt:
-      subnet: storage_mgmt_subnet{{ name }}
+      subnet: storage_mgmt_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-vcomputehci-%index%'
   deprecated_nic_config_name: 'vcomputehci.yaml'
@@ -387,26 +378,12 @@
   ServicesDefault:
     - OS::TripleO::Services::Aide
     - OS::TripleO::Services::AuditD
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::BarbicanClient
-{% endif %}
     - OS::TripleO::Services::BootParams
     - OS::TripleO::Services::CACerts
     - OS::TripleO::Services::CephClient
     - OS::TripleO::Services::CephExternal
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::CephGrafana
-    - OS::TripleO::Services::CephMds
-    - OS::TripleO::Services::CephMgr
-    - OS::TripleO::Services::CephMon
-    - OS::TripleO::Services::CephRbdMirror
-    - OS::TripleO::Services::CephRgw
-{% endif %}
     - OS::TripleO::Services::CephOSD
     - OS::TripleO::Services::CertmongerUser
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::CinderVolumeEdge
-{% endif %}
     - OS::TripleO::Services::Collectd
     - OS::TripleO::Services::ComputeCeilometerAgent
     - OS::TripleO::Services::ComputeNeutronCorePlugin
@@ -414,10 +391,6 @@
     - OS::TripleO::Services::ComputeNeutronMetadataAgent
     - OS::TripleO::Services::ComputeNeutronOvsAgent
     - OS::TripleO::Services::Docker
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::Etcd
-    - OS::TripleO::Services::GlanceApiEdge
-{% endif %}
     - OS::TripleO::Services::IpaClient
     - OS::TripleO::Services::Ipsec
     - OS::TripleO::Services::Iscsid
@@ -670,13 +643,13 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-compute-%index%'
   RoleParametersDefault:
@@ -753,13 +726,13 @@
   CountDefault: 0
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdk-%index%'
   deprecated_nic_config_name: 'computeovsdpdk.yaml'
@@ -828,13 +801,13 @@
     - dpdk
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovsdpdksriov-%index%'
   deprecated_nic_config_name: 'computeovsdpdksriov.yaml'
@@ -903,13 +876,13 @@
   CountDefault: 0
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computesriov-%index%'
   deprecated_nic_config_name: 'computesriov.yaml'
@@ -976,13 +949,13 @@
     - external_bridge
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computeovshwoffload-%index%'
   RoleParametersDefault:
@@ -1058,9 +1031,9 @@
   CountDefault: 0
   networks:
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
     StorageMgmt:
-      subnet: storage_mgmt_subnet{{ name }}
+      subnet: storage_mgmt_subnet
   uses_deprecated_params: False
   HostnameFormatDefault: '%stackname%-cephstorage-%index%'
   deprecated_nic_config_name: 'cephstorage.yaml'
@@ -1102,25 +1075,21 @@
 ###############################################################################
 - name: ComputeHCI
   description: |
-{% if leaf.name == DefaultLeaf0.name %}
-    Compute Node role hosting Ceph OSD too
-{% else %}
     Distributed Compute Node role with Ceph, Cinder volume, and Glance.
-{% endif %}
   CountDefault: 0
   tags:
     - external_bridge
   networks:
     External:
-      subnet: external_subnet{{ name }}
+      subnet: external_subnet
     InternalApi:
-      subnet: internal_api_subnet{{ name }}
+      subnet: internal_api_subnet
     Tenant:
-      subnet: tenant_subnet{{ name }}
+      subnet: tenant_subnet
     Storage:
-      subnet: storage_subnet{{ name }}
+      subnet: storage_subnet
     StorageMgmt:
-      subnet: storage_mgmt_subnet{{ name }}
+      subnet: storage_mgmt_subnet
   default_route_networks: ['External','ControlPlane']
   HostnameFormatDefault: '%stackname%-computehci-%index%'
   deprecated_nic_config_name: 'computehci.yaml'
@@ -1131,26 +1100,12 @@
   ServicesDefault:
     - OS::TripleO::Services::Aide
     - OS::TripleO::Services::AuditD
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::BarbicanClient
-{% endif %}
     - OS::TripleO::Services::BootParams
     - OS::TripleO::Services::CACerts
     - OS::TripleO::Services::CephClient
     - OS::TripleO::Services::CephExternal
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::CephGrafana
-    - OS::TripleO::Services::CephMds
-    - OS::TripleO::Services::CephMgr
-    - OS::TripleO::Services::CephMon
-    - OS::TripleO::Services::CephRbdMirror
-    - OS::TripleO::Services::CephRgw
-{% endif %}
     - OS::TripleO::Services::CephOSD
     - OS::TripleO::Services::CertmongerUser
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::CinderVolumeEdge
-{% endif %}
     - OS::TripleO::Services::Collectd
     - OS::TripleO::Services::ComputeCeilometerAgent
     - OS::TripleO::Services::ComputeNeutronCorePlugin
@@ -1158,10 +1113,6 @@
     - OS::TripleO::Services::ComputeNeutronMetadataAgent
     - OS::TripleO::Services::ComputeNeutronOvsAgent
     - OS::TripleO::Services::Docker
-{% if leaf.name != DefaultLeaf0.name %}
-    - OS::TripleO::Services::Etcd
-    - OS::TripleO::Services::GlanceApiEdge
-{% endif %}
     - OS::TripleO::Services::IpaClient
     - OS::TripleO::Services::Ipsec
     - OS::TripleO::Services::Iscsid
@@ -1195,4 +1146,737 @@
     - OS::TripleO::Services::Vpp
     - OS::TripleO::Services::OVNController
     - OS::TripleO::Services::OVNMetadataAgent
+{% endif %}
+{% else %}
+{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+
+{% set compute_count = (physical | selectattr("profile", "equalto", "compute") | selectattr("leaf", "equalto", leaf.name) | list | count) %}
+{% set vcompute_count = (vms | selectattr("profile", "equalto", "vcompute") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) %}
+
+###############################################################################
+###############################################################################
+# DCN VIRTUAL MACHINE ROLES                                                   #
+###############################################################################
+###############################################################################
+
+###############################################################################
+# Role: VirtualDistributedCompute                                             #
+###############################################################################
+- name: VirtualDistributedCompute
+  description: |
+    Distributed Compute Node role with Glance.
+  CountDefault: 0
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-vdistributedcompute-%index%'
+  deprecated_nic_config_name: 'vdistributedcompute.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "virtual-host"
+  update_serial: 25
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::CinderVolumeEdge
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::Etcd
+    - OS::TripleO::Services::GlanceApiEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: VirtualDistributedComputeScaleOut                                     #
+###############################################################################
+- name: VirtualDistributedComputeScaleOut
+  description: |
+    Distributed Compute Node role with HAproxy for Glance.
+  CountDefault: 0
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-vdistributedcomputescaleout-%index%'
+  deprecated_nic_config_name: 'vdistributedcomputescaleout.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "virtual-host"
+  update_serial: 25
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::HAproxyEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: VirtualDistributedComputeHCI                                          #
+###############################################################################
+- name: VirtualDistributedComputeHCI
+  description: |
+    Distributed Compute Node role with Ceph, Cinder volume, and Glance.
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+    StorageMgmt:
+      subnet: storage_mgmt_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-vdistributedcomputehci-%index%'
+  deprecated_nic_config_name: 'vdistributedcomputehci.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "throughput-performance"
+  # CephOSD present so serial has to be 1
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CephGrafana
+    - OS::TripleO::Services::CephMds
+    - OS::TripleO::Services::CephMgr
+    - OS::TripleO::Services::CephMon
+    - OS::TripleO::Services::CephRbdMirror
+    - OS::TripleO::Services::CephRgw
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::CinderVolumeEdge
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::Etcd
+    - OS::TripleO::Services::GlanceApiEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: VirtualDistributedComputeHCIScaleOut                                  #
+###############################################################################
+- name: VirtualDistributedComputeHCIScaleOut
+  description: |
+    Distributed Compute Node role with CephOSD and HAproxy for Glance.
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+    StorageMgmt:
+      subnet: storage_mgmt_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-vdistributedcomputehciscaleout-%index%'
+  deprecated_nic_config_name: 'vdistributedcomputehciscaleout.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "throughput-performance"
+  # CephOSD present so serial has to be 1
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::HAproxyEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: VirtualCephAll                                                        #
+###############################################################################
+- name: VirtualCephAll
+  description: |
+    Standalone Storage Full Role (OSD + MON + RGW + MDS + MGR + RBD Mirroring)
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+    StorageMgmt:
+      subnet: storage_mgmt_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-vcephall-%index%'
+  deprecated_nic_config_name: 'vcephall.yaml'
+  # CephOSD present so serial has to be 1
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephGrafana
+    - OS::TripleO::Services::CephMds
+    - OS::TripleO::Services::CephMgr
+    - OS::TripleO::Services::CephMon
+    - OS::TripleO::Services::CephRbdMirror
+    - OS::TripleO::Services::CephRgw
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+
+###############################################################################
+###############################################################################
+# PHYSICAL MACHINES ROLES                                                     #
+###############################################################################
+###############################################################################
+
+###############################################################################
+# Role: DistributedCompute                                                    #
+###############################################################################
+- name: DistributedCompute
+  description: |
+    Distributed Compute Node role with Glance.
+  CountDefault: 0
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-distributedcompute-%index%'
+  deprecated_nic_config_name: 'distributedcompute.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "virtual-host"
+  update_serial: 25
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::CinderVolumeEdge
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::Etcd
+    - OS::TripleO::Services::GlanceApiEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: DistributedComputeScaleOut                                            #
+###############################################################################
+- name: DistributedComputeScaleOut
+  description: |
+    Distributed Compute Node role with HAproxy for Glance.
+  CountDefault: 0
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-distributedcomputescaleout-%index%'
+  deprecated_nic_config_name: 'distributedcomputescaleout.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "virtual-host"
+  update_serial: 25
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::HAproxyEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: DistributedComputeHCI                                                 #
+###############################################################################
+- name: DistributedComputeHCI
+  description: |
+    Distributed Compute Node role with Ceph, Cinder volume, and Glance.
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+    StorageMgmt:
+      subnet: storage_mgmt_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-distributedcomputehci-%index%'
+  deprecated_nic_config_name: 'distributedcomputehci.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "throughput-performance"
+  # CephOSD present so serial has to be 1
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CephGrafana
+    - OS::TripleO::Services::CephMds
+    - OS::TripleO::Services::CephMgr
+    - OS::TripleO::Services::CephMon
+    - OS::TripleO::Services::CephRbdMirror
+    - OS::TripleO::Services::CephRgw
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::CinderVolumeEdge
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::Etcd
+    - OS::TripleO::Services::GlanceApiEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: DistributedComputeHCIScaleOut                                         #
+###############################################################################
+- name: DistributedComputeHCIScaleOut
+  description: |
+    Distributed Compute Node role with CephOSD and HAproxy for Glance.
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    InternalApi:
+      subnet: internal_api_subnet_{{ leaf.name }}
+    Tenant:
+      subnet: tenant_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+    StorageMgmt:
+      subnet: storage_mgmt_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-distributedcomputehciscaleout-%index%'
+  deprecated_nic_config_name: 'distributedcomputehciscaleout.yaml'
+  RoleParametersDefault:
+    FsAioMaxNumber: 1048576
+    TunedProfileName: "throughput-performance"
+  # CephOSD present so serial has to be 1
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BarbicanClient
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::HAproxyEdge
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+###############################################################################
+# Role: CephAll                                                               #
+###############################################################################
+- name: CephAll
+  description: |
+    Standalone Storage Full Role (OSD + MON + RGW + MDS + MGR + RBD Mirroring)
+  networks:
+    External:
+      subnet: external_subnet_{{ leaf.name }}
+    Storage:
+      subnet: storage_subnet_{{ leaf.name }}
+    StorageMgmt:
+      subnet: storage_mgmt_subnet_{{ leaf.name }}
+  default_route_networks: ['External','ControlPlane']
+  HostnameFormatDefault: '%stackname%-cephall-%index%'
+  deprecated_nic_config_name: 'cephall.yaml'
+  # CephOSD present so serial has to be 1
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephGrafana
+    - OS::TripleO::Services::CephMds
+    - OS::TripleO::Services::CephMgr
+    - OS::TripleO::Services::CephMon
+    - OS::TripleO::Services::CephRbdMirror
+    - OS::TripleO::Services::CephRgw
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::CertmongerUser
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::Docker
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
 {% endif %}

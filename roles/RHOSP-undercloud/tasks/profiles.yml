@@ -14,3 +14,32 @@
   fail:
     msg: Using Controller and VirtualControllers at the same time is not allowed.
   when: ((vms | selectattr("profile", "equalto", "vcontroller") | list | count) > 0) and ((physical | selectattr("profile", "equalto", "controller") | list | count) > 0)
+
+- name: PROFILES - Check only the right profiles are used in vms for leafs
+  fail:
+    msg: "ERROR in vm {{ item.1.name }}: Only these profiles can be used in leafs: 'vcompute, vdistributedcompute, vdistributedcomputescaleout, vdistributedcomputehci, vdistributedcomputehciscaleout, vcephall, vcephstorage"
+  when:
+    - item.1.hypervisor == item.0.hypervisor
+    - item.1.profile not in ['vcompute', 'vdistributedcompute', 'vdistributedcomputescaleout', 'vdistributedcomputehci', 'vdistributedcomputehciscaleout', 'vcephall', 'vcephstorage']
+  with_nested:
+    - "{{ DCNLeafs }}"
+    - "{{ vms }}"
+
+- name: PROFILES - Check only the right profiles are used in physical for leafs
+  fail:
+    msg: "ERROR in physical {{ item.1.name }}: Only these profiles can be used in leafs: 'compute, distributedcompute, distributedcomputescaleout, distributedcomputehci, distributedcomputehciscaleout, cephall, cephstorage"
+  when:
+    - item.1.leaf == item.0.name
+    - item.1.profile not in ['compute', 'distributedcompute', 'distributedcomputescaleout', 'distributedcomputehci', 'distributedcomputehciscaleout', 'cephall', 'cephstorage']
+  with_nested:
+    - "{{ DCNLeafs }}"
+    - "{{ physical }}"
+
+- name: PROFILES - Check no more than 3 nodes use the roles (Virtual)DistributedCompute, (Virtual)DistributedComputeHCI and (Virtual)CephAll
+  fail:
+    msg: More than 3 nodes allowed for roles (Virtual)DistributedCompute, (Virtual)DistributedComputeHCI and (Virtual)CephAll in each leaf.
+  when:
+    - (vms | selectattr("profile", "equalto", 'v' ~ item.1) | selectattr("hypervisor", "equalto", item.0.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", item.1) | selectattr("leaf", "equalto", item.0.name) | list | count) > 3
+  with_nested:
+    - "{{ DCNLeafs }}"
+    - ['distributedcompute', 'distributedcomputehci', 'cephall']
