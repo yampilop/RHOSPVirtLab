@@ -33,7 +33,7 @@ parameter_defaults:
   
 {% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   NetConfigDataLookup:
-{% for pm in physical if pm.leaf == leaf.name) %}
+{% for pm in physical if pm.leaf == leaf.name %}
     {{ leaf.name }}-{{ pm.name }}:
 {% for nic, interface in pm.nics.items() %}
       {{ nic }}: "{{ interface }}"
