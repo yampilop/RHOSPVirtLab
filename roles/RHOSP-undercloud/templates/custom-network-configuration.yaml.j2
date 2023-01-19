@@ -1,3 +1,6 @@
+resource_registry:
+  OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
+
 {% if RHOSP_version != 17.0 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
@@ -26,6 +29,14 @@ parameter_defaults:
   NeutronTunnelTypes: 'geneve'
   NeutronNetworkType: 'geneve,vlan'
   
+  NetConfigDataLookup:
+{% for vm in vms if vm.hypervisor == leaf.hypervisor %}
+    {{ leaf.name }}-{{ vm.name }}:
+{% for nic, value in vm.nics.items() %}
+      nic{{ loop.index + 1 }}: "{{ vm.mac }}:{{ networks[nic].mac_suffix }}"
+{% endfor %}
+{% endfor %}
+
   NovaSchedulerDefaultFilters:
     - AvailabilityZoneFilter
     - ComputeFilter
