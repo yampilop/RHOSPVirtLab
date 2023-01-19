@@ -33,7 +33,7 @@ parameter_defaults:
 {% for vm in vms if vm.hypervisor == leaf.hypervisor %}
     {{ leaf.name }}-{{ vm.name }}:
 {% for nic, value in vm.nics.items() %}
-      nic{{ loop.index + 1 }}: "{{ vm.mac }}:{{ networks[nic].mac_suffix }}"
+      nic{{ loop.index + 1 }}: "{{ vm.mac }}:{{ (networks | selectattr("name", "equalto", nic) | list | first).mac_suffix }}"
 {% endfor %}
 {% endfor %}
 
