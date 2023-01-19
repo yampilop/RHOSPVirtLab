@@ -16,6 +16,10 @@
     <nvram template='{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_VARS.fd'>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
 {% endif %}
     <bootmenu enable="no"/>
+{% item.profile != 'undercloud' %}
+    <boot dev='network'/>
+{% endif %}
+    <boot dev='hd'/>
   </os>
   <features>
     <acpi/>
@@ -50,6 +54,9 @@
       </backingStore>
 {% endif %}
       <target dev="sda" bus="sata"/>
+{% item.profile != 'undercloud' %}
+      <boot order="{{ (item.nics | count) + 1 }}"/>
+{% endif %}
     </disk>
 {% if item.data_disk_size is defined and item.data_disk_size > 0 %}
     <disk type="file" device="disk">
@@ -68,14 +75,14 @@
     </disk>
     <controller type="usb" model="qemu-xhci" ports="15"/>
 {% endif %}
-{% for network in networks  | sort(attribute='mac_suffix') if network.name in item.nics %}
+{% for network in networks | sort(attribute='mac_suffix') if network.name in item.nics %}
 {% if network.forward == 'bridge' %}
     <interface type="bridge">
       <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
       <source bridge="{{ network.bridge }}"/>
       <model type="e1000e"/>
-{% if 'ctlplane' in network.name %}
-      <boot order="1"/>
+{% item.profile != 'undercloud' %}
+      <boot order="{{ loop.index }}"/>
 {% endif %}
     </interface>
 {% else %}
@@ -83,8 +90,8 @@
       <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
       <source network="{{ network.name }}"/>
       <model type="e1000e"/>
-{% if 'ctlplane' in network.name %}
-      <boot order="1"/>
+{% item.profile != 'undercloud' %}
+      <boot order="{{ loop.index }}"/>
 {% endif %}
     </interface>
 {% endif %}
