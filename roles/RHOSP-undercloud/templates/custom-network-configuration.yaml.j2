@@ -30,7 +30,7 @@ parameter_defaults:
   NeutronNetworkType: 'geneve,vlan'
   
   NetConfigDataLookup:
-{% for vm in vms if vm.hypervisor == leaf.hypervisor %}
+{% for vm in vms if (vm.name != 'undercloud') and (vm.hypervisor == leaf.hypervisor) %}
     {{ leaf.name }}-{{ vm.name }}:
 {% for nic, value in vm.nics.items() %}
       nic{{ loop.index + 1 }}: "{{ vm.mac }}:{{ (networks | selectattr("name", "equalto", nic) | list | first).mac_suffix }}"
