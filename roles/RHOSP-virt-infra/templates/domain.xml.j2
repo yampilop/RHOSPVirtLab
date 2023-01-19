@@ -16,10 +16,6 @@
     <nvram template='{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_VARS.fd'>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
 {% endif %}
     <bootmenu enable="no"/>
-{% if item.profile != 'undercloud' %}
-    <boot dev='network'/>
-{% endif %}
-    <boot dev='hd'/>
   </os>
   <features>
     <acpi/>
@@ -120,4 +116,3 @@
     </rng>
   </devices>
 </domain>
-
