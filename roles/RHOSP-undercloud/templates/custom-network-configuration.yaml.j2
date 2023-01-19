@@ -1,6 +1,8 @@
+{% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
 resource_registry:
   OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
 
+{% endif %}
 {% if RHOSP_version != 17.0 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
@@ -29,13 +31,15 @@ parameter_defaults:
   NeutronTunnelTypes: 'geneve'
   NeutronNetworkType: 'geneve,vlan'
   
+{% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   NetConfigDataLookup:
-{% for vm in vms if (vm.name != 'undercloud') and (vm.hypervisor == leaf.hypervisor) %}
-    {{ leaf.name }}-{{ vm.name }}:
-{% for nic, value in vm.nics.items() %}
-      nic{{ loop.index + 1 }}: "{{ vm.mac }}:{{ (networks | selectattr("name", "equalto", nic) | list | first).mac_suffix }}"
+{% for pm in physical if pm.leaf == leaf.name) %}
+    {{ leaf.name }}-{{ pm.name }}:
+{% for nic, interface in pm.nics.items() %}
+      {{ nic }}: "{{ interface }}"
 {% endfor %}
 {% endfor %}
+{% endif %}
 
   NovaSchedulerDefaultFilters:
     - AvailabilityZoneFilter

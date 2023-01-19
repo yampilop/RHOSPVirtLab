@@ -343,6 +343,9 @@ For DCN leafs you need the following customizations to the vars files:
     mac: 'XX:XX:XX:XX:XX:XX'
     capabilities: 'boot_mode:uefi'
     disk_size: 599577434521
+    nics:
+      nic1: 'ens1f0'
+      nic2: 'ens1f1'
 ```
 
 - `vars/options.yml`:

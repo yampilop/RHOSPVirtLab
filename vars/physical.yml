@@ -14,6 +14,9 @@
 #    capabilities: 'boot_mode:bios'
 #    mac: '52:54:00:24:61:07'
 #    disk_size: 53687091200
+#    nics:
+#      nic1: 'ens1f0'
+#      nic2: 'ens1f1'
 #  - name: computeovsdpdk1
 #    leaf: overcloud
 #    title: 'RHOSPVirtLab Physical Compute DPDK 1'
@@ -28,3 +31,6 @@
 #    capabilities: 'boot_mode:bios'
 #    mac: '52:54:00:25:18:57'
 #    disk_size: 53687091200
+#    nics:
+#      nic1: 'ens1f0'
+#      nic2: 'ens1f1'

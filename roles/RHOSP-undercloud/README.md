@@ -95,6 +95,9 @@ physical:
     mac: 'XX:XX:XX:XX:XX:XX' (full MAC address of the ctlplane interface)
     capabilities: 'LIST_OF_CAPABILITIES'
     disk_size: DISK_SIZE_IN_KB
+    nics:
+      nic1: 'ens1f0'
+      nic2: 'ens1f1'
 ```
 
   The role considers no physical machines by default.
