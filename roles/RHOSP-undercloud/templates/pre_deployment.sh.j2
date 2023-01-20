@@ -93,7 +93,7 @@ openstack overcloud node provision -y --stack {{ leaf.name }} --network-config -
 {% endif %}
 
 # Generate roles
-openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml {% for ocrole in overcloud_roles if roles_count[leaf.name][ocrole.name] > 0 %}{{ ocrole.name }} {% endfor %}
+openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml {% for ocrole in overcloud_roles if roles_count[leaf.name][ocrole.name] > 0 %}{{ ocrole.name if (ocrole.copy_from is not defined) else (ocrole.copy_from ~ ':' ~ ocrole.name) }} {% endfor %}
 
 
 # Remove HostnameFormatDefault parameter for roles to default to lowercase role name
