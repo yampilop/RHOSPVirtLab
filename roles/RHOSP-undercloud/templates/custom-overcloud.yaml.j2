@@ -14,7 +14,7 @@ parameter_defaults:
   CinderStorageAvailabilityZone: {{ leaf.name }}
 # Uncomment the following after deploying the leafs
 #  GlanceMultistoreConfig:
-{% for dcn_leaf in DCNLeafs %}
+{% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}
 #    {{ dcn_leaf.name }}:
 #      GlanceBackend: rbd
 #      GlanceStoreDescription: '{{ dcn_leaf.name }} rbd glance store'
