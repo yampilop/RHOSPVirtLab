@@ -95,6 +95,14 @@ openstack overcloud node provision -y --stack {{ leaf.name }} --network-config -
 # Generate roles
 openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml {% for ocrole in overcloud_roles if roles_count[leaf.name][ocrole.name] > 0 %}{{ ocrole.name }} {% endfor %}
 
+
+# Remove HostnameFormatDefault parameter for roles to default to lowercase role name
+sed -i -E 's/HostnameFormatDefault: .+$//g' {{ templates_dir }}/roles_data.yaml
+# Add External network where it's needed
 {% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[leaf.name][role] > 0) %}
-sed -i -rz 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- name: {{ role }}\n\1  networks:\n    External:\n      subnet: external_subnet{{ '_' ~ leaf.name if leaf.name != DefaultLeaf0.name else '' }}\n    \3:/' {{ templates_dir }}/roles_data.yaml
+sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- name: {{ role }}\n\1  networks:\n    External:\n      subnet: external_subnet{{ '_' ~ leaf.name if leaf.name != DefaultLeaf0.name else '' }}\n    \3:/' {{ templates_dir }}/roles_data.yaml
 {% endfor %}
+{% if leaf.name != DefaultLeaf0.name %}
+# Change the subnets for the leaf ones
+sed -i -E 's/subnet: (.+_subnet)$/subnet: \1{{ '_' ~ leaf.name }}/g' {{ templates_dir }}/roles_data.yaml
+{% endif %}
