@@ -24,7 +24,7 @@ openstack overcloud ceph deploy -y \
 # Uncomment the following after deploying the leafs
 # sudo rm /home/stack/templates/dcn_ceph_external.yaml
 # sudo -E openstack overcloud export ceph \
-# --stack {% for dcn_leaf in DCNLeafs %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
+# --stack {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
 # --config-download-dir /var/lib/mistral \
 # --output-file /home/stack/templates/dcn_ceph_external.yaml
 {% endif %}
