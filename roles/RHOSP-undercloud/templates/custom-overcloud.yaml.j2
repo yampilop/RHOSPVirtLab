@@ -1,5 +1,7 @@
 {% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
 {% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
+{% set DefaultLeaf0_ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
+{% set DefaultLeaf0_hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 
 parameter_defaults:
 {% if leaf.name == DefaultLeaf0.name %}
@@ -47,13 +49,17 @@ parameter_defaults:
 {% endif %}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% else %}
+  CinderStorageAvailabilityZone: {{ leaf.name }}
+  GlanceBackendID: {{ leaf.name }}
 {% if (ceph_count + hci_count) > 0 %}
   GlanceEnabledImportMethods: web-download,copy-image
   GlanceBackend: rbd
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
-  GlanceBackendID: {{ leaf.name }}
   GlanceRbdPoolName: images
-  CinderStorageAvailabilityZone: {{ leaf.name }}
+{% else %}
+  GlanceBackend: swift
+{% endif %}
+{% if (DefaultLeaf0_ceph_count + DefaultLeaf0_hci_count) > 0 %}
   GlanceMultistoreConfig:
     {{ DefaultLeaf0.name }}:
       GlanceBackend: rbd
