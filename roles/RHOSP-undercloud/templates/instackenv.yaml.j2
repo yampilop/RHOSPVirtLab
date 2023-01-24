@@ -43,7 +43,7 @@ nodes:
         physical_network: {{ leaf.subnet.name }}
 {% endif %}
 {% endif %}
-    name: "{{ leaf.name ~ '-' ~ vm.name }}"
+    name: "{{ leaf.name ~ '-' ~ node.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
     cpu: {{ node.cpus }}
     memory: {{ (node.memory / 1024) | int }}
