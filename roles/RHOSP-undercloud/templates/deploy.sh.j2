@@ -96,9 +96,7 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
 {% else %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/dcn-hci.yaml \
-{% if RHOSP_version == 16.1 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/dcn-hci.yaml \
-{% else %}
+{% if RHOSP_version != 16.1 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml \
 {% endif %}
 -e /home/stack/templates/{{ DefaultLeaf0.name }}_ceph_external.yaml \
