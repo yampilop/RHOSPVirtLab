@@ -98,6 +98,16 @@ openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml {% for
 
 # Remove HostnameFormatDefault parameter for roles to default to lowercase role name
 sed -i -E '/HostnameFormatDefault: .+$/d' {{ templates_dir }}/roles_data.yaml
+{% if RHOSP_version == 13.0 %}
+# Add External network where it's needed
+{% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[leaf.name][role] > 0) %}
+sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    - ([^E].+)/- name: {{ role }}\n\1  networks:\n    - External{{ '_' ~ leaf.name if leaf.name != DefaultLeaf0.name else '' }}\n    - \3:/' {{ templates_dir }}/roles_data.yaml
+{% endfor %}
+{% if leaf.name != DefaultLeaf0.name %}
+# Change the subnets for the leaf ones
+sed -i -E 's/    - (Storage|StorageMgmt|InternalApi|Tenant|External)$/    - \1{{ '_' ~ leaf.name }}/g' {{ templates_dir }}/roles_data.yaml
+{% endif %}
+{% else %}
 # Add External network where it's needed
 {% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[leaf.name][role] > 0) %}
 sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- name: {{ role }}\n\1  networks:\n    External:\n      subnet: external_subnet{{ '_' ~ leaf.name if leaf.name != DefaultLeaf0.name else '' }}\n    \3:/' {{ templates_dir }}/roles_data.yaml
@@ -105,4 +115,5 @@ sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- 
 {% if leaf.name != DefaultLeaf0.name %}
 # Change the subnets for the leaf ones
 sed -i -E 's/subnet: (.+_subnet)$/subnet: \1{{ '_' ~ leaf.name }}/g' {{ templates_dir }}/roles_data.yaml
+{% endif %}
 {% endif %}
