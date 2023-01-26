@@ -1,8 +1,3 @@
-{% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
-resource_registry:
-  OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
-
-{% endif %}
 {% if RHOSP_version != 17.0 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
@@ -14,6 +9,9 @@ resource_registry:
 {% endif %}
 {% endif %}
 {% endfor %}
+{% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
+  OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
+{% endif %}
 {% endif %}
 
 parameter_defaults:
