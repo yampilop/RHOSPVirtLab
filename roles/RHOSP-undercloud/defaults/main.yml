@@ -59,18 +59,6 @@ DefaultLeaf0:
 
 # interfaces to use in each nic-config
 interfaces:
-  VirtualController:
-    ControlPlane: nic1
-    External: nic2
-  VirtualCompute:
-    ControlPlane: nic1
-    External: nic2
-  VirtualCephStorage:
-    ControlPlane: nic1
-    External: nic2
-  VirtualComputeHCI:
-    ControlPlane: nic1
-    External: nic2
   Controller:
     ControlPlane: nic2
     External: nic3
@@ -120,6 +108,21 @@ interfaces:
     ControlPlane: nic2
     External: nic3
   ComputeHCI:
+    ControlPlane: nic2
+    External: nic3
+  DistributedCompute:
+    ControlPlane: nic2
+    External: nic3
+  DistributedComputeScaleOut:
+    ControlPlane: nic2
+    External: nic3
+  DistributedComputeHCI:
+    ControlPlane: nic2
+    External: nic3
+  DistributedComputeHCIScaleOut:
+    ControlPlane: nic2
+    External: nic3
+  CephAll:
     ControlPlane: nic2
     External: nic3
 
@@ -223,10 +226,10 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
-  - name: vcontroller0
+  - name: controller0
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 0'
-    profile: 'vcontroller'
+    profile: 'controller'
     memory: 8388608
     vcpus: 2
     bmcport: 6231
@@ -238,10 +241,10 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: vcompute0
+  - name: compute0
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Compute 0'
-    profile: 'vcompute'
+    profile: 'compute'
     memory: 6291456
     vcpus: 4
     bmcport: 6234
@@ -273,7 +276,7 @@ networks:
     hypervisor: localhost
     bridge: br-external
     forward: bridge
-    mac_suffix: '05'
+    mac_suffix: '01'
     ipv4:
       address: '10.0.0.1'
       netmask: '255.255.255.0'
@@ -282,7 +285,7 @@ networks:
     hypervisor: localhost
     bridge: br-management
     forward: nat
-    mac_suffix: '0f'
+    mac_suffix: '02'
     ipv4:
       address: '192.168.250.1'
       netmask: '255.255.255.0'

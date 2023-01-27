@@ -1,16 +1,51 @@
+- name: PROFILES - Calculate roles count to use in the entire playbook
+  set_fact:
+    roles_count: |-
+      {
+      {%- for leaf in ([ DefaultLeaf0 ] + DCNLeafs) %}
+        {{ leaf.name }}:
+        {
+        {%- for role in overcloud_roles %}
+          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) }},
+        {%- endfor %}
+        },
+      {%- endfor %}
+      }
+
+- name: PROFILES - Parse roles count fact
+  set_fact:
+    roles_count: "{{ roles_count | from_yaml }}"
+
 - name: PROFILES - Check all vms profiles are virtual
   fail:
-    msg: Please check your vms.yaml file and make sure the profiles chosen are the virtual ones.
-  when: (item.name != 'undercloud') and (not item.profile.startswith('v'))
+    msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for vms."
+  when:
+    - item.name != 'undercloud'
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).virtual | bool)
   loop: "{{ vms }}"
 
-- name: PROFILES - Check all physical machines profiles are regular
+- name: PROFILES - Check only the right profiles are used in vms for leafs
   fail:
-    msg: Please check your physical.yaml file and make sure the profiles chosen are the non virtual ones.
-  when: item.profile.startswith('v')
+    msg: "ERROR in vm {{ item.name }}: Only distributed capable profiles can be used in leafs."
+  when:
+    - item.hypervisor != DefaultLeaf0.hypervisor
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
+  loop: "{{ vms }}"
+
+- name: PROFILES - Check only the right profiles are used in physical for leafs
+  fail:
+    msg: "ERROR in physical {{ item.name }}: Only distributed capable profiles can be used in leafs."
+  when:
+    - item.leaf != DefaultLeaf0.name
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
   loop: "{{ physical }}"
 
-- name: PROFILES - Check only one type of controllers is used
+- name: PROFILES - Check no more than the max amount of nodes for a profile is used in each leaf
   fail:
-    msg: Using Controller and VirtualControllers at the same time is not allowed.
-  when: ((vms | selectattr("profile", "equalto", "vcontroller") | list | count) > 0) and ((physical | selectattr("profile", "equalto", "controller") | list | count) > 0)
+    msg: "No more than {{ item.1.max }} nodes are allowed for the role {{ item.1.name }} in leaf {{ item.0.name }}."
+  when:
+    - item.1.max is defined
+    - roles_count[item.0.name][item.1.name] > item.1.max
+  with_nested:
+    - "{{ [ DefaultLeaf0 ] + DCNLeafs }}"
+    - "{{ overcloud_roles }}"

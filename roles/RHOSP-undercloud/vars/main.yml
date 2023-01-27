@@ -6,44 +6,130 @@ RHEL_version_supported:
   '8.4':
 
 overcloud_roles:
-  # Virtual roles
-  - name: VirtualController
-    profile: vcontroller
-    nic_configs: vcontroller.yaml
-  - name: VirtualCompute
-    profile: vcompute
-    nic_configs: vcompute.yaml
-  - name: VirtualCephStorage
-    profile: vcephstorage
-    nic_configs: vcephstorage.yaml
-  - name: VirtualComputeHCI
-    profile: vcomputehci
-    nic_configs: vcomputehci.yaml
-  # Physical roles
   - name: Controller
     profile: controller
-    nic_configs: controller.yaml
+    virtual: True
+    distributed: False
+    max: 3
   - name: Compute
     profile: compute
-    nic_configs: compute.yaml
+    virtual: True
+    distributed: True
   - name: ComputeOvsDpdk
     profile: computeovsdpdk
-    nic_configs: computeovsdpdk.yaml
+    virtual: False
+    distributed: False
   - name: ComputeOvsDpdkSriov
     profile: computeovsdpdksriov
-    nic_configs: computeovsdpdksriov.yaml
+    virtual: False
+    distributed: False
   - name: ComputeSriov
     profile: computesriov
-    nic_configs: computesriov.yaml
+    virtual: False
+    distributed: False
   - name: ComputeOvsHwOffload
     profile: computeovshwoffload
-    nic_configs: computeovshwoffload.yaml
+    virtual: False
+    distributed: False
+    copy_from: Compute
   - name: CephStorage
     profile: cephstorage
-    nic_configs: cephstorage.yaml
+    virtual: True
+    distributed: True
   - name: ComputeHCI
     profile: computehci
-    nic_configs: computehci.yaml
+    virtual: True
+    distributed: False
+  - name: DistributedCompute
+    profile: distributedcompute
+    virtual: True
+    distributed: True
+    max: 3
+  - name: DistributedComputeScaleOut
+    profile: distributedcomputescaleout
+    virtual: True
+    distributed: True
+  - name: DistributedComputeHCI
+    profile: distributedcomputehci
+    virtual: True
+    distributed: True
+    max: 3
+  - name: DistributedComputeHCIScaleOut
+    profile: distributedcomputehciscaleout
+    virtual: True
+    distributed: True
+  - name: CephAll
+    profile: cephall
+    virtual: True
+    distributed: True
+    max: 3
+
+roles_networks:
+  Controller:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  Compute:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeOvsDpdk:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeOvsDpdkSriov:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeSriov:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  ComputeOvsHwOffload:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  CephStorage:
+    - Storage
+    - StorageMgmt
+  ComputeHCI:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  DistributedCompute:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  DistributedComputeScaleOut:
+    - InternalApi
+    - Storage
+    - Tenant
+    - External
+  DistributedComputeHCI:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  DistributedComputeHCIScaleOut:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  CephAll:
+    - Storage
+    - StorageMgmt
 
 RHOSP_version_supported:
   17.0:

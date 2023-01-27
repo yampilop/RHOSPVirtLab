@@ -4,7 +4,7 @@ heat_template_version: queens
 heat_template_version: rocky
 {% endif %}
 description: >
-  Software Config to drive os-net-config to configure VLANs for the VirtualCompute role.
+  Software Config to drive os-net-config to configure VLANs for the {{ item.name }} role.
 parameters:
   ControlPlaneIp:
     default: ''
@@ -36,98 +36,36 @@ parameters:
       (The parameter is automatically resolved from the ctlplane network's mtu attribute.)
     type: number
 
-  StorageIpSubnet:
+{% for network in roles_networks[item.name] %}
+  {{ network }}IpSubnet:
     default: ''
-    description: IP address/subnet on the storage network
+    description: IP address/subnet on the {{ network }} network
     type: string
-  StorageNetworkVlanID:
-    default: {{ leaf.networks.Storage.vlan | default(1) }}
-    description: Vlan ID for the storage network traffic.
+  {{ network }}NetworkVlanID:
+    default: {{ leaf.networks[network].vlan | default(1) }}
+    description: Vlan ID for the {{ network }} network traffic.
     type: number
-  StorageMtu:
+  {{ network }}Mtu:
     default: 1500
     description: The maximum transmission unit (MTU) size(in bytes) that is
       guaranteed to pass through the data path of the segments in the
-      Storage network.
+      {{ network }} network.
     type: number
-  StorageInterfaceRoutes:
+  {{ network }}InterfaceDefaultRoute:
+    default: ''
+    description: default route for the {{ network }} network
+    type: string
+  {{ network }}InterfaceRoutes:
     default: []
     description: >
-      Routes for the storage network traffic.
+      Routes for the {{ network }} network traffic.
       JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
-  InternalApiIpSubnet:
-    default: ''
-    description: IP address/subnet on the internal_api network
-    type: string
-  InternalApiNetworkVlanID:
-    default: {{ leaf.networks.InternalApi.vlan | default(1) }}
-    description: Vlan ID for the internal_api network traffic.
-    type: number
-  InternalApiMtu:
-    default: 1500
-    description: The maximum transmission unit (MTU) size(in bytes) that is
-      guaranteed to pass through the data path of the segments in the
-      InternalApi network.
-    type: number
-  InternalApiInterfaceRoutes:
-    default: []
-    description: >
-      Routes for the internal_api network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
-      Unless the default is changed, the parameter is automatically resolved
-      from the subnet host_routes attribute.
-    type: json
-  TenantIpSubnet:
-    default: ''
-    description: IP address/subnet on the tenant network
-    type: string
-  TenantNetworkVlanID:
-    default: {{ leaf.networks.Tenant.vlan | default(1) }}
-    description: Vlan ID for the tenant network traffic.
-    type: number
-  TenantMtu:
-    default: 1500
-    description: The maximum transmission unit (MTU) size(in bytes) that is
-      guaranteed to pass through the data path of the segments in the
-      Tenant network.
-    type: number
-  TenantInterfaceRoutes:
-    default: []
-    description: >
-      Routes for the tenant network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
-      Unless the default is changed, the parameter is automatically resolved
-      from the subnet host_routes attribute.
-    type: json
-  ExternalIpSubnet:
-    default: ''
-    description: IP address/subnet on the external network
-    type: string
-  ExternalNetworkVlanID:
-    default: {{ leaf.networks.External.vlan | default(1) }}
-    description: Vlan ID for the external network traffic.
-    type: number
-  ExternalMtu:
-    default: 1500
-    description: The maximum transmission unit (MTU) size(in bytes) that is
-      guaranteed to pass through the data path of the segments in the
-      External network.
-    type: number
-  ExternalInterfaceDefaultRoute:
-    default: ''
-    description: default route for the external network
-    type: string
-  ExternalInterfaceRoutes:
-    default: []
-    description: >
-      Routes for the external network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
-      Unless the default is changed, the parameter is automatically resolved
-      from the subnet host_routes attribute.
-    type: json
+
+{% endfor %}
+
   DnsServers: # Override this via parameter_defaults
     default: []
     description: >
@@ -155,9 +93,9 @@ resources:
           expression: $.data.max()
           data:
             - {get_param: ControlPlaneMtu}
-            - {get_param: StorageMtu}
-            - {get_param: InternalApiMtu}
-            - {get_param: TenantMtu}
+{% for network in roles_networks[item.name] if network != 'External' %}
+            - {get_param: {{ network }}Mtu}
+{% endfor %}
 
   OsNetConfigImpl:
     type: OS::Heat::SoftwareConfig
@@ -170,7 +108,11 @@ resources:
           params:
             $network_config:
               network_config:
+{% if 'Dpdk' in item.name %}
+              - type: linux_bridge
+{% else %}
               - type: ovs_bridge
+{% endif %}
                 name: br-vlans
                 mtu:
                   get_attr: [MinViableMtu, value]
@@ -193,45 +135,30 @@ resources:
                           get_param: ControlPlaneDefaultRoute
                 members:
                 - type: interface
-                  name: {{ interfaces.VirtualCompute.ControlPlane }}
+                  name: {{ interfaces[item.name].ControlPlane }}
                   mtu:
                     get_attr: [MinViableMtu, value]
                   # force the MAC address of the bridge to this interface
                   primary: true
+{% for network in roles_networks[item.name] if network != 'External' %}
                 - type: vlan
                   mtu:
-                    get_param: StorageMtu
+                    get_param: {{ network }}Mtu
                   vlan_id:
-                    get_param: StorageNetworkVlanID
+                    get_param: {{ network }}NetworkVlanID
                   addresses:
                   - ip_netmask:
-                      get_param: StorageIpSubnet
+                      get_param: {{ network }}IpSubnet
                   routes:
                     list_concat_unique:
-                      - get_param: StorageInterfaceRoutes
-                - type: vlan
-                  mtu:
-                    get_param: InternalApiMtu
-                  vlan_id:
-                    get_param: InternalApiNetworkVlanID
-                  addresses:
-                  - ip_netmask:
-                      get_param: InternalApiIpSubnet
-                  routes:
-                    list_concat_unique:
-                      - get_param: InternalApiInterfaceRoutes
-                - type: vlan
-                  mtu:
-                    get_param: TenantMtu
-                  vlan_id:
-                    get_param: TenantNetworkVlanID
-                  addresses:
-                  - ip_netmask:
-                      get_param: TenantIpSubnet
-                  routes:
-                    list_concat_unique:
-                      - get_param: TenantInterfaceRoutes
+                      - get_param: {{ network }}InterfaceRoutes
+{% endfor %}
+{% if 'External' in roles_networks[item.name] %}
+{% if 'Dpdk' in item.name %}
+              - type: linux_bridge
+{% else %}
               - type: ovs_bridge
+{% endif %}
                 name: br-ex
                 mtu:
                   get_param: ExternalMtu
@@ -246,11 +173,74 @@ resources:
                         next_hop:
                           get_param: ExternalInterfaceDefaultRoute
                 members:
-                - type: interface
-                  name: {{ interfaces.VirtualCompute.External }}
+{% if (('Sriov' in item.name) or ('HwOffload' in item.name)) and ('v' in interfaces[item.name].External) %}
+                - type: sriov_vf
+                  device: {{ interfaces[item.name].External.split('v')[0] }}
+                  vfid: {{ interfaces[item.name].External.split('v')[1] }}
                   mtu:
                     get_param: ExternalMtu
+                  # force the MAC address of the bridge to this interface
                   primary: true
+{% else %}
+                - type: interface
+                  name: {{ interfaces[item.name].External }}
+                  mtu:
+                    get_param: ExternalMtu
+                  # force the MAC address of the bridge to this interface
+                  primary: true
+{% endif %}
+{% endif %}
+
+{% if ('Dpdk' in item.name) and (interfaces[item.name].DpdkBonds is defined) and (interfaces[item.name].DpdkBonds|length > 0) %}
+              - type: ovs_user_bridge
+                name: br-dpdk
+                use_dhcp: false
+                members:
+{% for dpdkbond in interfaces[item.name].DpdkBonds %}
+                - type: ovs_dpdk_bond
+                  name: {{ dpdkbond.name }}
+                  mtu: 9000
+                  rx_queue: 1
+                  ovs_extra:
+{% for port in dpdkbond.ports %}
+                    - set Interface {{ port.name }} options:n_rxq_desc=4096
+                    - set Interface {{ port.name }} options:n_txq_desc=4096
+{% endfor %}
+                  members:
+{% for port in dpdkbond.ports %}
+                  - type: ovs_dpdk_port
+                    name: {{ port.name }}
+                    driver: {{ port.driver }}
+                    members:
+{% if 'v' in port.interface %}
+                    - type: sriov_vf
+                      device: {{ port.interface.split('v')[0] }}
+                      vfid: {{ port.interface.split('v')[1] }}
+{% else %}
+                    - type: interface
+                      name: {{ port.interface }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{% if (('Sriov' in item.name) or ('HwOffload' in item.name)) and (interfaces[item.name].Sriov is defined) %}
+{% for sriovif in interfaces[item.name].Sriov %}
+              - type: sriov_pf
+                name: {{ sriovif.device }}
+                numvfs: {{ sriovif.numvfs }}
+                promisc: true
+                use_dhcp: false
+                nm_controlled: true
+                mtu:
+                  get_param: ExternalMtu
+                defroute: false
+{% if 'HwOffload' in item.name %}
+                link_mode: switchdev
+{% endif %}
+{% endfor %}
+{% endif %}
+
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.

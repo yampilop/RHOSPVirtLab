@@ -117,6 +117,20 @@
           "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
         },
       {% endfor %}
+      {% for leaf in DCNLeafs if (leaf.hypervisor != inventory_hostname) %}
+        {
+          "network": "{{ leaf.subnet.cidr.split('/')[0] }}",
+          "prefix": "{{ leaf.subnet.cidr.split('/')[1] }}",
+          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+        },
+      {% for network in (leaf.networks.keys() | list) %}
+        {
+          "network": "{{ leaf.networks[network].prefix ~ '.0' }}",
+          "prefix": "24",
+          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+        },
+      {% endfor %}
+      {% endfor %}
       ]
 
 - name: NETWORKING - Define network configuration for the public interface of the DCN hypervisors and add static route

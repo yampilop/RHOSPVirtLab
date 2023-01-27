@@ -1,5 +1,7 @@
-{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
-{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
+{% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
+{% set DefaultLeaf0_ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
+{% set DefaultLeaf0_hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 
 parameter_defaults:
 {% if leaf.name == DefaultLeaf0.name %}
@@ -15,6 +17,7 @@ parameter_defaults:
 # Uncomment the following after deploying the leafs
 #  GlanceMultistoreConfig:
 {% for dcn_leaf in DCNLeafs %}
+{% if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}
 #    {{ dcn_leaf.name }}:
 #      GlanceBackend: rbd
 #      GlanceStoreDescription: '{{ dcn_leaf.name }} rbd glance store'
@@ -22,9 +25,15 @@ parameter_defaults:
 #      CephClientUserName: openstack
 #      GlanceBackendID: {{ dcn_leaf.name }}
 #      GlanceRbdPoolName: images
+{% else %}
+#    {{ dcn_leaf.name }}:
+#      GlanceBackend: cinder
+#      GlanceStoreDescription: '{{ dcn_leaf.name }} Block Storage (cinder) store'
+#      GlanceBackendID: {{ dcn_leaf.name }}
+{% endif %}
 {% endfor %}
 {% else %}
-  GlanceBackend: swift
+  GlanceBackend: cinder
   CinderStorageAvailabilityZone: {{ leaf.name }}
 {% endif %}
   NovaComputeAvailabilityZone: {{ leaf.name }}
@@ -47,13 +56,17 @@ parameter_defaults:
 {% endif %}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% else %}
+  CinderStorageAvailabilityZone: {{ leaf.name }}
+  GlanceBackendID: {{ leaf.name }}
 {% if (ceph_count + hci_count) > 0 %}
   GlanceEnabledImportMethods: web-download,copy-image
   GlanceBackend: rbd
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
-  GlanceBackendID: {{ leaf.name }}
   GlanceRbdPoolName: images
-  CinderStorageAvailabilityZone: {{ leaf.name }}
+{% else %}
+  GlanceBackend: cinder
+{% endif %}
+{% if (DefaultLeaf0_ceph_count + DefaultLeaf0_hci_count) > 0 %}
   GlanceMultistoreConfig:
     {{ DefaultLeaf0.name }}:
       GlanceBackend: rbd
@@ -71,7 +84,7 @@ parameter_defaults:
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
 {% for ocrole in overcloud_roles %}
-{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}SchedulerHints:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
 {% endif %}

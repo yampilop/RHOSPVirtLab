@@ -74,10 +74,10 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_management: '192.168.250.10'
-  - name: vcontroller0
+  - name: controller0
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Controller 0'
-    profile: 'vcontroller'
+    profile: 'controller'
     memory: 8388608
     vcpus: 2
     bmcport: 6231
@@ -89,10 +89,10 @@ vms:
     nics:
       RHOSPVirtLab_ctlplane: ''
       RHOSPVirtLab_external: ''
-  - name: vcompute0
+  - name: compute0
     hypervisor: localhost
     title: 'RHOSPVirtLab Virtual Compute 0'
-    profile: 'vcompute'
+    profile: 'compute'
     memory: 6291456
     vcpus: 4
     bmcport: 6234
@@ -120,7 +120,7 @@ networks:
     hypervisor: localhost
     bridge: br-external
     forward: bridge
-    mac_suffix: '05'
+    mac_suffix: '01'
     ipv4:
       address: '10.0.0.1'
       netmask: '255.255.255.0'
@@ -129,7 +129,7 @@ networks:
     hypervisor: localhost
     bridge: br-management
     forward: nat
-    mac_suffix: '0f'
+    mac_suffix: '02'
     ipv4:
       address: '192.168.250.1'
       netmask: '255.255.255.0'

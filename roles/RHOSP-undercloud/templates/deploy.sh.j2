@@ -1,9 +1,9 @@
 #/bin/bash
 
-{% set dpdk_count = ((physical | selectattr("profile", "equalto", "computeovsdpdk") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
-{% set sriov_count = ((physical | selectattr("profile", "equalto", "computesriov") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovshwoffload") | selectattr("leaf", "equalto", leaf.name) | list | count) + (physical | selectattr("profile", "equalto", "computeovsdpdksriov") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
-{% set ceph_count = ((vms | selectattr("profile", "equalto", "vcephstorage") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "cephstorage") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
-{% set hci_count = ((vms | selectattr("profile", "equalto", "vcomputehci") | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", "computehci") | selectattr("leaf", "equalto", leaf.name) | list | count)) %}
+{% set dpdk_count = (roles_count[leaf.name]["ComputeOvsDpdk"] + roles_count[leaf.name]["ComputeOvsDpdkSriov"]) %}
+{% set sriov_count = (roles_count[leaf.name]["ComputeSriov"] + roles_count[leaf.name]["ComputeOvsHwOffload"] + roles_count[leaf.name]["ComputeOvsDpdkSriov"]) %}
+{% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
+{% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
 
 {% if leaf.name == DefaultLeaf0.name %}
 {% set templates_dir='/home/stack/templates' %}
@@ -12,7 +12,7 @@
 {% endif %}
 
 source /home/stack/stackrc
-{% if RHOSP_version == 17.0 and ceph_count > 0 %}
+{% if RHOSP_version == 17.0 and ceph_count + hci_count > 0 %}
 openstack overcloud ceph deploy -y \
 {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
 -o {{ templates_dir }}/deployed-ceph.yaml \
@@ -24,7 +24,7 @@ openstack overcloud ceph deploy -y \
 # Uncomment the following after deploying the leafs
 # sudo rm /home/stack/templates/dcn_ceph_external.yaml
 # sudo -E openstack overcloud export ceph \
-# --stack {% for dcn_leaf in DCNLeafs %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
+# --stack {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
 # --config-download-dir /var/lib/mistral \
 # --output-file /home/stack/templates/dcn_ceph_external.yaml
 {% endif %}
@@ -96,7 +96,9 @@ time openstack overcloud deploy \
 -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
 {% else %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/dcn-hci.yaml \
+{% if RHOSP_version != 16.1 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml \
+{% endif %}
 -e /home/stack/templates/{{ DefaultLeaf0.name }}_ceph_external.yaml \
 {% endif %}
 {% endif %}

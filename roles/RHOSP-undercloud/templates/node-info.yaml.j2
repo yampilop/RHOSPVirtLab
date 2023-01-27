@@ -2,9 +2,9 @@
 
 parameter_defaults:
 {% for ocrole in overcloud_roles %}
-{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}
   Overcloud{{ ocrole.name }}Flavor: baremetal
-  {{ ocrole.name }}Count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
+  {{ ocrole.name }}Count: {{ roles_count[leaf.name][ocrole.name] }}
 {% endif %}
 {% endfor %}
 
@@ -17,10 +17,10 @@ parameter_defaults:
 {% endif %}
 
 {% for ocrole in overcloud_roles %}
-{% if ((physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count)) > 0 %}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}
 - name: {{ ocrole.name }}
-  count: {{ (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) + (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) }}
-{% if 'Controller' in ocrole.name %}
+  count: {{ roles_count[leaf.name][ocrole.name] }}
+{% if ocrole.name == 'Controller' %}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
     extra_vars:

@@ -75,11 +75,7 @@ vms:
     - vcontroller0
     - vcompute0
 
-  The profile value can be one of the following:
-    - vcontroller
-    - vcompute
-    - vcephstorage
-    - vcomputehci
+  The profile value can be one of the listed in `overcloud_roles` variable with `virtual: True`.
 
 physical:
   List of the physical machines to be connected to the lab, in the format:
@@ -99,19 +95,14 @@ physical:
     mac: 'XX:XX:XX:XX:XX:XX' (full MAC address of the ctlplane interface)
     capabilities: 'LIST_OF_CAPABILITIES'
     disk_size: DISK_SIZE_IN_KB
+    nics:
+      nic1: 'ens1f0'
+      nic2: 'ens1f1'
 ```
 
   The role considers no physical machines by default.
 
-  The profile value can be one of the following:
-    - controller
-    - compute
-    - computeovsdpdk
-    - computeovsdpdksriov
-    - computesriov
-    - computeovshwoffload
-    - cephstorage
-    - computehci
+  The profile value can be one of the listed in `overcloud_roles` variable.
 
 networks:
   List of the virtual networks created. The role considers the defaults for RHOSP-virt-infra role:
