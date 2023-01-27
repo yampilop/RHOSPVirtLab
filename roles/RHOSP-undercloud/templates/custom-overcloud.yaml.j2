@@ -27,13 +27,13 @@ parameter_defaults:
 #      GlanceRbdPoolName: images
 {% else %}
 #    {{ dcn_leaf.name }}:
-#      GlanceBackend: swift
-#      GlanceStoreDescription: '{{ dcn_leaf.name }} swift glance store'
+#      GlanceBackend: cinder
+#      GlanceStoreDescription: '{{ dcn_leaf.name }} Block Storage (cinder) store'
 #      GlanceBackendID: {{ dcn_leaf.name }}
 {% endif %}
 {% endfor %}
 {% else %}
-  GlanceBackend: swift
+  GlanceBackend: cinder
   CinderStorageAvailabilityZone: {{ leaf.name }}
 {% endif %}
   NovaComputeAvailabilityZone: {{ leaf.name }}
@@ -64,7 +64,7 @@ parameter_defaults:
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
   GlanceRbdPoolName: images
 {% else %}
-  GlanceBackend: swift
+  GlanceBackend: cinder
 {% endif %}
 {% if (DefaultLeaf0_ceph_count + DefaultLeaf0_hci_count) > 0 %}
   GlanceMultistoreConfig:
