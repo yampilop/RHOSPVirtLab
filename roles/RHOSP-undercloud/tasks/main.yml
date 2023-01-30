@@ -6,9 +6,6 @@
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
-- name: Verify vms and physical profiles
-  import_tasks: tasks/profiles.yml
-
 - name: Wait until cloud-init finishes to grant the sudo access with no password
   raw: test -f /var/lib/cloud/instance/boot-finished
   retries: 30
@@ -117,6 +114,13 @@
   delay: 10
   register: result
   until: result is not failed
+
+- name: TEMPLATES
+  debug:
+    msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
+
+- name: CHECKS - Verify vms and physical profiles
+  import_tasks: tasks/profiles.yml
 
 - name: STACK - Import tasks for the main stack
   include_tasks: tasks/overcloud.yml
