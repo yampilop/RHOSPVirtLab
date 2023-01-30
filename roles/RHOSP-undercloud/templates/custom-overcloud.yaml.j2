@@ -42,15 +42,8 @@ parameter_defaults:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
     horizon::keystone_multidomain_support: true
     nova::availability_zone::default_schedule_zone: {{ leaf.name }}
-  VirtualControllerExtraConfig:
-    nova::scheduler::filter::scheduler_host_subset_size: '999'
-    horizon::keystone_multidomain_support: true
-    nova::availability_zone::default_schedule_zone: {{ leaf.name }}
 {% else %}
   ControllerExtraConfig:
-    nova::scheduler::filter::scheduler_host_subset_size: '999'
-    horizon::keystone_multidomain_support: true
-  VirtualControllerExtraConfig:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
     horizon::keystone_multidomain_support: true
 {% endif %}

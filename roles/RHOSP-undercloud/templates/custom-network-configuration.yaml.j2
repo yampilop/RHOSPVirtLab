@@ -51,7 +51,7 @@ parameter_defaults:
     - PciPassthroughFilter
 
 {% if DCNLeafs | length > 0 %}
-{% for ocrole in overcloud_roles %}
+{% for ocrole in overcloud_roles where not (ocrole.virtual | bool) %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
   {{ ocrole.name }}Parameters:
@@ -62,14 +62,17 @@ parameter_defaults:
 {% endif %}
 {% endif %}
 {% endfor %}
-  VirtualControllerParameters:
-    OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
   ControllerParameters:
     OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
 {% endif %}
 
 {% if roles_count[leaf.name]["ComputeOvsDpdkSriov"] > 0 %}
   ComputeOvsDpdkSriovParameters:
+{% if leaf.name != 'overcloud' %}
+    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
+{% else %}
+    NeutronBridgeMappings: "datacentre:br-ex"
+{% endif %}
     KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkSriovProperties.hugepages }} {{ ComputeOvsDpdkSriovProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkSriovProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
     IsolCpusList: "{{ ComputeOvsDpdkSriovProperties.isolcpus }}"
@@ -91,6 +94,11 @@ parameter_defaults:
 
 {% if roles_count[leaf.name]["ComputeOvsDpdk"] > 0 %}
   ComputeOvsDpdkParameters:
+{% if leaf.name != 'overcloud' %}
+    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
+{% else %}
+    NeutronBridgeMappings: "datacentre:br-ex"
+{% endif %}
     KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkProperties.hugepages }} {{ ComputeOvsDpdkProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
     IsolCpusList: "{{ ComputeOvsDpdkProperties.isolcpus }}"
@@ -110,6 +118,11 @@ parameter_defaults:
 
 {% if roles_count[leaf.name]["ComputeSriov"] > 0 %}
   ComputeSriovParameters:
+{% if leaf.name != 'overcloud' %}
+    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
+{% else %}
+    NeutronBridgeMappings: "datacentre:br-ex"
+{% endif %}
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
@@ -126,6 +139,11 @@ parameter_defaults:
 
 {% if roles_count[leaf.name]["ComputeOvsHwOffload"] > 0 %}
   ComputeOvsHwOffloadParameters:
+{% if leaf.name != 'overcloud' %}
+    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
+{% else %}
+    NeutronBridgeMappings: "datacentre:br-ex"
+{% endif %}
     IsolCpusList: '{{ ComputeOvsHwOffloadProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepages={{ ComputeOvsHwOffloadProperties.hugepages }} {{ ComputeOvsHwOffloadProperties.kernelargs }} isolcpus={{ ComputeOvsHwOffloadProperties.isolcpus }}"
     OvsHwOffload: true
