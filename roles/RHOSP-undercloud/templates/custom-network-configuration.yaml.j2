@@ -51,7 +51,7 @@ parameter_defaults:
     - PciPassthroughFilter
 
 {% if DCNLeafs | length > 0 %}
-{% for ocrole in overcloud_roles if not (ocrole.virtual | bool) %}
+{% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
   {{ ocrole.name }}Parameters:
