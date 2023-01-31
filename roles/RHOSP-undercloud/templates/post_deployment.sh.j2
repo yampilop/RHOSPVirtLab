@@ -49,8 +49,8 @@ openstack flavor show small_1_1_10 &>/dev/null || openstack flavor create --ram 
 openstack flavor show small_2_2_20_pinned &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --property hw:cpu_policy=dedicated --property hw:mem_page_size=large --public small_2_2_20_pinned
 openstack flavor show small_1_1_10_pinned &>/dev/null || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --property hw:cpu_policy=dedicated --property hw:mem_page_size=large --public small_1_1_10_pinned
 {% if sriov_count > 0 %}
-openstack flavor show small_2_2_20_sriov &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB --property hw:pci_numa_affinity_policy=preferred small_2_2_20_sriov
-openstack flavor show small_1_1_10_sriov &>/dev/null || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB --property hw:pci_numa_affinity_policy=preferred small_1_1_10_sriov
+openstack flavor show small_2_2_20_sriov &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=large small_2_2_20_sriov
+openstack flavor show small_1_1_10_sriov &>/dev/null || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=large small_1_1_10_sriov
 {% endif %}
 
 # Images
