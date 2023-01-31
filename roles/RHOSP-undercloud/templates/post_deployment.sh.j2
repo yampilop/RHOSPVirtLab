@@ -5,10 +5,10 @@
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
 
-{% set dpdk_count = (roles_count[leaf.name]["ComputeOvsDpdk"] + roles_count[leaf.name]["ComputeOvsDpdkSriov"]) %}
-{% set sriov_count = (roles_count[leaf.name]["ComputeSriov"] + roles_count[leaf.name]["ComputeOvsHwOffload"] + roles_count[leaf.name]["ComputeOvsDpdkSriov"]) %}
-{% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
-{% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
+{% set dpdk_count = (roles_count[DefaultLeaf0.name]["ComputeOvsDpdk"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
+{% set sriov_count = (roles_count[DefaultLeaf0.name]["ComputeSriov"] + roles_count[DefaultLeaf0.name]["ComputeOvsHwOffload"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
+{% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
+{% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 
 ################################################################################
 ### Default domain specifics ###################################################
@@ -47,6 +47,11 @@ openstack subnet show default-provider-subnet &>/dev/null || openstack subnet cr
 openstack flavor show small_2_2_20 &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public small_2_2_20
 openstack flavor show small_1_1_10 &>/dev/null || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public small_1_1_10
 openstack flavor show small_2_2_20_pinned &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --property hw:cpu_policy=dedicated --property hw:mem_page_size=large --public small_2_2_20_pinned
+openstack flavor show small_1_1_10_pinned &>/dev/null || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --property hw:cpu_policy=dedicated --property hw:mem_page_size=large --public small_1_1_10_pinned
+{% if sriov_count > 0 %}
+openstack flavor show small_2_2_20_sriov &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB --property hw:pci_numa_affinity_policy=preferred small_2_2_20_sriov
+openstack flavor show small_1_1_10_sriov &>/dev/null || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public --property sriov=true --property hw:cpu_policy=dedicated --property hw:mem_page_size=1GB --property hw:pci_numa_affinity_policy=preferred small_1_1_10_sriov
+{% endif %}
 
 # Images
 {% if (DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0) %}
