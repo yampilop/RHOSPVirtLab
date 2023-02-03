@@ -130,7 +130,7 @@ ComputeSriovProperties:
   hostmemory: 8192
   pcipassthrough:
     - devname: ens1f1
-      network: 'sriov1'
+      physical_network: 'sriov1'
       trusted: true
 
 # ComputeOvsHwOffload default properties
@@ -145,7 +145,7 @@ ComputeOvsHwOffloadProperties:
   hostmemory: 8192
   pcipassthrough:
     - devname: ens1f1
-      network: 'offload1'
+      physical_network: 'offload1'
       trusted: true
 
 # ComputeOvsDpdk default properties
@@ -178,7 +178,7 @@ ComputeOvsDpdkSriovProperties:
   physicaldevmappings: 'datacentre:br-ex,sriov1:ens1f1'
   pcipassthrough:
     - devname: ens1f1
-      network: 'sriov1'
+      physical_network: 'sriov1'
       trusted: true
 
 # CephStorage default properties
