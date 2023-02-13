@@ -124,7 +124,7 @@ parameter_defaults:
         ipaddr: {% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
         ipport: {{ vm.bmcport }}
         lanplus: 1
-{%- endfor %}
+{% endfor %}
 {% for node in physical if (node.profile == 'computeinstanceha') and (node.leaf == leaf.name) %}
     # {{ node.name }}
     - agent: fence_ipmilan
