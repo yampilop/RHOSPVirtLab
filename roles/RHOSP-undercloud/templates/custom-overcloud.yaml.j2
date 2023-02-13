@@ -122,6 +122,7 @@ parameter_defaults:
         login: admin
         passwd: admin
         ipaddr: {% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
+
         ipport: {{ vm.bmcport }}
         lanplus: 1
 {% endfor %}
