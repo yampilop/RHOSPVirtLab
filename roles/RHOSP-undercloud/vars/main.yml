@@ -316,7 +316,6 @@ roles_networks:
   ComputeInstanceHA:
     - InternalApi
     - Storage
-    - StorageMgmt
     - Tenant
     - External
   DistributedCompute:
