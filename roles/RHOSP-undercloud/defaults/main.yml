@@ -60,71 +60,74 @@ DefaultLeaf0:
 # interfaces to use in each nic-config
 interfaces:
   Controller:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   Compute:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   ComputeOvsDpdk:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
     DpdkBonds:
       - name: dpdkbond0
         ports:
           - name: dpdk0
+            interface: nic3
+            driver: vfio-pci
+          - name: dpdk1
             interface: nic4
             driver: vfio-pci
-          - name: dpdk1
-            interface: nic5
-            driver: vfio-pci
   ComputeOvsDpdkSriov:
-    ControlPlane: nic2
-    External: nic3v0
+    ControlPlane: nic1
+    External: nic2v0
     Sriov:
-      - device: nic3
+      - device: nic2
         numvfs: 8
     DpdkBonds:
       - name: dpdkbond0
         ports:
           - name: dpdk0
-            interface: nic3v1
+            interface: nic2v1
             driver: vfio-pci
           - name: dpdk1
-            interface: nic3v2
+            interface: nic2v2
             driver: vfio-pci
   ComputeSriov:
-    ControlPlane: nic2
-    External: nic3v0
+    ControlPlane: nic1
+    External: nic2v0
     Sriov:
-      - device: nic3
+      - device: nic2
         numvfs: 8
   ComputeOvsHwOffload:
-    ControlPlane: nic2
-    External: nic3v0
+    ControlPlane: nic1
+    External: nic2v0
     Sriov:
-      - device: nic3
+      - device: nic2
         numvfs: 8
   CephStorage:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   ComputeHCI:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
+  ComputeInstanceHA:
+    ControlPlane: nic1
+    External: nic2
   DistributedCompute:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   DistributedComputeScaleOut:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   DistributedComputeHCI:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   DistributedComputeHCIScaleOut:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
   CephAll:
-    ControlPlane: nic2
-    External: nic3
+    ControlPlane: nic1
+    External: nic2
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'

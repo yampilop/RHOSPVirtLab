@@ -98,6 +98,9 @@ interfaces:
   ComputeHCI:
     ControlPlane: nic1
     External: nic2
+  ComputeInstanceHA:
+    ControlPlane: nic1
+    External: nic2
   DistributedCompute:
     ControlPlane: nic1
     External: nic2
