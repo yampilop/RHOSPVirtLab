@@ -40,6 +40,10 @@ overcloud_roles:
     profile: computehci
     virtual: True
     distributed: False
+  - name: ComputeInstanceHA
+    profile: computeinstanceha
+    virtual: True
+    distributed: False
   - name: DistributedCompute
     profile: distributedcompute
     virtual: True
@@ -63,6 +67,209 @@ overcloud_roles:
     virtual: True
     distributed: True
     max: 3
+
+# Environment files to include in deploy command:
+#  - file: Name of the file
+#    absolute_path: True if the file name is a full path, False if it's relative to the leaf templates directory
+#    version: List of versions where the file will be included
+#    DCN: True if this will only be include in DCN deployments
+#    Leafs: All(Include in all the leafs)|Default(Include only in the default leaf)|NotDefault(Include only in the DCN leafs)
+deployment_environment:
+  - file: overcloud-baremetal-deployed.yaml
+    absolute_path: False
+    version: [ 17.0 ]
+    DCN: False
+    Leafs: All
+  - file: overcloud-networks-deployed.yaml
+    absolute_path: False
+    version: [ 17.0 ]
+    DCN: False
+    Leafs: All
+  - file: overcloud-vip-deployed.yaml
+    absolute_path: False
+    version: [ 17.0 ]
+    DCN: False
+    Leafs: All
+  - file: node-info.yaml
+    absolute_path: False
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: /home/stack/containers-prepare-parameter.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1 ]
+    DCN: False
+    Leafs: All
+  - file: overcloud-images.yaml
+    absolute_path: False
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: True
+    Leafs: All
+  - file: /home/stack/templates/overcloud-export.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: True
+    Leafs: NotDefault
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/host-config-and-reboot.yaml
+    absolute_path: True
+    version: [ 13.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'ComputeOvsDpdk', 'ComputeOvsDpdkSriov', 'ComputeSriov', 'ComputeOvsHwOffload' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/neutron-ovs-dpdk.yaml
+    absolute_path: True
+    version: [ 13.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'ComputeOvsDpdk', 'ComputeOvsDpdkSriov' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dpdk.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'ComputeOvsDpdk', 'ComputeOvsDpdkSriov' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'ComputeOvsDpdkSriov', 'ComputeSriov', 'ComputeOvsHwOffload' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: Default
+    Variable: LowMemUsage
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Variable: DeployOctavia
+  - file: custom-network-configuration.yaml
+    absolute_path: False
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml
+    absolute_path: True
+    version: [ 17.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml
+    absolute_path: True
+    version: [ 17.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml
+    absolute_path: True
+    version: [ 17.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: deployed-ceph.yaml
+    absolute_path: False
+    version: [ 17.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: Default
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: Default
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: Default
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/dcn-hci.yaml
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: NotDefault
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: "/home/stack/templates/overcloud_ceph_external.yaml"
+    absolute_path: True
+    version: [ 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: NotDefault
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: custom-ceph.yaml
+    absolute_path: False
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/rhsm.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Variable: RegisterNodes
+  - file: custom-overcloud.yaml
+    absolute_path: False
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+  - file: dcn_ceph_external.yaml
+    absolute_path: False
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: True
+    Leafs: Default
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/compute-instanceha.yaml
+    absolute_path: True
+    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'ComputeInstanceHA' ]
 
 roles_networks:
   Controller:
@@ -100,6 +307,12 @@ roles_networks:
     - Storage
     - StorageMgmt
   ComputeHCI:
+    - InternalApi
+    - Storage
+    - StorageMgmt
+    - Tenant
+    - External
+  ComputeInstanceHA:
     - InternalApi
     - Storage
     - StorageMgmt

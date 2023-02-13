@@ -108,3 +108,32 @@ parameter_defaults:
   - undercloud.ctlplane.localdomain:8787
   - 192.168.24.1:8787
 {% endif %}
+
+# Fencing parameters
+{% if roles_count[leaf.name]["ComputeInstanceHA"] > 0 %}
+  EnableFencing: true
+  FencingConfig:
+    devices:
+{% for vm in vms if (vm.profile == 'computeinstanceha') and (vm.hypervisor == leaf.hypervisor) %}
+    # {{ vm.name }}
+    - agent: fence_ipmilan
+      host_mac: {{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}
+      params:
+        login: admin
+        passwd: admin
+        ipaddr: {% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
+        ipport: {{ vm.bmcport }}
+        lanplus: 1
+{%- endfor %}
+{% for node in physical if (node.profile == 'computeinstanceha') and (node.leaf == leaf.name) %}
+    # {{ node.name }}
+    - agent: fence_ipmilan
+      host_mac: {{ node.mac }}
+      params:
+        login: {{ node.pm_user }}
+        passwd: {{ node.pm_password }}
+        ipaddr: {{ node.pm_addr }}
+        ipport: {{ node.pm_port }}
+        lanplus: 1
+{% endfor %}
+{% endif %}

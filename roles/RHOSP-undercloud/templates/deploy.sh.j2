@@ -1,7 +1,5 @@
 #/bin/bash
 
-{% set dpdk_count = (roles_count[leaf.name]["ComputeOvsDpdk"] + roles_count[leaf.name]["ComputeOvsDpdkSriov"]) %}
-{% set sriov_count = (roles_count[leaf.name]["ComputeSriov"] + roles_count[leaf.name]["ComputeOvsHwOffload"] + roles_count[leaf.name]["ComputeOvsDpdkSriov"]) %}
 {% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
 {% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
 
@@ -21,12 +19,12 @@ openstack overcloud ceph deploy -y \
 {% endif %}
 
 {% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) %}
-# Uncomment the following after deploying the leafs
-# sudo rm /home/stack/templates/dcn_ceph_external.yaml
-# sudo -E openstack overcloud export ceph \
-# --stack {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
-# --config-download-dir /var/lib/mistral \
-# --output-file /home/stack/templates/dcn_ceph_external.yaml
+sudo rm /home/stack/templates/dcn_ceph_external.yaml
+sudo -E openstack overcloud export ceph \
+--stack {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
+--config-download-dir /var/lib/mistral \
+--output-file /home/stack/templates/dcn_ceph_external.yaml
+[[ -f /home/stack/templates/dcn_ceph_external.yaml ]] || sudo touch /home/stack/templates/dcn_ceph_external.yaml
 {% endif %}
 
 date
@@ -35,83 +33,25 @@ time openstack overcloud deploy \
 --templates /usr/share/openstack-tripleo-heat-templates/ \
 --stack {{ leaf.name }} \
 -n /home/stack/templates/network_data.yaml \
-{% if RHOSP_version == 17.0 %}
--e {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
--e /home/stack/templates/overcloud-networks-deployed.yaml \
--e {{ templates_dir }}/overcloud-vip-deployed.yaml \
-{% endif %}
 -r {{ templates_dir }}/roles_data.yaml \
-{% if RHOSP_version != 17.0 %}
--e {{ templates_dir }}/node-info.yaml \
-{% endif %}
-{% if RHOSP_version != 13.0 %}
--e /home/stack/containers-prepare-parameter.yaml \
-{% endif %}
--e {{ templates_dir }}/overcloud-images.yaml \
-{% if DCNLeafs | length > 0 %}
-{% if RHOSP_version != 17.0 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml \
-{% endif %}
-{% if leaf.name != DefaultLeaf0.name %}
--e /home/stack/templates/overcloud-export.yaml \
-{% endif %}
-{% endif %}
--e /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml \
-{% if RHOSP_version != 17.0 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml \
-{% endif %}
-{% if ((RHOSP_version == 13.0) and (dpdk_count + sriov_count > 0)) %}
--e /usr/share/openstack-tripleo-heat-templates/environments/host-config-and-reboot.yaml \
-{% endif %}
-{% if dpdk_count > 0 %}
-{% if RHOSP_version == 13.0 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/neutron-ovs-dpdk.yaml \
+{% for environment in deployment_environment %}
+{% if ((environment.DCN | bool) and (DCNLeafs | length > 0)) or not (environment.DCN | bool) %}
+{% if ((environment.Leafs == 'Default') and (leaf.name == DefaultLeaf0.name)) or ((environment.Leafs == 'NotDefault') and (leaf.name != DefaultLeaf0.name)) or (environment.Leafs == 'All') %}
+{% if RHOSP_version in environment.version %}
+{% if ((environment.Roles is defined) and ((roles_count[leaf.name].items() | selectattr(0, "in", environment.Roles) | sum(1)) > 0)) or (environment.Roles is not defined) %}
+{% if ((environment.Variable is defined) and (lookup('vars', environment.Variable) | bool)) or (environment.Variable is not defined) %}
+{% if environment.absolute_path | bool %}
+-e {{ environment.file }} \
 {% else %}
--e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dpdk.yaml \
+-e {{ templates_dir }}/{{ environment.file }} \
 {% endif %}
-{% endif %}
--e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml \
-{% if sriov_count > 0 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml \
-{% endif %}
-{% if LowMemUsage and (leaf.name == DefaultLeaf0.name) %}
--e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml \
-{% endif %}
-{% if DeployOctavia %}
--e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
-{% endif %}
--e {{ templates_dir }}/custom-network-configuration.yaml \
-{% if (ceph_count + hci_count) > 0 %}
-{% if RHOSP_version == 17.0 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
--e {{ templates_dir }}/deployed-ceph.yaml \
-{% else %}
--e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \
-{% if leaf.name == DefaultLeaf0.name %}
--e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-rgw.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-mds.yaml \
--e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
-{% else %}
--e /usr/share/openstack-tripleo-heat-templates/environments/dcn-hci.yaml \
-{% if RHOSP_version != 16.1 %}
--e /usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml \
-{% endif %}
--e /home/stack/templates/{{ DefaultLeaf0.name }}_ceph_external.yaml \
-{% endif %}
-{% endif %}
--e {{ templates_dir }}/custom-ceph.yaml \
-{% endif %}
-{% if RegisterNodes %}
--e /usr/share/openstack-tripleo-heat-templates/environments/rhsm.yaml \
-{% endif %}
--e {{ templates_dir }}/custom-overcloud.yaml
-{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) %}
-# Add the following after deploying the leafs
-# -e /home/stack/templates/dcn_ceph_external.yaml
-{% endif %}
+{%- endif %}
+{%- endif %}
+{%- endif %}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+;
 date
 
 {% if leaf.name != DefaultLeaf0.name and RHOSP_version != 17.0 %}
@@ -132,13 +72,13 @@ sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdat
 rm /home/stack/templates/overcloud-export.yaml
 sudo chmod -R +rx /var/lib/mistral/overcloud/
 openstack overcloud export \
---config-download-dir /var/lib/mistral/overcloud \
+--config-download-dir /var/lib/mistral/{{ leaf.name }} \
 --stack {{ leaf.name }} --output-file /home/stack/templates/overcloud-export.yaml
 {% if (ceph_count + hci_count) > 0 %}
-sudo rm /home/stack/templates/{{ leaf.name }}_ceph_external.yaml
+sudo rm /home/stack/templates/overcloud_ceph_external.yaml
 sudo -E openstack overcloud export ceph \
 --stack {{ leaf.name }} \
 --config-download-dir /var/lib/mistral \
---output-file /home/stack/templates/{{ leaf.name }}_ceph_external.yaml
+--output-file /home/stack/templates/overcloud_ceph_external.yaml
 {% endif %}
 {% endif %}
