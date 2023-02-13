@@ -43,7 +43,7 @@ overcloud_roles:
   - name: ComputeInstanceHA
     profile: computeinstanceha
     virtual: True
-    distributed: False
+    distributed: True
   - name: DistributedCompute
     profile: distributedcompute
     virtual: True
