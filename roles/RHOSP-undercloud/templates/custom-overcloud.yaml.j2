@@ -109,8 +109,8 @@ parameter_defaults:
   - 192.168.24.1:8787
 {% endif %}
 
-# Fencing parameters
 {% if roles_count[leaf.name]["ComputeInstanceHA"] > 0 %}
+  # Fencing parameters
   EnableFencing: true
   FencingConfig:
     devices:
