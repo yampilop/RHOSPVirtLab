@@ -50,7 +50,7 @@ nodes:
     disk: {{ (node.disk_size / 1073741824) | int }}
     arch: "x86_64"
     pm_type: "{{ node.pm_type }}"
-{% if 'manual' not in node.pm_type or 'fake' not in node.pm_type %}
+{% if 'manual' not in node.pm_type and 'fake' not in node.pm_type %}
     pm_user: "{{ node.pm_user }}"
     pm_password: "{{ node.pm_password }}"
     pm_addr: "{{ node.pm_addr }}"
