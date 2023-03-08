@@ -30,7 +30,11 @@ enable_routed_networks = true
 #enable_tempest = true
 #enable_validations = true
 #enable_zaqar = true
+{% if RHOSP_version == 13.0 %}
+enabled_drivers = pxe_ipmitool,pxe_drac,pxe_ilo,fake_pxe
+{% else %}
 enabled_hardware_types = ipmi,redfish,ilo,idrac,manual-management
+{% endif %}
 #generate_service_certificate = true
 #heat_container_image =
 #heat_native = true
