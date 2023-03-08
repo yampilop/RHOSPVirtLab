@@ -63,27 +63,6 @@
   loop:
     - images
 
-- name: CONFIGFILES - Set container images prepare file
-  template:
-    src: "containers-prepare-parameter.yaml.j2"
-    dest: "/home/stack/containers-prepare-parameter.yaml"
-    owner: stack
-    group: stack
-
-- name: CONFIGFILES - Set custom undercloud parameters
-  copy:
-    src: "templates/custom-undercloud-params.yaml"
-    dest: "/home/stack/custom-undercloud-params.yaml"
-    owner: stack
-    group: stack
-
-- name: CONFIGFILES - Set undercloud configuration file
-  template:
-    src: "undercloud.conf.j2"
-    dest: "/home/stack/undercloud.conf"
-    owner: stack
-    group: stack
-
 - name: PACKAGES - Install needed packages
   yum:
     name: "{{ RHOSP_version_supported[RHOSP_version].packages }}"
@@ -121,6 +100,27 @@
 
 - name: CHECKS - Verify vms and physical profiles
   import_tasks: tasks/profiles.yml
+
+- name: CONFIGFILES - Set container images prepare file
+  template:
+    src: "containers-prepare-parameter.yaml.j2"
+    dest: "/home/stack/containers-prepare-parameter.yaml"
+    owner: stack
+    group: stack
+
+- name: CONFIGFILES - Set custom undercloud parameters
+  copy:
+    src: "templates/custom-undercloud-params.yaml"
+    dest: "/home/stack/custom-undercloud-params.yaml"
+    owner: stack
+    group: stack
+
+- name: CONFIGFILES - Set undercloud configuration file
+  template:
+    src: "undercloud.conf.j2"
+    dest: "/home/stack/undercloud.conf"
+    owner: stack
+    group: stack
 
 - name: STACK - Import tasks for the main stack
   include_tasks: tasks/overcloud.yml
