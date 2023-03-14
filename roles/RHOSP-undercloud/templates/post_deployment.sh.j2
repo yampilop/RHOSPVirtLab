@@ -1,6 +1,6 @@
 #/bin/bash
 
-{% set ext = networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first %}
+{% set ext = networks | selectattr('name', 'search', DefaultLeaf0.networks.External.network) | list | first %}
 {% set ext_addr = ext.ipv4.address ~ '/' ~ ext.ipv4.netmask %}
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
@@ -91,7 +91,7 @@ done
 ################################################################################
 ### {{ leaf.name }} shared #####################################################
 ################################################################################
-{% set ext = networks | selectattr('name', 'search', 'RHOSPVirtLab_external_' ~ leaf.name) | list | first %}
+{% set ext = networks | selectattr('name', 'search', leaf.networks.External.network) | list | first %}
 {% set ext_addr = ext.ipv4.address ~ '/' ~ ext.ipv4.netmask %}
 source /home/stack/{{ leaf.name }}rc
 

@@ -113,7 +113,11 @@ resources:
 {% else %}
               - type: ovs_bridge
 {% endif %}
+{% if leaf.networks.External.network == 'RHOSPVirtLab_ctlplane' %}
                 name: br-vlans
+{% else %}
+                name: br-ex
+{% endif %}
                 mtu:
                   get_attr: [MinViableMtu, value]
                 use_dhcp: false
@@ -153,7 +157,7 @@ resources:
                     list_concat_unique:
                       - get_param: {{ network }}InterfaceRoutes
 {% endfor %}
-{% if 'External' in roles_networks[item.name] %}
+{% if ('External' in roles_networks[item.name]) and (leaf.networks.External.network == 'RHOSPVirtLab_external') %}
 {% if 'Dpdk' in item.name %}
               - type: linux_bridge
 {% else %}
