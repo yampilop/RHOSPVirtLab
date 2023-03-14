@@ -113,7 +113,7 @@ resources:
 {% else %}
               - type: ovs_bridge
 {% endif %}
-{% if leaf.networks.External.network == 'RHOSPVirtLab_ctlplane' %}
+{% if leaf.networks.External.network != 'RHOSPVirtLab_ctlplane' %}
                 name: br-vlans
 {% else %}
                 name: br-ex
