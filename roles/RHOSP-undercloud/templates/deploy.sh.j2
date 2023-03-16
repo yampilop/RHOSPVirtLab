@@ -68,7 +68,7 @@ nova-manage cell_v2 discover_hosts --by-service --verbose"
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}
 
-{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) %}
+{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) and (RHOSP_version != 13.0) %}
 rm /home/stack/templates/overcloud-export.yaml
 sudo chmod -R +rx /var/lib/mistral/overcloud/
 openstack overcloud export \

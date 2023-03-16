@@ -112,7 +112,7 @@ deployment_environment:
     Leafs: All
   - file: /home/stack/templates/overcloud-export.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.0, 16.2, 16.1 ]
     DCN: True
     Leafs: NotDefault
   - file: /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml
