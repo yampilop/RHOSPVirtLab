@@ -69,7 +69,7 @@
   when:
     - inventory_hostname == 'localhost'
 
-- name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for leafs
+- name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for localhost and leafs
   firewalld:
     port: "{{ item.bmcport }}/udp"
     zone: "public"
@@ -79,5 +79,4 @@
   loop: "{{ vms }}"
   become: yes
   when:
-    - inventory_hostname != 'localhost'
     - inventory_hostname in item.hypervisor
