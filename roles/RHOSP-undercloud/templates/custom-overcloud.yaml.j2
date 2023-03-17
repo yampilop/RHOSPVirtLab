@@ -121,7 +121,7 @@ parameter_defaults:
       params:
         login: admin
         passwd: admin
-        ipaddr: {% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
+        ipaddr: {% if vm.hypervisor == 'localhost' %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
 
         ipport: {{ vm.bmcport }}
         lanplus: 1
