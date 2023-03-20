@@ -13,7 +13,7 @@ parameter_defaults:
 {% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
 {% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
   Overcloud{{ ocrole.name }}_{{ dcnleaf.name }}Flavor: baremetal
-  {{ ocrole.name }}_{{ dcnleaf.name }}Count: {{ roles_count[dcnleaf.name][ocrole.name] }}]
+  {{ ocrole.name }}_{{ dcnleaf.name }}Count: {{ roles_count[dcnleaf.name][ocrole.name] }}
 {% endif %}
 {% endfor %}
 {% endfor %}
