@@ -51,7 +51,8 @@ openstack baremetal node list
 
 
 # Prepare images
-{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
+{% if RHOSP_version == 13.0 %}
+{% if leaf.name == DefaultLeaf0.name %}
 {% if rh_serviceaccount and rh_token %}
 sudo docker login registry.redhat.io --username '{{ rh_serviceaccount }}' --password '{{ rh_token }}'
 {% else %}
@@ -74,6 +75,7 @@ sudo openstack overcloud container image prepare \
 sudo openstack overcloud container image upload \
 --config-file /home/stack/local_registry_images.yaml \
 --verbose
+{% endif %}
 {% elif RHOSP_version == 17.0 %}
 sudo openstack tripleo container image prepare \
 -e /home/stack/containers-prepare-parameter.yaml \
