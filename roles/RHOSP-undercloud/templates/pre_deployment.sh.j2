@@ -124,7 +124,7 @@ cp /usr/share/openstack-tripleo-heat-templates/roles/{{ ocrole.name }}.yaml /hom
 # Copy roles for {{ dcnleaf.name }} and change the role and network names
 {% for ocrole in overcloud_roles if roles_count[dcnleaf.name][ocrole.name] > 0 %}
 cp /usr/share/openstack-tripleo-heat-templates/roles/{{ ocrole.name if (ocrole.copy_from is not defined) else ocrole.copy_from }}.yaml /home/stack/roles/{{ ocrole.name }}_{{ dcnleaf.name }}.yaml
-{% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[leaf.name][role] > 0) %}
+{% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[dcnleaf.name][role] > 0) %}
 sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    - ([^E].+)/- name: {{ role }}\n\1  networks:\n    - External\n    - \3/' /home/stack/roles/{{ ocrole.name }}_{{ dcnleaf.name }}.yaml
 {% endfor %}
 sed -i -E 's/- name: {{ ocrole.name }}$/- name: {{ ocrole.name }}_{{ dcnleaf.name }}/g' /home/stack/roles/{{ ocrole.name }}_{{ dcnleaf.name }}.yaml
