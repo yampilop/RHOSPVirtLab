@@ -78,11 +78,24 @@ parameter_defaults:
     swap_size_megabytes: '8192'
 {% for ocrole in overcloud_roles %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
-  {{ ocrole.name }}{{ '_' ~ leaf.name if (RHOSP_version == 13.0) and (leaf.name != DefaultLeaf0.name) }}SchedulerHints:
+  {{ ocrole.name }}SchedulerHints:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
 {% endif %}
 {% endfor %}
 {% endif %}
+
+{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+  {{ ocrole.name }}_{{ dcnleaf.name }}SchedulerHints:
+    'capabilities:node': '{{ dcnleaf.name }}-{{ ocrole.profile }}%index%'
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% endif %}
+
 {% if RegisterNodes %}
   RhsmVars:
 {% if (rh_orgid is not defined) or (rh_activationkey is not defined) %}
