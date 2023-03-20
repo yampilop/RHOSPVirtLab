@@ -9,6 +9,15 @@ resource_registry:
 {% endif %}
 {% endif %}
 {% endfor %}
+{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+  OS::TripleO::{{ ocrole.name }}_{{ dcnleaf.name }}::Net::SoftwareConfig: /home/stack/templates/{{ dcnleaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
 {% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
 {% endif %}
@@ -55,7 +64,7 @@ parameter_defaults:
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
   {{ ocrole.name }}Parameters:
-{% if leaf.name != 'overcloud' %}
+{% if leaf.name != DefaultLeaf0.name %}
     NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex"
@@ -63,7 +72,19 @@ parameter_defaults:
 {% endif %}
 {% endfor %}
   ControllerParameters:
-    OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+    OVNCMSOptions: "enable-chassis-as-gw,availability-zones={{ DefaultLeaf0.name }}:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+
+{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+  {{ ocrole.name }}ControlPlaneSubnet: {{ dcnleaf.subnet.name }}
+  {{ ocrole.name }}Parameters:
+    NeutronBridgeMappings: "datacentre-{{ dcnleaf.name }}:br-ex"
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}]
 {% endif %}
 
 {% if roles_count[leaf.name]["ComputeOvsDpdkSriov"] > 0 %}
