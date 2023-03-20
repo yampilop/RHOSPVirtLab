@@ -122,7 +122,7 @@ parameter_defaults:
   - 192.168.24.1:8787
 {% endif %}
 
-{% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or (ControllersFencing | bool) %}
+{% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == DefaultLeaf0.name)) %}
   # Fencing parameters
   EnableFencing: true
   FencingConfig:
