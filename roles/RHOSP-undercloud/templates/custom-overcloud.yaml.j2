@@ -82,7 +82,6 @@ parameter_defaults:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
 {% endif %}
 {% endfor %}
-{% endif %}
 
 {% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
 {% for dcnleaf in DCNLeafs %}
@@ -94,6 +93,7 @@ parameter_defaults:
 {% endfor %}
 {% endfor %}
 {% endif %}
+
 {% endif %}
 
 {% if RegisterNodes %}
