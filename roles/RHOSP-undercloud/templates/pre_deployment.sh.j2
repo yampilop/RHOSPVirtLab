@@ -51,7 +51,7 @@ openstack baremetal node list
 
 
 # Prepare images
-{% if RHOSP_version == 13.0 %}
+{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
 {% if rh_serviceaccount and rh_token %}
 sudo docker login registry.redhat.io --username '{{ rh_serviceaccount }}' --password '{{ rh_token }}'
 {% else %}

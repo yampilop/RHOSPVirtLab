@@ -27,6 +27,9 @@ sudo -E openstack overcloud export ceph \
 [[ -f /home/stack/templates/dcn_ceph_external.yaml ]] || sudo touch /home/stack/templates/dcn_ceph_external.yaml
 {% endif %}
 
+{% if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name %}
+# No deployment command for RHOSP 13.0 leafs
+{% else %}
 date
 time openstack overcloud deploy \
 --log-file {{ leaf.name }}_deployment.log \
@@ -53,6 +56,7 @@ time openstack overcloud deploy \
 {%- endfor %}
 ;
 date
+{% endif %}
 
 {% if (leaf.name != DefaultLeaf0.name) and (RHOSP_version != 17.0) and (RHOSP_version != 13.0) %}
 {% raw %}
