@@ -118,7 +118,7 @@ openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml \
 
 {% for dcnleaf in DCNLeafs %}
 # Change name for the {{ dcnleaf.name }} roles
-{% for ocrole in overcloud_roles if roles_count[dcnleaf.name][ocrole] > 0 %}
+{% for ocrole in overcloud_roles if roles_count[dcnleaf.name][ocrole.name] > 0 %}
 sed -i -Ez 's/- name: {{ ocrole.name }}\n/- name: {{ ocrole.name }}_{{ dcnleaf.name }}\n/' {{ templates_dir }}/roles_data.yaml
 {% endfor %}
 
