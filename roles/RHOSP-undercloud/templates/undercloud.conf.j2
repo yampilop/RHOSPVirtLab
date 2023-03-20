@@ -65,7 +65,7 @@ subnets = {{ DefaultLeaf0.subnet.name }},{% for leaf in DCNLeafs %}{{ leaf.subne
 #subnets = {{ DefaultLeaf0.subnet.name }}
 {% endif %}
 #templates =
-undercloud_admin_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('3') }}
+undercloud_admin_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('3') | ipaddr('address') }}
 #undercloud_debug = true
 #undercloud_enable_paunch = true
 #undercloud_enable_selinux = true
@@ -73,7 +73,7 @@ undercloud_admin_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('3') }}
 #undercloud_log_file = install-undercloud.log
 undercloud_nameservers = {{ dns_servers | join(',') }}
 undercloud_ntp_servers = {{ ntp_servers | join(',') }}
-undercloud_public_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('2') }}
+undercloud_public_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('2') | ipaddr('address') }}
 #undercloud_service_certificate =
 #undercloud_timezone = <None>
 #undercloud_update_packages = false
