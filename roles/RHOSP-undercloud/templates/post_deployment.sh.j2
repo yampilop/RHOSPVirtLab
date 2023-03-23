@@ -1,7 +1,6 @@
 #/bin/bash
 
-{% set ext = networks | selectattr('name', 'search', DefaultLeaf0.networks.External.network) | list | first %}
-{% set ext_addr = ext.ipv4.address ~ '/' ~ ext.ipv4.netmask %}
+{% set ext_addr = DefaultLeaf0.networks.External.prefix ~ '.1/24' %}
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
 
@@ -41,7 +40,7 @@ openstack role add --project test-project --user test-admin --user-domain RHOSPV
 
 # External network
 openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
-openstack subnet show default-provider-subnet &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext.ipv4.address }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet 
+openstack subnet show default-provider-subnet &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet
 
 # Flavors
 openstack flavor show small_2_2_20 &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public small_2_2_20
@@ -91,13 +90,12 @@ done
 ################################################################################
 ### {{ leaf.name }} shared #####################################################
 ################################################################################
-{% set ext = networks | selectattr('name', 'search', leaf.networks.External.network) | list | first %}
-{% set ext_addr = ext.ipv4.address ~ '/' ~ ext.ipv4.netmask %}
+{% set ext_addr = leaf.networks.External.prefix ~ '.1/24' %}
 source /home/stack/{{ leaf.name }}rc
 
 # DCN {{ leaf.name }} external network
 openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre-{{ leaf.name }} default-provider-{{ leaf.name }}
-openstack subnet show default-provider-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext.ipv4.address }} --network default-provider-{{ leaf.name }} --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet-{{ leaf.name }}
+openstack subnet show default-provider-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr }} --network default-provider-{{ leaf.name }} --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet-{{ leaf.name }}
 
 {% endfor %}
 
