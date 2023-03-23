@@ -78,6 +78,7 @@
   loop: "{{ RHOSP_version_supported[RHOSP_version].images_directories }}"
 
 - name: IMAGES - Download images for testing
+  ignore_errors: true
   get_url:
     url: "{{ item.url }}"
     dest: "images/{{ item.name }}"
