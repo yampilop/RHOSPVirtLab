@@ -20,7 +20,7 @@
     state: enabled
   loop: "{{ networks }}"
   when:
-    - item.hypervisor == inventory_hostname
+    - inventory_hostname == item.hypervisor
     - (item.name == forward_network) or (item.forward == 'bridge')
 
 - name: FIREWALL - Ensure the other interfaces belong to libvirt zone
@@ -32,7 +32,7 @@
     state: enabled
   loop: "{{ networks }}"
   when:
-    - item.hypervisor == inventory_hostname
+    - inventory_hostname in item.hypervisor
     - (item.name != forward_network) and (item.forward != 'bridge')
 
 - name: FIREWALL - Enable masquerade in the firewall to allow external traffic
@@ -67,7 +67,7 @@
   loop: "{{ vms }}"
   become: yes
   when:
-    - inventory_hostname == 'localhost'
+    - inventory_hostname in DefaultLeaf0.hypervisor
 
 - name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for localhost and leafs
   firewalld:
@@ -79,4 +79,4 @@
   loop: "{{ vms }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname == item.hypervisor

@@ -127,14 +127,14 @@ parameter_defaults:
   EnableFencing: true
   FencingConfig:
     devices:
-{% for vm in vms if ((vm.profile == 'computeinstanceha') or (vm.profile == 'controller')) and (vm.hypervisor == leaf.hypervisor) %}
+{% for vm in vms if ((vm.profile == 'computeinstanceha') or (vm.profile == 'controller')) and (vm.hypervisor in leaf.hypervisor) %}
     # {{ vm.name }}
     - agent: fence_ipmilan
       host_mac: {{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}
       params:
         login: admin
         passwd: admin
-        ipaddr: {% if vm.hypervisor == 'localhost' %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
+        ipaddr: {% if vm.hypervisor in DefaultLeaf0.hypervisor %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
 
         ipport: {{ vm.bmcport }}
         lanplus: 1

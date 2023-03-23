@@ -2,7 +2,7 @@
 resource_registry:
 {% for ocrole in overcloud_roles %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
-{% if leaf.hypervisor == DefaultLeaf0.hypervisor %}
+{% if leaf.hypervisor in DefaultLeaf0.hypervisor %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.profile }}.yaml
 {% else %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.profile }}.yaml

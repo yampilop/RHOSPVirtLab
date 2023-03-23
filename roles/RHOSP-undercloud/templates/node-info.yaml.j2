@@ -65,7 +65,7 @@ parameter_defaults:
       - external
     swap_size_mb: 8192
   instances:
-{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}
+{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "in", leaf.hypervisor)) %}
   - name: {{ leaf.name }}-{{ vm.name }}
 {% if not vm.uefi %}
     image:

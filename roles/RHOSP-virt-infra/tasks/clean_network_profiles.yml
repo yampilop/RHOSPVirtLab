@@ -9,7 +9,7 @@
       state: down
       persistent_state: absent
   when:
-    - item.hypervisor == inventory_hostname
+    - inventory_hostname in item.hypervisor
     - item.forward == 'bridge'
   loop: "{{ networks }}"
 
@@ -24,7 +24,7 @@
       state: down
       persistent_state: absent
   when:
-    - item.hypervisor == inventory_hostname
+    - inventory_hostname in item.hypervisor
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
   loop: "{{ networks }}"
 

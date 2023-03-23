@@ -122,7 +122,7 @@
           "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
         },
       {% endfor %}
-      {% for leaf in DCNLeafs if (leaf.hypervisor != inventory_hostname) %}
+      {% for leaf in DCNLeafs if (inventory_hostname not in leaf.hypervisor) %}
         {
           "network": "{{ leaf.subnet.cidr.split('/')[0] }}",
           "prefix": "{{ leaf.subnet.cidr.split('/')[1] }}",

@@ -55,7 +55,7 @@ sudo yum update -y
 sudo reboot
 ```
 
-Repeat this in all your hypervisors when you use a DCN configuration.
+Repeat this in all your hypervisors when you use a DCN or multiple hypervisors configuration.
 
 ### Local user configuration
 
@@ -65,9 +65,9 @@ The user from which you will execute the lab needs to have username **admin** an
 admin ALL=(ALL) NOPASSWD:ALL
 ```
 
-Repeat that **admin** user setup in all your hypervisors when you use a DCN configuration.
+Repeat that **admin** user setup in all your hypervisors when you use a DCN or multiple hypervisors configuration.
 
-### DCN configuration
+### DCN or multiple hypervisors configuration
 
 In the main hypervisor (central) you need to create an ssh-key using the following command (use default options):
 
@@ -95,7 +95,7 @@ sudo dnf -y install git ansible vim wget bash-completion python3-argcomplete pyt
 sudo yum -y install git ansible vim wget bash-completion python2-netaddr rhel-system-roles tmux tcpdump
 ```
 
-Repeat this in all your hypervisors when you use a DCN configuration.
+Repeat this in all your hypervisors when you use a DCN or multiple hypervisors configuration.
 
 ## Pull the repo
 
@@ -114,7 +114,7 @@ cd RHOSPVirtLab
 
 ## Initial configurations
 
-#### Inventory for DCN configuration
+#### Inventory for DCN or multiple hypervisors configuration
 
 You need to add all your hypervisors in the `./inventory` file in the following way:
 
@@ -142,7 +142,7 @@ hypervisor | SUCCESS => {
 }
 ```
 
-For DCN deployments you need to see a similar output for all the hypervisors:
+For DCN or multiple hypervisors deployments you need to see a similar output for all the hypervisors:
 
 ```
 hypervisor_name | SUCCESS => {
@@ -211,11 +211,28 @@ The playbook sets up the following environment:
 
 ![Network diagram](images/network_diagram.png)
 
-## DCN Deployment
+## DCN deployment
 
 When using DCN Leafs, the playbook sets up the following environment:
 
 ![DCN leafs diagram](images/dcn_leafs_diagram.png)
+
+## Multiple hypervisors deployment
+
+When using multiple hypervisors for a single leaf, add your hypervisor to the `DefaultLeaf0` variable in `vars/options.yaml` this way:
+
+```yaml
+# Default leaf configuration
+DefaultLeaf0:
+  name: overcloud
+  hypervisor: localhost,<hypervisor1_name>,<hypervisor2_name>,...
+  subnet:
+...
+```
+
+The playbook sets up the following environment:
+
+![Multiple hypervisors diagram](images/multiple_hypervisors_diagram.png)
 
 ### Customizing the environment
 
@@ -387,6 +404,49 @@ DCNLeafs:
        prefix: '10.1.1'
        vlan: 60
        network: RHOSPVirtLab_ctlplane_leaf1
+```
+
+## Multiple hypervisors customization
+
+When using multiple hypervisors for a single leaf you need the following customizations to the vars files:
+
+- `vars/networks.yml`:
+    - `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` should be `forward: bridge`. RHOSPVirtLab_management remains as `forward: nat`.
+    - Create `RHOSPVirtLab_ctlplane_{{something}}` and `RHOSPVirtLab_external_{{something}}` networks for every hypervisor, with `forward: bridge`, consistent configuration and no ipv4 addressing, for example:
+
+```yaml
+  - name: RHOSPVirtLab_ctlplane_1
+    hypervisor: hypervisor_name
+    bridge: br-ctlplane
+    forward: bridge
+    mac_suffix: '00'
+  - name: RHOSPVirtLab_external_1
+    hypervisor: hypervisor_name
+    bridge: br-external
+    forward: bridge
+    mac_suffix: '05'
+```
+
+- `vars/vms.yml`:
+    - Create vms with `hypervisor: {{hypervisorname}}`, consistent configuration and nics related to the proper networks, for example:
+
+```yaml
+  - name: compute0
+    hypervisor: hypervisor_name
+    title: 'RHOSPVirtLab Virtual Compute 0'
+    profile: 'compute'
+    memory: 92272640
+    vcpus: 26
+    bmcport: 6230
+    mac: '0c:1f:0d:12:02'
+    uefi: false
+    disk_size: 157374182400
+    data_disk_size: 0
+    backing_store: ''
+    cdrom: ''
+    nics:
+      RHOSPVirtLab_ctlplane_1: ''
+      RHOSPVirtLab_external_1: ''
 ```
 
 ## Last steps
