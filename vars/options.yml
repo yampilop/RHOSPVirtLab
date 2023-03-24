@@ -119,7 +119,7 @@ interfaces:
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
-NetworkVlanRanges: 'datacentre:1:1000,sriov1:11:19'
+NetworkVlanRanges: 'datacentre:1:1000'
 
 # ComputeSriov default properties
 ComputeSriovProperties:

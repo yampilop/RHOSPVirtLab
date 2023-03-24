@@ -39,7 +39,11 @@ openstack role add --project test-project --user test-admin --user-domain RHOSPV
 ################################################################################
 
 # External network
+{% if DefaultLeaf0.networks.External.vlan is defined %}
+openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type vlan --provider-physical-network datacentre --provider-segment {{ DefaultLeaf0.networks.External.vlan }} default-provider
+{% else %}
 openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
+{% endif %}
 openstack subnet show default-provider-subnet &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr | ipaddr('address') }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet
 
 # Flavors
@@ -94,7 +98,11 @@ done
 source /home/stack/{{ leaf.name }}rc
 
 # DCN {{ leaf.name }} external network
+{% if leaf.networks.External.vlan is defined %}
+openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type vlan --provider-physical-network datacentre-{{ leaf.name }} --provider-segment {{ leaf.networks.External.vlan }} default-provider-{{ leaf.name }}
+{% else %}
 openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre-{{ leaf.name }} default-provider-{{ leaf.name }}
+{% endif %}
 openstack subnet show default-provider-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr | ipaddr('address') }} --network default-provider-{{ leaf.name }} --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet-{{ leaf.name }}
 
 {% endfor %}
