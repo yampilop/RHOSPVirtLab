@@ -136,7 +136,7 @@ sed -i -E '/HostnameFormatDefault: .+$/d' /home/stack/roles/{{ ocrole.name }}{{ 
 # Generate roles for all the leafs
 openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml --roles-path /home/stack/roles \
 {% for ocrole in overcloud_roles if roles_count[DefaultLeaf0.name][ocrole.name] > 0 %}{{ ocrole.name if (ocrole.copy_from is not defined) else (ocrole.copy_from ~ ':' ~ ocrole.name) }} {% endfor %} \
-{% for dcnleaf in DCNLeafs %}{% for ocrole in overcloud_roles if roles_count[dcnleaf.name][ocrole.name] > 0 %}{{ ocrole.name ~ '_' ~ dcnleaf.name }} {% endfor %}{% endfor %} \
+{% for dcnleaf in DCNLeafs %}{% for ocrole in overcloud_roles if roles_count[dcnleaf.name][ocrole.name] > 0 %}{{ ocrole.name ~ dcnleaf.name }} {% endfor %}{% endfor %} \
 ;
 {% endif %}
 {% endif %}
