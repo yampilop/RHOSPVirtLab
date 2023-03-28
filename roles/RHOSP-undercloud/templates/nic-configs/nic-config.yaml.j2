@@ -94,7 +94,7 @@ resources:
           data:
             - {get_param: ControlPlaneMtu}
 {% for network in roles_networks[item.name] if network != 'External' %}
-            - {get_param: {{ network }}Mtu}
+            - {get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu}
 {% endfor %}
 
   OsNetConfigImpl:
