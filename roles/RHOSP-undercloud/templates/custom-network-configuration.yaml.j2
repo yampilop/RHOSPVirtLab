@@ -13,7 +13,7 @@ resource_registry:
 {% for dcnleaf in DCNLeafs %}
 {% for ocrole in overcloud_roles %}
 {% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-  OS::TripleO::{{ ocrole.name }}_{{ dcnleaf.name }}::Net::SoftwareConfig: /home/stack/templates/{{ dcnleaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
+  OS::TripleO::{{ ocrole.name }}{{ dcnleaf.name }}::Net::SoftwareConfig: /home/stack/templates/{{ dcnleaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
 {% endif %}
 {% endfor %}
 {% endfor %}
@@ -81,8 +81,8 @@ parameter_defaults:
 {% for dcnleaf in DCNLeafs %}
 {% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
 {% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-  {{ ocrole.name }}_{{ dcnleaf.name }}ControlPlaneSubnet: {{ dcnleaf.subnet.name }}
-  {{ ocrole.name }}_{{ dcnleaf.name }}Parameters:
+  {{ ocrole.name }}{{ dcnleaf.name }}ControlPlaneSubnet: {{ dcnleaf.subnet.name }}
+  {{ ocrole.name }}{{ dcnleaf.name }}Parameters:
     NeutronBridgeMappings: "datacentre-{{ dcnleaf.name }}:br-ex"
 {% endif %}
 {% endfor %}
