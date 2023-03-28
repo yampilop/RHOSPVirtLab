@@ -118,6 +118,8 @@ mkdir /home/stack/roles
 # Copy roles for the default leaf
 {% for ocrole in overcloud_roles if roles_count[DefaultLeaf0.name][ocrole.name] > 0 %}
 cp /usr/share/openstack-tripleo-heat-templates/roles/{{ ocrole.name }}.yaml /home/stack/roles/{{ ocrole.name }}.yaml
+sed -i -Ez 's/- name: {{ ocrole.name }}\n(([^-][^\n]*\n)+)  networks:\n    - ([^E].+)/- name: {{ ocrole.name }}\n\1  networks:\n    - External\n    - \3/' /home/stack/roles/{{ ocrole.name }}.yaml
+sed -i -E '/HostnameFormatDefault: .+$/d' /home/stack/roles/{{ ocrole.name }}.yaml
 {% endfor %}
 
 {% for dcnleaf in DCNLeafs %}
