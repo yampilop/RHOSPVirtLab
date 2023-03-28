@@ -26,7 +26,7 @@ nodes:
     pm_type: "ipmi"
     pm_user: "admin"
     pm_password: "admin"
-    pm_addr: "{% if vm.hypervisor == 'localhost' %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}"
+    pm_addr: "{% if vm.hypervisor == 'localhost' %}{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_management') | list | first).ipv4.address }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}"
     pm_port: "{{ vm.bmcport }}"
 {% endfor %}
 
