@@ -72,10 +72,10 @@ parameter_defaults:
 {% endif %}
 {% endfor %}
   OVNDBSPacemakerTimeout: 360
+  OVNRemoteProbeInterval: 180000
+  OVNOpenflowProbeInterval: 180
   ControllerParameters:
     OVNCMSOptions: "enable-chassis-as-gw,availability-zones={{ DefaultLeaf0.name }}:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
-    OVNRemoteProbeInterval: 180000
-    OVNOpenflowProbeInterval: 180
 
 {% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
 {% for dcnleaf in DCNLeafs %}
