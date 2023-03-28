@@ -37,28 +37,28 @@ parameters:
     type: number
 
 {% for network in roles_networks[item.name] %}
-  {{ network }}IpSubnet:
+  {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}IpSubnet:
     default: ''
-    description: IP address/subnet on the {{ network }} network
+    description: IP address/subnet on the {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }} network
     type: string
-  {{ network }}NetworkVlanID:
+  {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}NetworkVlanID:
     default: {{ leaf.networks[network].vlan | default(1) }}
-    description: Vlan ID for the {{ network }} network traffic.
+    description: Vlan ID for the {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }} network traffic.
     type: number
-  {{ network }}Mtu:
+  {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}Mtu:
     default: 1500
     description: The maximum transmission unit (MTU) size(in bytes) that is
       guaranteed to pass through the data path of the segments in the
-      {{ network }} network.
+      {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }} network.
     type: number
-  {{ network }}InterfaceDefaultRoute:
+  {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}InterfaceDefaultRoute:
     default: ''
-    description: default route for the {{ network }} network
+    description: default route for the {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }} network
     type: string
-  {{ network }}InterfaceRoutes:
+  {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}InterfaceRoutes:
     default: []
     description: >
-      Routes for the {{ network }} network traffic.
+      Routes for the {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }} network traffic.
       JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
@@ -147,15 +147,15 @@ resources:
 {% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}
                 - type: vlan
                   mtu:
-                    get_param: {{ network }}Mtu
+                    get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}Mtu
                   vlan_id:
-                    get_param: {{ network }}NetworkVlanID
+                    get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}NetworkVlanID
                   addresses:
                   - ip_netmask:
-                      get_param: {{ network }}IpSubnet
+                      get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}IpSubnet
                   routes:
                     list_concat_unique:
-                      - get_param: {{ network }}InterfaceRoutes
+                      - get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}InterfaceRoutes
 {% endfor %}
 {% if ('External' in roles_networks[item.name]) and ('RHOSPVirtLab_external' in leaf.networks.External.network) %}
 {% if 'Dpdk' in item.name %}
@@ -165,46 +165,46 @@ resources:
 {% endif %}
                 name: br-ex
                 mtu:
-                  get_param: ExternalMtu
+                  get_param: External{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}Mtu
                 use_dhcp: false
                 addresses:
                 - ip_netmask:
-                    get_param: ExternalIpSubnet
+                    get_param: External{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}IpSubnet
                 routes:
                   list_concat_unique:
-                    - get_param: ExternalInterfaceRoutes
+                    - get_param: External{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}InterfaceRoutes
                     - - default: true
                         next_hop:
-                          get_param: ExternalInterfaceDefaultRoute
+                          get_param: External{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}InterfaceDefaultRoute
                 members:
 {% if (('Sriov' in item.name) or ('HwOffload' in item.name)) and ('v' in interfaces[item.name].External) %}
                 - type: sriov_vf
                   device: {{ interfaces[item.name].External.split('v')[0] }}
                   vfid: {{ interfaces[item.name].External.split('v')[1] }}
                   mtu:
-                    get_param: ExternalMtu
+                    get_param: External{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}Mtu
                   # force the MAC address of the bridge to this interface
                   primary: true
 {% else %}
                 - type: interface
                   name: {{ interfaces[item.name].External }}
                   mtu:
-                    get_param: ExternalMtu
+                    get_param: External{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}Mtu
                   # force the MAC address of the bridge to this interface
                   primary: true
 {% endif %}
 {% for network in roles_networks[item.name] if ('RHOSPVirtLab_external' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}
                 - type: vlan
                   mtu:
-                    get_param: {{ network }}Mtu
+                    get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}Mtu
                   vlan_id:
-                    get_param: {{ network }}NetworkVlanID
+                    get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}NetworkVlanID
                   addresses:
                   - ip_netmask:
-                      get_param: {{ network }}IpSubnet
+                      get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}IpSubnet
                   routes:
                     list_concat_unique:
-                      - get_param: {{ network }}InterfaceRoutes
+                      - get_param: {{ network }}{{ leaf.name if RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name }}InterfaceRoutes
 {% endfor %}
 {% endif %}
 
