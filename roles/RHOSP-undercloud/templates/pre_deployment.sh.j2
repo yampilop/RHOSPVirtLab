@@ -68,7 +68,7 @@ sudo openstack overcloud container image prepare \
 --set ceph_image=rhceph-3-rhel7 \
 --namespace=registry.redhat.io/rhosp13 \
 --prefix=openstack- \
---push-destination=192.168.24.1:8787 \
+--push-destination={{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }}:8787 \
 --tag-from-label {version}-{release} \
 --output-env-file {{ templates_dir }}/overcloud-images.yaml \
 --output-images-file /home/stack/local_registry_images.yaml
