@@ -119,7 +119,7 @@ parameter_defaults:
 {% if RHOSP_version == 13.0 %}
   DockerInsecureRegistryAddress:
   - undercloud.ctlplane.localdomain:8787
-  - 192.168.24.1:8787
+  - {{ DefaultLeaf0.subnet.cidr | ipaddr('1') }}:8787
 {% endif %}
 
 {% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == DefaultLeaf0.name)) %}
