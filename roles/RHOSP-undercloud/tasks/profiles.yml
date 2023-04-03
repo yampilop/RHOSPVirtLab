@@ -16,14 +16,6 @@
   set_fact:
     roles_count: "{{ roles_count | from_yaml }}"
 
-- name: PROFILES - Gather facts
-  setup:
-
-- name: PROFILES - Set vncproxy to the external hypervisor address when not defined
-  set_fact:
-    vncproxy: "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
-  when: vncproxy == ''
-
 - name: PROFILES - Check all vms profiles are virtual
   fail:
     msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for vms."
