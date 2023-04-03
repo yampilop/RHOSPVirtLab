@@ -87,6 +87,25 @@ parameter_defaults:
 {% endif %}
 {% endfor %}
 {% endfor %}
+
+# Spine-leaf routing for RHOSP 13.0
+{% for network in roles_networks.Controller %}
+  {{ network }}InterfaceRoutes:
+{% for dcnleaf in DCNLeafs %}
+    - destination: {{ dcnleaf.networks[network].prefix ~ '.0/24' }}
+      nexthop: {{ dcnleaf.networks[network].prefix ~ '.1' }}
+{% endfor %}
+{% endfor %}
+
+  ServiceNetMap:
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles if ocrole.name != 'Controller' %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+    {{ ocrole.name }}{{ dcnleaf.name }}ResolveNetwork: {{ 'storage_' ~ dcnleaf.name if 'Ceph' in ocrole.name else 'internal_api_' ~ dcnleaf.name }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
 {% endif %}
 {% endif %}
 

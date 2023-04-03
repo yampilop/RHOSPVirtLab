@@ -89,9 +89,25 @@ parameter_defaults:
 {% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}{{ dcnleaf.name }}SchedulerHints:
     'capabilities:node': '{{ dcnleaf.name }}-{{ ocrole.profile }}%index%'
+{% if 'Compute' in ocrole.name %}
+  {{ ocrole.name }}{{ dcnleaf.name }}ExtraConfig:
+    nova::compute::libvirt::vncserver_listen: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::compute::vncserver_proxyclient_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    neutron::agents::ml2::ovs::local_ip: "%{hiera('tenant_{{ dcnleaf.name }}')}"
+    cold_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    live_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::migration::libvirt::live_migration_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::my_ip: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    tripleo::profile::base::database::mysql::client::mysql_client_bind_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endfor %}
+{% if (ceph_count + hci_count) > 0 %}
+  CephAnsibleExtraConfig:
+    public_network: '{{ DefaultLeaf0.networks.Storage.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.Storage.prefix ~ '.0/24' }}{% endfor %}'
+    cluster_network: '{{ DefaultLeaf0.networks.StorageMgmt.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.StorageMgmt.prefix ~ '.0/24' }}{% endfor %}'
+{% endif %}
 {% endif %}
 
 {% endif %}
