@@ -9,6 +9,7 @@ create: True
 
 # overcloud parameters
 overcloud_ip: 10.0.0.254
+vncproxy: ''
 
 # dns and ntp servers
 dns_servers:

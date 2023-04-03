@@ -13,6 +13,7 @@ forwarded_ports:
   - 80
   - 6080
   - 5000
+vncproxy: ''
 
 # dns and ntp servers
 dns_servers:

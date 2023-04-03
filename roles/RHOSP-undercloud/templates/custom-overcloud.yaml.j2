@@ -80,6 +80,10 @@ parameter_defaults:
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}SchedulerHints:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
+{% if 'Compute' in ocrole.name %}
+  {{ ocrole.name }}ExtraConfig:
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
+{% endif %}
 {% endif %}
 {% endfor %}
 
@@ -99,6 +103,7 @@ parameter_defaults:
     nova::migration::libvirt::live_migration_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
     nova::my_ip: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
     tripleo::profile::base::database::mysql::client::mysql_client_bind_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -109,7 +114,6 @@ parameter_defaults:
     cluster_network: '{{ DefaultLeaf0.networks.StorageMgmt.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.StorageMgmt.prefix ~ '.0/24' }}{% endfor %}'
 {% endif %}
 {% endif %}
-
 {% endif %}
 
 {% if RegisterNodes %}
