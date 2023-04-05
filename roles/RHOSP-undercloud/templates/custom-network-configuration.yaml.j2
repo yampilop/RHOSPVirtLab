@@ -93,7 +93,16 @@ parameter_defaults:
   {{ network }}InterfaceRoutes:
 {% for dcnleaf in DCNLeafs %}
     - destination: {{ dcnleaf.networks[network].prefix ~ '.0/24' }}
+      nexthop: {{ leaf.networks[network].prefix ~ '.1' }}
+{% endfor %}
+{% for dcnleaf in DCNLeafs %}
+  {{ network }}{{ dcnleaf.name }}InterfaceRoutes:
+    - destination: {{ leaf.networks[network].prefix ~ '.0/24' }}
       nexthop: {{ dcnleaf.networks[network].prefix ~ '.1' }}
+{% for dcnleaf2 in DCNLeafs if dcnleaf2.name != dcnleaf.name %}
+    - destination: {{ dcnleaf2.networks[network].prefix ~ '.0/24' }}
+      nexthop: {{ dcnleaf.networks[network].prefix ~ '.1' }}
+{% endfor %}
 {% endfor %}
 {% endfor %}
 
