@@ -90,6 +90,23 @@ for HOST in $SERVERS; do
 done
 {% endif %}
 
+{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
+openstack aggregate show {{ DefaultLeaf0.name }} &>/dev/null || openstack aggregate create --zone {{ DefaultLeaf0.name }} {{ DefaultLeaf0.name }}
+for HOST in $SERVERS; do
+  if [[ $HOST == *"{{ DefaultLeaf0.name }}"* ]]; then
+    openstack aggregate add host {{ DefaultLeaf0.name }} $HOST.localdomain
+  fi
+done
+{% for leaf in DCNLeafs %}
+openstack aggregate show {{ leaf.name }} &>/dev/null || openstack aggregate create --zone {{ leaf.name }} {{ leaf.name }}
+for HOST in $SERVERS; do
+  if [[ $HOST == *"{{ leaf.name }}"* ]]; then
+    openstack aggregate add host {{ leaf.name }} $HOST.localdomain
+  fi
+done
+{% endfor %}
+{% endif %}
+
 {% for leaf in DCNLeafs %}
 ################################################################################
 ### {{ leaf.name }} shared #####################################################
@@ -134,14 +151,14 @@ openstack server group show soft-anti-affinity-group &>/dev/null || openstack se
 openstack network show test-network &>/dev/null || openstack network create test-network
 openstack subnet show test-subnet &>/dev/null || openstack subnet create --network test-network --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet
 openstack port show test-subnet-gw &>/dev/null || openstack port create --network test-network --fixed-ip subnet=test-subnet,ip-address=192.168.1.1 test-subnet-gw
-openstack router show test-router &>/dev/null || (openstack router create{% if DCNLeafs | length > 0 %} --availability-zone-hint overcloud{% endif %} test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
+openstack router show test-router &>/dev/null || (openstack router create{% if DCNLeafs | length > 0 and RHOSP_version != 13.0 %} --availability-zone-hint overcloud{% endif %} test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
 
 {% for leaf in DCNLeafs %}
 # DCN {{ leaf.name }} networking
 openstack network show test-network-{{ leaf.name }} &>/dev/null || openstack network create test-network-{{ leaf.name }}
 openstack subnet show test-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --network test-network-{{ leaf.name }} --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet-{{ leaf.name }}
 openstack port show test-subnet-{{ leaf.name }}-gw &>/dev/null || openstack port create --network test-network-{{ leaf.name }} --fixed-ip subnet=test-subnet-{{ leaf.name }},ip-address=192.168.1.1 test-subnet-{{ leaf.name }}-gw
-openstack router show test-router-{{ leaf.name }} &>/dev/null || (openstack router create --availability-zone-hint {{ leaf.name }} test-router-{{ leaf.name }} && openstack router set --external-gateway default-provider-{{ leaf.name }} test-router-{{ leaf.name }} && openstack router add port test-router-{{ leaf.name }} test-subnet-{{ leaf.name }}-gw)
+openstack router show test-router-{{ leaf.name }} &>/dev/null || (openstack router create{{ ' --availability-zone-hint' ~ leaf.name if RHOSP_version != 13.0 else '' }} test-router-{{ leaf.name }} && openstack router set --external-gateway default-provider-{{ leaf.name }} test-router-{{ leaf.name }} && openstack router add port test-router-{{ leaf.name }} test-subnet-{{ leaf.name }}-gw)
 {% endfor %}
 
 # Add SSH and ICMP to default security group
