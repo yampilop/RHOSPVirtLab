@@ -52,31 +52,31 @@
   gateway_ip: '{{ DefaultLeaf0.networks.Management.prefix }}.1'
   mtu: 1500
 {% for leaf in DCNLeafs %}
-- name: Storage_{{ leaf.name }}
-  vip: true
+- name: Storage{{ leaf.name }}
+  vip: false
   vlan: {{ leaf.networks.Storage.vlan | default(1) }}
   name_lower: storage_{{ leaf.name }}
   ip_subnet: '{{ leaf.networks.Storage.prefix }}.0/24'
   allocation_pools: [{'start': '{{ leaf.networks.Storage.prefix }}.4', 'end': '{{ leaf.networks.Storage.prefix }}.250'}]
   gateway_ip: '{{ leaf.networks.Storage.prefix }}.1'
   mtu: 1500
-- name: StorageMgmt_{{ leaf.name }}
+- name: StorageMgmt{{ leaf.name }}
   name_lower: storage_mgmt_{{ leaf.name }}
-  vip: true
+  vip: false
   vlan: {{ leaf.networks.StorageMgmt.vlan | default(1) }}
   ip_subnet: '{{ leaf.networks.StorageMgmt.prefix }}.0/24'
   allocation_pools: [{'start': '{{ leaf.networks.StorageMgmt.prefix }}.4', 'end': '{{ leaf.networks.StorageMgmt.prefix }}.250'}]
   gateway_ip: '{{ leaf.networks.StorageMgmt.prefix }}.1'
   mtu: 1500
-- name: InternalApi_{{ leaf.name }}
+- name: InternalApi{{ leaf.name }}
   name_lower: internal_api_{{ leaf.name }}
-  vip: true
+  vip: false
   vlan: {{ leaf.networks.InternalApi.vlan | default(1) }}
   ip_subnet: '{{ leaf.networks.InternalApi.prefix }}.0/24'
   allocation_pools: [{'start': '{{ leaf.networks.InternalApi.prefix }}.4', 'end': '{{ leaf.networks.InternalApi.prefix }}.250'}]
   gateway_ip: '{{ leaf.networks.InternalApi.prefix }}.1'
   mtu: 1500
-- name: Tenant_{{ leaf.name }}
+- name: Tenant{{ leaf.name }}
   vip: false  # Tenant network does not use VIPs
   name_lower: tenant_{{ leaf.name }}
   vlan: {{ leaf.networks.Tenant.vlan | default(1) }}
@@ -84,15 +84,15 @@
   allocation_pools: [{'start': '{{ leaf.networks.Tenant.prefix }}.4', 'end': '{{ leaf.networks.Tenant.prefix }}.250'}]
   gateway_ip: '{{ leaf.networks.Tenant.prefix }}.1'
   mtu: 1500
-- name: External_{{ leaf.name }}
-  vip: true
+- name: External{{ leaf.name }}
+  vip: false
   name_lower: external_{{ leaf.name }}
   vlan: {{ leaf.networks.External.vlan | default(1) }}
   ip_subnet: '{{ leaf.networks.External.prefix }}.0/24'
   allocation_pools: [{'start': '{{ leaf.networks.External.prefix }}.4', 'end': '{{ leaf.networks.External.prefix }}.99'}]
   gateway_ip: '{{ leaf.networks.External.prefix }}.1'
   mtu: 1500
-- name: Management_{{ leaf.name }}
+- name: Management{{ leaf.name }}
   # Management network is enabled by default for backwards-compatibility, but
   # is not included in any roles by default. Add to role definitions to use.
   enabled: true

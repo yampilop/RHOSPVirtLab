@@ -1,7 +1,6 @@
 #/bin/bash
 
-{% set ext = networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first %}
-{% set ext_addr = ext.ipv4.address ~ '/' ~ ext.ipv4.netmask %}
+{% set ext_addr = DefaultLeaf0.networks.External.prefix ~ '.1/24' %}
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
 
@@ -40,8 +39,12 @@ openstack role add --project test-project --user test-admin --user-domain RHOSPV
 ################################################################################
 
 # External network
+{% if DefaultLeaf0.networks.External.vlan is defined %}
+openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type vlan --provider-physical-network datacentre --provider-segment {{ DefaultLeaf0.networks.External.vlan }} default-provider
+{% else %}
 openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
-openstack subnet show default-provider-subnet &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext.ipv4.address }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet 
+{% endif %}
+openstack subnet show default-provider-subnet &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr | ipaddr('address') }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet
 
 # Flavors
 openstack flavor show small_2_2_20 &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public small_2_2_20
@@ -87,17 +90,37 @@ for HOST in $SERVERS; do
 done
 {% endif %}
 
+{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
+{% for leaf in DCNLeafs %}
+openstack aggregate show {{ leaf.name }} &>/dev/null || openstack aggregate create --zone {{ leaf.name }} {{ leaf.name }}
+for HOST in $SERVERS; do
+  if [[ $HOST == *"{{ leaf.name }}"* ]]; then
+    openstack aggregate add host {{ leaf.name }} $HOST.localdomain
+  fi
+done
+{% endfor %}
+openstack aggregate show {{ DefaultLeaf0.name }} &>/dev/null || openstack aggregate create --zone {{ DefaultLeaf0.name }} {{ DefaultLeaf0.name }}
+for HOST in $SERVERS; do
+  if [[ $HOST == *"{{ DefaultLeaf0.name }}"* ]]; then
+    openstack aggregate add host {{ DefaultLeaf0.name }} $HOST.localdomain
+  fi
+done
+{% endif %}
+
 {% for leaf in DCNLeafs %}
 ################################################################################
 ### {{ leaf.name }} shared #####################################################
 ################################################################################
-{% set ext = networks | selectattr('name', 'search', 'RHOSPVirtLab_external_' ~ leaf.name) | list | first %}
-{% set ext_addr = ext.ipv4.address ~ '/' ~ ext.ipv4.netmask %}
+{% set ext_addr = leaf.networks.External.prefix ~ '.1/24' %}
 source /home/stack/{{ leaf.name }}rc
 
 # DCN {{ leaf.name }} external network
+{% if leaf.networks.External.vlan is defined %}
+openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type vlan --provider-physical-network datacentre-{{ leaf.name }} --provider-segment {{ leaf.networks.External.vlan }} default-provider-{{ leaf.name }}
+{% else %}
 openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre-{{ leaf.name }} default-provider-{{ leaf.name }}
-openstack subnet show default-provider-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext.ipv4.address }} --network default-provider-{{ leaf.name }} --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet-{{ leaf.name }}
+{% endif %}
+openstack subnet show default-provider-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr | ipaddr('address') }} --network default-provider-{{ leaf.name }} --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet-{{ leaf.name }}
 
 {% endfor %}
 
@@ -128,14 +151,14 @@ openstack server group show soft-anti-affinity-group &>/dev/null || openstack se
 openstack network show test-network &>/dev/null || openstack network create test-network
 openstack subnet show test-subnet &>/dev/null || openstack subnet create --network test-network --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet
 openstack port show test-subnet-gw &>/dev/null || openstack port create --network test-network --fixed-ip subnet=test-subnet,ip-address=192.168.1.1 test-subnet-gw
-openstack router show test-router &>/dev/null || (openstack router create{% if DCNLeafs | length > 0 %} --availability-zone-hint overcloud{% endif %} test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
+openstack router show test-router &>/dev/null || (openstack router create{% if DCNLeafs | length > 0 and RHOSP_version != 13.0 %} --availability-zone-hint overcloud{% endif %} test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
 
 {% for leaf in DCNLeafs %}
 # DCN {{ leaf.name }} networking
 openstack network show test-network-{{ leaf.name }} &>/dev/null || openstack network create test-network-{{ leaf.name }}
 openstack subnet show test-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --network test-network-{{ leaf.name }} --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet-{{ leaf.name }}
 openstack port show test-subnet-{{ leaf.name }}-gw &>/dev/null || openstack port create --network test-network-{{ leaf.name }} --fixed-ip subnet=test-subnet-{{ leaf.name }},ip-address=192.168.1.1 test-subnet-{{ leaf.name }}-gw
-openstack router show test-router-{{ leaf.name }} &>/dev/null || (openstack router create --availability-zone-hint {{ leaf.name }} test-router-{{ leaf.name }} && openstack router set --external-gateway default-provider-{{ leaf.name }} test-router-{{ leaf.name }} && openstack router add port test-router-{{ leaf.name }} test-subnet-{{ leaf.name }}-gw)
+openstack router show test-router-{{ leaf.name }} &>/dev/null || (openstack router create{{ ' --availability-zone-hint' ~ leaf.name if RHOSP_version != 13.0 else '' }} test-router-{{ leaf.name }} && openstack router set --external-gateway default-provider-{{ leaf.name }} test-router-{{ leaf.name }} && openstack router add port test-router-{{ leaf.name }} test-subnet-{{ leaf.name }}-gw)
 {% endfor %}
 
 # Add SSH and ICMP to default security group

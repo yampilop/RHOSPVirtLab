@@ -6,7 +6,7 @@
         {{ leaf.name }}:
         {
         {%- for role in overcloud_roles %}
-          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "equalto", leaf.hypervisor) | list | count) }},
+          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "in", leaf.hypervisor) | list | count) }},
         {%- endfor %}
         },
       {%- endfor %}
@@ -28,7 +28,7 @@
   fail:
     msg: "ERROR in vm {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.hypervisor != DefaultLeaf0.hypervisor
+    - item.hypervisor not in DefaultLeaf0.hypervisor
     - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
   loop: "{{ vms }}"
 

@@ -2,7 +2,6 @@
   fail:
     msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
   when:
-    - inventory_hostname == 'localhost'
     - RHEL_version_supported[ansible_distribution_version] is not defined
 
 - name: CHECKS - Verify the RHOSP version selected is supported

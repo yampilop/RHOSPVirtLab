@@ -11,8 +11,12 @@ network_config:
 {% else %}
 - type: ovs_bridge
 {% endif %}
-{% raw %}  name: br-vlans
-  mtu: {{ min_viable_mtu }}
+{% if leaf.networks.External.network != 'RHOSPVirtLab_ctlplane' %}
+  name: br-vlans
+{% else %}
+  name: br-ex
+{% endif %}
+{% raw %}  mtu: {{ min_viable_mtu }}
   use_dhcp: false
   dns_servers: {{ ctlplane_dns_nameservers }}
   domain: {{ dns_search_domains }}
@@ -51,6 +55,7 @@ network_config:
 {% endfor %}
 {% endraw %}
 {% endif %}
+{% if ('External' in roles_networks[item.name]) and (leaf.networks.External.network == 'RHOSPVirtLab_external') %}
 {% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}
@@ -75,6 +80,7 @@ network_config:
     # force the MAC address of the bridge to this interface
     primary: true
 {% endraw %}
+{% endif %}
 {% endif %}
 {% if interfaces[item.name].Sriov is defined %}
 {% for sriovif in interfaces[item.name].Sriov %}

@@ -1,5 +1,5 @@
 nodes:
-{% for vm in vms if (not vm.profile == 'undercloud') and (vm.hypervisor == leaf.hypervisor) %}
+{% for vm in vms if (not vm.profile == 'undercloud') and (vm.hypervisor in leaf.hypervisor) %}
 {% if vm.uefi %}
 {% set vm_capabilities='boot_mode:uefi' %}
 {% else %}
@@ -11,7 +11,7 @@ nodes:
 {% else %}
   - ports:
       - address: '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
-{% if vm.hypervisor == 'localhost' %}
+{% if vm.hypervisor in DefaultLeaf0.hypervisor %}
         physical_network: ctlplane
 {% else %}
         physical_network: {{ leaf.subnet.name }}
@@ -26,7 +26,7 @@ nodes:
     pm_type: "ipmi"
     pm_user: "admin"
     pm_password: "admin"
-    pm_addr: "{% if vm.hypervisor == 'localhost' %}192.168.250.1{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}"
+    pm_addr: "{% if vm.hypervisor == 'localhost' %}{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_management') | list | first).ipv4.address }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}"
     pm_port: "{{ vm.bmcport }}"
 {% endfor %}
 
@@ -50,8 +50,10 @@ nodes:
     disk: {{ (node.disk_size / 1073741824) | int }}
     arch: "x86_64"
     pm_type: "{{ node.pm_type }}"
+{% if 'manual' not in node.pm_type and 'fake' not in node.pm_type %}
     pm_user: "{{ node.pm_user }}"
     pm_password: "{{ node.pm_password }}"
     pm_addr: "{{ node.pm_addr }}"
     pm_port: "{{ node.pm_port }}"
+{% endif %}
 {% endfor %}

@@ -13,6 +13,7 @@ forwarded_ports:
   - 80
   - 6080
   - 5000
+vncproxy: ''
 
 # dns and ntp servers
 dns_servers:
@@ -98,6 +99,9 @@ interfaces:
   ComputeHCI:
     ControlPlane: nic1
     External: nic2
+  ComputeInstanceHA:
+    ControlPlane: nic1
+    External: nic2
   DistributedCompute:
     ControlPlane: nic1
     External: nic2
@@ -116,7 +120,7 @@ interfaces:
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
-NetworkVlanRanges: 'datacentre:1:1000,sriov1:11:19'
+NetworkVlanRanges: 'datacentre:1:1000'
 
 # ComputeSriov default properties
 ComputeSriovProperties:
@@ -193,6 +197,9 @@ RegisterNodes: False
 
 # Low Memory Usage parameters
 LowMemUsage: True
+
+# Enable fencing for controllers
+ControllersFencing: True
 
 # DCN leafs
 DCNLeafs: []

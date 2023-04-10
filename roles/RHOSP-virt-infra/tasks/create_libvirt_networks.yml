@@ -18,7 +18,7 @@
   notify: HANDLER - restart libvirtd service
   when:
     - inventory_hostname == 'localhost'
-    - (networks | selectattr('name', 'search', 'RHOSPVirtLab_external') | list | first).forward == 'nat'
+    - (networks | selectattr('name', 'search', DefaultLeaf0.networks.External.network) | list | first).forward == 'nat'
 
 - name: NETWORKS - Gather facts about libvirt networks
   community.libvirt.virt_net:

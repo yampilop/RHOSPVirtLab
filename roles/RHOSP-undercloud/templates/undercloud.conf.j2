@@ -30,7 +30,11 @@ enable_routed_networks = true
 #enable_tempest = true
 #enable_validations = true
 #enable_zaqar = true
-#enabled_hardware_types = ipmi,redfish,ilo,idrac
+{% if RHOSP_version == 13.0 %}
+enabled_drivers = pxe_ipmitool,pxe_drac,pxe_ilo,fake_pxe
+{% else %}
+enabled_hardware_types = ipmi,redfish,ilo,idrac,manual-management
+{% endif %}
 #generate_service_certificate = true
 #heat_container_image =
 #heat_native = true
@@ -44,7 +48,7 @@ enable_routed_networks = true
 #ironic_default_network_interface = flat
 #ironic_enabled_network_interfaces = flat
 local_interface = eth0
-local_ip = 192.168.24.1/24
+local_ip = {{ DefaultLeaf0.subnet.cidr | ipaddr('1') }}
 #local_mtu = 1500
 local_subnet = {{ DefaultLeaf0.subnet.name }}
 #net_config_override = 
@@ -61,7 +65,7 @@ subnets = {{ DefaultLeaf0.subnet.name }},{% for leaf in DCNLeafs %}{{ leaf.subne
 #subnets = {{ DefaultLeaf0.subnet.name }}
 {% endif %}
 #templates =
-undercloud_admin_host = 192.168.24.3
+undercloud_admin_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('3') | ipaddr('address') }}
 #undercloud_debug = true
 #undercloud_enable_paunch = true
 #undercloud_enable_selinux = true
@@ -69,7 +73,7 @@ undercloud_admin_host = 192.168.24.3
 #undercloud_log_file = install-undercloud.log
 undercloud_nameservers = {{ dns_servers | join(',') }}
 undercloud_ntp_servers = {{ ntp_servers | join(',') }}
-undercloud_public_host = 192.168.24.2
+undercloud_public_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('2') | ipaddr('address') }}
 #undercloud_service_certificate =
 #undercloud_timezone = <None>
 #undercloud_update_packages = false

@@ -2,13 +2,22 @@
 resource_registry:
 {% for ocrole in overcloud_roles %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
-{% if leaf.hypervisor == DefaultLeaf0.hypervisor %}
+{% if leaf.hypervisor in DefaultLeaf0.hypervisor %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.profile }}.yaml
 {% else %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
 {% endif %}
 {% endif %}
 {% endfor %}
+{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+  OS::TripleO::{{ ocrole.name }}{{ dcnleaf.name }}::Net::SoftwareConfig: /home/stack/templates/{{ dcnleaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
 {% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
 {% endif %}
@@ -55,15 +64,58 @@ parameter_defaults:
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
   {{ ocrole.name }}Parameters:
-{% if leaf.name != 'overcloud' %}
+{% if leaf.name != DefaultLeaf0.name %}
     NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex"
 {% endif %}
 {% endif %}
 {% endfor %}
+  OVNDBSPacemakerTimeout: 360
+  OVNRemoteProbeInterval: 180000
+  OVNOpenflowProbeInterval: 180
   ControllerParameters:
-    OVNCMSOptions: "enable-chassis-as-gw,availability-zones=overcloud:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+    OVNCMSOptions: "enable-chassis-as-gw,availability-zones={{ DefaultLeaf0.name }}:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+
+{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+  {{ ocrole.name }}{{ dcnleaf.name }}ControlPlaneSubnet: {{ dcnleaf.subnet.name }}
+  {{ ocrole.name }}{{ dcnleaf.name }}Parameters:
+    NeutronBridgeMappings: "datacentre-{{ dcnleaf.name }}:br-ex"
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+# Spine-leaf routing for RHOSP 13.0
+{% for network in roles_networks.Controller %}
+  {{ network }}InterfaceRoutes:
+{% for dcnleaf in DCNLeafs %}
+    - destination: {{ dcnleaf.networks[network].prefix ~ '.0/24' }}
+      nexthop: {{ leaf.networks[network].prefix ~ '.1' }}
+{% endfor %}
+{% for dcnleaf in DCNLeafs %}
+  {{ network }}{{ dcnleaf.name }}InterfaceRoutes:
+    - destination: {{ leaf.networks[network].prefix ~ '.0/24' }}
+      nexthop: {{ dcnleaf.networks[network].prefix ~ '.1' }}
+{% for dcnleaf2 in DCNLeafs if dcnleaf2.name != dcnleaf.name %}
+    - destination: {{ dcnleaf2.networks[network].prefix ~ '.0/24' }}
+      nexthop: {{ dcnleaf.networks[network].prefix ~ '.1' }}
+{% endfor %}
+{% endfor %}
+{% endfor %}
+
+  ServiceNetMap:
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles if ocrole.name != 'Controller' %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+    {{ ocrole.name }}{{ dcnleaf.name }}ResolveNetwork: {{ 'storage_' ~ dcnleaf.name if 'Ceph' in ocrole.name else 'internal_api_' ~ dcnleaf.name }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% endif %}
 {% endif %}
 
 {% if roles_count[leaf.name]["ComputeOvsDpdkSriov"] > 0 %}

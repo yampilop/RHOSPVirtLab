@@ -8,9 +8,9 @@ After=network-online.target
 Type=notify
 {% if inventory_hostname == 'localhost' %}
 {% if ansible_distribution_version == '7.9' %}
-ExecStart=/usr/sbin/dhcrelay -d 192.168.24.1 192.168.24.5 -i {{ external_if }}
+ExecStart=/usr/sbin/dhcrelay -d {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ DefaultLeaf0.subnet.dhcp_start }} -i {{ external_if }}
 {% else %}
-ExecStart=/usr/sbin/dhcrelay -d 192.168.24.1 192.168.24.5 -iu br-ctlplane -id {{ external_if }}
+ExecStart=/usr/sbin/dhcrelay -d {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ DefaultLeaf0.subnet.dhcp_start }} -iu br-ctlplane -id {{ external_if }}
 {% endif %}
 {% else %}
 {% if ansible_distribution_version == '7.9' %}

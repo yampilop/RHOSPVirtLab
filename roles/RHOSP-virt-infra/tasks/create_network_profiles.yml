@@ -6,7 +6,7 @@
       dhcp4: no
       auto6: no
       address:
-        - "{% if item.ipv4 %}{{ (item.ipv4.address ~ '/' ~ item.ipv4.netmask) | ipaddr('host/prefix') }}{% endif %}"
+        - "{% if item.ipv4 is defined %}{{ (item.ipv4.address ~ '/' ~ item.ipv4.netmask) | ipaddr('host/prefix') }}{% endif %}"
     noip:
       dhcp4: no
       auto6: no
@@ -15,7 +15,8 @@
       interface_name: "{{ item.bridge }}"
       type: bridge
       autoconnect: yes
-      ip: "{% if item.ipv4 %}{{ ip }}{% else %}{{ noip }}{% endif %}"
+      ip: "{% if item.ipv4 is defined %}{{ ip }}{% else %}{{ noip }}{% endif %}"
+      mtu: 1500
       state: up
   when:
     - item.hypervisor == inventory_hostname
@@ -34,6 +35,7 @@
       ip:
         dhcp4: no
         auto6: no
+      mtu: 1500
       state: up
   when:
     - item.hypervisor == inventory_hostname
@@ -51,6 +53,7 @@
       controller: "{{ item.bridge }}"
       port_type: bridge
       autoconnect: yes
+      mtu: 1500
       state: up
   when:
     - item.hypervisor == inventory_hostname
@@ -67,6 +70,7 @@
       vlan_id: "{{ DefaultLeaf0.networks[item].vlan }}"
       parent: "{{ ( networks | selectattr('name', 'equalto', DefaultLeaf0.networks[item].network) | list | first ).bridge }}"
       autoconnect: yes
+      mtu: 1500
       state: up
       ip:
         dhcp4: no
@@ -88,6 +92,7 @@
       vlan_id: "{{ item.0.networks[item.1].vlan }}"
       parent: "{{ ( networks | selectattr('name', 'equalto', item.0.networks[item.1].network) | list | first ).bridge }}"
       autoconnect: yes
+      mtu: 1500
       state: up
       ip:
         dhcp4: no
@@ -117,7 +122,7 @@
           "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
         },
       {% endfor %}
-      {% for leaf in DCNLeafs if (leaf.hypervisor != inventory_hostname) %}
+      {% for leaf in DCNLeafs if (inventory_hostname not in leaf.hypervisor) %}
         {
           "network": "{{ leaf.subnet.cidr.split('/')[0] }}",
           "prefix": "{{ leaf.subnet.cidr.split('/')[1] }}",
@@ -142,6 +147,7 @@
       interface_name: "{{ hypervisor_external_if }}"
       type: ethernet
       autoconnect: yes
+      mtu: 1500
       state: up
       ip:
         dhcp4: yes
@@ -177,6 +183,7 @@
       interface_name: "{{ external_if }}"
       type: ethernet
       autoconnect: yes
+      mtu: 1500
       state: up
       ip:
         dhcp4: yes

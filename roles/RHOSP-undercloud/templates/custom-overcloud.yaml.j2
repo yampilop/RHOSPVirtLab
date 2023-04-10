@@ -80,9 +80,42 @@ parameter_defaults:
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}SchedulerHints:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
+{% if 'Compute' in ocrole.name %}
+  {{ ocrole.name }}ExtraConfig:
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
+{% endif %}
 {% endif %}
 {% endfor %}
+
+{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
+{% for dcnleaf in DCNLeafs %}
+{% for ocrole in overcloud_roles %}
+{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+  {{ ocrole.name }}{{ dcnleaf.name }}SchedulerHints:
+    'capabilities:node': '{{ dcnleaf.name }}-{{ ocrole.profile }}%index%'
+{% if 'Compute' in ocrole.name %}
+  {{ ocrole.name }}{{ dcnleaf.name }}ExtraConfig:
+    nova::compute::libvirt::vncserver_listen: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::compute::vncserver_proxyclient_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    neutron::agents::ml2::ovs::local_ip: "%{hiera('tenant_{{ dcnleaf.name }}')}"
+    cold_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    live_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::migration::libvirt::live_migration_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::my_ip: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    tripleo::profile::base::database::mysql::client::mysql_client_bind_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
 {% endif %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% if (ceph_count + hci_count) > 0 %}
+  CephAnsibleExtraConfig:
+    public_network: '{{ DefaultLeaf0.networks.Storage.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.Storage.prefix ~ '.0/24' }}{% endfor %}'
+    cluster_network: '{{ DefaultLeaf0.networks.StorageMgmt.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.StorageMgmt.prefix ~ '.0/24' }}{% endfor %}'
+{% endif %}
+{% endif %}
+{% endif %}
+
 {% if RegisterNodes %}
   RhsmVars:
 {% if (rh_orgid is not defined) or (rh_activationkey is not defined) %}
@@ -106,5 +139,35 @@ parameter_defaults:
 {% if RHOSP_version == 13.0 %}
   DockerInsecureRegistryAddress:
   - undercloud.ctlplane.localdomain:8787
-  - 192.168.24.1:8787
+  - {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }}:8787
+{% endif %}
+
+{% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == DefaultLeaf0.name)) %}
+  # Fencing parameters
+  EnableFencing: true
+  FencingConfig:
+    devices:
+{% for vm in vms if ((vm.profile == 'computeinstanceha') or (vm.profile == 'controller')) and (vm.hypervisor in leaf.hypervisor) %}
+    # {{ vm.name }}
+    - agent: fence_ipmilan
+      host_mac: {{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}
+      params:
+        login: admin
+        passwd: admin
+        ipaddr: {% if vm.hypervisor in DefaultLeaf0.hypervisor %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
+
+        ipport: {{ vm.bmcport }}
+        lanplus: 1
+{% endfor %}
+{% for node in physical if ((node.profile == 'computeinstanceha') or (node.profile == 'controller')) and (node.leaf == leaf.name) %}
+    # {{ node.name }}
+    - agent: fence_ipmilan
+      host_mac: {{ node.mac }}
+      params:
+        login: {{ node.pm_user }}
+        passwd: {{ node.pm_password }}
+        ipaddr: {{ node.pm_addr }}
+        ipport: {{ node.pm_port }}
+        lanplus: 1
+{% endfor %}
 {% endif %}

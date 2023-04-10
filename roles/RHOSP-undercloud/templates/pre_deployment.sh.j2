@@ -52,6 +52,7 @@ openstack baremetal node list
 
 # Prepare images
 {% if RHOSP_version == 13.0 %}
+{% if leaf.name == DefaultLeaf0.name %}
 {% if rh_serviceaccount and rh_token %}
 sudo docker login registry.redhat.io --username '{{ rh_serviceaccount }}' --password '{{ rh_token }}'
 {% else %}
@@ -67,13 +68,14 @@ sudo openstack overcloud container image prepare \
 --set ceph_image=rhceph-3-rhel7 \
 --namespace=registry.redhat.io/rhosp13 \
 --prefix=openstack- \
---push-destination=192.168.24.1:8787 \
+--push-destination={{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }}:8787 \
 --tag-from-label {version}-{release} \
 --output-env-file {{ templates_dir }}/overcloud-images.yaml \
 --output-images-file /home/stack/local_registry_images.yaml
 sudo openstack overcloud container image upload \
 --config-file /home/stack/local_registry_images.yaml \
 --verbose
+{% endif %}
 {% elif RHOSP_version == 17.0 %}
 sudo openstack tripleo container image prepare \
 -e /home/stack/containers-prepare-parameter.yaml \
@@ -92,22 +94,14 @@ sudo openstack tripleo container image prepare \
 openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 {% endif %}
 
+{% if RHOSP_version != 13.0 %}
 # Generate roles
 openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml {% for ocrole in overcloud_roles if roles_count[leaf.name][ocrole.name] > 0 %}{{ ocrole.name if (ocrole.copy_from is not defined) else (ocrole.copy_from ~ ':' ~ ocrole.name) }} {% endfor %}
 
 
 # Remove HostnameFormatDefault parameter for roles to default to lowercase role name
 sed -i -E '/HostnameFormatDefault: .+$/d' {{ templates_dir }}/roles_data.yaml
-{% if RHOSP_version == 13.0 %}
-# Add External network where it's needed
-{% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[leaf.name][role] > 0) %}
-sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    - ([^E].+)/- name: {{ role }}\n\1  networks:\n    - External{{ '_' ~ leaf.name if leaf.name != DefaultLeaf0.name else '' }}\n    - \3/' {{ templates_dir }}/roles_data.yaml
-{% endfor %}
-{% if leaf.name != DefaultLeaf0.name %}
-# Change the subnets for the leaf ones
-sed -i -E 's/    - (Storage|StorageMgmt|InternalApi|Tenant|External)$/    - \1{{ '_' ~ leaf.name }}/g' {{ templates_dir }}/roles_data.yaml
-{% endif %}
-{% else %}
+
 # Add External network where it's needed
 {% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[leaf.name][role] > 0) %}
 sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- name: {{ role }}\n\1  networks:\n    External:\n      subnet: external_subnet{{ '_' ~ leaf.name if leaf.name != DefaultLeaf0.name else '' }}\n    \3:/' {{ templates_dir }}/roles_data.yaml
@@ -115,5 +109,36 @@ sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- 
 {% if leaf.name != DefaultLeaf0.name %}
 # Change the subnets for the leaf ones
 sed -i -E 's/subnet: (.+_subnet)$/subnet: \1{{ '_' ~ leaf.name }}/g' {{ templates_dir }}/roles_data.yaml
+{% endif %}
+{% else %}
+{% if leaf.name == DefaultLeaf0.name %}
+# Create roles folder
+mkdir /home/stack/roles
+
+# Copy roles for the default leaf
+{% for ocrole in overcloud_roles if roles_count[DefaultLeaf0.name][ocrole.name] > 0 %}
+cp /usr/share/openstack-tripleo-heat-templates/roles/{{ ocrole.name }}.yaml /home/stack/roles/{{ ocrole.name }}.yaml
+sed -i -Ez 's/- name: {{ ocrole.name }}\n(([^-][^\n]*\n)+)  networks:\n    - ([^E].+)/- name: {{ ocrole.name }}\n\1  networks:\n    - External\n    - \3/' /home/stack/roles/{{ ocrole.name }}.yaml
+sed -i -E '/HostnameFormatDefault: .+$/d' /home/stack/roles/{{ ocrole.name }}.yaml
+{% endfor %}
+
+{% for dcnleaf in DCNLeafs %}
+# Copy roles for {{ dcnleaf.name }} and change the role and network names
+{% for ocrole in overcloud_roles if roles_count[dcnleaf.name][ocrole.name] > 0 %}
+cp /usr/share/openstack-tripleo-heat-templates/roles/{{ ocrole.name if (ocrole.copy_from is not defined) else ocrole.copy_from }}.yaml /home/stack/roles/{{ ocrole.name }}{{ dcnleaf.name }}.yaml
+{% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[dcnleaf.name][role] > 0) %}
+sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    - ([^E].+)/- name: {{ role }}\n\1  networks:\n    - External\n    - \3/' /home/stack/roles/{{ ocrole.name }}{{ dcnleaf.name }}.yaml
+{% endfor %}
+sed -i -E 's/- name: {{ ocrole.name }}$/- name: {{ ocrole.name }}{{ dcnleaf.name }}/g' /home/stack/roles/{{ ocrole.name }}{{ dcnleaf.name }}.yaml
+sed -i -E 's/    - (Storage|StorageMgmt|InternalApi|Tenant|External)$/    - \1{{ dcnleaf.name }}/g' /home/stack/roles/{{ ocrole.name }}{{ dcnleaf.name }}.yaml
+sed -i -E '/HostnameFormatDefault: .+$/d' /home/stack/roles/{{ ocrole.name }}{{ dcnleaf.name }}.yaml
+{% endfor %}
+{% endfor %}
+
+# Generate roles for all the leafs
+openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml --roles-path /home/stack/roles \
+{% for ocrole in overcloud_roles if roles_count[DefaultLeaf0.name][ocrole.name] > 0 %}{{ ocrole.name if (ocrole.copy_from is not defined) else (ocrole.copy_from ~ ':' ~ ocrole.name) }} {% endfor %} \
+{% for dcnleaf in DCNLeafs %}{% for ocrole in overcloud_roles if roles_count[dcnleaf.name][ocrole.name] > 0 %}{{ ocrole.name ~ dcnleaf.name }} {% endfor %}{% endfor %} \
+;
 {% endif %}
 {% endif %}
