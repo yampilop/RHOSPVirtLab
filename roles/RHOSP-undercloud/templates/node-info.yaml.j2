@@ -64,16 +64,26 @@ parameter_defaults:
     networks:
     - network: ctlplane
       vif: true
+{% if 'Storage' in roles_networks[ocrole.name] %}
     - network: storage
       subnet: storage_subnet{{ name }}
+{% endif %}
+{% if 'StorageMgmt' in roles_networks[ocrole.name] %}
     - network: storage_mgmt
       subnet: storage_mgmt_subnet{{ name }}
+{% endif %}
+{% if 'InternalApi' in roles_networks[ocrole.name] %}
     - network: internal_api
       subnet: internal_api_subnet{{ name }}
+{% endif %}
+{% if 'Tenant' in roles_networks[ocrole.name] %}
     - network: tenant
       subnet: tenant_subnet{{ name }}
+{% endif %}
+{% if 'External' in roles_networks[ocrole.name] %}
     - network: external
       subnet: external_subnet{{ name }}
+{% endif %}
     network_config:
       network_config_update: true
       template: /home/stack/templates/nic-configs/{{ ocrole.profile }}.j2
