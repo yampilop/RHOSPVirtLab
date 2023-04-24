@@ -44,6 +44,22 @@ parameter_defaults:
         /srv=10GB
         /var=100%
 {% endif %}
+{% if ('Sriov' in ocrole.name) or ('OvsHwOffload' in ocrole.name) or ('OvsDpdk' in ocrole.name) %}
+  ansible_playbooks:
+  - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
+    extra_vars:
+      kernel_args: 'default_hugepagesz={{ vars[ocrole.name + 'Properties'].hugepagesz }} hugepagesz={{ vars[ocrole.name + 'Properties'].hugepagesz }} hugepages={{ vars[ocrole.name + 'Properties'].hugepages }} {{ vars[ocrole.name + 'Properties'].kernelargs }} isolcpus={{ vars[ocrole.name + 'Properties'].isolcpus }}'
+      tuned_isolated_cores: '{{ vars[ocrole.name + 'Properties'].isolcpus }}'
+      tuned_profile: 'cpu-partitioning'
+      reboot_wait_timeout: 1800
+{% endif %}
+{% if 'OvsDpdk' in ocrole.name %}
+  - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-openvswitch-dpdk.yaml
+    extra_vars:
+      pmd: '{{ vars[ocrole.name + 'Properties'].ovspmdcorelist }}'
+      memory_channels: '{{ vars[ocrole.name + 'Properties'].memorychannels }}'
+      socket_mem: '{{ vars[ocrole.name + 'Properties'].socketmemory }}'
+{% endif %}
   defaults:
     networks:
     - network: ctlplane
