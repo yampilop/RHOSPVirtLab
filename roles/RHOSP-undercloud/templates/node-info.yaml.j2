@@ -111,8 +111,9 @@ parameter_defaults:
     root_size_gb: {{ (pm.disk_size / 1073741824) | int - 9 }}
     network_config:
       net_config_data_lookup:
+        {{ leaf.name }}-{{ pm.name }}:
 {% for nic, interface in pm.nics.items() %}
-        {{ nic }}: '{{ pm.mac if nic == 'nic1' else interface }}'
+          {{ nic }}: '{{ pm.mac if nic == 'nic1' else interface }}'
 {% endfor %}
 {% endif %}
 {% endfor %}
