@@ -32,7 +32,7 @@ network_config:
     primary: true
 {% endraw %}
 {% if 'Dpdk' not in item.name %}
-{% raw %}{% for network in role_networks if network is match('{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ '|' if not loop.last else network }}{% endfor %}{% raw %}') %}{% endraw %}
+{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
 {% raw %}
   - type: vlan
     mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
@@ -44,7 +44,7 @@ network_config:
 {% endfor %}
 {% endraw %}
 {% else %}
-{% raw %}{% for network in role_networks if network is match('{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ '|' if not loop.last else network }}{% endfor %}{% raw %}') %}{% endraw %}
+{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
 {% raw %}
 - type: vlan
   device: br-vlans
