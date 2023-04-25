@@ -33,7 +33,8 @@ network_config:
 {% endraw %}
 {% if 'Dpdk' not in item.name %}
 {% raw %}{% for network in role_networks if network is match('{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ '|' if not loop.last else network }}{% endfor %}{% raw %}') %}{% endraw %}
-{% raw %}  - type: vlan
+{% raw %}
+  - type: vlan
     mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
     vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
     addresses:
@@ -44,7 +45,8 @@ network_config:
 {% endraw %}
 {% else %}
 {% raw %}{% for network in role_networks if network is match('{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ '|' if not loop.last else network }}{% endfor %}{% raw %}') %}{% endraw %}
-{% raw %}- type: vlan
+{% raw %}
+- type: vlan
   device: br-vlans
   mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
   vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
