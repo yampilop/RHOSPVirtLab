@@ -18,7 +18,7 @@ resource_registry:
 {% endfor %}
 {% endfor %}
 {% endif %}
-{% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
+{% if (RHOSP_version < 17.0) and (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
 {% endif %}
 {% endif %}
@@ -38,7 +38,7 @@ parameter_defaults:
   NeutronTunnelTypes: 'geneve'
   NeutronNetworkType: 'geneve,vlan'
   
-{% if (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
+{% if (RHOSP_version < 17.0) and (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   NetConfigDataLookup:
 {% for pm in physical if pm.leaf == leaf.name %}
     node{{ loop.index }}:

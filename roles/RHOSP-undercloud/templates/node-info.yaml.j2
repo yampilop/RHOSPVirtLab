@@ -109,6 +109,11 @@ parameter_defaults:
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
     root_size_gb: {{ (pm.disk_size / 1073741824) | int - 9 }}
+    network_config:
+      net_config_data_lookup:
+{% for nic, interface in pm.nics.items() %}
+        {{ nic }}: '{{ pm.mac if nic == 'nic1' else interface }}'
+{% endfor %}
 {% endif %}
 {% endfor %}
 {% endif %}
