@@ -114,6 +114,11 @@ parameter_defaults:
     cluster_network: '{{ DefaultLeaf0.networks.StorageMgmt.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.StorageMgmt.prefix ~ '.0/24' }}{% endfor %}'
 {% endif %}
 {% endif %}
+{% else %}
+{% for ocrole in overcloud_roles if 'Compute' in ocrole.name %}
+  {{ ocrole.name }}ExtraConfig:
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
+{% endfor %}
 {% endif %}
 
 {% if RegisterNodes %}
