@@ -115,7 +115,7 @@ parameter_defaults:
 {% endif %}
 {% endif %}
 {% else %}
-{% for ocrole in overcloud_roles if 'Compute' in ocrole.name %}
+{% for ocrole in overcloud_roles if ('Compute' in ocrole.name) and (roles_count[leaf.name][ocrole.name] > 0) %}
   {{ ocrole.name }}ExtraConfig:
     nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
 {% endfor %}
