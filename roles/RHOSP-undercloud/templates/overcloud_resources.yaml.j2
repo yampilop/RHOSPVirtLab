@@ -1,0 +1,81 @@
+heat_template_version: {{ RHOSP_version_supported[RHOSP_version].heat_template_version }}
+
+description: >
+  HOT Template to create basic needed resources after deployment of RHOSPVirtLab
+
+parameters:
+  domain_name:
+    type: string
+    description: Domain name
+    default: RHOSPVirtLab
+  project_name:
+    type: string
+    description: Project name
+    default: test-project
+  user_name:
+    type: string
+    description: User name
+    default: test-admin
+  user_password:
+    type: string
+    description: User name
+    default: redhat
+  # <param name>:
+  #   type: <string | number | json | comma_delimited_list | boolean>
+  #   label: <human-readable name of the parameter>
+  #   description: <description of the parameter>
+  #   default: <default value for parameter>
+  #   hidden: <true | false>
+  #   constraints:
+  #     <parameter constraints>
+  #   immutable: <true | false>
+  #   tags: <list of parameter categories>
+
+resources:
+  domain:
+    type: OS::Keystone::Domain
+    properties:
+      name: {get_param: domain_name}
+      description: RHOSPVirtLab domain
+      enabled: True
+  project:
+    type: OS::Keystone::Project
+    properties:
+      name: {get_param: project_name}
+      domain: {get_resource: domain}
+      description: Test project
+      enabled: True
+  user:
+    type: OS::Keystone::User
+    properties:
+      name: {get_param: user_name}
+      domain: {get_resource: domain}
+      description: Test admin user
+      enabled: True
+      password: {get_param: user_password}
+      default_project: {get_resource: project}
+      roles:
+        - role: admin
+          domain: {get_resource: domain}
+        - role: admin
+          project: {get_resource: project}
+
+  # <resource ID>:
+  #   type: <resource type>
+  #   properties:
+  #     <property name>: <property value>
+  #   metadata:
+  #     <resource specific metadata>
+  #   depends_on: <resource ID or list of ID>
+  #   update_policy: <update policy>
+  #   deletion_policy: <deletion policy>
+  #   external_id: <external resource ID>
+  #   condition: <condition name or expression or boolean>
+
+outputs:
+  user_id:
+    value: {get_resource: user}
+  # <parameter name>:
+  #   description: <description>
+  #   value: <parameter value>
+  #   condition: <condition name or expression or boolean>

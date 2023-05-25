@@ -23,16 +23,7 @@ SERVERS=$(openstack server list -f value -c Name)
 
 source /home/stack/overcloudrc
 
-# Domain
-openstack domain create RHOSPVirtLab --or-show
-
-# Project
-openstack project create --domain RHOSPVirtLab test-project --or-show
-
-# User and roles
-openstack user create --domain RHOSPVirtLab --project test-project --project-domain RHOSPVirtLab --password redhat --description "Test project admin" test-admin --or-show
-openstack role add --domain RHOSPVirtLab --user test-admin --user-domain RHOSPVirtLab admin
-openstack role add --project test-project --user test-admin --user-domain RHOSPVirtLab admin
+openstack stack create --template /home/stack/templates/overcloud_resources.yaml overcloud_resources
 
 ################################################################################
 ### Overcloud shared ###########################################################
