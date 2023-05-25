@@ -20,6 +20,11 @@ parameters:
     type: string
     description: User name
     default: redhat
+  default_provider_network_name:
+    type: string
+    description: Default provider network name
+    default: default-provider
+
   # <param name>:
   #   type: <string | number | json | comma_delimited_list | boolean>
   #   label: <human-readable name of the parameter>
@@ -32,6 +37,7 @@ parameters:
   #   tags: <list of parameter categories>
 
 resources:
+  # Keystone resources
   domain:
     type: OS::Keystone::Domain
     properties:
@@ -40,6 +46,7 @@ resources:
       enabled: True
   project:
     type: OS::Keystone::Project
+    depends_on: domain
     properties:
       name: {get_param: project_name}
       domain: {get_resource: domain}
@@ -47,6 +54,7 @@ resources:
       enabled: True
   user:
     type: OS::Keystone::User
+    depends_on: project
     properties:
       name: {get_param: user_name}
       domain: {get_resource: domain}
@@ -59,6 +67,33 @@ resources:
           domain: {get_resource: domain}
         - role: admin
           project: {get_resource: project}
+
+  # Neutron resources
+  default_provider_network:
+    type: OS::Neutron::ProviderNet
+    properties:
+      name: {get_param: default_provider_network_name}
+      network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
+      physical_network: datacentre
+{% if DefaultLeaf0.networks.External.vlan is defined %}
+      segmentation_id: {{ DefaultLeaf0.networks.External.vlan | default('') }}
+{% endif %}
+      router_external: True
+      port_security_enabled: True
+      shared: True
+  default_provider_subnet:
+    type: OS::Neutron::Subnet
+    depends_on: default_provider_network
+    properties:
+      name: {list_join: ['', [{get_param: default_provider_network_name}, '-subnet']]}
+      network: {get_resource: default_provider_network}
+      ip_version: 4
+      allocation_pools:
+        - start: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipmath(99) }}
+          end: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipmath(249) }}
+      cidr: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
+      enable_dhcp: True
+      gateway_ip: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
 
   # <resource ID>:
   #   type: <resource type>
@@ -75,6 +110,7 @@ resources:
 outputs:
   user_id:
     value: {get_resource: user}
+
   # <parameter name>:
   #   description: <description>
   #   value: <parameter value>

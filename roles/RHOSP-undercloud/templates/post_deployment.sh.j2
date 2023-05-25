@@ -29,14 +29,6 @@ openstack stack create --template /home/stack/templates/overcloud_resources.yaml
 ### Overcloud shared ###########################################################
 ################################################################################
 
-# External network
-{% if DefaultLeaf0.networks.External.vlan is defined %}
-openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type vlan --provider-physical-network datacentre --provider-segment {{ DefaultLeaf0.networks.External.vlan }} default-provider
-{% else %}
-openstack network show default-provider &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre default-provider
-{% endif %}
-openstack subnet show default-provider-subnet &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr | ipaddr('address') }} --network default-provider --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet
-
 # Flavors
 openstack flavor show small_2_2_20 &>/dev/null || openstack flavor create --ram 2048 --disk 20 --vcpus 2 --public small_2_2_20
 openstack flavor show small_1_1_10 &>/dev/null || openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public small_1_1_10
