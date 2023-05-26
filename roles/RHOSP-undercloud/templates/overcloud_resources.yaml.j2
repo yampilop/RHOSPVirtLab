@@ -29,6 +29,14 @@ parameters:
     type: string
     description: Default provider network name
     default: default-provider
+  image_rhel_external_id:
+    type: string
+    description: External ID to reference RHEL image
+    default: ''
+  image_cirros_external_id:
+    type: string
+    description: External ID to reference CirrOS image
+    default: ''
 
   # <param name>:
   #   type: <string | number | json | comma_delimited_list | boolean>
@@ -147,32 +155,12 @@ resources:
 {% endfor %}
 
   # Image resources
-{% if not ((DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0)) %}
   image_rhel:
     type: OS::Glance::WebImage
-    deletion_policy: Retain
-    properties:
-      name: RHEL{{ RHOSP_version_supported[RHOSP_version].rhel_release }}
-      disk_format: qcow2
-      container_format: bare
-      visibility: public
-      location: {{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}
-      min_disk: 12
-      min_ram: 1536
-      visibility: public
+    external_id: {get_param: image_rhel_external_id}
   image_cirros:
     type: OS::Glance::WebImage
-    deletion_policy: Retain
-    properties:
-      name: CirrOS
-      disk_format: qcow2
-      container_format: bare
-      visibility: public
-      location: {{ CirrOSDownloadLink }}
-      min_disk: 2
-      min_ram: 512
-      visibility: public
-{% endif %}
+    external_id: {get_param: image_cirros_external_id}
 
   # <resource ID>:
   #   type: <resource type>
@@ -188,6 +176,7 @@ resources:
 
 outputs:
   user_id:
+    description: test-admin user UUID
     value: {get_resource: user}
 
   # <parameter name>:

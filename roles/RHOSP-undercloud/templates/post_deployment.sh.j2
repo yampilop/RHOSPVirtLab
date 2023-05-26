@@ -23,8 +23,6 @@ SERVERS=$(openstack server list -f value -c Name)
 
 source /home/stack/overcloudrc
 
-openstack stack create --template /home/stack/templates/overcloud_resources.yaml overcloud_resources
-
 ################################################################################
 ### Overcloud shared ###########################################################
 ################################################################################
@@ -33,7 +31,26 @@ openstack stack create --template /home/stack/templates/overcloud_resources.yaml
 {% if (DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0) %}
 openstack image show '{{ rhel_image_name }}' &>/dev/null || (qemu-img convert -f qcow2 -O raw images/{{ rhel_image_file }} images/{{ rhel_image_file }}.raw && glance image-create --disk-format raw --container-format bare --name '{{ rhel_image_name }}' --file images/{{ rhel_image_file }}.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show '{{ rhel_image_name }}' -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
 openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw images/cirros.qcow2 images/cirros.raw && glance image-create --disk-format raw --container-format bare --name CirrOS --file images/cirros.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show CirrOS -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
+{% else %}
+openstack image show '{{ rhel_image_name }}' &>/dev/null || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
+openstack image show CirrOS &>/dev/null || openstack image create --disk-format qcow2 --min-disk 2 --min-ram 512 --file images/cirros.qcow2 --public CirrOS
 {% endif %}
+RHEL_IMAGE_ID=$(openstack image show '{{ rhel_image_name }}' -f value -c ID)
+CIRROS_IMAGE_ID=$(openstack image show CirrOS -f value -c ID)
+
+################################################################################
+### Create Overcloud Resources by HOT Template #################################
+################################################################################
+
+openstack stack create \
+--template /home/stack/templates/overcloud_resources.yaml \
+--parameter "image_rhel_external_id=${RHEL_IMAGE_ID}" \
+--parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
+overcloud_resources
+
+################################################################################
+### TODO: MIGRATE TO overcloud_resources.yaml ##################################
+################################################################################
 
 {% if DeployOctavia %}
 # Octavia configuration
