@@ -191,6 +191,28 @@ resources:
       hosts: [{% for node in (physical | selectattr("profile", "match", "Sriov|HwOffload")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
       metadata: { "sriov": true }
 {% endif %}
+{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
+{% for leaf in DCNLeafs %}
+  aggregate_{{ leaf.name }}:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: {{ leaf.name }}
+      availability_zone: {{ leaf.name }}
+      hosts:
+        list_concat:
+          - [{% for vm in (vms | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}{{ vm.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+          - [{% for node in (physical | selectattr("leaf", "equalto", leaf.name)) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+{% endfor %}
+  aggregate_{{ DefaultLeaf0.name }}:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: {{ DefaultLeaf0.name }}
+      availability_zone: {{ DefaultLeaf0.name }}
+      hosts:
+        list_concat:
+          - [{% for vm in (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor)) %}{{ vm.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+          - [{% for node in (physical | selectattr("leaf", "equalto", DefaultLeaf0.name)) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+{% endif %}
 
   # <resource ID>:
   #   type: <resource type>

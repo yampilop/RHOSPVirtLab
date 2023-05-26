@@ -60,25 +60,6 @@ overcloud_resources
 ### TODO: MIGRATE TO overcloud_resources.yaml ##################################
 ################################################################################
 
-# Aggregates
-
-{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
-{% for leaf in DCNLeafs %}
-openstack aggregate show {{ leaf.name }} &>/dev/null || openstack aggregate create --zone {{ leaf.name }} {{ leaf.name }}
-for HOST in $SERVERS; do
-  if [[ $HOST == *"{{ leaf.name }}"* ]]; then
-    openstack aggregate add host {{ leaf.name }} $HOST.localdomain
-  fi
-done
-{% endfor %}
-openstack aggregate show {{ DefaultLeaf0.name }} &>/dev/null || openstack aggregate create --zone {{ DefaultLeaf0.name }} {{ DefaultLeaf0.name }}
-for HOST in $SERVERS; do
-  if [[ $HOST == *"{{ DefaultLeaf0.name }}"* ]]; then
-    openstack aggregate add host {{ DefaultLeaf0.name }} $HOST.localdomain
-  fi
-done
-{% endif %}
-
 {% for leaf in DCNLeafs %}
 ################################################################################
 ### {{ leaf.name }} shared #####################################################
