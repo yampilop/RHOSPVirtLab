@@ -1,33 +1,17 @@
-#/bin/bash
-
-{% set ext_addr = DefaultLeaf0.networks.External.prefix ~ '.1/24' %}
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
-
 {% set dpdk_count = (roles_count[DefaultLeaf0.name]["ComputeOvsDpdk"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
 {% set sriov_count = (roles_count[DefaultLeaf0.name]["ComputeSriov"] + roles_count[DefaultLeaf0.name]["ComputeOvsHwOffload"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
 {% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
 {% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
-
-################################################################################
-### Default domain specifics ###################################################
-################################################################################
-
-source ~/stackrc
-
-{% if RHOSP_version == 17.0 %}
-SERVERS=$(openstack baremetal node list -f value -c Name)
-{% else %}
-SERVERS=$(openstack server list -f value -c Name)
-{% endif %}
+#/bin/bash
 
 source /home/stack/overcloudrc
 
 ################################################################################
-### Overcloud shared ###########################################################
+### Overcloud images ###########################################################
 ################################################################################
 
-# Images
 {% if (DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0) %}
 openstack image show '{{ rhel_image_name }}' &>/dev/null || (qemu-img convert -f qcow2 -O raw images/{{ rhel_image_file }} images/{{ rhel_image_file }}.raw && glance image-create --disk-format raw --container-format bare --name '{{ rhel_image_name }}' --file images/{{ rhel_image_file }}.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show '{{ rhel_image_name }}' -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
 openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw images/cirros.qcow2 images/cirros.raw && glance image-create --disk-format raw --container-format bare --name CirrOS --file images/cirros.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show CirrOS -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)

@@ -172,8 +172,8 @@ resources:
       description: A non-high availability load balancer for testing.
       enabled: True
       flavor_profile: {get_resource: amphora_single_profile}
-{% endif %}
 
+{% endif %}
   # Host aggregate resources
 {% if dpdk_count > 0 %}
   aggregate_dpdk_hosts:
