@@ -174,6 +174,24 @@ resources:
       flavor_profile: {get_resource: amphora_single_profile}
 {% endif %}
 
+  # Host aggregate resources
+{% if dpdk_count > 0 %}
+  aggregate_dpdk_hosts:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: dpdk_hosts
+      hosts: [{% for node in (physical | selectattr("profile", "contains", "Dpdk")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+      metadata: { "dpdk": true }
+{% endif %}
+{% if sriov_count > 0 %}
+  aggregate_sriov_hosts:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: sriov_hosts
+      hosts: [{% for node in (physical | selectattr("profile", "match", "Sriov|HwOffload")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+      metadata: { "sriov": true }
+{% endif %}
+
   # <resource ID>:
   #   type: <resource type>
   #   properties:

@@ -61,23 +61,6 @@ overcloud_resources
 ################################################################################
 
 # Aggregates
-{% if dpdk_count > 0 %}
-openstack aggregate show dpdk_hosts &>/dev/null || (openstack aggregate create dpdk_hosts && openstack aggregate set --property dpdk=true dpdk_hosts)
-for HOST in $SERVERS; do
-  if [[ $HOST == *"dpdk"* ]]; then
-    openstack aggregate add host dpdk_hosts $HOST.localdomain
-  fi
-done
-{% endif %}
-
-{% if sriov_count > 0 %}
-openstack aggregate show sriov_hosts &>/dev/null || (openstack aggregate create sriov_hosts && openstack aggregate set --property sriov=true sriov_hosts)
-for HOST in $SERVERS; do
-  if [[ $HOST == *"sriov"* ]]; then
-    openstack aggregate add host sriov_hosts $HOST.localdomain
-  fi
-done
-{% endif %}
 
 {% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
 {% for leaf in DCNLeafs %}
