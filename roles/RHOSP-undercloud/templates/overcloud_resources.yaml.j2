@@ -53,7 +53,6 @@ resources:
   # Keystone resources
   domain:
     type: OS::Keystone::Domain
-    deletion_policy: Retain
     properties:
       name: {get_param: domain_name}
       description: RHOSPVirtLab domain
@@ -85,7 +84,6 @@ resources:
   # Provider network resources
   default_provider_network:
     type: OS::Neutron::ProviderNet
-    deletion_policy: Retain
     properties:
       name: {get_param: default_provider_network_name}
       network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
@@ -98,7 +96,6 @@ resources:
       shared: True
   default_provider_subnet:
     type: OS::Neutron::Subnet
-    deletion_policy: Retain
     depends_on: default_provider_network
     properties:
       name: {list_join: ['', [{get_param: default_provider_network_name}, '-subnet']]}
@@ -158,6 +155,24 @@ resources:
   image_cirros:
     type: OS::Glance::WebImage
     external_id: {get_param: image_cirros_external_id}
+
+{% if DeployOctavia %}
+  # Octavia resources
+  amphora_single_profile:
+    type: OS::Octavia::FlavorProfile
+    properties:
+      name: amphora-single-profile
+      provider_name: amphora
+      flavor_data: '{"loadbalancer_topology": "SINGLE"}'
+  standalone_lb:
+    type: OS::Octavia::Flavor
+    depends_on: amphora_single_profile
+    properties:
+      name: standalone-lb
+      description: A non-high availability load balancer for testing.
+      enabled: True
+      flavor_profile: {get_resource: amphora_single_profile}
+{% endif %}
 
   # <resource ID>:
   #   type: <resource type>

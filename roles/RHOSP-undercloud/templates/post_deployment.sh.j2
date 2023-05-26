@@ -60,12 +60,6 @@ overcloud_resources
 ### TODO: MIGRATE TO overcloud_resources.yaml ##################################
 ################################################################################
 
-{% if DeployOctavia %}
-# Octavia configuration
-openstack loadbalancer flavorprofile show amphora-single-profile &>/dev/null || openstack loadbalancer flavorprofile create --name amphora-single-profile --provider amphora --flavor-data '{"loadbalancer_topology": "SINGLE"}'
-openstack loadbalancer flavor show standalone-lb &>/dev/null || openstack loadbalancer flavor create --name standalone-lb --flavorprofile amphora-single-profile --description "A non-high availability load balancer for testing."
-{% endif %}
-
 # Aggregates
 {% if dpdk_count > 0 %}
 openstack aggregate show dpdk_hosts &>/dev/null || (openstack aggregate create dpdk_hosts && openstack aggregate set --property dpdk=true dpdk_hosts)
