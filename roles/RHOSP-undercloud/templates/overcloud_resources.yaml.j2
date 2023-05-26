@@ -115,7 +115,6 @@ resources:
 {% for size in DefaultFlavorsSize %}
   flavor_m1_{{ size.name }}:
     type: OS::Nova::Flavor
-    deletion_policy: Retain
     properties:
       name: m1.{{ size.name }}
       vcpus: {{ size.vcpus }}
@@ -127,7 +126,6 @@ resources:
 {% if dpdk_count > 0 %}
   flavor_pinned_{{ size.name }}:
     type: OS::Nova::Flavor
-    deletion_policy: Retain
     properties:
       name: pinned.{{ size.name }}
       vcpus: {{ size.vcpus }}
@@ -141,7 +139,6 @@ resources:
 {% if sriov_count > 0 %}
   flavor_sriov_{{ size.name }}:
     type: OS::Nova::Flavor
-    deletion_policy: Retain
     properties:
       name: sriov.{{ size.name }}
       vcpus: {{ size.vcpus }}

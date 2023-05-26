@@ -35,14 +35,22 @@ openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw ima
 openstack image show '{{ rhel_image_name }}' &>/dev/null || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
 openstack image show CirrOS &>/dev/null || openstack image create --disk-format qcow2 --min-disk 2 --min-ram 512 --file images/cirros.qcow2 --public CirrOS
 {% endif %}
-RHEL_IMAGE_ID=$(openstack image show '{{ rhel_image_name }}' -f value -c ID)
-CIRROS_IMAGE_ID=$(openstack image show CirrOS -f value -c ID)
+RHEL_IMAGE_ID=$(openstack image show '{{ rhel_image_name }}' -f value -c id)
+CIRROS_IMAGE_ID=$(openstack image show CirrOS -f value -c id)
 
 ################################################################################
 ### Create Overcloud Resources by HOT Template #################################
 ################################################################################
 
-openstack stack create \
+# If the stack does not exist, create it
+openstack stack show overcloud_resources &>/dev/null || openstack stack create \
+--template /home/stack/templates/overcloud_resources.yaml \
+--parameter "image_rhel_external_id=${RHEL_IMAGE_ID}" \
+--parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
+overcloud_resources
+
+# If the stack exists, update it
+openstack stack show overcloud_resources &>/dev/null && openstack stack update \
 --template /home/stack/templates/overcloud_resources.yaml \
 --parameter "image_rhel_external_id=${RHEL_IMAGE_ID}" \
 --parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
