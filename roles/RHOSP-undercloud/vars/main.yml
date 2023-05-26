@@ -519,3 +519,5 @@ RHOSP_version_supported:
       ceph_prometheus_tag: ''
       namespace: ''
     heat_template_version: queens
+
+CirrOSDownloadLink: http://download.cirros-cloud.net/0.6.1/cirros-0.6.1-x86_64-disk.img

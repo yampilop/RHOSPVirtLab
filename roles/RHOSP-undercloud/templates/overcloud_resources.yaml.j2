@@ -1,5 +1,7 @@
 {% set dpdk_count = (roles_count[DefaultLeaf0.name]["ComputeOvsDpdk"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
 {% set sriov_count = (roles_count[DefaultLeaf0.name]["ComputeSriov"] + roles_count[DefaultLeaf0.name]["ComputeOvsHwOffload"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
+{% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
+{% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 
 heat_template_version: {{ RHOSP_version_supported[RHOSP_version].heat_template_version }}
 
@@ -143,6 +145,34 @@ resources:
       extra_specs: { "sriov": true, "hw:cpu_policy": "dedicated", "hw:mem_page_size": "large" }
 {% endif %}
 {% endfor %}
+
+  # Image resources
+{% if not ((DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0)) %}
+  image_rhel:
+    type: OS::Glance::WebImage
+    deletion_policy: Retain
+    properties:
+      name: RHEL{{ RHOSP_version_supported[RHOSP_version].rhel_release }}
+      disk_format: qcow2
+      container_format: bare
+      visibility: public
+      image_location: {{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}
+      min_disk: 12
+      min_ram: 1536
+      visibility: public
+  image_cirros:
+    type: OS::Glance::WebImage
+    deletion_policy: Retain
+    properties:
+      name: CirrOS
+      disk_format: qcow2
+      container_format: bare
+      visibility: public
+      image_location: {{ CirrOSDownloadLink }}
+      min_disk: 2
+      min_ram: 512
+      visibility: public
+{% endif %}
 
   # <resource ID>:
   #   type: <resource type>
