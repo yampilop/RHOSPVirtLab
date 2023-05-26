@@ -156,7 +156,7 @@ resources:
       disk_format: qcow2
       container_format: bare
       visibility: public
-      image_location: {{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}
+      location: {{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}
       min_disk: 12
       min_ram: 1536
       visibility: public
@@ -168,7 +168,7 @@ resources:
       disk_format: qcow2
       container_format: bare
       visibility: public
-      image_location: {{ CirrOSDownloadLink }}
+      location: {{ CirrOSDownloadLink }}
       min_disk: 2
       min_ram: 512
       visibility: public
