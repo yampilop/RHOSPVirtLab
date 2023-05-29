@@ -9,14 +9,6 @@ description: >
   HOT Template to create basic needed resources after deployment of RHOSPVirtLab
 
 parameters:
-  domain_name:
-    type: string
-    description: Domain name
-    default: RHOSPVirtLab
-  project_name:
-    type: string
-    description: Project name
-    default: test-project
   user_name:
     type: string
     description: User name
@@ -25,10 +17,6 @@ parameters:
     type: string
     description: User name
     default: redhat
-  default_provider_network_name:
-    type: string
-    description: Default provider network name
-    default: default-provider
   image_rhel_external_id:
     type: string
     description: External ID to reference RHEL image
@@ -54,7 +42,7 @@ resources:
   default_provider_network:
     type: OS::Neutron::ProviderNet
     properties:
-      name: { get_param: default_provider_network_name }
+      name: default-provider
       network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
       physical_network: datacentre
 {% if DefaultLeaf0.networks.External.vlan is defined %}
@@ -67,7 +55,7 @@ resources:
     type: OS::Neutron::Subnet
     depends_on: default_provider_network
     properties:
-      name: { list_join: ['', [{ get_param: default_provider_network_name}, '-subnet']] }
+      name: default-provider-subnet
       network: { get_resource: default_provider_network }
       ip_version: 4
       allocation_pools:
@@ -93,7 +81,7 @@ resources:
   default_provider_network_{{ leaf.name }}:
     type: OS::Neutron::ProviderNet
     properties:
-      name: { list_join: ['', [{ get_param: default_provider_network_name}, '-{{ leaf.name }}']] }
+      name: default-provider-{{ leaf.name }}
       network_type: {{ 'vlan' if (leaf.networks.External.vlan is defined) else 'flat' }}
       physical_network: datacentre-{{ leaf.name }}
 {% if leaf.networks.External.vlan is defined %}
@@ -106,7 +94,7 @@ resources:
     type: OS::Neutron::Subnet
     depends_on: default_provider_network_{{ leaf.name }}
     properties:
-      name: { list_join: ['', [{ get_param: default_provider_network_name}, '-{{ leaf.name }}-subnet']] }
+      name: default-provider-{{ leaf.name }}-subnet
       network: { get_resource: default_provider_network_{{ leaf.name }} }
       ip_version: 4
       allocation_pools:
@@ -248,35 +236,15 @@ resources:
 {% endif %}
 
   # Keystone resources
-  domain:
-    type: OS::Keystone::Domain
-    properties:
-      name: { get_param: domain_name }
-      description: RHOSPVirtLab domain
-      enabled: True
-  project:
-    type: OS::Keystone::Project
-    depends_on: domain
-    properties:
-      name: { get_param: project_name }
-      domain: { get_resource: domain }
-      description: Test project
-      enabled: True
   user:
     type: OS::Keystone::User
-    depends_on: project
     properties:
       name: { get_param: user_name }
-      domain: { get_resource: domain }
       description: Test admin user
       enabled: True
       password: { get_param: user_password }
-      default_project: { get_resource: project }
+      default_project: admin
       roles:
-        - role: admin
-          domain: { get_resource: domain }
-        - role: admin
-          project: { get_resource: project }
         - role: admin
           domain: Default
         - role: admin
@@ -294,10 +262,8 @@ resources:
   # Tenant network resources
   test_network:
     type: OS::Neutron::Net
-    depends_on: project
     properties:
       name: test-network
-      tenant_id: { get_resource: project }
   test_subnet:
     type: OS::Neutron::Subnet
     depends_on: test_network
@@ -308,7 +274,6 @@ resources:
       cidr: 192.168.1.0/24
       enable_dhcp: True
       gateway_ip: 192.168.1.1
-      tenant_id: { get_resource: project }
   test_subnet_gateway:
     type: OS::Neutron::Port
     depends_on: test_subnet
