@@ -37,10 +37,6 @@ parameters:
     type: string
     description: External ID to reference CirrOS image
     default: ''
-  undercloud_public_key_file:
-    type: string
-    description: Undercloud public key file
-    default: '/home/stack/.ssh/id_rsa.pub'
 
   # <param name>:
   #   type: <string | number | json | comma_delimited_list | boolean>
@@ -252,7 +248,7 @@ resources:
     type: OS::Nova::KeyPair
     properties:
       name: undercloud-key
-      public_key: { get_file: { get_param: undercloud_public_key_file } }
+      public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
 
   # <resource ID>:
   #   type: <resource type>
