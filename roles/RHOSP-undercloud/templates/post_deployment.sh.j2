@@ -44,37 +44,6 @@ overcloud_resources
 ### TODO: MIGRATE TO overcloud_resources.yaml ##################################
 ################################################################################
 
-{% for leaf in DCNLeafs %}
-################################################################################
-### {{ leaf.name }} shared #####################################################
-################################################################################
-{% set ext_addr = leaf.networks.External.prefix ~ '.1/24' %}
-source /home/stack/{{ leaf.name }}rc
-
-# DCN {{ leaf.name }} external network
-{% if leaf.networks.External.vlan is defined %}
-openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type vlan --provider-physical-network datacentre-{{ leaf.name }} --provider-segment {{ leaf.networks.External.vlan }} default-provider-{{ leaf.name }}
-{% else %}
-openstack network show default-provider-{{ leaf.name }} &>/dev/null || openstack network create --share --external --provider-network-type flat --provider-physical-network datacentre-{{ leaf.name }} default-provider-{{ leaf.name }}
-{% endif %}
-openstack subnet show default-provider-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --subnet-range {{ ext_addr | ipaddr('network/prefix') }} --gateway {{ ext_addr | ipaddr('address') }} --network default-provider-{{ leaf.name }} --allocation-pool start={{ ext_addr | ipmath(99) }},end={{ ext_addr | ipmath(249) }} default-provider-subnet-{{ leaf.name }}
-
-{% endfor %}
-
-################################################################################
-### RHOSPVirtLab domain specifics ##############################################
-################################################################################
-
-if [ ! -f /home/stack/RHOSPVirtLabrc ]; then
-  cp /home/stack/overcloudrc /home/stack/RHOSPVirtLabrc
-  sed -i 's/OS_USERNAME=admin/OS_USERNAME=test-admin/' /home/stack/RHOSPVirtLabrc
-  sed -i 's/OS_PROJECT_NAME=admin/OS_PROJECT_NAME=test-project/' /home/stack/RHOSPVirtLabrc
-  sed -i 's/DOMAIN_NAME=Default/DOMAIN_NAME=RHOSPVirtLab/' /home/stack/RHOSPVirtLabrc
-  sed -i 's/OS_PASSWORD=.*/OS_PASSWORD=redhat/' /home/stack/RHOSPVirtLabrc
-fi
-
-source /home/stack/RHOSPVirtLabrc
-
 # Keypairs
 openstack keypair show undercloud-key &>/dev/null || openstack keypair create --public-key /home/stack/.ssh/id_rsa.pub undercloud-key
 

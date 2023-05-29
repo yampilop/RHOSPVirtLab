@@ -108,6 +108,35 @@ resources:
       enable_dhcp: True
       gateway_ip: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
 
+{% for leaf in DCNLeafs %}
+  # Provider network resources for DCN {{ leaf.name }}
+  default_provider_network_{{ leaf.name }}:
+    type: OS::Neutron::ProviderNet
+    properties:
+      name: {list_join: ['', [{get_param: default_provider_network_name}, '-{{ leaf.name }}']]}
+      network_type: {{ 'vlan' if (leaf.networks.External.vlan is defined) else 'flat' }}
+      physical_network: datacentre-{{ leaf.name }}
+{% if leaf.networks.External.vlan is defined %}
+      segmentation_id: {{ leaf.networks.External.vlan | default('') }}
+{% endif %}
+      router_external: True
+      port_security_enabled: True
+      shared: True
+  default_provider_subnet_{{ leaf.name }}:
+    type: OS::Neutron::Subnet
+    depends_on: default_provider_network_{{ leaf.name }}
+    properties:
+      name: {list_join: ['', [{get_param: default_provider_network_name}, '-{{ leaf.name }}-subnet']]}
+      network: {get_resource: default_provider_network_{{ leaf.name }}}
+      ip_version: 4
+      allocation_pools:
+        - start: {{ (leaf.networks.External.prefix ~ '.1/24') | ipmath(99) }}
+          end: {{ (leaf.networks.External.prefix ~ '.1/24') | ipmath(249) }}
+      cidr: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
+      enable_dhcp: True
+      gateway_ip: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
+{% endfor %}
+
   # Flavor resources
 {% for size in DefaultFlavorsSize %}
   flavor_m1_{{ size.name }}:
