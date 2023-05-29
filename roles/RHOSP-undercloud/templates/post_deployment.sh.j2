@@ -1,7 +1,5 @@
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
-{% set dpdk_count = (roles_count[DefaultLeaf0.name]["ComputeOvsDpdk"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
-{% set sriov_count = (roles_count[DefaultLeaf0.name]["ComputeSriov"] + roles_count[DefaultLeaf0.name]["ComputeOvsHwOffload"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
 {% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
 {% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 #/bin/bash
@@ -26,11 +24,14 @@ CIRROS_IMAGE_ID=$(openstack image show CirrOS -f value -c id)
 ### Create Overcloud Resources by HOT Template #################################
 ################################################################################
 
+SECGROUPID=$(openstack security group show -f value -c id default)
+
 # If the stack does not exist, create it
 openstack stack show overcloud_resources &>/dev/null || openstack stack create \
 --template /home/stack/templates/overcloud_resources.yaml \
 --parameter "image_rhel_external_id=${RHEL_IMAGE_ID}" \
 --parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
+--parameter "default_security_group_id=${SECGROUPID}" \
 overcloud_resources
 
 # If the stack exists, update it
@@ -38,21 +39,5 @@ openstack stack show overcloud_resources &>/dev/null && openstack stack update \
 --template /home/stack/templates/overcloud_resources.yaml \
 --parameter "image_rhel_external_id=${RHEL_IMAGE_ID}" \
 --parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
+--parameter "default_security_group_id=${SECGROUPID}" \
 overcloud_resources
-
-################################################################################
-### TODO: MIGRATE TO overcloud_resources.yaml ##################################
-################################################################################
-
-{% for leaf in DCNLeafs %}
-# DCN {{ leaf.name }} networking
-openstack network show test-network-{{ leaf.name }} &>/dev/null || openstack network create test-network-{{ leaf.name }}
-openstack subnet show test-subnet-{{ leaf.name }} &>/dev/null || openstack subnet create --network test-network-{{ leaf.name }} --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet-{{ leaf.name }}
-openstack port show test-subnet-{{ leaf.name }}-gw &>/dev/null || openstack port create --network test-network-{{ leaf.name }} --fixed-ip subnet=test-subnet-{{ leaf.name }},ip-address=192.168.1.1 test-subnet-{{ leaf.name }}-gw
-openstack router show test-router-{{ leaf.name }} &>/dev/null || (openstack router create{{ ' --availability-zone-hint' ~ leaf.name if RHOSP_version != 13.0 else '' }} test-router-{{ leaf.name }} && openstack router set --external-gateway default-provider-{{ leaf.name }} test-router-{{ leaf.name }} && openstack router add port test-router-{{ leaf.name }} test-subnet-{{ leaf.name }}-gw)
-{% endfor %}
-
-# Add SSH and ICMP to default security group
-SECGROUP=$(openstack security group list | grep default | grep $(openstack project show test-project -f value -c id) | awk '{print $2}')
-openstack security group rule list $SECGROUP | grep 22:22 || openstack security group rule create $SECGROUP --protocol tcp --dst-port 22:22 --remote-ip 0.0.0.0/0
-openstack security group rule list $SECGROUP | grep icmp || openstack security group rule create $SECGROUP --protocol icmp

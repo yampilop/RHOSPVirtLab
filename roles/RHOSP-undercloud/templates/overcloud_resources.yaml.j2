@@ -25,17 +25,10 @@ parameters:
     type: string
     description: External ID to reference CirrOS image
     default: ''
-
-  # <param name>:
-  #   type: <string | number | json | comma_delimited_list | boolean>
-  #   label: <human-readable name of the parameter>
-  #   description: <description of the parameter>
-  #   default: <default value for parameter>
-  #   hidden: <true | false>
-  #   constraints:
-  #     <parameter constraints>
-  #   immutable: <true | false>
-  #   tags: <list of parameter categories>
+  default_security_group_id:
+    type: string
+    description: External ID to reference the default security group
+    default: ''
 
 resources:
   # Provider network resources
@@ -103,7 +96,17 @@ resources:
       cidr: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
       enable_dhcp: True
       gateway_ip: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
-
+  default_router_{{ leaf.name }}:
+    type: OS::Neutron::Router
+    depends_on: default_provider_network_{{ leaf.name }}
+    properties:
+      name: default-router-{{ leaf.name }}
+{% if RHOSP_version != 13.0 %}
+      availability_zone_hints: ['{{ leaf.name }}']
+{% endif %}
+      external_gateway_info:
+        network: { get_resource: default_provider_network_{{ leaf.name }} }
+        enable_snat: True
 {% endfor %}
   # Flavor resources
 {% for size in DefaultFlavorsSize %}
@@ -291,25 +294,63 @@ resources:
     properties:
       port: { get_resource: test_subnet_gateway }
       router: { get_resource: default_router }
+{% for leaf in DCNLeafs %}
+  test_network_{{ leaf.name }}:
+    type: OS::Neutron::Net
+    properties:
+      name: test-network-{{ leaf.name }}
+  test_subnet_{{ leaf.name }}:
+    type: OS::Neutron::Subnet
+    depends_on: test_network_{{ leaf.name }}
+    properties:
+      name: test-subnet-{{ leaf.name }}
+      network: { get_resource: test_network_{{ leaf.name }} }
+      ip_version: 4
+      cidr: 192.168.1.0/24
+      enable_dhcp: True
+      gateway_ip: 192.168.1.1
+  test_subnet_gateway_{{ leaf.name }}:
+    type: OS::Neutron::Port
+    depends_on: test_subnet_{{ leaf.name }}
+    properties:
+      name: test-subnet-gw-{{ leaf.name }}
+      network: { get_resource: test_network_{{ leaf.name }} }
+      fixed_ips:
+        - subnet: { get_resource: test_subnet_{{ leaf.name }} }
+          ip_address: 192.168.1.1
+  default_router_interface:
+    type: OS::Neutron::RouterInterface
+    depends_on:
+      - default_router_{{ leaf.name }}
+      - test_subnet_gateway_{{ leaf.name }}
+    properties:
+      port: { get_resource: test_subnet_gateway_{{ leaf.name }} }
+      router: { get_resource: default_router_{{ leaf.name }} }
+{% endfor %}
 
-  # <resource ID>:
-  #   type: <resource type>
-  #   properties:
-  #     <property name>: <property value>
-  #   metadata:
-  #     <resource specific metadata>
-  #   depends_on: <resource ID or list of ID>
-  #   update_policy: <update policy>
-  #   deletion_policy: <deletion policy>
-  #   external_id: <external resource ID>
-  #   condition: <condition name or expression or boolean>
+  # Security group resources
+  default_security_group:
+    type: OS::Neutron::SecurityGroup
+    external_id: { get_param: default_security_group_id }
+  default_security_group_ssh_rule:
+    type: OS::Neutron::SecurityGroupRule
+    depends_on: default_security_group
+    properties:
+      description: SSH
+      port_range_max: 22
+      port_range_min: 22
+      protocol: tcp
+      remote_ip_prefix: 0.0.0.0/0
+      security_group: { get_resource: default_security_group }
+  default_security_group_icmp_rule:
+    type: OS::Neutron::SecurityGroupRule
+    depends_on: default_security_group
+    properties:
+      description: ICMP
+      protocol: icmp
+      security_group: { get_resource: default_security_group }
 
 outputs:
   user_id:
     description: test-admin user UUID
     value: { get_resource: user }
-
-  # <parameter name>:
-  #   description: <description>
-  #   value: <parameter value>
-  #   condition: <condition name or expression or boolean>
