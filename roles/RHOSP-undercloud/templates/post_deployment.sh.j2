@@ -44,12 +44,6 @@ overcloud_resources
 ### TODO: MIGRATE TO overcloud_resources.yaml ##################################
 ################################################################################
 
-# Networking
-openstack network show test-network &>/dev/null || openstack network create test-network
-openstack subnet show test-subnet &>/dev/null || openstack subnet create --network test-network --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet
-openstack port show test-subnet-gw &>/dev/null || openstack port create --network test-network --fixed-ip subnet=test-subnet,ip-address=192.168.1.1 test-subnet-gw
-openstack router show test-router &>/dev/null || (openstack router create{% if DCNLeafs | length > 0 and RHOSP_version != 13.0 %} --availability-zone-hint overcloud{% endif %} test-router && openstack router set --external-gateway default-provider test-router && openstack router add port test-router test-subnet-gw)
-
 {% for leaf in DCNLeafs %}
 # DCN {{ leaf.name }} networking
 openstack network show test-network-{{ leaf.name }} &>/dev/null || openstack network create test-network-{{ leaf.name }}

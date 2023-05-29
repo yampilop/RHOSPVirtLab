@@ -50,55 +50,11 @@ parameters:
   #   tags: <list of parameter categories>
 
 resources:
-  # Keystone resources
-  domain:
-    type: OS::Keystone::Domain
-    properties:
-      name: {get_param: domain_name}
-      description: RHOSPVirtLab domain
-      enabled: True
-  project:
-    type: OS::Keystone::Project
-    depends_on: domain
-    properties:
-      name: {get_param: project_name}
-      domain: {get_resource: domain}
-      description: Test project
-      enabled: True
-  user:
-    type: OS::Keystone::User
-    depends_on: project
-    properties:
-      name: {get_param: user_name}
-      domain: {get_resource: domain}
-      description: Test admin user
-      enabled: True
-      password: {get_param: user_password}
-      default_project: {get_resource: project}
-      roles:
-        - role: admin
-          domain: {get_resource: domain}
-        - role: admin
-          project: {get_resource: project}
-        - role: admin
-          domain: Default
-        - role: admin
-          project: admin
-
-  # Keypair resources
-  undercloud_key:
-    type: OS::Nova::KeyPair
-    depends_on: user
-    properties:
-      name: undercloud-key
-      public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
-      user: { get_resource: user }
-
   # Provider network resources
   default_provider_network:
     type: OS::Neutron::ProviderNet
     properties:
-      name: {get_param: default_provider_network_name}
+      name: { get_param: default_provider_network_name }
       network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
       physical_network: datacentre
 {% if DefaultLeaf0.networks.External.vlan is defined %}
@@ -111,8 +67,8 @@ resources:
     type: OS::Neutron::Subnet
     depends_on: default_provider_network
     properties:
-      name: {list_join: ['', [{get_param: default_provider_network_name}, '-subnet']]}
-      network: {get_resource: default_provider_network}
+      name: { list_join: ['', [{ get_param: default_provider_network_name}, '-subnet']] }
+      network: { get_resource: default_provider_network }
       ip_version: 4
       allocation_pools:
         - start: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipmath(99) }}
@@ -126,7 +82,7 @@ resources:
   default_provider_network_{{ leaf.name }}:
     type: OS::Neutron::ProviderNet
     properties:
-      name: {list_join: ['', [{get_param: default_provider_network_name}, '-{{ leaf.name }}']]}
+      name: { list_join: ['', [{ get_param: default_provider_network_name}, '-{{ leaf.name }}']] }
       network_type: {{ 'vlan' if (leaf.networks.External.vlan is defined) else 'flat' }}
       physical_network: datacentre-{{ leaf.name }}
 {% if leaf.networks.External.vlan is defined %}
@@ -139,8 +95,8 @@ resources:
     type: OS::Neutron::Subnet
     depends_on: default_provider_network_{{ leaf.name }}
     properties:
-      name: {list_join: ['', [{get_param: default_provider_network_name}, '-{{ leaf.name }}-subnet']]}
-      network: {get_resource: default_provider_network_{{ leaf.name }}}
+      name: { list_join: ['', [{ get_param: default_provider_network_name}, '-{{ leaf.name }}-subnet']] }
+      network: { get_resource: default_provider_network_{{ leaf.name }} }
       ip_version: 4
       allocation_pools:
         - start: {{ (leaf.networks.External.prefix ~ '.1/24') | ipmath(99) }}
@@ -193,10 +149,10 @@ resources:
   # Image resources
   image_rhel:
     type: OS::Glance::WebImage
-    external_id: {get_param: image_rhel_external_id}
+    external_id: { get_param: image_rhel_external_id }
   image_cirros:
     type: OS::Glance::WebImage
-    external_id: {get_param: image_cirros_external_id}
+    external_id: { get_param: image_cirros_external_id }
 
 {% if DeployOctavia %}
   # Octavia resources
@@ -213,7 +169,7 @@ resources:
       name: standalone-lb
       description: A non-high availability load balancer for testing.
       enabled: True
-      flavor_profile: {get_resource: amphora_single_profile}
+      flavor_profile: { get_resource: amphora_single_profile }
 
 {% endif %}
   # Host aggregate resources
@@ -280,6 +236,99 @@ resources:
       policies: ['soft-anti-affinity']
 {% endif %}
 
+  # Keystone resources
+  domain:
+    type: OS::Keystone::Domain
+    properties:
+      name: { get_param: domain_name }
+      description: RHOSPVirtLab domain
+      enabled: True
+  project:
+    type: OS::Keystone::Project
+    depends_on: domain
+    properties:
+      name: { get_param: project_name }
+      domain: { get_resource: domain }
+      description: Test project
+      enabled: True
+  user:
+    type: OS::Keystone::User
+    depends_on: project
+    properties:
+      name: { get_param: user_name }
+      domain: { get_resource: domain }
+      description: Test admin user
+      enabled: True
+      password: { get_param: user_password }
+      default_project: { get_resource: project }
+      roles:
+        - role: admin
+          domain: { get_resource: domain }
+        - role: admin
+          project: { get_resource: project }
+        - role: admin
+          domain: Default
+        - role: admin
+          project: admin
+
+  # Keypair resources
+  undercloud_key:
+    type: OS::Nova::KeyPair
+    depends_on: user
+    properties:
+      name: undercloud-key
+      public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
+      user: { get_resource: user }
+
+  # Tenant network resources
+  test_network:
+    type: OS::Neutron::Net
+    depends_on: project
+    properties:
+      name: test-network
+      tenant_id: { get_resource: project }
+  test_subnet:
+    type: OS::Neutron::Subnet
+    depends_on: test_network
+    properties:
+      name: test-subnet
+      network: { get_resource: test_network }
+      ip_version: 4
+      cidr: 192.168.1.0/24
+      enable_dhcp: True
+      gateway_ip: 192.168.1.1
+      tenant_id: { get_resource: project }
+  test_subnet_gateway:
+    type: OS::Neutron::Port
+    depends_on: test_subnet
+    properties:
+      name: test-subnet-gw
+      network: { get_resource: test_network }
+      fixed_ips:
+        - subnet: test_subnet
+          ip_address: 192.168.1.1
+      tenant_id: { get_resource: project }
+  test_router:
+    type: OS::Neutron::Router
+    depends_on: test_network
+    properties:
+      name: test-router
+{% if DCNLeafs | length > 0 and RHOSP_version != 13.0 %}
+      availability_zone_hints: ['{{ DefaultLeaf0.name }}']
+{% endif %}
+      external_gateway_info:
+        network: { get_resource: test_network }
+        enable_snat: True
+      tenant_id: { get_resource: project }
+  test_router_interface:
+    type: OS::Neutron::RouterInterface
+    depends_on:
+      - test_router
+      - test_subnet_gateway
+    properties:
+      port: { get_resource: test_subnet_gateway }
+      router: { get_resource: test_router }
+
   # <resource ID>:
   #   type: <resource type>
   #   properties:
@@ -295,7 +344,7 @@ resources:
 outputs:
   user_id:
     description: test-admin user UUID
-    value: {get_resource: user}
+    value: { get_resource: user }
 
   # <parameter name>:
   #   description: <description>
