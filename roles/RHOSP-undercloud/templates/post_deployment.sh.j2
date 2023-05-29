@@ -44,9 +44,6 @@ overcloud_resources
 ### TODO: MIGRATE TO overcloud_resources.yaml ##################################
 ################################################################################
 
-# Keypairs
-openstack keypair show undercloud-key &>/dev/null || openstack keypair create --public-key /home/stack/.ssh/id_rsa.pub undercloud-key
-
 # Server groups
 openstack server group show affinity-group &>/dev/null || openstack server group create --policy affinity affinity-group
 openstack server group show anti-affinity-group &>/dev/null || openstack server group create --policy anti-affinity anti-affinity-group

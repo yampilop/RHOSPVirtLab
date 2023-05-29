@@ -37,6 +37,10 @@ parameters:
     type: string
     description: External ID to reference CirrOS image
     default: ''
+  undercloud_public_key_file:
+    type: string
+    description: Undercloud public key file
+    default: '/home/stack/.ssh/id_rsa.pub'
 
   # <param name>:
   #   type: <string | number | json | comma_delimited_list | boolean>
@@ -135,8 +139,8 @@ resources:
       cidr: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
       enable_dhcp: True
       gateway_ip: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
-{% endfor %}
 
+{% endfor %}
   # Flavor resources
 {% for size in DefaultFlavorsSize %}
   flavor_m1_{{ size.name }}:
@@ -242,6 +246,13 @@ resources:
           - [{% for vm in (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor)) %}{{ vm.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
           - [{% for node in (physical | selectattr("leaf", "equalto", DefaultLeaf0.name)) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
 {% endif %}
+
+  # Keypair resources
+  undercloud-key:
+    type: OS::Nova::KeyPair
+    properties:
+      name: undercloud-key
+      public_key: { get_file: { get_param: undercloud_public_key_file } }
 
   # <resource ID>:
   #   type: <resource type>
