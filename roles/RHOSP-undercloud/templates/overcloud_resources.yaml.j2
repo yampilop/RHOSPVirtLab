@@ -80,6 +80,10 @@ resources:
           domain: {get_resource: domain}
         - role: admin
           project: {get_resource: project}
+        - role: admin
+          domain: Default
+        - role: admin
+          project: admin
 
   # Provider network resources
   default_provider_network:
@@ -244,11 +248,13 @@ resources:
 {% endif %}
 
   # Keypair resources
-  undercloud-key:
+  undercloud_key:
     type: OS::Nova::KeyPair
+    depends_on: user
     properties:
       name: undercloud-key
       public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
+      user_id: { get_resource: user }
 
   # <resource ID>:
   #   type: <resource type>
