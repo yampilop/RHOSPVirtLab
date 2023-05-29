@@ -85,6 +85,15 @@ resources:
         - role: admin
           project: admin
 
+  # Keypair resources
+  undercloud_key:
+    type: OS::Nova::KeyPair
+    depends_on: user
+    properties:
+      name: undercloud-key
+      public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
+      user: { get_resource: user }
+
   # Provider network resources
   default_provider_network:
     type: OS::Neutron::ProviderNet
@@ -247,14 +256,29 @@ resources:
           - [{% for node in (physical | selectattr("leaf", "equalto", DefaultLeaf0.name)) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
 {% endif %}
 
-  # Keypair resources
-  undercloud_key:
-    type: OS::Nova::KeyPair
-    depends_on: user
+  # Server group resources
+  affinity_group:
+    type: OS::Nova::ServerGroup
     properties:
-      name: undercloud-key
-      public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
-      user_id: { get_resource: user }
+      name: affinity-group
+      policies: ['affinity']
+  anti_affinity_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name: anti-affinity-group
+      policies: ['anti-affinity']
+{% if (RHOSP_version != 13.0) %}
+  soft_affinity_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name: soft-affinity-group
+      policies: ['soft-affinity']
+  soft_anti_affinity_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name: soft-anti-affinity-group
+      policies: ['soft-anti-affinity']
+{% endif %}
 
   # <resource ID>:
   #   type: <resource type>

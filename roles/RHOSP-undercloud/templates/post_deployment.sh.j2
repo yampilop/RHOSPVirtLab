@@ -44,12 +44,6 @@ overcloud_resources
 ### TODO: MIGRATE TO overcloud_resources.yaml ##################################
 ################################################################################
 
-# Server groups
-openstack server group show affinity-group &>/dev/null || openstack server group create --policy affinity affinity-group
-openstack server group show anti-affinity-group &>/dev/null || openstack server group create --policy anti-affinity anti-affinity-group
-openstack server group show soft-affinity-group &>/dev/null || openstack server group create --policy soft-affinity soft-affinity-group
-openstack server group show soft-anti-affinity-group &>/dev/null || openstack server group create --policy soft-anti-affinity soft-anti-affinity-group
-
 # Networking
 openstack network show test-network &>/dev/null || openstack network create test-network
 openstack subnet show test-subnet &>/dev/null || openstack subnet create --network test-network --subnet-range 192.168.1.0/24 --gateway 192.168.1.1 --dhcp test-subnet
