@@ -62,9 +62,6 @@ resources:
     depends_on: default_provider_network
     properties:
       name: default-router
-{% if DCNLeafs | length > 0 and RHOSP_version != 13.0 %}
-      availability_zone_hints: ['{{ DefaultLeaf0.name }}']
-{% endif %}
       external_gateway_info:
         network: { get_resource: default_provider_network }
         enable_snat: True
@@ -101,9 +98,6 @@ resources:
     depends_on: default_provider_network_{{ leaf.name }}
     properties:
       name: default-router-{{ leaf.name }}
-{% if RHOSP_version != 13.0 %}
-      availability_zone_hints: ['{{ leaf.name }}']
-{% endif %}
       external_gateway_info:
         network: { get_resource: default_provider_network_{{ leaf.name }} }
         enable_snat: True

@@ -24,18 +24,18 @@ CIRROS_IMAGE_ID=$(openstack image show CirrOS -f value -c id)
 ### Create Overcloud Resources by HOT Template #################################
 ################################################################################
 
-SECGROUPID=$(openstack security group show -f value -c id default)
+SECGROUPID=$(openstack security group list | grep default | grep $(openstack project show admin -f value -c id) | awk '{print $2}')
 
-# If the stack does not exist, create it
-openstack stack show overcloud_resources &>/dev/null || openstack stack create \
+# If the stack exists, update it
+openstack stack show overcloud_resources &>/dev/null && openstack stack update \
 --template /home/stack/templates/overcloud_resources.yaml \
 --parameter "image_rhel_external_id=${RHEL_IMAGE_ID}" \
 --parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
 --parameter "default_security_group_id=${SECGROUPID}" \
 overcloud_resources
 
-# If the stack exists, update it
-openstack stack show overcloud_resources &>/dev/null && openstack stack update \
+# If the stack does not exist, create it
+openstack stack show overcloud_resources &>/dev/null || openstack stack create \
 --template /home/stack/templates/overcloud_resources.yaml \
 --parameter "image_rhel_external_id=${RHEL_IMAGE_ID}" \
 --parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
