@@ -312,7 +312,7 @@ resources:
       fixed_ips:
         - subnet: { get_resource: test_subnet_{{ leaf.name }} }
           ip_address: 192.168.1.1
-  default_router_interface:
+  default_router_interface_{{ leaf.name }}:
     type: OS::Neutron::RouterInterface
     depends_on:
       - default_router_{{ leaf.name }}
