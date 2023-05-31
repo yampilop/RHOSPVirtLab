@@ -22,6 +22,7 @@
     - custom-network-configuration.yaml
     - custom-ceph.yaml
     - vip_data.yaml
+    - overcloud_resources.yaml
 
 - name: TEMPLATES - Prepare the nic-configs templates
   template:

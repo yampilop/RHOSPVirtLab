@@ -1,0 +1,354 @@
+{% set dpdk_count = (roles_count[DefaultLeaf0.name]["ComputeOvsDpdk"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
+{% set sriov_count = (roles_count[DefaultLeaf0.name]["ComputeSriov"] + roles_count[DefaultLeaf0.name]["ComputeOvsHwOffload"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
+{% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
+{% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
+
+heat_template_version: {{ RHOSP_version_supported[RHOSP_version].heat_template_version }}
+
+description: >
+  HOT Template to create basic needed resources after deployment of RHOSPVirtLab
+
+parameters:
+  user_name:
+    type: string
+    description: User name
+    default: test-admin
+  user_password:
+    type: string
+    description: User name
+    default: redhat
+  image_rhel_external_id:
+    type: string
+    description: External ID to reference RHEL image
+    default: ''
+  image_cirros_external_id:
+    type: string
+    description: External ID to reference CirrOS image
+    default: ''
+  default_security_group_id:
+    type: string
+    description: External ID to reference the default security group
+    default: ''
+
+resources:
+  # Provider network resources
+  default_provider_network:
+    type: OS::Neutron::ProviderNet
+    properties:
+      name: default-provider
+      network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
+      physical_network: datacentre
+{% if DefaultLeaf0.networks.External.vlan is defined %}
+      segmentation_id: {{ DefaultLeaf0.networks.External.vlan | default('') }}
+{% endif %}
+      router_external: True
+      port_security_enabled: True
+      shared: True
+  default_provider_subnet:
+    type: OS::Neutron::Subnet
+    depends_on: default_provider_network
+    properties:
+      name: default-provider-subnet
+      network: { get_resource: default_provider_network }
+      ip_version: 4
+      allocation_pools:
+        - start: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipmath(99) }}
+          end: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipmath(249) }}
+      cidr: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
+      enable_dhcp: True
+      gateway_ip: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
+  default_router:
+    type: OS::Neutron::Router
+    depends_on: default_provider_network
+    properties:
+      name: default-router
+      external_gateway_info:
+        network: { get_resource: default_provider_network }
+        enable_snat: True
+
+{% for leaf in DCNLeafs %}
+  # Provider network resources for DCN {{ leaf.name }}
+  default_provider_network_{{ leaf.name }}:
+    type: OS::Neutron::ProviderNet
+    properties:
+      name: default-provider-{{ leaf.name }}
+      network_type: {{ 'vlan' if (leaf.networks.External.vlan is defined) else 'flat' }}
+      physical_network: datacentre-{{ leaf.name }}
+{% if leaf.networks.External.vlan is defined %}
+      segmentation_id: {{ leaf.networks.External.vlan | default('') }}
+{% endif %}
+      router_external: True
+      port_security_enabled: True
+      shared: True
+  default_provider_subnet_{{ leaf.name }}:
+    type: OS::Neutron::Subnet
+    depends_on: default_provider_network_{{ leaf.name }}
+    properties:
+      name: default-provider-{{ leaf.name }}-subnet
+      network: { get_resource: default_provider_network_{{ leaf.name }} }
+      ip_version: 4
+      allocation_pools:
+        - start: {{ (leaf.networks.External.prefix ~ '.1/24') | ipmath(99) }}
+          end: {{ (leaf.networks.External.prefix ~ '.1/24') | ipmath(249) }}
+      cidr: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
+      enable_dhcp: True
+      gateway_ip: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
+  default_router_{{ leaf.name }}:
+    type: OS::Neutron::Router
+    depends_on: default_provider_network_{{ leaf.name }}
+    properties:
+      name: default-router-{{ leaf.name }}
+      external_gateway_info:
+        network: { get_resource: default_provider_network_{{ leaf.name }} }
+        enable_snat: True
+{% endfor %}
+  # Flavor resources
+{% for size in DefaultFlavorsSize %}
+  flavor_m1_{{ size.name }}:
+    type: OS::Nova::Flavor
+    properties:
+      name: m1.{{ size.name }}
+      vcpus: {{ size.vcpus }}
+      ram: {{ size.ram }}
+      disk: {{ size.disk }}
+      ephemeral: {{ size.ephemeral }}
+      swap: {{ size.swap }}
+      is_public: True
+{% if dpdk_count > 0 %}
+  flavor_pinned_{{ size.name }}:
+    type: OS::Nova::Flavor
+    properties:
+      name: pinned.{{ size.name }}
+      vcpus: {{ size.vcpus }}
+      ram: {{ size.ram }}
+      disk: {{ size.disk }}
+      ephemeral: {{ size.ephemeral }}
+      swap: {{ size.swap }}
+      is_public: True
+      extra_specs: { "hw:cpu_policy": "dedicated", "hw:mem_page_size": "large" }
+{% endif %}
+{% if sriov_count > 0 %}
+  flavor_sriov_{{ size.name }}:
+    type: OS::Nova::Flavor
+    properties:
+      name: sriov.{{ size.name }}
+      vcpus: {{ size.vcpus }}
+      ram: {{ size.ram }}
+      disk: {{ size.disk }}
+      ephemeral: {{ size.ephemeral }}
+      swap: {{ size.swap }}
+      is_public: True
+      extra_specs: { "sriov": true, "hw:cpu_policy": "dedicated", "hw:mem_page_size": "large" }
+{% endif %}
+{% endfor %}
+
+  # Image resources
+  image_rhel:
+{% if RHOSP_version != 13.0 %}
+    type: OS::Glance::WebImage
+{% else %}
+    type: OS::Glance::Image
+{% endif %}
+    external_id: { get_param: image_rhel_external_id }
+  image_cirros:
+{% if RHOSP_version != 13.0 %}
+    type: OS::Glance::WebImage
+{% else %}
+    type: OS::Glance::Image
+{% endif %}
+    external_id: { get_param: image_cirros_external_id }
+
+{% if DeployOctavia %}
+  # Octavia resources
+  amphora_single_profile:
+    type: OS::Octavia::FlavorProfile
+    properties:
+      name: amphora-single-profile
+      provider_name: amphora
+      flavor_data: '{"loadbalancer_topology": "SINGLE"}'
+  standalone_lb:
+    type: OS::Octavia::Flavor
+    depends_on: amphora_single_profile
+    properties:
+      name: standalone-lb
+      description: A non-high availability load balancer for testing.
+      enabled: True
+      flavor_profile: { get_resource: amphora_single_profile }
+
+{% endif %}
+  # Host aggregate resources
+{% if dpdk_count > 0 %}
+  aggregate_dpdk_hosts:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: dpdk_hosts
+      hosts: [{% for node in (physical | selectattr("profile", "contains", "Dpdk")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+      metadata: { "dpdk": true }
+{% endif %}
+{% if sriov_count > 0 %}
+  aggregate_sriov_hosts:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: sriov_hosts
+      hosts: [{% for node in (physical | selectattr("profile", "match", "Sriov|HwOffload")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+      metadata: { "sriov": true }
+{% endif %}
+{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
+{% for leaf in DCNLeafs %}
+{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
+  aggregate_{{ leaf.name }}:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: {{ leaf.name }}
+      availability_zone: {{ leaf.name }}
+{% endif %}
+{% endfor %}
+{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
+  aggregate_{{ DefaultLeaf0.name }}:
+    type: OS::Nova::HostAggregate
+    properties:
+      name: {{ DefaultLeaf0.name }}
+      availability_zone: {{ DefaultLeaf0.name }}
+{% endif %}
+{% endif %}
+
+  # Server group resources
+  affinity_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name: affinity-group
+      policies: ['affinity']
+  anti_affinity_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name: anti-affinity-group
+      policies: ['anti-affinity']
+{% if (RHOSP_version != 13.0) %}
+  soft_affinity_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name: soft-affinity-group
+      policies: ['soft-affinity']
+  soft_anti_affinity_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name: soft-anti-affinity-group
+      policies: ['soft-anti-affinity']
+{% endif %}
+
+  # Keystone resources
+  user:
+    type: OS::Keystone::User
+    properties:
+      name: { get_param: user_name }
+      description: Test admin user
+      enabled: True
+      password: { get_param: user_password }
+      default_project: admin
+      roles:
+        - role: admin
+          domain: Default
+        - role: admin
+          project: admin
+
+  # Keypair resources
+  undercloud_key:
+    type: OS::Nova::KeyPair
+    depends_on: user
+    properties:
+      name: undercloud-key
+      public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
+      user: { get_resource: user }
+
+  # Tenant network resources
+  test_network:
+    type: OS::Neutron::Net
+    properties:
+      name: test-network
+  test_subnet:
+    type: OS::Neutron::Subnet
+    depends_on: test_network
+    properties:
+      name: test-subnet
+      network: { get_resource: test_network }
+      ip_version: 4
+      cidr: 192.168.1.0/24
+      enable_dhcp: True
+      gateway_ip: 192.168.1.1
+  test_subnet_gateway:
+    type: OS::Neutron::Port
+    depends_on: test_subnet
+    properties:
+      name: test-subnet-gw
+      network: { get_resource: test_network }
+      fixed_ips:
+        - subnet: { get_resource: test_subnet }
+          ip_address: 192.168.1.1
+  default_router_interface:
+    type: OS::Neutron::RouterInterface
+    depends_on:
+      - default_router
+      - test_subnet_gateway
+    properties:
+      port: { get_resource: test_subnet_gateway }
+      router: { get_resource: default_router }
+{% for leaf in DCNLeafs %}
+  test_network_{{ leaf.name }}:
+    type: OS::Neutron::Net
+    properties:
+      name: test-network-{{ leaf.name }}
+  test_subnet_{{ leaf.name }}:
+    type: OS::Neutron::Subnet
+    depends_on: test_network_{{ leaf.name }}
+    properties:
+      name: test-subnet-{{ leaf.name }}
+      network: { get_resource: test_network_{{ leaf.name }} }
+      ip_version: 4
+      cidr: 192.168.1.0/24
+      enable_dhcp: True
+      gateway_ip: 192.168.1.1
+  test_subnet_gateway_{{ leaf.name }}:
+    type: OS::Neutron::Port
+    depends_on: test_subnet_{{ leaf.name }}
+    properties:
+      name: test-subnet-gw-{{ leaf.name }}
+      network: { get_resource: test_network_{{ leaf.name }} }
+      fixed_ips:
+        - subnet: { get_resource: test_subnet_{{ leaf.name }} }
+          ip_address: 192.168.1.1
+  default_router_interface_{{ leaf.name }}:
+    type: OS::Neutron::RouterInterface
+    depends_on:
+      - default_router_{{ leaf.name }}
+      - test_subnet_gateway_{{ leaf.name }}
+    properties:
+      port: { get_resource: test_subnet_gateway_{{ leaf.name }} }
+      router: { get_resource: default_router_{{ leaf.name }} }
+{% endfor %}
+
+  # Security group resources
+  default_security_group:
+    type: OS::Neutron::SecurityGroup
+    external_id: { get_param: default_security_group_id }
+  default_security_group_ssh_rule:
+    type: OS::Neutron::SecurityGroupRule
+    depends_on: default_security_group
+    properties:
+      description: SSH
+      port_range_max: 22
+      port_range_min: 22
+      protocol: tcp
+      remote_ip_prefix: 0.0.0.0/0
+      security_group: { get_resource: default_security_group }
+  default_security_group_icmp_rule:
+    type: OS::Neutron::SecurityGroupRule
+    depends_on: default_security_group
+    properties:
+      description: ICMP
+      protocol: icmp
+      security_group: { get_resource: default_security_group }
+
+outputs:
+  user_id:
+    description: test-admin user UUID
+    value: { get_resource: user }

@@ -40,12 +40,10 @@ parameter_defaults:
   NovaCrossAZAttach: false
   ControllerExtraConfig:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
-    horizon::keystone_multidomain_support: true
     nova::availability_zone::default_schedule_zone: {{ leaf.name }}
 {% else %}
   ControllerExtraConfig:
     nova::scheduler::filter::scheduler_host_subset_size: '999'
-    horizon::keystone_multidomain_support: true
 {% endif %}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% else %}

@@ -88,7 +88,7 @@
   loop:
     - url: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
       name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
-    - url: "https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img"
+    - url: "{{ CirrOSDownloadLink }}"
       name: "cirros.qcow2"
   retries: 3
   delay: 10

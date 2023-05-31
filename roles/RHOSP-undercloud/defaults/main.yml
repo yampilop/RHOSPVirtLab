@@ -216,6 +216,51 @@ ControllersFencing: True
 # DCN leafs
 DCNLeafs: []
 
+# Default flavors size
+DefaultFlavorsSize:
+  - name: nano
+    vcpus: 1
+    ram: 128
+    disk: 2
+    ephemeral: 0
+    swap: 0
+  - name: micro
+    vcpus: 1
+    ram: 256
+    disk: 5
+    ephemeral: 0
+    swap: 0
+  - name: small
+    vcpus: 1
+    ram: 512
+    disk: 10
+    ephemeral: 0
+    swap: 0
+  - name: medium
+    vcpus: 2
+    ram: 1024
+    disk: 10
+    ephemeral: 0
+    swap: 0
+  - name: large
+    vcpus: 2
+    ram: 2048
+    disk: 20
+    ephemeral:
+    swap: 0
+  - name: xlarge
+    vcpus: 4
+    ram: 4096
+    disk: 20
+    ephemeral: 0
+    swap: 0
+  - name: 2xlarge
+    vcpus: 8
+    ram: 8192
+    disk: 50
+    ephemeral: 0
+    swap: 0
+
 # vms is a list to define the virtual machines to be created. The role defines a minimum of one undercloud, one controller node and one compute node
 vms:
   - name: undercloud

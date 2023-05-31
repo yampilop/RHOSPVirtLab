@@ -387,6 +387,7 @@ RHOSP_version_supported:
       ceph_node_exporter_tag: v4.6
       ceph_prometheus_tag: latest
       namespace: registry.redhat.io/rhosp-rhel9
+    heat_template_version: wallaby
   16.2:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
@@ -429,6 +430,7 @@ RHOSP_version_supported:
       ceph_node_exporter_tag: v4.6
       ceph_prometheus_tag: v4.6
       namespace: registry.redhat.io/rhosp-rhel8
+    heat_template_version: rocky
   16.1:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.2.0/BaseOS/x86_64/images/rhel-guest-image-8.2-290.x86_64.qcow2'
@@ -476,6 +478,7 @@ RHOSP_version_supported:
       ceph_node_exporter_tag: v4.1
       ceph_prometheus_tag: 4.1
       namespace: registry.redhat.io/rhosp-rhel8
+    heat_template_version: rocky
   13.0:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-7/7.9/Server/x86_64/images/rhel-guest-image-7.9-30.x86_64.qcow2'
@@ -515,3 +518,6 @@ RHOSP_version_supported:
       ceph_node_exporter_tag: ''
       ceph_prometheus_tag: ''
       namespace: ''
+    heat_template_version: queens
+
+CirrOSDownloadLink: http://download.cirros-cloud.net/0.6.1/cirros-0.6.1-x86_64-disk.img
