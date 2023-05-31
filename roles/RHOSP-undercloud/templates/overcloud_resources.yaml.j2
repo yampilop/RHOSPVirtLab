@@ -195,7 +195,7 @@ resources:
 {% endif %}
 {% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
 {% for leaf in DCNLeafs %}
-{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | length + physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph") | length ) > 0 %}
+{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
   aggregate_{{ leaf.name }}:
     type: OS::Nova::HostAggregate
     properties:
@@ -207,7 +207,7 @@ resources:
           - [{% for node in (physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
 {% endif %}
 {% endfor %}
-{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | length ) > 0 %}
+{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
   aggregate_{{ DefaultLeaf0.name }}:
     type: OS::Nova::HostAggregate
     properties:
