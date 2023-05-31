@@ -201,16 +201,6 @@ resources:
     properties:
       name: {{ leaf.name }}
       availability_zone: {{ leaf.name }}
-      hosts:
-{% for ocrole in overcloud_roles if ('compute' in ocrole.profile or 'ceph' in ocrole.profile) %}
-{% for vm in (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "equalto", ocrole.profile)) %}
-        - "{{ DefaultLeaf0.name }}-{{ vm.profile }}{{ leaf.name }}-{{ loop.index0 }}.localdomain"
-{% endfor %}
-{% set vmcount = (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "equalto", ocrole.profile) | list | length) %}
-{% for node in (physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "equalto", ocrole.profile)) %}
-        - "{{ DefaultLeaf0.name }}-{{ node.profile }}{{ leaf.name }}-{{ vmcount + loop.index0 }}.localdomain"
-{% endfor %}
-{% endfor %}
 {% endif %}
 {% endfor %}
 {% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
@@ -219,15 +209,6 @@ resources:
     properties:
       name: {{ DefaultLeaf0.name }}
       availability_zone: {{ DefaultLeaf0.name }}
-      hosts:
-{% for ocrole in overcloud_roles if ('compute' in ocrole.profile or 'ceph' in ocrole.profile) %}
-{% for vm in (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "equalto", ocrole.profile)) %}
-        - "{{ DefaultLeaf0.name }}-{{ vm.profile }}-{{ loop.index0 }}.localdomain"
-{% endfor %}
-{% set vmcount = (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "equalto", ocrole.profile) | list | length) %}
-{% for node in (physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "equalto", ocrole.profile)) %}
-        - "{{ DefaultLeaf0.name }}-{{ node.profile }}-{{ vmcount + loop.index0 }}.localdomain"
-{% endfor %}
 {% endfor %}
 {% endif %}
 {% endif %}

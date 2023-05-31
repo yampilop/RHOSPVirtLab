@@ -4,6 +4,12 @@
 {% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 #/bin/bash
 
+{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
+# Get servers list
+source ~/stackrc
+SERVERS=$(openstack server list -f value -c Name)
+{% endif %}
+
 source /home/stack/overcloudrc
 
 ################################################################################
@@ -41,3 +47,25 @@ openstack stack show overcloud_resources &>/dev/null || openstack stack create \
 --parameter "image_cirros_external_id=${CIRROS_IMAGE_ID}" \
 --parameter "default_security_group_id=${SECGROUPID}" \
 overcloud_resources
+
+{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
+# Manual host addition for host aggregates needed for RHOSP 13.0 DCN
+{% for leaf in DCNLeafs %}
+{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
+openstack aggregate show {{ leaf.name }} &>/dev/null || openstack aggregate create --zone {{ leaf.name }} {{ leaf.name }}
+for HOST in $SERVERS; do
+  if [[ $HOST == *"{{ leaf.name }}"* ]]; then
+    openstack aggregate add host {{ leaf.name }} $HOST.localdomain
+  fi
+done
+{% endif %}
+{% endfor %}
+{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
+openstack aggregate show {{ DefaultLeaf0.name }} &>/dev/null || openstack aggregate create --zone {{ DefaultLeaf0.name }} {{ DefaultLeaf0.name }}
+for HOST in $SERVERS; do
+  if [[ $HOST == *"{{ DefaultLeaf0.name }}"* ]]; then
+    openstack aggregate add host {{ DefaultLeaf0.name }} $HOST.localdomain
+  fi
+done
+{% endif %}
+{% endif %}
