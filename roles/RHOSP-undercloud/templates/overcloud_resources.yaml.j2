@@ -144,10 +144,18 @@ resources:
 
   # Image resources
   image_rhel:
+{% if RHOSP_version != 13.0 %}
     type: OS::Glance::WebImage
+{% else %}
+    type: OS::Glance::Image
+{% endif %}
     external_id: { get_param: image_rhel_external_id }
   image_cirros:
+{% if RHOSP_version != 13.0 %}
     type: OS::Glance::WebImage
+{% else %}
+    type: OS::Glance::Image
+{% endif %}
     external_id: { get_param: image_cirros_external_id }
 
 {% if DeployOctavia %}
@@ -187,6 +195,7 @@ resources:
 {% endif %}
 {% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
 {% for leaf in DCNLeafs %}
+{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | length + physical | selectattr("leaf", "equalto", leaf.name)) | selectattr("profile", "match", "compute|ceph") | length ) > 0 %}
   aggregate_{{ leaf.name }}:
     type: OS::Nova::HostAggregate
     properties:
@@ -194,9 +203,11 @@ resources:
       availability_zone: {{ leaf.name }}
       hosts:
         list_concat:
-          - [{% for vm in (vms | selectattr("hypervisor", "equalto", leaf.hypervisor)) %}{{ vm.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
-          - [{% for node in (physical | selectattr("leaf", "equalto", leaf.name)) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+          - [{% for vm in (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph")) %}{{ vm.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+          - [{% for node in (physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+{% endif %}
 {% endfor %}
+{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name)) | selectattr("profile", "match", "compute|ceph") | length ) > 0 %}
   aggregate_{{ DefaultLeaf0.name }}:
     type: OS::Nova::HostAggregate
     properties:
@@ -204,8 +215,9 @@ resources:
       availability_zone: {{ DefaultLeaf0.name }}
       hosts:
         list_concat:
-          - [{% for vm in (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor)) %}{{ vm.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
-          - [{% for node in (physical | selectattr("leaf", "equalto", DefaultLeaf0.name)) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+          - [{% for vm in (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph")) %}{{ vm.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+          - [{% for node in (physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+{% endif %}
 {% endif %}
 
   # Server group resources
