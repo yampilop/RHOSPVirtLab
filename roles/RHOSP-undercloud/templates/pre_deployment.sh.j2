@@ -7,7 +7,7 @@ source /home/stack/stackrc
 
 # Auto source and completion
 if [ ! -f /usr/share/bash-completion/completions/openstack ]; then
-  openstack complete 2>/dev/null | sudo tee /usr/share/bash-completion/completions/openstack
+  openstack complete 2>/dev/null | grep -v -E 'DEBUG osc_lib|INFO osc_lib' | sudo tee /usr/share/bash-completion/completions/openstack
 fi
 
 if ! grep -Fxq "source /home/stack/stackrc" /home/stack/.bashrc; then
