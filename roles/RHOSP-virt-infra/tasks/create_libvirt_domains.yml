@@ -8,6 +8,7 @@
   community.libvirt.virt:
     command: define
     xml: "{{ lookup('template', 'domain.xml.j2') }}"
+    autostart: yes
   loop: "{{ vms }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
