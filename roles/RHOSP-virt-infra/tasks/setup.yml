@@ -97,3 +97,22 @@
     state: started
     enabled: yes
   become: yes
+
+- name: SETUP - Check the type of CPU technology
+  shell: "ls /sys/module/ | grep kvm_ | awk '{print $1; system(\"cat /sys/module/\"$1\"/parameters/nested\")}'"
+  register: nested_output
+  become: yes
+
+- name: SETUP - Enable nested virtualization if needed
+  lineinfile:
+    path: /etc/modprobe.d/kvm.conf
+    regexp: "^options {{ nested_output.stdout_lines[0] }}"
+    insertafter: "^#options {{ nested_output.stdout_lines[0] }}"
+    line: "options {{ nested_output.stdout_lines[0] }} nested=1"
+  when: (nested_output.stdout_lines[1] == '0') or (nested_output.stdout_lines[1] == 'N')
+  become: yes
+
+- name: SETUP - Notify to restart the machine if nested virtualization is disabled
+  fail:
+    msg: "Please restart the machine '{{ inventory_hostname }}' to enable nested virtualization and then run the playbook again."
+  when: (nested_output.stdout_lines[1] == '0') or (nested_output.stdout_lines[1] == 'N')
