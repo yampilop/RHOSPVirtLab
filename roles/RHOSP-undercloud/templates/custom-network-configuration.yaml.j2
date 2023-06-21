@@ -110,7 +110,7 @@ parameter_defaults:
 {% for dcnleaf in DCNLeafs %}
 {% for ocrole in overcloud_roles if ocrole.name != 'Controller' %}
 {% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-    {{ ocrole.name }}{{ dcnleaf.name }}ResolveNetwork: {{ 'storage_' ~ dcnleaf.name if 'Ceph' in ocrole.name else 'internal_api_' ~ dcnleaf.name }}
+    {{ ocrole.name }}{{ dcnleaf.name }}HostnameResolveNetwork: {{ 'storage_' ~ dcnleaf.name if 'Ceph' in ocrole.name else 'internal_api_' ~ dcnleaf.name }}
 {% endif %}
 {% endfor %}
 {% endfor %}
