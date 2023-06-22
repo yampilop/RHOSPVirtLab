@@ -96,6 +96,7 @@ parameter_defaults:
     nova::compute::libvirt::vncserver_listen: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
     nova::compute::vncserver_proxyclient_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
     neutron::agents::ml2::ovs::local_ip: "%{hiera('tenant_{{ dcnleaf.name }}')}"
+    ovn::controller::ovn_encap_ip: "%{hiera('tenant_{{ dcnleaf.name }}')}"
     cold_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
     live_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
     nova::migration::libvirt::live_migration_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"

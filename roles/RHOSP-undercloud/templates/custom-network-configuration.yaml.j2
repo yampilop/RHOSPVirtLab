@@ -84,6 +84,7 @@ parameter_defaults:
   {{ ocrole.name }}{{ dcnleaf.name }}ControlPlaneSubnet: {{ dcnleaf.subnet.name }}
   {{ ocrole.name }}{{ dcnleaf.name }}Parameters:
     NeutronBridgeMappings: "datacentre-{{ dcnleaf.name }}:br-ex"
+    NeutronTenantNetwork: "tenant_{{ dcnleaf.name }}"
 {% endif %}
 {% endfor %}
 {% endfor %}
