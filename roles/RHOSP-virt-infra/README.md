@@ -13,8 +13,10 @@ Requires rhel-system-roles package installed.
 Role Variables
 --------------
 
-RHOSP_version: **17.0**|16.2|16.1|13.0
+RHOSP_version: **17.1**|17.0|16.2|16.1|13.0
   This variable sets the version of RHOSP to install.
+
+RHOSP_release: **latest**|*valid_number*
 
 cleanup: **False**|True
   This variable sets if the resources (domains, networks, storage) should be cleaned before the creation process.

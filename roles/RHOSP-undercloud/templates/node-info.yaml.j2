@@ -1,4 +1,4 @@
-{% if RHOSP_version != 17.0 %}
+{% if RHOSP_version < 17.0 %}
 
 parameter_defaults:
 {% for ocrole in overcloud_roles %}

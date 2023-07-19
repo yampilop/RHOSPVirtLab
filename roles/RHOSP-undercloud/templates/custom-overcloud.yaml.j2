@@ -71,7 +71,7 @@ parameter_defaults:
   RootStackName: {{ leaf.name }}
   ManageNetworks: false
 {% endif %}
-{% if RHOSP_version != 17.0 %}
+{% if RHOSP_version < 17.0 %}
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
 {% for ocrole in overcloud_roles %}

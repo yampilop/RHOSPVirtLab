@@ -43,6 +43,12 @@ RHEL_version_supported:
     ovmf_path: '/usr/share/edk2/ovmf/'
 
 RHOSP_version_supported:
+  17.1:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-9/9.2.0/BaseOS/x86_64/images/rhel-guest-image-9.2-20230414.17.x86_64.qcow2'
+      name: 'rhel-9.2-x86_64-kvm.qcow2'
+      main_partition: '/dev/sda4'
+    rhel_release: '9.2'
   17.0:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-9/9.0.0/BaseOS/x86_64/images/rhel-guest-image-9.0-20220420.0.x86_64.qcow2'

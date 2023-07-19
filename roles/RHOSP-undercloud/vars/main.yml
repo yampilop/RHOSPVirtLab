@@ -77,17 +77,17 @@ overcloud_roles:
 deployment_environment:
   - file: overcloud-baremetal-deployed.yaml
     absolute_path: False
-    version: [ 17.0 ]
+    version: [ 17.1, 17.0 ]
     DCN: False
     Leafs: All
   - file: overcloud-networks-deployed.yaml
     absolute_path: False
-    version: [ 17.0 ]
+    version: [ 17.1, 17.0 ]
     DCN: False
     Leafs: All
   - file: overcloud-vip-deployed.yaml
     absolute_path: False
-    version: [ 17.0 ]
+    version: [ 17.1, 17.0 ]
     DCN: False
     Leafs: All
   - file: node-info.yaml
@@ -97,12 +97,12 @@ deployment_environment:
     Leafs: All
   - file: /home/stack/containers-prepare-parameter.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1 ]
+    version: [ 17.1, 17.0, 16.2, 16.1 ]
     DCN: False
     Leafs: All
   - file: overcloud-images.yaml
     absolute_path: False
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
   - file: /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml
@@ -112,12 +112,12 @@ deployment_environment:
     Leafs: All
   - file: /home/stack/templates/overcloud-export.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1 ]
+    version: [ 17.1, 17.0, 16.2, 16.1 ]
     DCN: True
     Leafs: NotDefault
   - file: /usr/share/openstack-tripleo-heat-templates/environments/enable-swap.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
   - file: /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml
@@ -144,59 +144,59 @@ deployment_environment:
     Roles: [ 'ComputeOvsDpdk', 'ComputeOvsDpdkSriov' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dpdk.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1 ]
+    version: [ 17.1, 17.0, 16.2, 16.1 ]
     DCN: False
     Leafs: All
     Roles: [ 'ComputeOvsDpdk', 'ComputeOvsDpdkSriov' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
   - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
     Roles: [ 'ComputeOvsDpdkSriov', 'ComputeSriov', 'ComputeOvsHwOffload' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: Default
     Variable: LowMemUsage
   - file: /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
     Variable: DeployOctavia
   - file: custom-network-configuration.yaml
     absolute_path: False
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
   - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml
     absolute_path: True
-    version: [ 17.0 ]
+    version: [ 17.1, 17.0 ]
     DCN: False
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml
     absolute_path: True
-    version: [ 17.0 ]
+    version: [ 17.1, 17.0 ]
     DCN: False
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml
     absolute_path: True
-    version: [ 17.0 ]
+    version: [ 17.1, 17.0 ]
     DCN: False
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: deployed-ceph.yaml
     absolute_path: False
-    version: [ 17.0 ]
+    version: [ 17.1, 17.0 ]
     DCN: False
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
@@ -232,7 +232,7 @@ deployment_environment:
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml
     absolute_path: True
-    version: [ 17.0, 16.2 ]
+    version: [ 17.1, 17.0, 16.2 ]
     DCN: False
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
@@ -244,36 +244,36 @@ deployment_environment:
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: custom-ceph.yaml
     absolute_path: False
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/rhsm.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
     Variable: RegisterNodes
   - file: custom-overcloud.yaml
     absolute_path: False
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
   - file: dcn_ceph_external.yaml
     absolute_path: False
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: True
     Leafs: Default
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/compute-instanceha.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
     Roles: [ 'ComputeInstanceHA' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/disable-telemetry.yaml
     absolute_path: True
-    version: [ 17.0, 16.2, 16.1, 13.0 ]
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: Default
 
@@ -350,11 +350,49 @@ roles_networks:
     - StorageMgmt
 
 RHOSP_version_supported:
+  17.1:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-9/9.2.0/BaseOS/x86_64/images/rhel-guest-image-9.2-20230414.17.x86_64.qcow2'
+      name: 'rhel-9.2-x86_64-kvm.qcow2'
+      main_partition: '/dev/sda4'
+    rhel_release: '9.2'
+    undercloud_repos:
+      - rhel-9.2-for-x86_64-baseos-eus-rpms
+      - rhel-9.2-for-x86_64-appstream-eus-rpms
+      - rhel-9.2-for-x86_64-highavailability-eus-rpms
+      - openstack-beta-for-rhel-9-x86_64-rpms # TODO: Replace when 17.1 is GA
+      - fast-datapath-for-rhel-9-x86_64-rpms
+    nodes_repos:
+      - rhel-9.2-for-x86_64-baseos-eus-rpms
+      - rhel-9.2-for-x86_64-appstream-eus-rpms
+      - rhel-9.2-for-x86_64-highavailability-eus-rpms
+      - openstack-beta-for-rhel-9-x86_64-rpms # TODO: Replace when 17.1 is GA
+      - fast-datapath-for-rhel-9-x86_64-rpms
+    modules: []
+    packages:
+      - python3-argcomplete
+      - python3-tripleoclient
+      - rhosp-director-images-ipa-x86_64
+      - rhosp-director-images-x86_64
+      - rhosp-director-images-uefi-x86_64
+    images_directories:
+      - '/usr/share/rhosp-director-images/ironic-python-agent-latest-17.1-x86_64.tar'
+      - '/usr/share/rhosp-director-images/overcloud-full-latest-17.1-x86_64.tar'
+      - '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.1-x86_64.tar'
+    container_image_prepare:
+      ceph_alertmanager_tag: latest
+      ceph_grafana_image: rhceph-5-dashboard-rhel8
+      ceph_grafana_tag: latest
+      ceph_image: rhceph-5-rhel8
+      ceph_node_exporter_tag: v4.6
+      ceph_prometheus_tag: latest
+      namespace: registry.redhat.io/rhosp-rhel9
+    heat_template_version: wallaby
   17.0:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-9/9.0.0/BaseOS/x86_64/images/rhel-guest-image-9.0-20220420.0.x86_64.qcow2'
       name: 'rhel-9.0-x86_64-kvm.qcow2'
-      main_partition: '/dev/sda3'
+      main_partition: '/dev/sda4'
     rhel_release: '9.0'
     undercloud_repos:
       - rhel-9-for-x86_64-baseos-eus-rpms
@@ -520,4 +558,4 @@ RHOSP_version_supported:
       namespace: ''
     heat_template_version: queens
 
-CirrOSDownloadLink: http://download.cirros-cloud.net/0.6.1/cirros-0.6.1-x86_64-disk.img
+CirrOSDownloadLink: http://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img
