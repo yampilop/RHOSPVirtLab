@@ -233,7 +233,7 @@ deployment_environment:
   - file: /usr/share/openstack-tripleo-heat-templates/environments/dcn-storage.yaml
     absolute_path: True
     version: [ 17.1, 17.0, 16.2 ]
-    DCN: False
+    DCN: True
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: "/home/stack/templates/overcloud_ceph_external.yaml"
@@ -381,12 +381,12 @@ RHOSP_version_supported:
       - '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.1-x86_64.tar'
     container_image_prepare:
       ceph_alertmanager_tag: latest
-      ceph_grafana_image: rhceph-5-dashboard-rhel8
+      ceph_grafana_image: rhceph-6-dashboard-rhel9
       ceph_grafana_tag: latest
-      ceph_image: rhceph-5-rhel8
+      ceph_image: rhceph-6-rhel9
       ceph_node_exporter_tag: v4.6
       ceph_prometheus_tag: latest
-      namespace: registry.redhat.io/rhosp-rhel9
+      namespace: registry.redhat.io/rhosp-beta # TODO: Replace when 17.1 is GA
     heat_template_version: wallaby
   17.0:
     rhel_image:
