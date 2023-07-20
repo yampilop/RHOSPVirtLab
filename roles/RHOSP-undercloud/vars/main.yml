@@ -357,15 +357,15 @@ RHOSP_version_supported:
       main_partition: '/dev/sda4'
     rhel_release: '9.2'
     undercloud_repos:
-      - rhel-9.2-for-x86_64-baseos-eus-rpms
-      - rhel-9.2-for-x86_64-appstream-eus-rpms
-      - rhel-9.2-for-x86_64-highavailability-eus-rpms
+      - rhel-9-for-x86_64-baseos-eus-rpms
+      - rhel-9-for-x86_64-appstream-eus-rpms
+      - rhel-9-for-x86_64-highavailability-eus-rpms
       - openstack-beta-for-rhel-9-x86_64-rpms # TODO: Replace when 17.1 is GA
       - fast-datapath-for-rhel-9-x86_64-rpms
     nodes_repos:
-      - rhel-9.2-for-x86_64-baseos-eus-rpms
-      - rhel-9.2-for-x86_64-appstream-eus-rpms
-      - rhel-9.2-for-x86_64-highavailability-eus-rpms
+      - rhel-9-for-x86_64-baseos-eus-rpms
+      - rhel-9-for-x86_64-appstream-eus-rpms
+      - rhel-9-for-x86_64-highavailability-eus-rpms
       - openstack-beta-for-rhel-9-x86_64-rpms # TODO: Replace when 17.1 is GA
       - fast-datapath-for-rhel-9-x86_64-rpms
     modules: []
