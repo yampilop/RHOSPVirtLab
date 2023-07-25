@@ -14,6 +14,9 @@ source /home/stack/stackrc
 openstack overcloud ceph deploy -y \
 {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
 -o {{ templates_dir }}/deployed-ceph.yaml \
+{% if hci_count > 0 %}
+--config {{ templates_dir }}/initial-ceph.conf \
+{% endif %}
 --roles-data {{ templates_dir }}/roles_data.yaml \
 --container-image-prepare /home/stack/containers-prepare-parameter.yaml
 {% endif %}
