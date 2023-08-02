@@ -92,6 +92,7 @@ sudo openstack tripleo container image prepare \
 {% if RHOSP_version >= 17.0 %}
 # Provision nodes
 openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
+metalsmith list
 {% endif %}
 
 {% if RHOSP_version != 13.0 %}
