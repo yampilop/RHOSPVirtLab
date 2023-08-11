@@ -59,10 +59,10 @@ Repeat this in all your hypervisors when you use a DCN or multiple hypervisors c
 
 ### Local user configuration
 
-The user from which you will execute the lab needs to have username **admin** and `sudo` **permissions enabled with no password**. To achieve that you need to create a file `/etc/sudoers.d/admin` with the following content:
+The user from which you will execute the lab needs to have username **admin** and `sudo` **permissions enabled with no password**. To achieve that you need to create a file `/etc/sudoers.d/admin` with the following command:
 
 ```
-echo "admin ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/admin
+sudo echo "admin ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/admin
 ```
 
 Repeat that **admin** user setup in all your hypervisors when you use a DCN or multiple hypervisors configuration.
