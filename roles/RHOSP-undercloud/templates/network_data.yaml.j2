@@ -104,7 +104,7 @@
   gateway_ip: '{{ leaf.networks.Management.prefix }}.1'
   mtu: 1500
 {% endfor %}
-{% elif RHOSP_version != 17.0 %}
+{% elif RHOSP_version < 17.0 %}
 # RHOSP 16.X version
 - name: Storage
   vip: true
@@ -230,7 +230,7 @@
 {% endfor %}
 {% endif %}
 {% else %}
-# RHOSP 17.0 version
+# RHOSP 17.x version
 - name: Storage
   name_lower: storage
   vip: true

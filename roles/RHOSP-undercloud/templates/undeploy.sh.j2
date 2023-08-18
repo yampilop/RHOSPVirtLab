@@ -4,7 +4,7 @@ source /home/stack/stackrc
 
 [ ! -f /home/stack/clean-steps.txt ] && echo '[{"interface": "deploy", "step": "erase_devices_metadata"}]' > /home/stack/clean-steps.txt
 
-{% if RHOSP_version == 17.0 %}
+{% if RHOSP_version >= 17.0 %}
 # Delete the overcloud
 metalsmith list
 {% for leaf in DCNLeafs %}
@@ -35,7 +35,7 @@ openstack baremetal node list
 timeout 600 bash -c -- 'while (openstack baremetal node list -f value -c Name -c "Provisioning State" | grep -Ev "failed|manageable"); do echo "Waiting for cleanning..."; sleep 5; done'
 openstack baremetal node list
 
-{% if RHOSP_version == 17.0 %}
+{% if RHOSP_version >= 17.0 %}
 # Delete the ports (to avoid future duplicates)
 openstack port list -f value -c ID -c Status | grep DOWN | awk '{system("openstack port delete "$1)}'
 openstack port list

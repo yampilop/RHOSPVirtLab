@@ -22,7 +22,7 @@ parameter_defaults:
       namespace: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.namespace }}
       neutron_driver: ovn
       rhel_containers: false
-      tag: '{{ RHOSP_version }}'
+      tag: '{{ RHOSP_version }}{{ '.' ~ RHOSP_release if RHOSP_release != 'latest' else '' }}'
     tag_from_label: '{version}-{release}'
   ContainerImageRegistryLogin: false
   ContainerImageRegistryCredentials:

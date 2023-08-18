@@ -20,7 +20,7 @@ fi
 
 # Prepare the overcloud
 openstack overcloud image upload --image-path /home/stack/images/
-{% if RHOSP_version == 17.0 %}
+{% if RHOSP_version >= 17.0 %}
 openstack overcloud image upload --image-path /home/stack/images/ --os-image-name overcloud-full.qcow2
 ls -al /var/lib/ironic/images/
 {% else %}
@@ -31,7 +31,7 @@ openstack image list --fit-width
 {% set templates_dir="/home/stack/templates/" ~ leaf.name %}
 {% endif %}
 
-{% if RHOSP_version == 17.0 %}
+{% if RHOSP_version >= 17.0 %}
 # Provision networks and vips
 {% if leaf.name == DefaultLeaf0.name %}
 openstack overcloud network provision -y --output /home/stack/templates/overcloud-networks-deployed.yaml /home/stack/templates/network_data.yaml
@@ -76,7 +76,7 @@ sudo openstack overcloud container image upload \
 --config-file /home/stack/local_registry_images.yaml \
 --verbose
 {% endif %}
-{% elif RHOSP_version == 17.0 %}
+{% elif RHOSP_version >= 17.0 %}
 sudo openstack tripleo container image prepare \
 -e /home/stack/containers-prepare-parameter.yaml \
 --output-env-file {{ templates_dir }}/overcloud-images.yaml
@@ -89,9 +89,10 @@ sudo openstack tripleo container image prepare \
 --output-env-file {{ templates_dir }}/overcloud-images.yaml
 {% endif %}
 
-{% if RHOSP_version == 17.0 %}
+{% if RHOSP_version >= 17.0 %}
 # Provision nodes
 openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
+metalsmith list
 {% endif %}
 
 {% if RHOSP_version != 13.0 %}

@@ -21,6 +21,7 @@
     - network_data.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
+    - initial-ceph.conf
     - vip_data.yaml
     - overcloud_resources.yaml
 
@@ -31,18 +32,18 @@
     owner: stack
     group: stack
   when:
-    - RHOSP_version != 17.0
+    - RHOSP_version < 17.0
     - roles_count[DefaultLeaf0.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
 
-- name: TEMPLATES - RHOSP 17.0 nic-config files
+- name: TEMPLATES - RHOSP >= 17.0 nic-config files
   template:
     src: "templates/nic-configs/nic-config.j2"
     dest: "/home/stack/templates/nic-configs/{{ item.profile }}.j2"
     owner: stack
     group: stack
   when:
-    - RHOSP_version == 17.0
+    - RHOSP_version >= 17.0
     - roles_count[DefaultLeaf0.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
 

@@ -1,0 +1,12 @@
+[global]
+public_network = {{ DefaultLeaf0.subnet.cidr }}{% for leaf in DCNLeafs %},{{ leaf.subnet.cidr }}{% endfor %}
+
+cluster_network = {{ DefaultLeaf0.subnet.cidr }}{% for leaf in DCNLeafs %},{{ leaf.subnet.cidr }}{% endfor %}
+
+ms_bind_ipv4 = True
+ms_bind_ipv6 = False
+[osd]
+osd_memory_target_autotune = true
+osd_numa_auto_affinity = true
+[mgr]
+mgr/cephadm/autotune_memory_target_ratio = 0.2

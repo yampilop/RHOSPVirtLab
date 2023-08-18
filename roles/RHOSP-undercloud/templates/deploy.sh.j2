@@ -10,10 +10,13 @@
 {% endif %}
 
 source /home/stack/stackrc
-{% if RHOSP_version == 17.0 and ceph_count + hci_count > 0 %}
+{% if RHOSP_version >= 17.0 and ceph_count + hci_count > 0 %}
 openstack overcloud ceph deploy -y \
 {{ templates_dir }}/overcloud-baremetal-deployed.yaml \
 -o {{ templates_dir }}/deployed-ceph.yaml \
+{% if hci_count > 0 %}
+--config {{ templates_dir }}/initial-ceph.conf \
+{% endif %}
 --roles-data {{ templates_dir }}/roles_data.yaml \
 --container-image-prepare /home/stack/containers-prepare-parameter.yaml
 {% endif %}
@@ -58,7 +61,7 @@ time openstack overcloud deploy \
 date
 {% endif %}
 
-{% if (leaf.name != DefaultLeaf0.name) and (RHOSP_version != 17.0) and (RHOSP_version != 13.0) %}
+{% if (leaf.name != DefaultLeaf0.name) and (RHOSP_version < 17.0) and (RHOSP_version != 13.0) %}
 {% raw %}
 ANSIBLE_HOST_KEY_CHECKING=false TRIPLEO_PLAN_NAME=overcloud \
 ansible -i /usr/bin/tripleo-ansible-inventory \
@@ -68,7 +71,7 @@ nova-manage cell_v2 discover_hosts --by-service --verbose"
 {% endraw %}
 {% endif %}
 
-{% if RHOSP_version == 17.0 and (ceph_count + hci_count) > 0 %}
+{% if RHOSP_version >= 17.0 and (ceph_count + hci_count) > 0 %}
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}
 

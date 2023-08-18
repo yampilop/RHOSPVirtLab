@@ -2,7 +2,8 @@
 # defaults file for RHOSP-undercloud
 
 # RHOSP version
-RHOSP_version: 17.0
+RHOSP_version: 17.1
+RHOSP_release: latest
 
 # Cleaning and creating parameters
 create: True

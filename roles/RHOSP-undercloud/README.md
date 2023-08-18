@@ -11,8 +11,10 @@ It's tested to work on a Red Hat Enterprise Linux version 8.4 or 7.9 system. Req
 Role Variables
 --------------
 
-RHOSP_version: **17.0**|16.2|16.1|13.0
+RHOSP_version: **17.1**|17.0|16.2|16.1|13.0
   This variable sets the version of RHOSP to install.
+
+RHOSP_release: **latest**|*valid_number*
 
 create: **True**|False
   This variable sets if the resources will be created or not. Useful in combination with cleanup:True to wipe the lab environment.
