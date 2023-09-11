@@ -142,18 +142,18 @@ deployment_environment:
     DCN: False
     Leafs: All
     Roles: [ 'ComputeOvsDpdk', 'ComputeOvsDpdkSriov' ]
-  - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dpdk.yaml
+  - file: "/usr/share/openstack-tripleo-heat-templates/environments/services/neutron-{{ NeutronDriver }}-dpdk.yaml"
     absolute_path: True
     version: [ 17.1, 17.0, 16.2, 16.1 ]
     DCN: False
     Leafs: All
     Roles: [ 'ComputeOvsDpdk', 'ComputeOvsDpdkSriov' ]
-  - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-dvr-ha.yaml
+  - file: "/usr/share/openstack-tripleo-heat-templates/environments/services/neutron-{{ NeutronDriver }}-dvr{{ '-ha' if NeutronDriver == 'ovn' else '' }}.yaml"
     absolute_path: True
     version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False
     Leafs: All
-  - file: /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml
+  - file: "/usr/share/openstack-tripleo-heat-templates/environments/services/neutron-{{ NeutronDriver }}-sriov.yaml"
     absolute_path: True
     version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
     DCN: False

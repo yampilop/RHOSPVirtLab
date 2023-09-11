@@ -214,6 +214,9 @@ LowMemUsage: True
 # Enable fencing for controllers
 ControllersFencing: True
 
+# Neutron driver
+NeutronDriver: ovn
+
 # DCN leafs
 DCNLeafs: []
 

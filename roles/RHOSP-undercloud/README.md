@@ -46,6 +46,9 @@ DeployOctavia: False
 RegisterNodes: False
   This variable sets if the nodes will be registered.
 
+NeutronDriver: **ovn** | ovs
+  This variable sets the neutron driver to use.
+
 DCNLeafs:
   Variable used to define leafs when making a DCN deployment.
 

@@ -20,7 +20,7 @@ parameter_defaults:
       name_prefix: openstack-
       name_suffix: ''
       namespace: {{ RHOSP_version_supported[RHOSP_version].container_image_prepare.namespace }}
-      neutron_driver: ovn
+      neutron_driver: {{ NeutronDriver }}
       rhel_containers: false
       tag: '{{ RHOSP_version }}{{ '.' ~ RHOSP_release if RHOSP_release != 'latest' else '' }}'
     tag_from_label: '{version}-{release}'
