@@ -45,7 +45,7 @@ time openstack overcloud deploy \
 {% if ((environment.Leafs == 'Default') and (leaf.name == DefaultLeaf0.name)) or ((environment.Leafs == 'NotDefault') and (leaf.name != DefaultLeaf0.name)) or (environment.Leafs == 'All') %}
 {% if RHOSP_version in environment.version %}
 {% if ((environment.Roles is defined) and ((roles_count[leaf.name].items() | selectattr(0, "in", environment.Roles) | sum(1)) > 0)) or (environment.Roles is not defined) %}
-{% if ((environment.Variable is defined) and (lookup('vars', environment.Variable) | bool)) or (environment.Variable is not defined) %}
+{% if ((environment.Variable is defined) and (lookup('vars', environment.Variable) | bool)) or ((environment.Variable is defined) and (lookup('vars', environment.Variable) is mapping)) or (environment.Variable is not defined) %}
 {% if environment.absolute_path | bool %}
 -e {{ environment.file }} \
 {% else %}

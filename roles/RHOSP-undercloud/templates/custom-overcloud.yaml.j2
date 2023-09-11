@@ -3,6 +3,12 @@
 {% set DefaultLeaf0_ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
 {% set DefaultLeaf0_hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 
+{% if (not DisableTelemetry) and (Telemetry is mapping) %}
+# For Telemetry
+resource_registry:
+  OS::TripleO::Services::Collectd: /usr/share/openstack-tripleo-heat-templates/deployment/metrics/collectd-container-puppet.yaml
+{% endif %}
+
 parameter_defaults:
 {% if leaf.name == DefaultLeaf0.name %}
 {% if DCNLeafs | length > 0 %}
@@ -174,4 +180,113 @@ parameter_defaults:
         ipport: {{ node.pm_port }}
         lanplus: 1
 {% endfor %}
+{% endif %}
+
+{% if (not DisableTelemetry) and (Telemetry is mapping) %}
+# Telemetry definitions
+
+# enable-stf.yaml contents
+  # only send to STF, not other publishers
+  EventPipelinePublishers: []
+  PipelinePublishers: []
+
+  # manage the polling and pipeline configuration files for Ceilometer agents
+  ManagePolling: true
+  ManagePipeline: true
+
+  # enable Ceilometer metrics and events
+  CeilometerQdrPublishMetrics: true
+  CeilometerQdrPublishEvents: true
+
+  # enable collection of API status
+  CollectdEnableSensubility: true
+  CollectdSensubilityTransport: amqp1
+
+  # enable collection of containerized service metrics
+  CollectdEnableLibpodstats: true
+
+  # set collectd overrides for higher telemetry resolution and extra plugins
+  # to load
+  CollectdConnectionType: amqp1
+  CollectdAmqpInterval: 5
+  CollectdDefaultPollingInterval: 5
+  CollectdExtraPlugins:
+    - vmem
+
+  # set standard prefixes for where metrics and events are published to QDR
+  MetricsQdrAddresses:
+    - prefix: 'collectd'
+      distribution: multicast
+    - prefix: 'anycast/ceilometer'
+      distribution: multicast
+
+  ExtraConfig:
+    ceilometer::agent::polling::polling_interval: 30
+    ceilometer::agent::polling::polling_meters:
+      - cpu
+      - disk.*
+      - ip.*
+      - image.*
+      - memory
+      - memory.*
+      - network.services.vpn.*
+      - network.services.firewall.*
+      - perf.*
+      - port
+      - port.*
+      - switch
+      - switch.*
+      - storage.*
+      - volume.*
+
+      # to avoid filling the memory buffers if disconnected from the message bus
+      # note: this may need an adjustment if there are many metrics to be sent.
+      collectd::plugin::amqp1::send_queue_limit: 5000
+
+      # receive extra information about virtual memory
+      collectd::plugin::vmem::verbose: true
+
+      # provide name and uuid in addition to hostname for better correlation
+      # to ceilometer data
+      collectd::plugin::virt::hostname_format: "name uuid hostname"
+
+      # provide the human-friendly name of the virtual instance
+      collectd::plugin::virt::plugin_instance_format: metadata
+
+      # set memcached collectd plugin to report its metrics by hostname
+      # rather than host IP, ensuring metrics in the dashboard remain uniform
+      collectd::plugin::memcached::instances:
+        local:
+          host: "%{hiera('fqdn_canonical')}"
+          port: 11211
+
+# stf-connectors.yaml contents
+  MetricsQdrConnectors:
+    - host: {{ Telemetry.MetricsConnectorHost }}
+      port: 443
+      role: edge
+      verifyHostname: false
+      sslProfile: sslProfile
+
+  MetricsQdrSSLProfiles:
+    - name: sslProfile
+
+  CeilometerQdrEventsConfig:
+    driver: amqp
+    topic: {{ Telemetry.Cloud }}-event
+
+  CeilometerQdrMetricsConfig:
+    driver: amqp
+    topic: {{ Telemetry.Cloud }}-metering
+
+  CollectdAmqpInstances:
+    {{ Telemetry.Cloud }}-notify:
+      notify: true
+      format: JSON
+      presettle: false
+    {{ Telemetry.Cloud }}-telemetry:
+      format: JSON
+      presettle: false
+
+  CollectdSensubilityResultsChannel: sensubility/{{ Telemetry.Cloud }}-telemetry
 {% endif %}

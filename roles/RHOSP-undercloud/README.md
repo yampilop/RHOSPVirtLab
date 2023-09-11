@@ -40,14 +40,20 @@ ComputeSriovProperties, ComputeOvsHwOffloadProperties, ComputeOvsDpdkProperties,
 CephStorageProperties:
   Default properties for Ceph roles.
 
-DeployOctavia: False
+DeployOctavia: **False** | True
   This variable sets if the LBaaS Octavia service will be deployed.
 
-RegisterNodes: False
+RegisterNodes: **False** | True
   This variable sets if the nodes will be registered.
 
 NeutronDriver: **ovn** | ovs
   This variable sets the neutron driver to use.
+
+DisableTelemetry: **True** | False
+  This variable allows to disable telemetry. Set to False if you want to use Telemetry parameter.
+
+Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local, Cloud: cloud1 }
+  Variable used to define telemetry parameters.
 
 DCNLeafs:
   Variable used to define leafs when making a DCN deployment.

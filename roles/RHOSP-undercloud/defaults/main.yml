@@ -220,6 +220,14 @@ NeutronDriver: ovn
 # DCN leafs
 DCNLeafs: []
 
+# Disable telemetry
+DisableTelemetry: True
+
+# Telemetry parameters (Set DisableTelemetry to False to use)
+Telemetry: False
+#  MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local
+#  Cloud: cloud1
+
 # Default flavors size
 DefaultFlavorsSize:
   - name: nano

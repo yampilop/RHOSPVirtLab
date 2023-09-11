@@ -254,6 +254,24 @@ deployment_environment:
     DCN: False
     Leafs: All
     Variable: RegisterNodes
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/disable-telemetry.yaml
+    absolute_path: True
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: Default
+    Variable: DisableTelemetry
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/metrics/ceilometer-write-qdr.yaml
+    absolute_path: True
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Variable: Telemetry
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/metrics/qdr-edge-only.yaml
+    absolute_path: True
+    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
+    DCN: False
+    Leafs: All
+    Variable: Telemetry
   - file: custom-overcloud.yaml
     absolute_path: False
     version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
@@ -271,11 +289,6 @@ deployment_environment:
     DCN: False
     Leafs: All
     Roles: [ 'ComputeInstanceHA' ]
-  - file: /usr/share/openstack-tripleo-heat-templates/environments/disable-telemetry.yaml
-    absolute_path: True
-    version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
-    DCN: False
-    Leafs: Default
 
 roles_networks:
   Controller:
