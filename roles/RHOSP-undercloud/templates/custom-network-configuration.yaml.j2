@@ -35,8 +35,12 @@ parameter_defaults:
   NeutronFlatNetworks: "*"
   
   NeutronNetworkVLANRanges: "{{ NetworkVlanRanges }}"
+{% if NeutronDriver == 'ovn' %}
   NeutronTunnelTypes: 'geneve'
   NeutronNetworkType: 'geneve,vlan'
+{% else %}
+  NeutronOVSFirewallDriver: openvswitch
+{% endif %}
   
 {% if (RHOSP_version < 17.0) and (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   NetConfigDataLookup:
