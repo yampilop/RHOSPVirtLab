@@ -64,6 +64,11 @@ parameter_defaults:
     - PciPassthroughFilter
 
 {% if DCNLeafs | length > 0 %}
+  NeutronDefaultAvailabilityZones: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
+{% if NeutronDriver == 'ovs' %}
+  NeutronL3AgentAvailabilityZone: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
+  NeutronDhcpAgentAvailabilityZone: '{{ leaf.name }}'
+{% endif %}
 {% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
@@ -75,11 +80,13 @@ parameter_defaults:
 {% endif %}
 {% endif %}
 {% endfor %}
+{% if NeutronDriver == 'ovn' %}
   OVNDBSPacemakerTimeout: 360
   OVNRemoteProbeInterval: 180000
   OVNOpenflowProbeInterval: 180
   ControllerParameters:
     OVNCMSOptions: "enable-chassis-as-gw,availability-zones={{ DefaultLeaf0.name }}:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+{% endif %}
 
 {% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
 {% for dcnleaf in DCNLeafs %}
