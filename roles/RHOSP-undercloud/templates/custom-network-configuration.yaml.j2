@@ -67,7 +67,7 @@ parameter_defaults:
   NeutronDefaultAvailabilityZones: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
 {% if NeutronDriver == 'ovs' %}
   NeutronL3AgentAvailabilityZone: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
-  NeutronDhcpAgentAvailabilityZone: '{{ leaf.name }}'
+  NeutronDhcpAgentAvailabilityZone: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
 {% endif %}
 {% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
