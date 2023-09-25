@@ -196,6 +196,9 @@ DeployOctavia: False
 # Designate parameters
 DeployDesignate: False
 
+# FRR parameters
+DeployFrr: False
+
 # Subscription manager parameters
 RegisterNodes: False
 

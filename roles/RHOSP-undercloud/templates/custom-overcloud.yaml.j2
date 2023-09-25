@@ -290,3 +290,8 @@ parameter_defaults:
 
   CollectdSensubilityResultsChannel: sensubility/{{ Telemetry.Cloud }}-telemetry
 {% endif %}
+
+{% if DeployDesignate %}
+  UnboundForwardResolvers: {{ dns_servers }}
+{% endif %}
+

@@ -44,7 +44,10 @@ DeployOctavia: **False** | True
   This variable sets if the LBaaS Octavia service will be deployed.
 
 DeployDesignate: **False** | True
-  This variable sets if the DNSaaS Designate service will be deployed (only available for RHOSP_version >= 17.
+  This variable sets if the DNSaaS Designate service will be deployed (only available for RHOSP_version >= 17).
+
+DeployFrr: **False** | True
+  This variable sets if the FRRouting service will be deployed (only available for RHOSP_version >= 17.1).
 
 RegisterNodes: **False** | True
   This variable sets if the nodes will be registered.

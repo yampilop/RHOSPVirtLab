@@ -288,6 +288,7 @@ This are the mandatory parameter you most probably need to customize:
 - Set the proper parameters for NFV roles in `ComputeSriovProperties`, `ComputeOvsHwOffloadProperties`, `ComputeOvsDpdkProperties` and/or `ComputeOvsDpdkSriovProperties`.
 - Choose to deploy Octavia with `DeployOctavia: True`.
 - Choose to deploy Designate with `DeployDesignate: True`.
+- Choose to deploy FRR with `DeployFrr: True`.
 - Choose to register the nodes with `RegisterNodes: True`.
 
 #### DCNLeafs customization

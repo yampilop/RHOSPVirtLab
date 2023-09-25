@@ -222,3 +222,7 @@ parameter_defaults:
     NovaPCIPassthrough: {{ ComputeOvsHwOffloadProperties.pcipassthrough }}
     NeutronPhysicalDevMappings: {{ ComputeOvsHwOffloadProperties.physicaldevmappings }}
 {% endif %}
+
+{% if DeployFrr %}
+  FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
+{% endif %}
