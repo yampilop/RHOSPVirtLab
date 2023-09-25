@@ -205,6 +205,9 @@ CephStorageProperties:
 # Octavia parameters
 DeployOctavia: False
 
+# Designate parameters
+DeployDesignate: False
+
 # Subscription manager parameters
 RegisterNodes: False
 

@@ -171,6 +171,12 @@ deployment_environment:
     DCN: False
     Leafs: All
     Variable: DeployOctavia
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/enable-designate.yaml
+    absolute_path: True
+    version: [ 17.1, 17.0 ]
+    DCN: False
+    Leafs: All
+    Variable: DeployDesignate
   - file: custom-network-configuration.yaml
     absolute_path: False
     version: [ 17.1, 17.0, 16.2, 16.1, 13.0 ]
