@@ -292,6 +292,8 @@ parameter_defaults:
 {% endif %}
 
 {% if DeployDesignate %}
-  UnboundForwardResolvers: {{ dns_servers }}
+  UnboundForwardResolvers:
+{% for server in dns_servers %}
+    - {{ server }}
+{% endfor %}
 {% endif %}
-
