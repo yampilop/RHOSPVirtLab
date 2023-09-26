@@ -58,7 +58,7 @@ NeutronDriver: **ovn** | ovs
 DisableTelemetry: **True** | False
   This variable allows to disable telemetry. Set to False if you want to use Telemetry parameter.
 
-Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local, Cloud: cloud1 }
+Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local, MetricsConnectorIPAddress: 10.8.223.249, Cloud: cloud1 }
   Variable used to define telemetry parameters.
 
 DCNLeafs:
