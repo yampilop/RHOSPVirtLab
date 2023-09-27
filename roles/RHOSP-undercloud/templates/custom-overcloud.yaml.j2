@@ -184,8 +184,10 @@ parameter_defaults:
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}
 # Telemetry definitions
+  ExtraHostFileEntries:
+    - "{{ Telemetry.MetricsConnectorIPAddress }} {{ Telemetry.MetricsConnectorHost }}"
 
-# enable-stf.yaml contents
+  # enable-stf.yaml contents
   # only send to STF, not other publishers
   EventPipelinePublishers: []
   PipelinePublishers: []
@@ -260,7 +262,7 @@ parameter_defaults:
         host: "%{hiera('fqdn_canonical')}"
         port: 11211
 
-# stf-connectors.yaml contents
+  # stf-connectors.yaml contents
   MetricsQdrConnectors:
     - host: {{ Telemetry.MetricsConnectorHost }}
       port: 443
@@ -289,4 +291,11 @@ parameter_defaults:
       presettle: false
 
   CollectdSensubilityResultsChannel: sensubility/{{ Telemetry.Cloud }}-telemetry
+{% endif %}
+
+{% if DeployDesignate %}
+  UnboundForwardResolvers:
+{% for server in dns_servers %}
+    - {{ server }}
+{% endfor %}
 {% endif %}

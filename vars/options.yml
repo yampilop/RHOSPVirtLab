@@ -193,6 +193,12 @@ CephStorageProperties:
 # Octavia parameters
 DeployOctavia: False
 
+# Designate parameters
+DeployDesignate: False
+
+# FRR parameters
+DeployFrr: False
+
 # Subscription manager parameters
 RegisterNodes: False
 
@@ -211,6 +217,7 @@ DisableTelemetry: True
 # Telemetry parameters (Set DisableTelemetry to False to use)
 Telemetry: False
   # MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local
+  # MetricsConnectorIPAddress: 10.8.223.249
   # Cloud: cloud1
 
 # DCN leafs

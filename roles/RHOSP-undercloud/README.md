@@ -43,6 +43,12 @@ CephStorageProperties:
 DeployOctavia: **False** | True
   This variable sets if the LBaaS Octavia service will be deployed.
 
+DeployDesignate: **False** | True
+  This variable sets if the DNSaaS Designate service will be deployed (only available for RHOSP_version >= 17).
+
+DeployFrr: **False** | True
+  This variable sets if the FRRouting service will be deployed (only available for RHOSP_version >= 17.1).
+
 RegisterNodes: **False** | True
   This variable sets if the nodes will be registered.
 
@@ -52,7 +58,7 @@ NeutronDriver: **ovn** | ovs
 DisableTelemetry: **True** | False
   This variable allows to disable telemetry. Set to False if you want to use Telemetry parameter.
 
-Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local, Cloud: cloud1 }
+Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local, MetricsConnectorIPAddress: 10.8.223.249, Cloud: cloud1 }
   Variable used to define telemetry parameters.
 
 DCNLeafs:
