@@ -234,6 +234,10 @@ Telemetry: False
 #  MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local
 #  MetricsConnectorIPAddress: 10.8.223.249
 #  Cloud: cloud1
+#  Certificate: |
+#    -----BEGIN CERTIFICATE-----
+#    <snip>
+#    -----END CERTIFICATE-----
 
 # Default flavors size
 DefaultFlavorsSize:
