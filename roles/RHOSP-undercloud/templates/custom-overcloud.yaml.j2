@@ -273,7 +273,8 @@ parameter_defaults:
   MetricsQdrSSLProfiles:
     - name: sslProfile
 {% if RHOSP_version >= 17 %}
-      caCertFileContent: "{{ Telemetry.Certificate }}"
+      caCertFileContent: |
+{{ Telemetry.Certificate }}
 {% endif %}
 
   CeilometerQdrEventsConfig:
