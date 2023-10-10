@@ -274,7 +274,9 @@ parameter_defaults:
     - name: sslProfile
 {% if RHOSP_version >= 17 %}
       caCertFileContent: |
-{{ Telemetry.Certificate }}
+{% for row in ( Telemetry.Certificate.split('\n') ) %}
+        {{ row }}
+{% endfor %}
 {% endif %}
 
   CeilometerQdrEventsConfig:
