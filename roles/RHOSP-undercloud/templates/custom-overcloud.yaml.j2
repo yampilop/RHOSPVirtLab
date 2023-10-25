@@ -272,6 +272,12 @@ parameter_defaults:
 
   MetricsQdrSSLProfiles:
     - name: sslProfile
+{% if RHOSP_version >= 17 %}
+      caCertFileContent: |
+{% for row in ( Telemetry.Certificate.split('\n') ) %}
+        {{ row }}
+{% endfor %}
+{% endif %}
 
   CeilometerQdrEventsConfig:
     driver: amqp
