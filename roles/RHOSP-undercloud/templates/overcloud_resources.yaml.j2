@@ -158,7 +158,7 @@ resources:
 {% endif %}
     external_id: { get_param: image_cirros_external_id }
 
-{% if DeployOctavia %}
+{% if DeployOctavia and RHOSP_version >= 17 %}
   # Octavia resources
   amphora_single_profile:
     type: OS::Octavia::FlavorProfile
