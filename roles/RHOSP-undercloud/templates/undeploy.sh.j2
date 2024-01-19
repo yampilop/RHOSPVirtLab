@@ -32,7 +32,7 @@ openstack baremetal node list -f value -c Name | awk '{system("openstack baremet
 openstack baremetal node list
 
 # Wait for the nodes to finish cleanning process or failing (timeout 10 minutes)
-timeout 600 bash -c -- 'while (openstack baremetal node list -f value -c Name -c "Provisioning State" | grep -Ev "failed|manageable"); do echo "Waiting for cleanning..."; sleep 5; done'
+timeout 600 bash -c -- 'while (openstack baremetal node list -f value -c Name -c "Provisioning State" | grep -Ev "failed|manageable"); do echo "Waiting for cleaning..."; sleep 5; done'
 openstack baremetal node list
 
 {% if RHOSP_version >= 17.0 %}
