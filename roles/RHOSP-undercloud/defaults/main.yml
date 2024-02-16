@@ -5,6 +5,9 @@
 RHOSP_version: 17.1
 RHOSP_release: latest
 
+# Custom RHEL image: set URL to use a custom image. If it's a local file, use "file://<full_path>"
+CustomRhelImage: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
+
 # Cleaning and creating parameters
 create: True
 

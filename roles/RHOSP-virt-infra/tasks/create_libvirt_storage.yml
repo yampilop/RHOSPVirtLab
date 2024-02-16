@@ -77,7 +77,7 @@
 
 - name: STORAGE - Download the rhel base image
   get_url:
-    url: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
+    url: "{{ CustomRhelImage }}"
     dest: "{{ pool_location }}/{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     mode: "0777"
     owner: root

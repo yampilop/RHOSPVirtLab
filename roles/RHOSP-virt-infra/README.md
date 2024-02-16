@@ -18,6 +18,10 @@ RHOSP_version: **17.1**|17.0|16.2|16.1|13.0
 
 RHOSP_release: **latest**|*valid_number*
 
+CustomRhelImage: **"{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"**|*"<url>"*|*"file://<full_path>"*
+  Use this variable to customize the RHEL image to use as base for the undercloud and testing.
+  You can use a URL ("http://...") or a path to a downloaded file ("file://<full_path>"). As you need to use the full path, the value will have a triple dash, for instance "file:///home/admin/rhel.qcow2"
+
 cleanup: **False**|True
   This variable sets if the resources (domains, networks, storage) should be cleaned before the creation process.
 
