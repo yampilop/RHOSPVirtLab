@@ -501,18 +501,18 @@ RHOSP_version_supported:
       main_partition: '/dev/sda3'
     rhel_release: '8.2'
     undercloud_repos:
-      - rhel-8-for-x86_64-baseos-rpms
-      - rhel-8-for-x86_64-appstream-rpms
-      - rhel-8-for-x86_64-highavailability-rpms
+      - rhel-8-for-x86_64-baseos-tus-rpms
+      - rhel-8-for-x86_64-appstream-tus-rpms
+      - rhel-8-for-x86_64-highavailability-tus-rpms
       - ansible-2.9-for-rhel-8-x86_64-rpms
       - openstack-16.1-for-rhel-8-x86_64-rpms
       - fast-datapath-for-rhel-8-x86_64-rpms
       - advanced-virt-for-rhel-8-x86_64-rpms
       - rhceph-4-tools-for-rhel-8-x86_64-rpms
     nodes_repos:
-      - rhel-8-for-x86_64-baseos-rpms
-      - rhel-8-for-x86_64-appstream-rpms
-      - rhel-8-for-x86_64-highavailability-rpms
+      - rhel-8-for-x86_64-baseos-tus-rpms
+      - rhel-8-for-x86_64-appstream-tus-rpms
+      - rhel-8-for-x86_64-highavailability-tus-rpms
       - ansible-2.9-for-rhel-8-x86_64-rpms
       - openstack-16.1-for-rhel-8-x86_64-rpms
       - fast-datapath-for-rhel-8-x86_64-rpms

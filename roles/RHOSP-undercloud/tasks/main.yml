@@ -86,7 +86,7 @@
     group: stack
     timeout: 30
   loop:
-    - url: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
+    - url: "{{ CustomRhelImage }}"
       name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     - url: "{{ CirrOSDownloadLink }}"
       name: "cirros.qcow2"
