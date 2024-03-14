@@ -27,8 +27,8 @@ parameter_defaults:
   NetworkDeploymentActions: ['CREATE','UPDATE']
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
-  ControlPlaneDefaultRoute: {{ DefaultLeaf0.subnet.gateway }}
-  ControlPlaneSubnet: {{ DefaultLeaf0.subnet.name }}
+  ControlPlaneDefaultRoute: {{ leaf.subnet.gateway }}
+  ControlPlaneSubnet: {{ leaf.subnet.name }}
   
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
@@ -72,7 +72,6 @@ parameter_defaults:
 {% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
   {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
-  {{ ocrole.name }}ControlPlaneDefaultRoute: {{ leaf.subnet.gateway }}
   {{ ocrole.name }}Parameters:
 {% if leaf.name != DefaultLeaf0.name %}
     NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
