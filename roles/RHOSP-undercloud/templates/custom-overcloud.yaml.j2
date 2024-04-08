@@ -74,7 +74,7 @@ parameter_defaults:
 {% endif %}
   NovaAZAttach: false
   NovaComputeAvailabilityZone: {{ leaf.name }}
-  RootStackName: {{ leaf.name }}
+  RootStackName: {{ DefaultLeaf0.name }}
   ManageNetworks: false
 {% endif %}
 {% if RHOSP_version < 17.0 %}

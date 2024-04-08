@@ -20,7 +20,6 @@
     - custom-overcloud.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
-    - vip_data.yaml
 
 - name: "TEMPLATES - Prepare the nic-configs templates for {{ leaf.name }}"
   template:
