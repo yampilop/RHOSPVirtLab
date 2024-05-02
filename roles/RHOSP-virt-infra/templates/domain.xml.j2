@@ -62,9 +62,8 @@
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
       <source file="{{ pool_location }}/{{ item.cdrom }}"/>
-      <target dev="sdb" bus="sata"/>
+      <target dev="{{ 'sdc' if (item.data_disk_size is defined and item.data_disk_size > 0) else 'sdb' }}" bus="sata"/>
       <readonly/>
-      <address type="drive" controller="0" bus="0" target="0" unit="1"/>
     </disk>
     <controller type="usb" model="qemu-xhci" ports="15"/>
 {% endif %}
