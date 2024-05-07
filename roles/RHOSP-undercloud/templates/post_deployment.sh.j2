@@ -73,3 +73,28 @@ done
 openstack loadbalancer flavorprofile show amphora-single-profile &>/dev/null || openstack loadbalancer flavorprofile create --name amphora-single-profile --provider amphora --flavor-data '{"loadbalancer_topology": "SINGLE"}'
 openstack loadbalancer flavor show standalone-lb &>/dev/null || openstack loadbalancer flavor create --name standalone-lb --flavorprofile amphora-single-profile --description "A non-high availability load balancer for testing."
 {% endif %}
+
+# Apply logrotate configuration to avoid full disks
+source ~/stackrc
+export ANSIBLE_HOST_KEY_CHECKING=False
+
+{% if (RHOSP_version >= 17) %}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' undercloud,{{ DefaultLeaf0.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' undercloud,{{ DefaultLeaf0.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' undercloud,{{ DefaultLeaf0.name }}
+{% for leaf in DCNLeafs %}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' {{ leaf.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' {{ leaf.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' {{ leaf.name }}
+{% endfor %}
+{% else %}
+tripleo-ansible-inventory --static-yaml-inventory ~/tripleo-ansible-inventory.yaml
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' undercloud,{{ DefaultLeaf0.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' undercloud,{{ DefaultLeaf0.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' undercloud,{{ DefaultLeaf0.name }}
+{% for leaf in DCNLeafs %}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' {{ leaf.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' {{ leaf.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' {{ leaf.name }}
+{% endfor %}
+{% endif %}
