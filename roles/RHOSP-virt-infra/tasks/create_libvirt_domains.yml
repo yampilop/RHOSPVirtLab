@@ -67,3 +67,12 @@
   when:
     - inventory_hostname in item.hypervisor
     - item.nics.RHOSPVirtLab_management is defined
+
+- name: DOMAINS - Add overcloud IP entry to /etc/hosts on the local machines
+  lineinfile:
+    path: "/etc/hosts"
+    regexp: "{{ overcloud_ip }}\tovercloud"
+    line: "{{ overcloud_ip }}\tovercloud"
+    state: present
+  become: yes
+

@@ -24,7 +24,20 @@ resource_registry:
 {% endif %}
 
 parameter_defaults:
+{% if RHOSP_version < 17.0 %}
   NetworkDeploymentActions: ['CREATE','UPDATE']
+{% else %}
+{% for ocrole in overcloud_roles %}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}
+{% if leaf.hypervisor in DefaultLeaf0.hypervisor %}
+  {{ ocrole.name }}NetworkConfigTemplate: '/home/stack/templates/nic-configs/{{ ocrole.profile }}.j2'
+{% else %}
+  {{ ocrole.name }}NetworkConfigTemplate: '/home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.profile }}.j2'
+{% endif %}
+  {{ ocrole.name }}NetworkConfigUpdate: true
+{% endif %}
+{% endfor %}
+{% endif %}
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
   ControlPlaneDefaultRoute: {{ leaf.subnet.gateway }}
