@@ -107,7 +107,7 @@ deployment_environment:
     Leafs: All
   - file: /usr/share/openstack-tripleo-heat-templates/environments/nova-az-config.yaml
     absolute_path: True
-    version: [ 16.2, 16.1 ]
+    version: [ 17.1, 17.0, 16.2, 16.1 ]
     DCN: True
     Leafs: All
   - file: /home/stack/templates/overcloud-export.yaml
