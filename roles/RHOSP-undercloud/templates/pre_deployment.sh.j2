@@ -31,10 +31,16 @@ openstack image list --fit-width
 {% set templates_dir="/home/stack/templates/" ~ leaf.name %}
 {% endif %}
 
-{% if RHOSP_version >= 17.0 and leaf.name == DefaultLeaf0.name %}
+{% if RHOSP_version >= 17.0 %}
+{% if leaf.name == DefaultLeaf0.name %}
 # Provision networks and vips
-openstack overcloud network provision -y --output /home/stack/templates/overcloud-networks-deployed.yaml /home/stack/templates/network_data.yaml
+openstack overcloud network provision -y --output {{ templates_dir }}/overcloud-networks-deployed.yaml {{ templates_dir }}/network_data.yaml
 openstack overcloud network vip provision -y --stack {{ leaf.name }} --output {{ templates_dir }}/overcloud-vip-deployed.yaml {{ templates_dir }}/vip_data.yaml
+{% else %}
+# Copy the central site network and vip files
+cp /home/stack/templates/overcloud-networks-deployed.yaml {{ templates_dir }}/overcloud-networks-deployed.yaml
+cp /home/stack/templates/overcloud-vip-deployed.yaml {{ templates_dir }}/overcloud-vip-deployed.yaml
+{% endif %}
 {% endif %}
 
 # Prepare baremetal nodes
