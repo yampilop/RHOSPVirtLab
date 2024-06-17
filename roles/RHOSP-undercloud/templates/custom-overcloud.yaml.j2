@@ -164,10 +164,11 @@ parameter_defaults:
       params:
         login: admin
         passwd: admin
-        ipaddr: {% if vm.hypervisor in DefaultLeaf0.hypervisor %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
+        ipaddr: {% if vm.hypervisor == 'localhost' %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
 
         ipport: {{ vm.bmcport }}
-        lanplus: 1
+        lanplus: true
+        pcmk_host_list: {{ vm.name }}
 {% endfor %}
 {% for node in physical if ((node.profile == 'computeinstanceha') or (node.profile == 'controller')) and (node.leaf == leaf.name) %}
     # {{ node.name }}
@@ -178,7 +179,8 @@ parameter_defaults:
         passwd: {{ node.pm_password }}
         ipaddr: {{ node.pm_addr }}
         ipport: {{ node.pm_port }}
-        lanplus: 1
+        lanplus: true
+        pcmk_host_list: {{ vm.name }}
 {% endfor %}
 {% endif %}
 
