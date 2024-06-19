@@ -75,11 +75,9 @@ nova-manage cell_v2 discover_hosts --by-service --verbose"
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}
 
-{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) and (RHOSP_version != 13.0) %}
+{% if (DCNLeafs | length > 0) and (leaf.name == DefaultLeaf0.name) and (RHOSP_version > 13.0) and (RHOSP_version < 17.0) %}
 rm /home/stack/templates/overcloud-export.yaml
-{% if RHOSP_version < 17 %}
 sudo chmod -R +rx /var/lib/mistral/overcloud/
-{% endif %}
 openstack overcloud export \
 --config-download-dir /var/lib/mistral/{{ leaf.name }} \
 --stack {{ leaf.name }} --output-file /home/stack/templates/overcloud-export.yaml
@@ -87,9 +85,7 @@ openstack overcloud export \
 sudo rm /home/stack/templates/overcloud_ceph_external.yaml
 sudo -E openstack overcloud export ceph \
 --stack {{ leaf.name }} \
-{% if RHOSP_version < 17 %}
 --config-download-dir /var/lib/mistral \
-{% endif %}
 --output-file /home/stack/templates/overcloud_ceph_external.yaml
 {% endif %}
 {% endif %}
