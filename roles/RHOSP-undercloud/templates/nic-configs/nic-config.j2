@@ -57,7 +57,7 @@ network_config:
 {% endfor %}
 {% endraw %}
 {% endif %}
-{% if ('External' in roles_networks[item.name]) and (leaf.networks.External.network == 'RHOSPVirtLab_external') %}
+{% if ('External' in roles_networks[item.name]) and ('RHOSPVirtLab_external' in leaf.networks.External.network) %}
 {% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}
