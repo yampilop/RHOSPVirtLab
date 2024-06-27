@@ -39,8 +39,12 @@ parameter_defaults:
 {% endif %}{# IF 2.1.1 FOR 1 IF 1 #}
 {% endfor %}{# IF 2.1.1 FOR 1 #}
 {% else %}{# IF 2.1.1 #}
+{% if RHOSP_version < 17.0 %}{# IF 2.1.1.1 #}
   GlanceBackend: cinder
   CinderStorageAvailabilityZone: {{ leaf.name }}
+{% else %}{# IF 2.1.1.1 #}
+  GlanceBackend: swift
+{% endif %}{# IF 2.1.1.1 #}
 {% endif %}{# IF 2.1.1 #}
   NovaComputeAvailabilityZone: {{ leaf.name }}
   NovaCrossAZAttach: false
@@ -53,17 +57,19 @@ parameter_defaults:
 {% endif %}{# IF 2.1 #}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% else %}{# IF 2 #}
+{% if RHOSP_version < 17.0 %}{# IF 2.2 #}
   CinderStorageAvailabilityZone: {{ leaf.name }}
   GlanceBackendID: {{ leaf.name }}
-{% if (ceph_count + hci_count) > 0 %}{# IF 2.2 #}
+{% endif %}{# IF 2.2 #}
+{% if (ceph_count + hci_count) > 0 %}{# IF 2.3 #}
   GlanceEnabledImportMethods: web-download,copy-image
   GlanceBackend: rbd
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
   GlanceRbdPoolName: images
-{% else %}{# IF 2.2 #}
+{% else %}{# IF 2.3 #}
   GlanceBackend: cinder
-{% endif %}{# IF 2.2 #}
-{% if (DefaultLeaf0_ceph_count + DefaultLeaf0_hci_count) > 0 %}{# IF 2.3 #}
+{% endif %}{# IF 2.3 #}
+{% if (DefaultLeaf0_ceph_count + DefaultLeaf0_hci_count) > 0 %}{# IF 2.4 #}
   GlanceMultistoreConfig:
     {{ DefaultLeaf0.name }}:
       GlanceBackend: rbd
@@ -71,13 +77,17 @@ parameter_defaults:
       CephClusterName: {{ DefaultLeaf0.name }}
       GlanceRbdPoolName: images
       CephClientUserName: openstack
-{% endif %}{# IF 2.3 #}
-  NovaAZAttach: false
-  NovaComputeAvailabilityZone: {{ leaf.name }}
-  ManageNetworks: false
-{% if RHOSP_version < 17.0 %}{# IF 2.4 #}
-  RootStackName: {{ DefaultLeaf0.name }}
 {% endif %}{# IF 2.4 #}
+{% if RHOSP_version < 17.0 %}{# IF 2.5 #}
+  NovaAZAttach: false
+{% else %}{# IF 2.5 #}
+  NovaCrossAZAttach: false
+{% endif %}{# IF 2.5 #}
+  NovaComputeAvailabilityZone: {{ leaf.name }}
+{% if RHOSP_version < 17.0 %}{# IF 2.6 #}
+  ManageNetworks: false
+  RootStackName: {{ DefaultLeaf0.name }}
+{% endif %}{# IF 2.6 #}
 {% endif %}{# IF 2 #}
 {% if RHOSP_version < 17.0 %}{# IF 3 #}
   AllNodesExtraConfig:
