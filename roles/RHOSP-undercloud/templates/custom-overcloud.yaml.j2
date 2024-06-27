@@ -186,9 +186,10 @@ parameter_defaults:
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}
 # Telemetry definitions
+{% if leaf.name == DefaultLeaf0.name %}
   ExtraHostFileEntries:
     - "{{ Telemetry.MetricsConnectorIPAddress }} {{ Telemetry.MetricsConnectorHost }}"
-
+{% endif %}
   # enable-stf.yaml contents
   # only send to STF, not other publishers
   EventPipelinePublishers: []
