@@ -304,7 +304,8 @@ For DCN leafs you need the following customizations to the vars files:
 
 - `vars/networks.yml`:
     - `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` should be `forward: bridge`. RHOSPVirtLab_management remains as `forward: nat`.
-    - Create `RHOSPVirtLab_ctlplane_{{leaf.name}}` and `RHOSPVirtLab_external_{{leaf.name}}` networks for every leaf, with `forward: bridge` and consistent configuration, for example:
+    - Create `RHOSPVirtLab_ctlplane_{{leaf.name}}` and `RHOSPVirtLab_external_{{leaf.name}}` networks for every leaf, with `forward: bridge` and consistent configuration.
+    - Define `hypervisor_if: {{interface_name}}` for both networks if you plan to attach physical nodes to that leaf.
 
 ```yaml
   - name: RHOSPVirtLab_ctlplane_leaf1
@@ -326,8 +327,6 @@ For DCN leafs you need the following customizations to the vars files:
       netmask: '255.255.255.0'
       dhcp: false
 ```
-
-    - Define `hypervisor_if: {{interface_name}}` for both networks if you plan to attach physical nodes to that leaf.
 
 - `vars/vms.yml`:
     - **Do not use `uefi: true` in DCN leafs VMs** because introspection and deployment won't work due to a tftp known problem with firewalld.
