@@ -83,9 +83,9 @@ ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansibl
 ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' undercloud,{{ DefaultLeaf0.name }}
 ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' undercloud,{{ DefaultLeaf0.name }}
 {% for leaf in DCNLeafs %}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' {{ leaf.name }}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' {{ leaf.name }}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' {{ leaf.name }}
+ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' {{ leaf.name }}
+ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' {{ leaf.name }}
+ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' {{ leaf.name }}
 {% endfor %}
 {% else %}
 tripleo-ansible-inventory --static-yaml-inventory ~/tripleo-ansible-inventory.yaml

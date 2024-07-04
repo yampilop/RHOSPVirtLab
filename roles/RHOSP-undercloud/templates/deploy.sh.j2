@@ -61,10 +61,14 @@ time openstack overcloud deploy \
 date
 {% endif %}
 
-{% if (leaf.name != DefaultLeaf0.name) and (RHOSP_version < 17.0) and (RHOSP_version != 13.0) %}
-{% raw %}
+{% if (leaf.name != DefaultLeaf0.name) and (RHOSP_version != 13.0) %}
 ANSIBLE_HOST_KEY_CHECKING=false TRIPLEO_PLAN_NAME=overcloud \
+{% if (RHOSP_version < 17.0) %}
 ansible -i /usr/bin/tripleo-ansible-inventory \
+{% else %}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml \
+{%- endif %}
+{% raw %}
 nova_api[0] -b -a \
 "{{ container_cli }} exec -it nova_api \
 nova-manage cell_v2 discover_hosts --by-service --verbose"
