@@ -175,7 +175,7 @@
 
 - name: Download and unpack libguestfs binary appliance (unsupported workaround https://access.redhat.com/solutions/4073061)
   unarchive:
-    src: "http://download.libguestfs.org/binaries/appliance/appliance-1.40.1.tar.xz"
+    src: "http://download.libguestfs.org/binaries/appliance/appliance-1.46.0.tar.xz"
     dest: "/home/{{ ansible_user }}/"
     remote_src: yes
     mode: "0777"
