@@ -56,7 +56,7 @@
 
 - name: NETWORKING - Define management network connection
   set_fact:
-    network_connections: "{{ connection }}"
+    network_connections: "{{ network_connections + [connection] }}"
   vars:
     connection:
       name: "eth1"
