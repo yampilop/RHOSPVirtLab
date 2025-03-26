@@ -54,6 +54,26 @@
     state: latest
   notify: HANDLER - Reboot the machine
 
+- name: NETWORKING - Define management network connection
+  set_fact:
+    network_connections: "{{ connection }}"
+  vars:
+    connection:
+      name: "eth1"
+      interface_name: "eth1"
+      type: ethernet
+      autoconnect: yes
+      mtu: 1500
+      state: up
+      ip:
+        dhcp4: yes
+
+- name: NETWORKING - Configure network using system role
+  import_role:
+    name: rhel-system-roles.network
+  vars:
+    network_allow_restart: yes
+
 - name: CONFIGFILES - Create images directory
   file:
     path: "/home/stack/images"
