@@ -122,19 +122,15 @@
 - name: CHECKS - Verify vms and physical profiles
   import_tasks: tasks/profiles.yml
 
-- name: CONFIGFILES - Set container images prepare file
+- name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
   template:
-    src: "containers-prepare-parameter.yaml.j2"
-    dest: "/home/stack/containers-prepare-parameter.yaml"
+    src: "{{ item }}.j2"
+    dest: "/home/stack/{{ item }}"
     owner: stack
     group: stack
-
-- name: CONFIGFILES - Set custom undercloud parameters
-  copy:
-    src: "templates/custom-undercloud-params.yaml"
-    dest: "/home/stack/custom-undercloud-params.yaml"
-    owner: stack
-    group: stack
+  loop:
+    - "containers-prepare-parameter.yaml"
+    - "custom-undercloud-params.yaml"
 
 - name: CONFIGFILES - Set undercloud configuration file
   template:
