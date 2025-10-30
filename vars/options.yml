@@ -227,6 +227,29 @@ Telemetry: False
   #   <snip>
   #   -----END CERTIFICATE-----
 
+# Parameter to define extra firewall rules for the undercloud
+UndercloudExtraFirewallRules: []
+#    '300 checkmk':
+#      port: 8081
+#      proto: tcp
+#      action: accept
+#    '301 checkmk':
+#      port: 15000
+#      proto: tcp
+#      action: accept
+#    '302 checkmk':
+#      port: 6556
+#      proto: tcp
+#      action: accept
+#    '303 checkmk':
+#      port: 6557
+#      proto: tcp
+#      action: accept
+#    '304 checkmk':
+#      port: 8000
+#      proto: tcp
+#      action: accept
+
 # DCN leafs
 DCNLeafs: []
   # - name: leaf1

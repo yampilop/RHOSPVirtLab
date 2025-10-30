@@ -1,0 +1,18 @@
+parameter_defaults:
+  AdminPassword: "redhat"
+  AdminEmail: "admin@example.com"
+
+{% if UndercloudExtraFirewallRules is defined and UndercloudExtraFirewallRules %}
+{% if RHOSP_version > 17.0 %}
+  ExtraFirewallRules:
+{% for key in UndercloudExtraFirewallRules.keys() %}
+    '{{ key }}': {{ UndercloudExtraFirewallRules[key] | to_yaml }}
+{%- endfor %}
+{% else %}
+  ExtraConfig:
+    tripleo::firewall::firewall_rules:
+{% for key in UndercloudExtraFirewallRules.keys() %}
+      '{{ key }}': {{ UndercloudExtraFirewallRules[key] | to_yaml }}
+{%- endfor %}
+{% endif %}
+{% endif %}
