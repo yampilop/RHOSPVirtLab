@@ -138,7 +138,7 @@ resources:
       ephemeral: {{ size.ephemeral }}
       swap: {{ size.swap }}
       is_public: True
-      extra_specs: { "sriov": true, "hw:cpu_policy": "dedicated", "hw:mem_page_size": "large" }
+      extra_specs: { "sriov": "True", "hw:cpu_policy": "dedicated", "hw:mem_page_size": "large" }
 {% endif %}
 {% endfor %}
 
@@ -183,7 +183,7 @@ resources:
     properties:
       name: dpdk_hosts
       hosts: [{% for node in (physical | selectattr("profile", "contains", "Dpdk")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
-      metadata: { "dpdk": true }
+      metadata: { "dpdk": "True" }
 {% endif %}
 {% if sriov_count > 0 %}
   aggregate_sriov_hosts:
@@ -191,7 +191,7 @@ resources:
     properties:
       name: sriov_hosts
       hosts: [{% for node in (physical | selectattr("profile", "match", "Sriov|HwOffload")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
-      metadata: { "sriov": true }
+      metadata: { "sriov": "True" }
 {% endif %}
 {% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
 {% for leaf in DCNLeafs %}
