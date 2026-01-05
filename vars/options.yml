@@ -214,6 +214,9 @@ ControllersFencing: True
 # Neutron driver
 NeutronDriver: ovn
 
+# Snmpd configuration
+SnmpdReadonlyUserPassword: RHOSPVirtLab
+
 # Disable telemetry
 DisableTelemetry: True
 

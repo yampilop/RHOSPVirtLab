@@ -196,6 +196,9 @@ parameter_defaults:
 {% endfor %}{# IF 6 FOR 2 #}
 {% endif %}{# IF 6 #}
 
+# Snmp definitions
+  SnmpdReadonlyUserPassword: {{ SnmpdReadonlyUserPassword }}
+
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 7 #}
 # Telemetry definitions
 {% if leaf.name == DefaultLeaf0.name %}{# IF 7.1 #}

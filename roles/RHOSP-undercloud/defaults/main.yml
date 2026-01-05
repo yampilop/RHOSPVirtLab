@@ -229,6 +229,9 @@ NeutronDriver: ovn
 # DCN leafs
 DCNLeafs: []
 
+# Snmpd configuration
+SnmpdReadonlyUserPassword: RHOSPVirtLab
+
 # Disable telemetry
 DisableTelemetry: True
 
