@@ -5,17 +5,12 @@ nodes:
 {% else %}
 {% set vm_capabilities='boot_mode:bios' %}
 {% endif %}
-{% if RHOSP_version == 13.0 %}
-  - mac: 
-      - '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
-{% else %}
   - ports:
       - address: '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
 {% if vm.hypervisor in DefaultLeaf0.hypervisor %}
         physical_network: ctlplane
 {% else %}
         physical_network: {{ leaf.subnet.name }}
-{% endif %}
 {% endif %}
     name: "{{ leaf.name ~ '-' ~ vm.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ vm.name, "boot_option:local", vm_capabilities] | join(',') }}"
@@ -31,17 +26,12 @@ nodes:
 {% endfor %}
 
 {% for node in physical if node.leaf == leaf.name %}
-{% if RHOSP_version == 13.0 %}
-  - mac: 
-      - '{{ node.mac }}'
-{% else %}
   - ports:
       - address: '{{ node.mac }}'
 {% if node.leaf == DefaultLeaf0.name %}
         physical_network: ctlplane
 {% else %}
         physical_network: {{ leaf.subnet.name }}
-{% endif %}
 {% endif %}
     name: "{{ leaf.name ~ '-' ~ node.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"

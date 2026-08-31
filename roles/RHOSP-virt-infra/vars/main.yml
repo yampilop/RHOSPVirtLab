@@ -41,6 +41,36 @@ RHEL_version_supported:
       - virtualbmc
       - netaddr
     ovmf_path: '/usr/share/edk2/ovmf/'
+  "9.6": # TODO
+    packages:
+      - libvirt
+      - libvirt-bash-completion
+      - libguestfs-tools
+      - ipmitool
+      - "@python36"
+      - python3-lxml
+      - python3-libvirt
+      - edk2-ovmf
+      - dhcp-relay
+    pip:
+      - virtualbmc
+      - netaddr
+    ovmf_path: '/usr/share/edk2/ovmf/'
+  "10.2": # TODO
+    packages:
+      - libvirt
+      - libvirt-bash-completion
+      - libguestfs-tools
+      - ipmitool
+      - "@python36"
+      - python3-lxml
+      - python3-libvirt
+      - edk2-ovmf
+      - dhcp-relay
+    pip:
+      - virtualbmc
+      - netaddr
+    ovmf_path: '/usr/share/edk2/ovmf/'
 
 RHOSP_version_supported:
   17.1:
@@ -49,27 +79,9 @@ RHOSP_version_supported:
       name: 'rhel-9.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda4'
     rhel_release: '9.2'
-  17.0:
-    rhel_image:
-      url: 'http://porkchop.redhat.com/released/RHEL-9/9.0.0/BaseOS/x86_64/images/rhel-guest-image-9.0-20220420.0.x86_64.qcow2'
-      name: 'rhel-9.0-x86_64-kvm.qcow2'
-      main_partition: '/dev/sda4'
-    rhel_release: '9.0'
   16.2:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
-  16.1:
-    rhel_image:
-      url: 'http://porkchop.redhat.com/released/RHEL-8/8.2.0/BaseOS/x86_64/images/rhel-guest-image-8.2-290.x86_64.qcow2'
-      name: 'rhel-8.2-x86_64-kvm.qcow2'
-      main_partition: '/dev/sda3'
-    rhel_release: '8.2'
-  13.0:
-    rhel_image:
-      url: 'http://porkchop.redhat.com/released/RHEL-7/7.9/Server/x86_64/images/rhel-guest-image-7.9-30.x86_64.qcow2'
-      name: 'rhel-7.9-x86_64-kvm.qcow2'
-      main_partition: '/dev/sda1'
-    rhel_release: '7.9'

@@ -5,14 +5,18 @@ Virtual lab to setup a Red Hat OpenStack Platform test installation over a RHEL 
 Currently supported RHOSP versions:
 
 - **17.1** (default)
-- 17.0
 - 16.2
-- 16.1
-- 13.0
 
 ## Assumptions
 
-This document assumes that you run a **RHEL 8.4** or **RHEL 7.9** installation in your server. The steps for other OS versions may differ from the exposed here.
+This document assumes that you run a **RHEL installation** in your server, in one of the following versions:
+
+- **RHEL 10.2**
+- **RHEL 9.6**
+- **RHEL 8.4**
+- **RHEL 7.9**
+
+The steps for other OS versions may differ from the exposed here. Some bugs may appear due to compatibility of packages.
 
 Your server must fulfill the following **minimum requirements**:
 
@@ -20,7 +24,38 @@ Your server must fulfill the following **minimum requirements**:
   * RAM: 128GB
   * Disk: 350GB of free space
 
-Your server needs to be registered and attached to a valid pool. To do that:
+Your server needs to be registered, attached to a valid pool and with the needed repositories enabled. To do that:
+
+- On **RHEL 10.2**:
+
+```bash
+sudo subscription-manager register
+sudo subscription-manager list --available --all
+(select a valid available pool)
+sudo subscription-manager attach --pool=<POOL_ID>
+sudo subscription-manager release --set=10.2
+sudo subscription-manager repos --disable=*
+sudo subscription-manager repos --enable=rhel-10-for-x86_64-baseos-rpms \
+--enable=rhel-10-for-x86_64-appstream-rpms
+sudo dnf update -y
+sudo reboot
+```
+
+- On **RHEL 9.6**:
+
+```bash
+# TODO
+sudo subscription-manager register
+sudo subscription-manager list --available --all
+(select a valid available pool)
+sudo subscription-manager attach --pool=<POOL_ID>
+sudo subscription-manager release --set=9.6
+sudo subscription-manager repos --disable=*
+sudo subscription-manager repos --enable=rhel-9-for-x86_64-baseos-rpms \
+--enable=rhel-9-for-x86_64-appstream-rpms
+sudo dnf update -y
+sudo reboot
+```
 
 - On **RHEL 8.4**:
 
@@ -83,6 +118,19 @@ ssh-copy-id admin@<hypervisor_address>
 ```
 
 ## Install required and useful packages
+
+- On **RHEL 10.2**:
+
+```bash
+sudo dnf -y install git vim wget bash-completion python3-argcomplete python3-netaddr rhel-system-roles tmux tcpdump
+```
+
+- On **RHEL 9.6**:
+
+```bash
+# TODO
+sudo dnf -y install git vim wget bash-completion python3-argcomplete python3-netaddr rhel-system-roles tmux tcpdump
+```
 
 - On **RHEL 8.4**:
 

@@ -13,7 +13,7 @@ Requires rhel-system-roles package installed.
 Role Variables
 --------------
 
-RHOSP_version: **17.1**|17.0|16.2|16.1|13.0
+RHOSP_version: **17.1**|16.2
   This variable sets the version of RHOSP to install.
 
 RHOSP_release: **latest**|*valid_number*
@@ -147,4 +147,4 @@ CC BY-SA 4.0
 Author Information
 ------------------
 
-Juan Pablo Martí (Technical Support Engineer) [jmarti@redhat.com][yampilop@gmail.com]
+Juan Pablo Martí (Software Maintenance Engineer) [jmarti@redhat.com][yampilop@gmail.com]

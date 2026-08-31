@@ -6,7 +6,7 @@ parameter_defaults:
   SnmpdReadonlyUserPassword: {{ SnmpdReadonlyUserPassword }}
 
 {% if UndercloudExtraFirewallRules is defined and UndercloudExtraFirewallRules %}
-{% if RHOSP_version > 17.0 %}
+{% if RHOSP_version >= 17.1 %}
   ExtraFirewallRules:
 {% for key in UndercloudExtraFirewallRules.keys() %}
     '{{ key }}': {{ UndercloudExtraFirewallRules[key] | to_yaml }}

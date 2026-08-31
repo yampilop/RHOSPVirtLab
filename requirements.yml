@@ -1,6 +1,9 @@
 ---
 collections:
   - name: community.libvirt
+  - name: community.general
+  - name: ansible.posix
+  - name: ansible.netcommon
 
 roles:
   - name: geerlingguy.swap

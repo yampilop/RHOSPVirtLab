@@ -39,7 +39,7 @@ parameter_defaults:
 {% endif %}{# IF 2.1.1 FOR 1 IF 1 #}
 {% endfor %}{# IF 2.1.1 FOR 1 #}
 {% else %}{# IF 2.1.1 #}
-{% if RHOSP_version < 17.0 %}{# IF 2.1.1.1 #}
+{% if RHOSP_version < 17.1 %}{# IF 2.1.1.1 #}
   GlanceBackend: cinder
   CinderStorageAvailabilityZone: {{ leaf.name }}
 {% else %}{# IF 2.1.1.1 #}
@@ -57,7 +57,7 @@ parameter_defaults:
 {% endif %}{# IF 2.1 #}
   PublicVirtualFixedIPs: [{'ip_address':'{{ overcloud_ip }}'}]
 {% else %}{# IF 2 #}
-{% if RHOSP_version < 17.0 %}{# IF 2.2 #}
+{% if RHOSP_version < 17.1 %}{# IF 2.2 #}
   CinderStorageAvailabilityZone: {{ leaf.name }}
   GlanceBackendID: {{ leaf.name }}
 {% endif %}{# IF 2.2 #}
@@ -67,7 +67,7 @@ parameter_defaults:
   GlanceStoreDescription: '{{ leaf.name }} rbd glance store'
   GlanceRbdPoolName: images
 {% else %}{# IF 2.3 #}
-{% if RHOSP_version < 17.0 %}{# IF 2.3.1 #}
+{% if RHOSP_version < 17.1 %}{# IF 2.3.1 #}
   GlanceBackend: cinder
 {% endif %}{# IF 2.3.1 #}
 {% endif %}{# IF 2.3 #}
@@ -80,18 +80,18 @@ parameter_defaults:
       GlanceRbdPoolName: images
       CephClientUserName: openstack
 {% endif %}{# IF 2.4 #}
-{% if RHOSP_version < 17.0 %}{# IF 2.5 #}
+{% if RHOSP_version < 17.1 %}{# IF 2.5 #}
   NovaAZAttach: false
 {% else %}{# IF 2.5 #}
   NovaCrossAZAttach: false
 {% endif %}{# IF 2.5 #}
   NovaComputeAvailabilityZone: {{ leaf.name }}
-{% if RHOSP_version < 17.0 %}{# IF 2.6 #}
+{% if RHOSP_version < 17.1 %}{# IF 2.6 #}
   ManageNetworks: false
   RootStackName: {{ DefaultLeaf0.name }}
 {% endif %}{# IF 2.6 #}
 {% endif %}{# IF 2 #}
-{% if RHOSP_version < 17.0 %}{# IF 3 #}
+{% if RHOSP_version < 17.1 %}{# IF 3 #}
   AllNodesExtraConfig:
     swap_size_megabytes: '8192'
 {% for ocrole in overcloud_roles %}{# IF 3 FOR 1 #}
@@ -105,34 +105,6 @@ parameter_defaults:
 {% endif %}{# IF 3 FOR 1 IF 1 #}
 {% endfor %}{# IF 3 FOR 1 #}
 
-{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}{# IF 3.1 #}
-{% for dcnleaf in DCNLeafs %}{# IF 3.1 FOR 1 #}
-{% for ocrole in overcloud_roles %}{# IF 3.1 FOR 1.1 #}
-{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}{# IF 3.1 FOR 1.1 IF 1 #}
-  {{ ocrole.name }}{{ dcnleaf.name }}SchedulerHints:
-    'capabilities:node': '{{ dcnleaf.name }}-{{ ocrole.profile }}%index%'
-{% if 'Compute' in ocrole.name %}{# IF 3.1 FOR 1.1 IF 1.1 #}
-  {{ ocrole.name }}{{ dcnleaf.name }}ExtraConfig:
-    nova::compute::libvirt::vncserver_listen: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
-    nova::compute::vncserver_proxyclient_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
-    neutron::agents::ml2::ovs::local_ip: "%{hiera('tenant_{{ dcnleaf.name }}')}"
-    ovn::controller::ovn_encap_ip: "%{hiera('tenant_{{ dcnleaf.name }}')}"
-    cold_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
-    live_migration_ssh_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
-    nova::migration::libvirt::live_migration_inbound_addr: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
-    nova::my_ip: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
-    tripleo::profile::base::database::mysql::client::mysql_client_bind_address: "%{hiera('internal_api_{{ dcnleaf.name }}')}"
-    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
-{% endif %}{# IF 3.1 FOR 1.1 IF 1.1 #}
-{% endif %}{# IF 3.1 FOR 1.1 IF 1 #}
-{% endfor %}{# IF 3.1 FOR 1.1 #}
-{% endfor %}{# IF 3.1 FOR 1 #}
-{% if (ceph_count + hci_count) > 0 %}{# IF 3.1.1 #}
-  CephAnsibleExtraConfig:
-    public_network: '{{ DefaultLeaf0.networks.Storage.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.Storage.prefix ~ '.0/24' }}{% endfor %}'
-    cluster_network: '{{ DefaultLeaf0.networks.StorageMgmt.prefix ~ '.0/24' }},{% for dcnleaf in DCNLeafs %}{{ leaf.networks.StorageMgmt.prefix ~ '.0/24' }}{% endfor %}'
-{% endif %}{# IF 3.1.1 #}
-{% endif %}{# IF 3.1 #}
 {% else %}{# IF 3 #}
 {% for ocrole in overcloud_roles if ('Compute' in ocrole.name) and (roles_count[leaf.name][ocrole.name] > 0) %}{# IF 3 FOR 1 #}
   {{ ocrole.name }}ExtraConfig:
@@ -156,15 +128,8 @@ parameter_defaults:
 {% for repo in RHOSP_version_supported[RHOSP_version].nodes_repos %}{# IF 4 FOR 1 #}
       - {{ repo }}
 {% endfor %}{# IF 4 FOR 1 #}
-{% if RHOSP_version != 13.0 %}{# IF 4.2 #}
     rhsm_release: {{ RHOSP_version_supported[RHOSP_version].rhel_release }}
-{% endif %}{# IF 4.2 #}
 {% endif %}{# IF 4 #}
-{% if RHOSP_version == 13.0 %}{# IF 5 #}
-  DockerInsecureRegistryAddress:
-  - undercloud.ctlplane.localdomain:8787
-  - {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }}:8787
-{% endif %}{# IF 5 #}
 
 {% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == DefaultLeaf0.name)) %}{# IF 6 #}
   # Fencing parameters

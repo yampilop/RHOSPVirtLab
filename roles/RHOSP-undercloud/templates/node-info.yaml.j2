@@ -1,4 +1,4 @@
-{% if RHOSP_version < 17.0 %}
+{% if RHOSP_version < 17.1 %}
 
 parameter_defaults:
 {% for ocrole in overcloud_roles %}
@@ -7,17 +7,6 @@ parameter_defaults:
   {{ ocrole.name }}Count: {{ roles_count[leaf.name][ocrole.name] }}
 {% endif %}
 {% endfor %}
-
-{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
-{% for dcnleaf in DCNLeafs %}
-{% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
-{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-  Overcloud{{ ocrole.name }}{{ dcnleaf.name }}Flavor: baremetal
-  {{ ocrole.name }}{{ dcnleaf.name }}Count: {{ roles_count[dcnleaf.name][ocrole.name] }}
-{% endif %}
-{% endfor %}
-{% endfor %}
-{% endif %}
 
 {% else %}
 

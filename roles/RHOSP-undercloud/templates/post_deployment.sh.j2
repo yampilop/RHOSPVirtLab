@@ -4,12 +4,6 @@
 {% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
 #/bin/bash
 
-{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
-# Get servers list
-source ~/stackrc
-SERVERS=$(openstack server list -f value -c Name)
-{% endif %}
-
 source /home/stack/overcloudrc
 
 ################################################################################
@@ -48,27 +42,7 @@ openstack stack show overcloud_resources &>/dev/null || openstack stack create \
 --parameter "default_security_group_id=${SECGROUPID}" \
 overcloud_resources
 
-{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
-# Manual host addition for host aggregates needed for RHOSP 13.0 DCN
-{% for leaf in DCNLeafs %}
-{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
-for HOST in $SERVERS; do
-  if [[ $HOST == *"{{ leaf.name }}"* ]]; then
-    openstack aggregate add host {{ leaf.name }} $HOST.localdomain
-  fi
-done
-{% endif %}
-{% endfor %}
-{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
-for HOST in $SERVERS; do
-  if [[ $HOST == *"{{ DefaultLeaf0.name }}"* ]]; then
-    openstack aggregate add host {{ DefaultLeaf0.name }} $HOST.localdomain
-  fi
-done
-{% endif %}
-{% endif %}
-
-{% if DeployOctavia and RHOSP_version < 17%}
+{% if DeployOctavia and RHOSP_version < 17 %}
 # Octavia configuration
 openstack loadbalancer flavorprofile show amphora-single-profile &>/dev/null || openstack loadbalancer flavorprofile create --name amphora-single-profile --provider amphora --flavor-data '{"loadbalancer_topology": "SINGLE"}'
 openstack loadbalancer flavor show standalone-lb &>/dev/null || openstack loadbalancer flavor create --name standalone-lb --flavorprofile amphora-single-profile --description "A non-high availability load balancer for testing."

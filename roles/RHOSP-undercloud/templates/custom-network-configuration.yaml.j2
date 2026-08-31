@@ -1,4 +1,4 @@
-{% if RHOSP_version < 17.0 %}
+{% if RHOSP_version < 17.1 %}
 resource_registry:
 {% for ocrole in overcloud_roles %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
@@ -9,22 +9,13 @@ resource_registry:
 {% endif %}
 {% endif %}
 {% endfor %}
-{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
-{% for dcnleaf in DCNLeafs %}
-{% for ocrole in overcloud_roles %}
-{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-  OS::TripleO::{{ ocrole.name }}{{ dcnleaf.name }}::Net::SoftwareConfig: /home/stack/templates/{{ dcnleaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
-{% endif %}
-{% endfor %}
-{% endfor %}
-{% endif %}
-{% if (RHOSP_version < 17.0) and (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
+{% if (RHOSP_version < 17.1) and (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
 {% endif %}
 {% endif %}
 
 parameter_defaults:
-{% if RHOSP_version < 17.0 %}
+{% if RHOSP_version < 17.1 %}
   NetworkDeploymentActions: ['CREATE','UPDATE']
 {% else %}
 {% for ocrole in overcloud_roles %}
@@ -55,7 +46,7 @@ parameter_defaults:
   NeutronOVSFirewallDriver: openvswitch
 {% endif %}
   
-{% if (RHOSP_version < 17.0) and (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
+{% if (RHOSP_version < 17.1) and (physical | selectattr("leaf", "equalto", leaf.name) | list | count) > 0 %}
   NetConfigDataLookup:
 {% for pm in physical if pm.leaf == leaf.name %}
     node{{ loop.index }}:
@@ -101,46 +92,6 @@ parameter_defaults:
     OVNCMSOptions: "enable-chassis-as-gw,availability-zones={{ DefaultLeaf0.name }}:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
 {% endif %}
 
-{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
-{% for dcnleaf in DCNLeafs %}
-{% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
-{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-  {{ ocrole.name }}{{ dcnleaf.name }}ControlPlaneSubnet: {{ dcnleaf.subnet.name }}
-  {{ ocrole.name }}{{ dcnleaf.name }}Parameters:
-    NeutronBridgeMappings: "datacentre-{{ dcnleaf.name }}:br-ex"
-    NeutronTenantNetwork: "tenant_{{ dcnleaf.name }}"
-{% endif %}
-{% endfor %}
-{% endfor %}
-
-# Spine-leaf routing for RHOSP 13.0
-{% for network in roles_networks.Controller %}
-  {{ network }}InterfaceRoutes:
-{% for dcnleaf in DCNLeafs %}
-    - destination: {{ dcnleaf.networks[network].prefix ~ '.0/24' }}
-      nexthop: {{ leaf.networks[network].prefix ~ '.1' }}
-{% endfor %}
-{% for dcnleaf in DCNLeafs %}
-  {{ network }}{{ dcnleaf.name }}InterfaceRoutes:
-    - destination: {{ leaf.networks[network].prefix ~ '.0/24' }}
-      nexthop: {{ dcnleaf.networks[network].prefix ~ '.1' }}
-{% for dcnleaf2 in DCNLeafs if dcnleaf2.name != dcnleaf.name %}
-    - destination: {{ dcnleaf2.networks[network].prefix ~ '.0/24' }}
-      nexthop: {{ dcnleaf.networks[network].prefix ~ '.1' }}
-{% endfor %}
-{% endfor %}
-{% endfor %}
-
-  ServiceNetMap:
-{% for dcnleaf in DCNLeafs %}
-{% for ocrole in overcloud_roles if ocrole.name != 'Controller' %}
-{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-    {{ ocrole.name }}{{ dcnleaf.name }}HostnameResolveNetwork: {{ 'storage_' ~ dcnleaf.name if 'Ceph' in ocrole.name else 'internal_api_' ~ dcnleaf.name }}
-{% endif %}
-{% endfor %}
-{% endfor %}
-
-{% endif %}
 {% endif %}
 
 {% if roles_count[leaf.name]["ComputeOvsDpdkSriov"] > 0 %}
@@ -157,12 +108,8 @@ parameter_defaults:
     OvsDpdkSocketMemory: "{{ ComputeOvsDpdkSriovProperties.socketmemory }}"
     OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkSriovProperties.memorychannels }}"
     OvsDpdkCoreList: "{{ ComputeOvsDpdkSriovProperties.ovsdpdkcorelist }}"
-{% if RHOSP_version == 13.0 %}
-    NovaVcpuPinSet: "{{ ComputeOvsDpdkSriovProperties.dedicatedcpus }}"
-{% else %}
     NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkSriovProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkSriovProperties.sharedcpus }}"
-{% endif %}
     OvsPmdCoreList: "{{ ComputeOvsDpdkSriovProperties.ovspmdcorelist}}"
     OvsEnableDpdk: true
     NovaPCIPassthrough: {{ ComputeOvsDpdkSriovProperties.pcipassthrough }}
@@ -183,12 +130,8 @@ parameter_defaults:
     OvsDpdkSocketMemory: "{{ ComputeOvsDpdkProperties.socketmemory }}"
     OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkProperties.memorychannels }}"
     OvsDpdkCoreList: "{{ ComputeOvsDpdkProperties.ovsdpdkcorelist }}"
-{% if RHOSP_version == 13.0 %}
-    NovaVcpuPinSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
-{% else %}
     NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkProperties.sharedcpus }}"
-{% endif %}
     OvsPmdCoreList: "{{ ComputeOvsDpdkProperties.ovspmdcorelist}}"
     OvsEnableDpdk: true
 {% endif %}
@@ -203,12 +146,8 @@ parameter_defaults:
     IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
     KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
     TunedProfileName: "cpu-partitioning"
-{% if RHOSP_version == 13.0 %}
-    NovaVcpuPinSet: "{{ ComputeSriovProperties.dedicatedcpus }}"
-{% else %}
     NovaComputeCpuDedicatedSet: "{{ ComputeSriovProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeSriovProperties.sharedcpus }}"
-{% endif %}
     NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}
     NovaPCIPassthrough: {{ ComputeSriovProperties.pcipassthrough }}
     NeutronPhysicalDevMappings: {{ ComputeSriovProperties.physicaldevmappings }}
@@ -225,12 +164,8 @@ parameter_defaults:
     KernelArgs: "default_hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepages={{ ComputeOvsHwOffloadProperties.hugepages }} {{ ComputeOvsHwOffloadProperties.kernelargs }} isolcpus={{ ComputeOvsHwOffloadProperties.isolcpus }}"
     OvsHwOffload: true
     TunedProfileName: "cpu-partitioning"
-{% if RHOSP_version == 13.0 %}
-    NovaVcpuPinSet: "{{ ComputeOvsHwOffloadProperties.dedicatedcpus }}"
-{% else %}
     NovaComputeCpuDedicatedSet: "{{ ComputeOvsHwOffloadProperties.dedicatedcpus }}"
     NovaComputeCpuSharedSet: "{{ ComputeOvsHwOffloadProperties.sharedcpus }}"
-{% endif %}
     NovaReservedHostMemory: {{ ComputeOvsHwOffloadProperties.hostmemory }}
     NovaPCIPassthrough: {{ ComputeOvsHwOffloadProperties.pcipassthrough }}
     NeutronPhysicalDevMappings: {{ ComputeOvsHwOffloadProperties.physicaldevmappings }}

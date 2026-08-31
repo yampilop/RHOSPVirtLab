@@ -144,18 +144,10 @@ resources:
 
   # Image resources
   image_rhel:
-{% if RHOSP_version != 13.0 %}
-    type: OS::Glance::WebImage
-{% else %}
     type: OS::Glance::Image
-{% endif %}
     external_id: { get_param: image_rhel_external_id }
   image_cirros:
-{% if RHOSP_version != 13.0 %}
-    type: OS::Glance::WebImage
-{% else %}
     type: OS::Glance::Image
-{% endif %}
     external_id: { get_param: image_cirros_external_id }
 
 {% if DeployOctavia and RHOSP_version >= 17 %}
@@ -193,24 +185,6 @@ resources:
       hosts: [{% for node in (physical | selectattr("profile", "match", "Sriov|HwOffload")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
       metadata: { "sriov": true }
 {% endif %}
-{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
-{% for leaf in DCNLeafs %}
-{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
-  aggregate_{{ leaf.name }}:
-    type: OS::Nova::HostAggregate
-    properties:
-      name: {{ leaf.name }}
-      availability_zone: {{ leaf.name }}
-{% endif %}
-{% endfor %}
-{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
-  aggregate_{{ DefaultLeaf0.name }}:
-    type: OS::Nova::HostAggregate
-    properties:
-      name: {{ DefaultLeaf0.name }}
-      availability_zone: {{ DefaultLeaf0.name }}
-{% endif %}
-{% endif %}
 
   # Server group resources
   affinity_group:
@@ -223,7 +197,6 @@ resources:
     properties:
       name: anti-affinity-group
       policies: ['anti-affinity']
-{% if (RHOSP_version != 13.0) %}
   soft_affinity_group:
     type: OS::Nova::ServerGroup
     properties:
@@ -234,7 +207,6 @@ resources:
     properties:
       name: soft-anti-affinity-group
       policies: ['soft-anti-affinity']
-{% endif %}
 
   # Keystone resources
   user:
