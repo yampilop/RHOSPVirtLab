@@ -6,7 +6,7 @@
   vlan: {{ network.vlan | default(1) }}
   name_lower: {{ networkName | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
   ip_subnet: '{{ network.prefix }}.0/24'
-  allocation_pools: [{'start': '{{ network.prefix }}.4', 'end': '{{ network.prefix }}.{{ '99' if networkName == 'External' else 250' }}'}]
+  allocation_pools: [{'start': '{{ network.prefix }}.4', 'end': '{{ network.prefix }}.{{ '99' if networkName == 'External' else '250' }}'}]
   gateway_ip: '{{ network.prefix }}.1'
   mtu: 1500
 {% if DCNLeafs | length > 0 %}
@@ -35,17 +35,17 @@
       ip_subnet: {{ network.prefix }}.0/24
       allocation_pools:
         - start: {{ network.prefix }}.4
-          end: {{ network.prefix }}.{{ '99' if networkName == 'External' else 250' }}
+          end: {{ network.prefix }}.{{ '99' if networkName == 'External' else '250' }}
       gateway_ip: {{ network.prefix }}.1
       vlan: {{ network.vlan | default(1) }}
 {% for leaf in DCNLeafs %}
     {{ networkName | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet_{{ leaf.name }}:
-      ip_subnet: {{ leaf.networks.[networkName].prefix }}.0/24
+      ip_subnet: {{ leaf.networks[networkName].prefix }}.0/24
       allocation_pools:
-        - start: {{ leaf.networks.[networkName].prefix }}.4
-          end: {{ leaf.networks.[networkName].prefix }}.250
-      gateway_ip: {{ leaf.networks.[networkName].prefix }}.1
-      vlan: {{ leaf.networks.[networkName].vlan | default(1) }}
+        - start: {{ leaf.networks[networkName].prefix }}.4
+          end: {{ leaf.networks[networkName].prefix }}.250
+      gateway_ip: {{ leaf.networks[networkName].prefix }}.1
+      vlan: {{ leaf.networks[networkName].vlan | default(1) }}
 {% endfor %}
 {% endfor %}
 # End of RHOSP 17.1 version
