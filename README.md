@@ -44,7 +44,6 @@ sudo reboot
 - On **RHEL 9.6**:
 
 ```bash
-# TODO
 sudo subscription-manager register
 sudo subscription-manager list --available --all
 (select a valid available pool)
@@ -128,7 +127,6 @@ sudo dnf -y install git vim wget bash-completion python3-argcomplete python3-net
 - On **RHEL 9.6**:
 
 ```bash
-# TODO
 sudo dnf -y install git vim wget bash-completion python3-argcomplete python3-netaddr rhel-system-roles tmux tcpdump
 ```
 

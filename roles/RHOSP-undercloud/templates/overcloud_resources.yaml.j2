@@ -52,8 +52,8 @@ resources:
       network: { get_resource: default_provider_network }
       ip_version: 4
       allocation_pools:
-        - start: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipmath(99) }}
-          end: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipmath(249) }}
+        - start: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(99) }}
+          end: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(249) }}
       cidr: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
       enable_dhcp: True
       gateway_ip: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
@@ -88,8 +88,8 @@ resources:
       network: { get_resource: default_provider_network_{{ leaf.name }} }
       ip_version: 4
       allocation_pools:
-        - start: {{ (leaf.networks.External.prefix ~ '.1/24') | ipmath(99) }}
-          end: {{ (leaf.networks.External.prefix ~ '.1/24') | ipmath(249) }}
+        - start: {{ (leaf.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(99) }}
+          end: {{ (leaf.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(249) }}
       cidr: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
       enable_dhcp: True
       gateway_ip: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('address') }}

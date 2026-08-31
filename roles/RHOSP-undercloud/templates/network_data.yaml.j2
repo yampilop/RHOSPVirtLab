@@ -2,7 +2,7 @@
 # RHOSP 16.2 version
 {% for networkName, network in DefaultLeaf0.networks.items() %}
 - name: {{ networkName }}
-  vip: {{ 'false # Tenant network does not use VIPs' if networkName in 'Tenant,Management' else 'true' }}
+  vip: {{ 'false' if networkName in 'Tenant,Management' else 'true' }}
   vlan: {{ network.vlan | default(1) }}
   name_lower: {{ networkName | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
   ip_subnet: '{{ network.prefix }}.0/24'
@@ -28,7 +28,7 @@
 {% for networkName, network in DefaultLeaf0.networks.items() %}
 - name: {{ networkName }}
   name_lower: {{ networkName | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
-  vip: {{ 'false # Tenant network does not use VIPs' if networkName in 'Tenant,Management' else 'true' }}
+  vip: {{ 'false' if networkName in 'Tenant,Management' else 'true' }}
   mtu: 1500
   subnets:
     {{ networkName | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet:
