@@ -37,7 +37,7 @@ resources:
     type: OS::Neutron::ProviderNet
     properties:
       name: default-provider
-      network_type: {{ 'vlan' (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
+      network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
       physical_network: datacentre
 {% if (DefaultLeaf0.networks.External.vlan is defined) %}
       segmentation_id: {{ DefaultLeaf0.networks.External.vlan | default('') }}
