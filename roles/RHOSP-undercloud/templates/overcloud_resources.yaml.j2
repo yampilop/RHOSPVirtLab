@@ -31,14 +31,15 @@ parameters:
     default: ''
 
 resources:
+{% if (DefaultLeaf0.networks.External is defined) %}
   # Provider network resources
   default_provider_network:
     type: OS::Neutron::ProviderNet
     properties:
       name: default-provider
-      network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
+      network_type: {{ 'vlan' (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
       physical_network: datacentre
-{% if DefaultLeaf0.networks.External.vlan is defined %}
+{% if (DefaultLeaf0.networks.External.vlan is defined) %}
       segmentation_id: {{ DefaultLeaf0.networks.External.vlan | default('') }}
 {% endif %}
       router_external: True
@@ -102,6 +103,7 @@ resources:
         network: { get_resource: default_provider_network_{{ leaf.name }} }
         enable_snat: True
 {% endfor %}
+{% endif %}
   # Flavor resources
 {% for size in DefaultFlavorsSize %}
   flavor_m1_{{ size.name }}:

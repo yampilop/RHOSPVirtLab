@@ -41,13 +41,11 @@ RHEL_version_supported:
       - virtualbmc
       - netaddr
     ovmf_path: '/usr/share/edk2/ovmf/'
-  "9.6": # TODO
+  "9.6":
     packages:
       - libvirt
-      - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      - "@python36"
       - python3-lxml
       - python3-libvirt
       - edk2-ovmf
@@ -56,13 +54,11 @@ RHEL_version_supported:
       - virtualbmc
       - netaddr
     ovmf_path: '/usr/share/edk2/ovmf/'
-  "10.2": # TODO
+  "10.2":
     packages:
       - libvirt
-      - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      - "@python36"
       - python3-lxml
       - python3-libvirt
       - edk2-ovmf
