@@ -12,7 +12,7 @@ network_config:
 {% else %}
 - type: ovs_bridge
 {% endif %}
-  name: br-ex
+{% raw %}  name: br-ex
   use_dhcp: false
   dns_servers: {{ ctlplane_dns_nameservers }}
   domain: {{ dns_search_domains }}
@@ -21,6 +21,7 @@ network_config:
   routes: {{ ctlplane_host_routes }}
   members:
   - type: interface
+{% endraw %}
     name: {{ interfaces[item.name].ControlPlane }}
     primary: true
 {% else %}{# IF 1 #}
