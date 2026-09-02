@@ -5,6 +5,11 @@
 libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
+# The single undercloud machine and whether it is a pre-existing physical host
+# (as opposed to a libvirt VM the virt-infra role would create).
+undercloud_machine: "{{ machines | selectattr('openstack.role', 'equalto', 'undercloud') | list | first }}"
+undercloud_is_physical: "{{ (undercloud_machine.type | default('libvirt')) == 'physical' }}"
+
 RHEL_version_supported:
   '7.9':
   '8.4':

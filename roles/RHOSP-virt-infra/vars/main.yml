@@ -5,6 +5,11 @@
 libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
+# The single undercloud machine and whether it is a pre-existing physical host
+# (as opposed to a libvirt VM this role would create).
+undercloud_machine: "{{ machines | selectattr('openstack.role', 'equalto', 'undercloud') | list | first }}"
+undercloud_is_physical: "{{ (undercloud_machine.type | default('libvirt')) == 'physical' }}"
+
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 vbmc_path: "/usr/local/bin/vbmc"
 vbmcd_path: "/usr/local/bin/vbmcd"

@@ -23,7 +23,7 @@
       {%- for leaf in ([ DefaultLeaf0 ] + DCNLeafs) %}
         {{ leaf.name }}: {{
           ((libvirt_machines | rejectattr('openstack.role', 'equalto', 'undercloud') | selectattr('libvirt.hypervisor', 'in', leaf.hypervisor) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)
-           + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)) > 0
+           + (physical_machines | rejectattr('openstack.role', 'equalto', 'undercloud') | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)) > 0
         }},
       {%- endfor %}
       }
@@ -42,8 +42,8 @@
     - deployed_server[item.name] | bool
     - ((libvirt_machines | rejectattr('openstack.role', 'equalto', 'undercloud') | selectattr('libvirt.hypervisor', 'in', item.hypervisor) | rejectattr('pre_provisioned', 'defined') | list | count)
        + (libvirt_machines | rejectattr('openstack.role', 'equalto', 'undercloud') | selectattr('libvirt.hypervisor', 'in', item.hypervisor) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
-       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | rejectattr('pre_provisioned', 'defined') | list | count)
-       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
+       + (physical_machines | rejectattr('openstack.role', 'equalto', 'undercloud') | selectattr('openstack.leaf', 'equalto', item.name) | rejectattr('pre_provisioned', 'defined') | list | count)
+       + (physical_machines | rejectattr('openstack.role', 'equalto', 'undercloud') | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
   loop: "{{ [ DefaultLeaf0 ] + DCNLeafs }}"
 
 - name: PROFILES - Ensure pre-provisioned overcloud nodes define a valid ctlplane_ip
@@ -94,6 +94,7 @@
   fail:
     msg: "ERROR in physical {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
+    - item.openstack.role != 'undercloud'
     - item.openstack.leaf != DefaultLeaf0.name
     - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).distributed | bool)
   loop: "{{ physical_machines }}"

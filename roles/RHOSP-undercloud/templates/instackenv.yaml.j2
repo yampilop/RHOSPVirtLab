@@ -21,7 +21,7 @@ nodes:
     pm_port: "{{ vm.pm.port }}"
 {% endfor %}
 
-{% for node in physical_machines if node.openstack.leaf == leaf.name and (not node.pre_provisioned | default(false)) %}
+{% for node in physical_machines if (not node.openstack.role == 'undercloud') and node.openstack.leaf == leaf.name and (not node.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ node.physical.mac }}'
 {% if node.openstack.leaf == DefaultLeaf0.name %}
