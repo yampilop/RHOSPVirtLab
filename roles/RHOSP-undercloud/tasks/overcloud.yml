@@ -25,6 +25,16 @@
     - vip_data.yaml
     - overcloud_resources.yaml
 
+- name: TEMPLATES - Prepare the deployed-server port map (16.2 deployed servers)
+  template:
+    src: "deployed-server-ports.yaml.j2"
+    dest: "/home/stack/templates/deployed-server-ports.yaml"
+    owner: stack
+    group: stack
+  when:
+    - RHOSP_version < 17.1
+    - deployed_server[leaf.name]
+
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
     src: "nic-configs/nic-config.yaml.j2"

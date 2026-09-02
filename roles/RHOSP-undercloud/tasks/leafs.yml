@@ -21,6 +21,16 @@
     - custom-network-configuration.yaml
     - custom-ceph.yaml
 
+- name: "TEMPLATES - Prepare the deployed-server port map for {{ leaf.name }} (16.2)"
+  template:
+    src: "deployed-server-ports.yaml.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/deployed-server-ports.yaml"
+    owner: stack
+    group: stack
+  when:
+    - RHOSP_version < 17.1
+    - deployed_server[leaf.name]
+
 - name: "TEMPLATES - Prepare the nic-configs templates for {{ leaf.name }}"
   template:
     src: "nic-configs/nic-config.yaml.j2"

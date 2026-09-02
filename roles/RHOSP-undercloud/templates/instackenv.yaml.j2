@@ -1,6 +1,6 @@
 nodes:
 {% set ctlplane_bridge = (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).bridge %}
-{% for vm in libvirt_machines if (not vm.openstack.role == 'undercloud') and (vm.libvirt.hypervisor in leaf.hypervisor) %}
+{% for vm in libvirt_machines if (not vm.openstack.role == 'undercloud') and (vm.libvirt.hypervisor in leaf.hypervisor) and (not vm.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}'
 {% if vm.libvirt.hypervisor in DefaultLeaf0.hypervisor %}
@@ -21,7 +21,7 @@ nodes:
     pm_port: "{{ vm.pm.port }}"
 {% endfor %}
 
-{% for node in physical_machines if node.openstack.leaf == leaf.name %}
+{% for node in physical_machines if node.openstack.leaf == leaf.name and (not node.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ node.physical.mac }}'
 {% if node.openstack.leaf == DefaultLeaf0.name %}
