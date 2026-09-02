@@ -46,63 +46,76 @@ DefaultLeaf0:
 DCNLeafs:
   Variable used to define leafs when making a DCN deployment.
 
-vms:
-  List of the virtual machines created, in the format:
+machines:
+  Unified list of lab machines (both libvirt VMs and physical baremetal nodes).
+  Every entry shares common top-level parameters and is tagged with a `type`
+  discriminator; technology-specific parameters live in a block named after the type.
 
-```yaml
-  - name: VM_NAME
-    hypervisor: HYPERVISOR_NAME
-    title: 'VM_TITLE'
-    profile: 'PROFILE'
-    memory: RAM_IN_KB
-    vcpus: AMOUNT_OF_CPUS
-    bmcport: VBMC_PORT_TO_ASSIGN
-    mac: 'XX:XX:XX:XX:XX' (without the last octet)
-    uefi: false
-    disk_size: DISK_SIZE_IN_KB
-    data_disk_size: DISK_SIZE_IN_KB
-    backing_store: 'QCOW2_IMAGE' (image to use as base for the disk)
-    cdrom: 'CDROM_IMAGE' (image to insert as cdrom, useful for cloud-init)
-    nics:
-      NETWORK_NAME_1: 'IP_ADDRESS_1'
-      NETWORK_NAME_2: 'IP_ADDRESS_2'
-      ...
-```
-
-  By default the role creates:
-    - undercloud
-    - vcontroller0
-    - vcompute0
-
-  The profile value can be one of the following:
-    - vcontroller
-    - vcompute
-    - vcephstorage
-    - vcomputehci
-
-physical:
-  List of the physical machines to be connected to the lab, in the format:
+  A libvirt VM (`type: libvirt`):
 
 ```yaml
   - name: MACHINE_NAME
-    leaf: LEAF_NAME
-    title: 'MACHINE_TITLE'
-    profile: 'PROFILE'
-    memory: RAM_IN_KB
-    cpus: AMOUNT_OF_CPUS
-    pm_type: "ipmi"|"redfish"|"ilo"|"idrac"
-    pm_user: "PM_USER_NAME"
-    pm_password: "PM_PASSWORD"
-    pm_addr: "PM_IP_ADDRESS"
-    pm_port: "623"|"PM_PORT_IF_DIFFERENT_FROM_DEFAULT"
-    mac: 'XX:XX:XX:XX:XX:XX' (full MAC address of the ctlplane interface)
-    capabilities: 'LIST_OF_CAPABILITIES'
-    disk_size: DISK_SIZE_IN_KB
+    type: libvirt
+    pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
+    openstack:
+      role: PROFILE            # virtual-capable overcloud role, or 'undercloud'
+    pm:
+      type: ipmi
+      user: BMC_USER
+      password: BMC_PASSWORD
+      address: localhost       # localhost/hypervisor for VMs
+      port: VBMC_PORT          # virtualbmc port (unique per VM)
+      mode: bios               # bios | uefi
+    libvirt:
+      title: 'VM_TITLE'
+      hypervisor: HYPERVISOR_NAME
+      cpus: AMOUNT_OF_CPUS
+      memory: RAM_IN_KIB
+      disks:                   # one or more; exactly one root; all attached as virtio
+      - root: true
+        size: DISK_SIZE_IN_BYTES
+      - size: DATA_DISK_SIZE_IN_BYTES  # optional extra data disk(s)
+      network:
+        interfaces:            # each NIC attaches to a hypervisor bridge (type=bridge)
+        - name: nic1
+          mac: 'XX:XX:XX:XX:XX:XX'
+          bridge: BRIDGE_NAME
+        - name: nic2
+          mac: 'XX:XX:XX:XX:XX:XX'
+          bridge: BRIDGE_NAME
+          management: true     # optional: marks the Ansible access NIC (IP from inventory)
 ```
 
-  The role considers no physical machines by default.
+  A physical baremetal node (`type: physical`):
 
-  The profile value can be one of the following:
+```yaml
+  - name: MACHINE_NAME
+    type: physical
+    pre_provisioned: false     # optional: true = OS already loaded (deployed server)
+    openstack:
+      role: PROFILE
+      leaf: LEAF_NAME
+    pm:
+      type: "ipmi"|"redfish"|"ilo"|"idrac"
+      user: "PM_USER_NAME"
+      password: "PM_PASSWORD"
+      address: "PM_IP_ADDRESS"
+      port: "623"
+      mode: bios               # bios | uefi
+    physical:
+      cpus: AMOUNT_OF_CPUS
+      memory: RAM_IN_KIB
+      disk: DISK_SIZE_IN_BYTES
+      mac: 'XX:XX:XX:XX:XX:XX'  # boot NIC MAC (for introspection)
+      nics:
+        nic1: 'ens1f0'
+        nic2: 'ens1f1'
+```
+
+  By default the role creates only the `undercloud` VM (with commented examples for
+  overcloud VMs and physical nodes). The role considers no physical machines by default.
+
+  The `openstack.role` value can be one of the following:
     - controller
     - compute
     - computeovsdpdk
@@ -111,6 +124,33 @@ physical:
     - computeovshwoffload
     - cephstorage
     - computehci
+
+  VMs may only use virtual-capable profiles (those with `virtual: True` in the
+  `overcloud_roles` variable from `roles/RHOSP-undercloud/vars/main.yml`).
+
+  The `management: true` interface flag marks the NIC that Ansible uses to reach the
+  machine. Its IP is **not** stored in `machines.yml`; it is taken from the machine's
+  `ansible_host` entry in the `inventory` file. For a libvirt undercloud, cloud-init
+  applies that address statically at first boot and os-net-config later reuses it; for
+  a physical undercloud the address is simply reachable via the inventory.
+
+  The `pre_provisioned` flag (top level, both types) records whether the node already
+  has an OS loaded ("deployed server") or will be provisioned later by ironic
+  (unprovisioned, the default). The undercloud is always `pre_provisioned: true`; the
+  other machines default to unprovisioned but can opt in. For a **pre_provisioned
+  libvirt VM** the role:
+  - backs the root disk with the RHEL base image (`<RHOSP_version>.rhel_image.name`)
+    and populates it with `virt-resize`, and
+  - builds a per-machine NoCloud (cidata) ISO — `<machine>-init.iso` — from user-data /
+    meta-data / network-config and attaches it as a SATA cdrom.
+
+  The cloud-init login user is `stack` for the undercloud role and the overcloud SSH
+  user otherwise (`heat-admin` on 16.2, `tripleo-admin` on 17.1). When the machine has a
+  `management: true` interface, its inventory `ansible_host` is seeded via network-config.
+  An **unprovisioned** VM gets empty disks and no cloud-init cdrom.
+
+  Convenience views `libvirt_machines` and `physical_machines` (defined in the role
+  `vars/main.yml`) filter this list by `type`.
 
 networks:
   List of the virtual networks created. The default values are:
@@ -128,9 +168,8 @@ Example Playbook
   hosts: infrastructure
   vars_files:
     - vars/options.yml
-    - vars/vms.yml
+    - vars/machines.yml
     - vars/networks.yml
-    - vars/overcloud.yml
   pre_tasks:
     - name: Set ansible_user to the current user
       set_fact:

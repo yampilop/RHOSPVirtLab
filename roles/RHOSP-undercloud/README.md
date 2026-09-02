@@ -68,62 +68,83 @@ Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service
 DCNLeafs:
   Variable used to define leafs when making a DCN deployment.
 
-vms:
-  List of the virtual machines created, in the format:
+machines:
+  Unified list of lab machines (both libvirt VMs and physical baremetal nodes),
+  shared with the RHOSP-virt-infra role. Every entry shares common top-level parameters
+  and is tagged with a `type` discriminator; technology-specific parameters live in a
+  block named after the type.
 
-```yaml
-  - name: VM_NAME
-    hypervisor: HYPERVISOR_NAME
-    title: 'VM_TITLE'
-    profile: 'PROFILE'
-    memory: RAM_IN_KB
-    vcpus: AMOUNT_OF_CPUS
-    bmcport: VBMC_PORT_TO_ASSIGN
-    mac: 'XX:XX:XX:XX:XX' (without the last octet)
-    uefi: false
-    disk_size: DISK_SIZE_IN_KB
-    data_disk_size: DISK_SIZE_IN_KB
-    backing_store: 'QCOW2_IMAGE' (image to use as base for the disk)
-    cdrom: 'CDROM_IMAGE' (image to insert as cdrom, useful for cloud-init)
-    nics:
-      NETWORK_NAME_1: 'IP_ADDRESS_1'
-      NETWORK_NAME_2: 'IP_ADDRESS_2'
-      ...
-```
-
-  The role considers the defaults for RHOSP-virt-infra role:
-    - undercloud
-    - vcontroller0
-    - vcompute0
-
-  The profile value can be one of the listed in `overcloud_roles` variable with `virtual: True`.
-
-physical:
-  List of the physical machines to be connected to the lab, in the format:
+  A libvirt VM (`type: libvirt`):
 
 ```yaml
   - name: MACHINE_NAME
-    leaf: LEAF_NAME
-    title: 'MACHINE_TITLE'
-    profile: 'PROFILE'
-    memory: RAM_IN_KB
-    cpus: AMOUNT_OF_CPUS
-    pm_type: "ipmi"|"redfish"|"ilo"|"idrac"
-    pm_user: "PM_USER_NAME"
-    pm_password: "PM_PASSWORD"
-    pm_addr: "PM_IP_ADDRESS"
-    pm_port: "623"|"PM_PORT_IF_DIFFERENT_FROM_DEFAULT"
-    mac: 'XX:XX:XX:XX:XX:XX' (full MAC address of the ctlplane interface)
-    capabilities: 'LIST_OF_CAPABILITIES'
-    disk_size: DISK_SIZE_IN_KB
-    nics:
-      nic1: 'ens1f0'
-      nic2: 'ens1f1'
+    type: libvirt
+    pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
+    openstack:
+      role: PROFILE            # virtual-capable overcloud role, or 'undercloud'
+    pm:
+      type: ipmi
+      user: BMC_USER
+      password: BMC_PASSWORD
+      address: localhost
+      port: VBMC_PORT          # virtualbmc port (unique per VM)
+      mode: bios               # bios | uefi
+    libvirt:
+      title: 'VM_TITLE'
+      hypervisor: HYPERVISOR_NAME
+      cpus: AMOUNT_OF_CPUS
+      memory: RAM_IN_KIB
+      disks:                   # one or more; exactly one root; all attached as virtio
+      - root: true
+        size: DISK_SIZE_IN_BYTES
+      - size: DATA_DISK_SIZE_IN_BYTES  # optional extra data disk(s)
+      network:
+        interfaces:
+        - name: nic1
+          mac: 'XX:XX:XX:XX:XX:XX'
+          bridge: BRIDGE_NAME
 ```
 
-  The role considers no physical machines by default.
+  A physical baremetal node (`type: physical`):
 
-  The profile value can be one of the listed in `overcloud_roles` variable.
+```yaml
+  - name: MACHINE_NAME
+    type: physical
+    pre_provisioned: false     # optional: true = OS already loaded (deployed server)
+    openstack:
+      role: PROFILE
+      leaf: LEAF_NAME
+    pm:
+      type: "ipmi"|"redfish"|"ilo"|"idrac"
+      user: "PM_USER_NAME"
+      password: "PM_PASSWORD"
+      address: "PM_IP_ADDRESS"
+      port: "623"
+      mode: bios               # bios | uefi
+    physical:
+      cpus: AMOUNT_OF_CPUS
+      memory: RAM_IN_KIB
+      disk: DISK_SIZE_IN_BYTES
+      mac: 'XX:XX:XX:XX:XX:XX'
+      nics:
+        nic1: 'ens1f0'
+        nic2: 'ens1f1'
+```
+
+  The role considers the defaults for the RHOSP-virt-infra role (only the `undercloud`
+  VM by default) and no physical machines by default.
+
+  The `openstack.role` value can be one of those listed in the `overcloud_roles`
+  variable; VMs may only use profiles with `virtual: True`. Convenience views
+  `libvirt_machines` and `physical_machines` (defined in the role `vars/main.yml`)
+  filter this list by `type`.
+
+  The `pre_provisioned` flag (top level, both types) marks a node whose OS is already
+  loaded ("deployed server") versus one provisioned later by ironic (the default). The
+  undercloud is always `pre_provisioned: true`. A pre_provisioned libvirt VM is booted
+  from the RHEL base image with a cloud-init cdrom (see the RHOSP-virt-infra role for
+  details); the cloud-init user is `stack` for the undercloud and the overcloud SSH user
+  (`heat-admin` on 16.2, `tripleo-admin` on 17.1) for the other roles.
 
 networks:
   List of the virtual networks created. The role considers the defaults for RHOSP-virt-infra role:
@@ -149,8 +170,7 @@ Example Playbook
     - vault_credentials.yaml
     - vars/options.yml
     - vars/networks.yml
-    - vars/vms.yml
-    - vars/physical.yml
+    - vars/machines.yml
   gather_facts: no
 
   pre_tasks:
