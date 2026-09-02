@@ -13,18 +13,18 @@
 
 - name: CHECKS - Get total hypervisor memory planned
   set_fact:
-    total_hypervisor_memory_mb: "{{ ((vms | selectattr('hypervisor', 'equalto', inventory_hostname) | list) | sum(attribute='memory')) / 1024 }}"
+    total_hypervisor_memory_mb: "{{ ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.memory') | list) | sum) / 1024 }}"
 
 - name: CHECKS - Check RAM usage wont be larger than the hypervisor capacity
   fail:
-    msg: Please check your vms.yaml file and make sure the memory usage ({{ total_hypervisor_memory_mb | int }} MB) is not larger than the hypervisor capacity ({{ ansible_memory_mb.real.total | int }} MB) considering 8192 MB for the host.
+    msg: Please check your machines.yml file and make sure the memory usage ({{ total_hypervisor_memory_mb | int }} MB) is not larger than the hypervisor capacity ({{ ansible_memory_mb.real.total | int }} MB) considering 8192 MB for the host.
   when: total_hypervisor_memory_mb | int + 8192 > ansible_memory_mb.real.total | int
 
 - name: CHECKS - Get total hypervisor cpus planned
   set_fact:
-    total_hypervisor_cpus: "{{ ((vms | selectattr('hypervisor', 'equalto', inventory_hostname) | list) | sum(attribute='vcpus')) }}"
+    total_hypervisor_cpus: "{{ ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.cpus') | list) | sum) }}"
 
 - name: CHECKS - Check CPU usage wont be larger than the hypervisor capacity
   fail:
-    msg: Please check your vms.yaml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 2 CPUs for the host.
+    msg: Please check your machines.yml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 2 CPUs for the host.
   when: total_hypervisor_cpus | int + 2 > ansible_processor_vcpus | int

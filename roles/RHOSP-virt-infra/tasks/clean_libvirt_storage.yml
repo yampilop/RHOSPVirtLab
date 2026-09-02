@@ -21,18 +21,20 @@
   community.libvirt.virt_pool:
     command: facts
 
-- name: STORAGE - Delete the root disk file
-  file:
-    path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
-    state: absent
-  loop: "{{ vms }}"
-  when: inventory_hostname in item.hypervisor
+- name: STORAGE - Find the disk and cloud-init files for each libvirt machine
+  find:
+    paths: "{{ pool_location }}"
+    patterns:
+      - "{{ item.name }}_*.qcow2"
+      - "{{ item.name }}-init.iso"
+  loop: "{{ libvirt_machines }}"
+  when: inventory_hostname in item.libvirt.hypervisor
+  register: machine_disk_files
 
-- name: STORAGE - Delete the data disk file
+- name: STORAGE - Delete the disk files
   file:
-    path: "{{ pool_location }}/{{ item.name }}_data.qcow2"
+    path: "{{ item.path }}"
     state: absent
-  loop: "{{ vms }}"
-  when:
-    - inventory_hostname in item.hypervisor
-    - item.data_disk_size is defined and item.data_disk_size > 0
+  loop: "{{ machine_disk_files.results | selectattr('files', 'defined') | map(attribute='files') | flatten }}"
+  loop_control:
+    label: "{{ item.path }}"

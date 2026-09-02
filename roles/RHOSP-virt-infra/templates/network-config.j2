@@ -1,0 +1,10 @@
+version: 2
+ethernets:
+{% for iface in machine.libvirt.network.interfaces if iface.management | default(false) %}
+  {{ iface.name }}:
+    match:
+      macaddress: '{{ iface.mac }}'
+    set-name: {{ iface.name }}
+    addresses:
+      - {{ hostvars[machine.name].ansible_host }}/24
+{% endfor %}

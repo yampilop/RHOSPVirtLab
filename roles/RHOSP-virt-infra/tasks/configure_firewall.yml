@@ -59,24 +59,24 @@
 
 - name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in libvirt zone for localhost
   firewalld:
-    port: "{{ item.bmcport }}/udp"
+    port: "{{ item.pm.port }}/udp"
     zone: "libvirt"
     permanent: yes
     immediate: yes
     state: enabled
-  loop: "{{ vms }}"
+  loop: "{{ libvirt_machines }}"
   become: yes
   when:
     - inventory_hostname in DefaultLeaf0.hypervisor
 
 - name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for localhost and leafs
   firewalld:
-    port: "{{ item.bmcport }}/udp"
+    port: "{{ item.pm.port }}/udp"
     zone: "public"
     permanent: yes
     immediate: yes
     state: enabled
-  loop: "{{ vms }}"
+  loop: "{{ libvirt_machines }}"
   become: yes
   when:
-    - inventory_hostname == item.hypervisor
+    - inventory_hostname == item.libvirt.hypervisor

@@ -1,17 +1,17 @@
 <domain type="kvm">
   <name>{{ item.name }}</name>
-  <title>{{ item.title }}</title>
+  <title>{{ item.libvirt.title }}</title>
   <metadata>
     <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
       <libosinfo:os id="http://redhat.com/rhel/{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"/>
     </libosinfo:libosinfo>
   </metadata>
-  <memory>{{ item.memory }}</memory>
-  <currentMemory>{{ item.memory }}</currentMemory>
-  <vcpu placement="static">{{ item.vcpus }}</vcpu>
+  <memory>{{ item.libvirt.memory }}</memory>
+  <currentMemory>{{ item.libvirt.memory }}</currentMemory>
+  <vcpu placement="static">{{ item.libvirt.cpus }}</vcpu>
   <os>
     <type arch="x86_64" machine="q35">hvm</type>
-{% if item.uefi %}
+{% if item.pm.mode == 'uefi' %}
     <loader readonly='yes' secure='no' type='pflash'>{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_CODE.secboot.fd</loader>
     <nvram template='{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_VARS.fd'>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
 {% endif %}
@@ -22,7 +22,7 @@
     <apic/>
     <vmport state="off"/>
   </features>
-{% if 'compute' in item.profile %}
+{% if 'compute' in item.openstack.role %}
   <cpu mode="host-passthrough" check="partial"/>
 {% else %}
   <cpu mode="host-model" check="partial"/>
@@ -40,47 +40,36 @@
     <suspend-to-disk enabled="no"/>
   </pm>
   <devices>
+{% set ns = namespace(disk_idx=0) %}
+{% for disk in item.libvirt.disks %}
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2"/>
-      <source file="{{ pool_location }}/{{ item.name }}_root.qcow2"/>
-{% if item.backing_store != '' %}
+      <source file="{{ pool_location }}/{{ item.name }}_{{ 'root' if disk.root | default(false) else 'data' ~ loop.index0 }}.qcow2"/>
+{% if disk.root | default(false) and item.pre_provisioned | default(false) %}
       <backingStore type="file">
         <format type="qcow2"/>
-        <source file="{{ pool_location }}/{{ item.backing_store }}"/>
+        <source file="{{ pool_location }}/{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"/>
       </backingStore>
 {% endif %}
-      <target dev="sda" bus="sata"/>
+      <target dev="vd{{ 'abcdefghij'[ns.disk_idx] }}" bus="virtio"/>
     </disk>
-{% if item.data_disk_size is defined and item.data_disk_size > 0 %}
-    <disk type="file" device="disk">
-      <driver name="qemu" type="qcow2"/>
-      <source file="{{ pool_location }}/{{ item.name }}_data.qcow2"/>
-      <target dev="sdb" bus="sata"/>
-    </disk>
-{% endif %}
-{% if item.cdrom != '' %}
+{% set ns.disk_idx = ns.disk_idx + 1 %}
+{% endfor %}
+{% if item.pre_provisioned | default(false) %}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
-      <source file="{{ pool_location }}/{{ item.cdrom }}"/>
-      <target dev="{{ 'sdc' if (item.data_disk_size is defined and item.data_disk_size > 0) else 'sdb' }}" bus="sata"/>
+      <source file="{{ pool_location }}/{{ item.name }}-init.iso"/>
+      <target dev="sda" bus="sata"/>
       <readonly/>
     </disk>
     <controller type="usb" model="qemu-xhci" ports="15"/>
 {% endif %}
-{% for network in networks | sort(attribute='mac_suffix') if network.name in item.nics %}
-{% if network.forward == 'bridge' %}
+{% for iface in item.libvirt.network.interfaces %}
     <interface type="bridge">
-      <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
-      <source bridge="{{ network.bridge }}"/>
+      <mac address="{{ iface.mac }}"/>
+      <source bridge="{{ iface.bridge }}"/>
       <model type="e1000e"/>
     </interface>
-{% else %}
-    <interface type="network">
-      <mac address="{{ item.mac }}:{{ network.mac_suffix }}"/>
-      <source network="{{ network.name }}"/>
-      <model type="e1000e"/>
-    </interface>
-{% endif %}
 {% endfor %}
     <console type="pty"/>
     <channel type="unix">

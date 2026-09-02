@@ -1,0 +1,67 @@
+# Generate a per-machine NoCloud (cidata) cloud-init ISO for `machine`.
+# Included once per libvirt machine that is `pre_provisioned: true`. The ISO is named
+# after the machine (<machine>-init.iso) and attached as a cdrom by domain.xml.j2.
+# A network-config (static management IP from inventory) is added only when the
+# machine has a `management: true` interface.
+# The seeded login user is `stack` for the undercloud role and the overcloud SSH
+# user (heat-admin on 16.2, tripleo-admin on 17.1) for every other role.
+
+- name: STORAGE - Determine if {{ machine.name }} has a management interface
+  set_fact:
+    ci_has_mgmt: "{{ machine.libvirt.network.interfaces | selectattr('management', 'defined') | selectattr('management') | list | length > 0 }}"
+
+- name: STORAGE - Determine the cloud-init user for {{ machine.name }}
+  set_fact:
+    ci_user: "{{ 'stack' if machine.openstack.role == 'undercloud' else RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}"
+
+- name: STORAGE - Render user-data for {{ machine.name }}
+  template:
+    src: "user-data.j2"
+    dest: "/home/{{ ansible_user }}/{{ machine.name }}-user-data"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  register: ci_user_data
+
+- name: STORAGE - Render meta-data for {{ machine.name }}
+  template:
+    src: "meta-data.j2"
+    dest: "/home/{{ ansible_user }}/{{ machine.name }}-meta-data"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  register: ci_meta_data
+
+- name: STORAGE - Render network-config for {{ machine.name }}
+  template:
+    src: "network-config.j2"
+    dest: "/home/{{ ansible_user }}/{{ machine.name }}-network-config"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  register: ci_network_config
+  when: ci_has_mgmt | bool
+
+- name: STORAGE - Create the {{ machine.name }} cloud-init ISO
+  command: >-
+    genisoimage -output /home/{{ ansible_user }}/{{ machine.name }}-init.iso
+    -volid cidata -joliet -rock
+    /home/{{ ansible_user }}/{{ machine.name }}-user-data
+    /home/{{ ansible_user }}/{{ machine.name }}-meta-data
+    {% if ci_has_mgmt | bool %}/home/{{ ansible_user }}/{{ machine.name }}-network-config{% endif %}
+  register: ci_iso
+  when: ci_user_data.changed or ci_meta_data.changed or (ci_network_config.changed | default(false))
+
+- name: STORAGE - Copy the {{ machine.name }} cloud-init ISO to the pool location
+  copy:
+    src: "/home/{{ ansible_user }}/{{ machine.name }}-init.iso"
+    dest: "{{ pool_location }}/{{ machine.name }}-init.iso"
+    mode: "0777"
+    owner: root
+    group: root
+    remote_src: yes
+  become: yes
+  register: ci_iso_pool
+  when: ci_iso.changed
+
+- name: STORAGE - Record that {{ machine.name }} cloud-init ISO changed
+  set_fact:
+    cloud_init_changed_machines: "{{ (cloud_init_changed_machines | default([])) + [machine.name] }}"
+  when: ci_iso_pool.changed | default(false)

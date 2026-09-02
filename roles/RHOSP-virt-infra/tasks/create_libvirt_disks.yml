@@ -1,0 +1,62 @@
+# Manage the qcow2 volumes for a single libvirt machine (passed in as `machine`).
+# Disk file naming (shared with domain.xml.j2):
+#   root disk  -> <machine>_root.qcow2
+#   data disks -> <machine>_data<index>.qcow2   (index = position in the disks list)
+# When the machine is pre_provisioned its root disk is populated from the RHEL base
+# image (virt-resize); otherwise every disk starts empty. The cloud-init cdrom (if
+# any) is not a disk entry; it is handled separately in create_libvirt_cloud_init.yml.
+
+- name: STORAGE - Check if disk files exist for {{ machine.name }}
+  stat:
+    path: "{{ pool_location }}/{{ machine.name }}_{{ 'root' if disk.root | default(false) else 'data' ~ disk_index }}.qcow2"
+    get_checksum: False
+    get_md5: False
+  loop: "{{ machine.libvirt.disks }}"
+  loop_control:
+    loop_var: disk
+    index_var: disk_index
+  register: machine_disk_stat
+
+- name: STORAGE - Create disk files for {{ machine.name }}
+  command: "virsh vol-create-as RHOSPVirtLab_storage {{ machine.name }}_{{ 'root' if item.disk.root | default(false) else 'data' ~ item.disk_index }}.qcow2 --capacity {{ item.disk.size }} --allocation {{ item.disk.size }} --prealloc-metadata --format qcow2"
+  loop: "{{ machine_disk_stat.results }}"
+  become: yes
+  notify: HANDLER - Clean known_hosts file
+  when:
+    - not item.skipped | default(false)
+    - not item.stat.exists
+
+- name: STORAGE - Set permissions on disk files for {{ machine.name }}
+  file:
+    path: "{{ pool_location }}/{{ machine.name }}_{{ 'root' if item.disk.root | default(false) else 'data' ~ item.disk_index }}.qcow2"
+    mode: "0777"
+  loop: "{{ machine_disk_stat.results }}"
+  become: yes
+  when: not item.skipped | default(false)
+
+- name: STORAGE - Populate the root disk from the base image for {{ machine.name }}
+  command: "virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }} {{ pool_location }}/{{ machine.name }}_root.qcow2"
+  loop: "{{ machine_disk_stat.results }}"
+  become: yes
+  notify: HANDLER - Clean known_hosts file
+  when:
+    - not item.skipped | default(false)
+    - not item.stat.exists
+    - machine.pre_provisioned | default(false)
+    - item.disk.root | default(false)
+    - not ((ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16))
+
+- name: STORAGE - Populate the root disk from the base image for {{ machine.name }} (libguestfs workaround https://access.redhat.com/solutions/4073061)
+  command: "virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }} {{ pool_location }}/{{ machine.name }}_root.qcow2"
+  environment:
+    LIBGUESTFS_BACKEND: direct
+    LIBGUESTFS_PATH: "/home/{{ ansible_user }}/appliance"
+  loop: "{{ machine_disk_stat.results }}"
+  become: yes
+  notify: HANDLER - Clean known_hosts file
+  when:
+    - not item.skipped | default(false)
+    - not item.stat.exists
+    - machine.pre_provisioned | default(false)
+    - item.disk.root | default(false)
+    - (ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16)

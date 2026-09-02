@@ -1,9 +1,9 @@
 #cloud-config
 system_info:
   default_user:
-    name: stack
+    name: {{ ci_user }}
 users:
-  - name: stack
+  - name: {{ ci_user }}
     gecos: OpenStack Admin
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh_authorized_keys:
@@ -11,6 +11,6 @@ users:
 chpasswd:
   list: |
     root:redhat
-    stack:redhat
+    {{ ci_user }}:redhat
   expire: False
 ssh_pwauth: True

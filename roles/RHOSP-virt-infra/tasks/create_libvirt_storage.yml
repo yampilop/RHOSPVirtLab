@@ -37,43 +37,13 @@
     - RHOSPVirtLab_storage
   become: yes
 
-- name: STORAGE - Render user-data
-  template:
-    src: "user-data.j2"
-    dest: "/home/{{ ansible_user }}/user-data"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-  register: user_data
-  when: inventory_hostname == 'localhost'
-
-- name: STORAGE - Copy meta-data
-  copy:
-    src: "templates/meta-data"
-    dest: "/home/{{ ansible_user }}/meta-data"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-  register: meta_data
-  when: inventory_hostname == 'localhost'
-
-- name: STORAGE - Create undercloud-init.iso image with user-data and meta-data
-  command: "genisoimage -output /home/{{ ansible_user }}/undercloud-init.iso -volid cidata -joliet -rock /home/{{ ansible_user }}/user-data /home/{{ ansible_user }}/meta-data"
-  register: overcloud_init
-  when:
-    - inventory_hostname == 'localhost'
-    - user_data.changed or meta_data.changed
-
-- name: STORAGE - Copy undercloud-init.iso to the pool location
-  copy:
-    src: "/home/{{ ansible_user }}/undercloud-init.iso"
-    dest: "{{ pool_location }}/undercloud-init.iso"
-    mode: "0777"
-    owner: root
-    group: root
-  become: yes
-  register: overcloud_init_pool
-  when:
-    - inventory_hostname == 'localhost'
-    - overcloud_init.changed
+- name: STORAGE - Generate per-machine cloud-init ISOs
+  include_tasks: create_libvirt_cloud_init.yml
+  loop: "{{ libvirt_machines | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list }}"
+  loop_control:
+    loop_var: machine
+    label: "{{ machine.name }}"
+  when: inventory_hostname in machine.libvirt.hypervisor
 
 - name: STORAGE - Download the rhel base image
   get_url:
@@ -89,89 +59,18 @@
   until: result is not failed
   when: inventory_hostname == 'localhost'
 
-- name: STORAGE - Check if the needed image files exist
+- name: STORAGE - Check if the rhel base image exists
   stat:
-    path: "{{ pool_location }}/{{ item }}"
-  register: files_output
-  loop:
-    - "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
-    - "undercloud-init.iso"
+    path: "{{ pool_location }}/{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
+  register: rhel_image_stat
   when: inventory_hostname == 'localhost'
 
-- name: STORAGE - Fail when any of the files does not exist
+- name: STORAGE - Fail when the rhel base image does not exist
   fail:
-    msg: "{{ item.item }} does not exist"
-  loop: "{{ files_output.results  }}"
+    msg: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }} does not exist"
   when:
     - inventory_hostname == 'localhost'
-    - item.stat.exists == false
-
-- name: STORAGE - Check if the root disk file exists
-  stat:
-    path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
-    get_checksum: False
-    get_md5: False
-  register: disk_file
-  loop: "{{ vms }}"
-  when: inventory_hostname in item.hypervisor
-
-- name: STORAGE - Check if the data disk file exists
-  stat:
-    path: "{{ pool_location }}/{{ item.name }}_data.qcow2"
-    get_checksum: False
-    get_md5: False
-  register: data_disk_file
-  loop: "{{ vms }}"
-  when: inventory_hostname in item.hypervisor
-
-- name: STORAGE - Create root disk file
-  command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_root.qcow2 --capacity {{ item.item.disk_size }} --allocation {{ item.item.disk_size }} --prealloc-metadata --format qcow2"
-  loop: "{{ disk_file.results }}"
-  become: yes
-  notify: HANDLER - Clean known_hosts file
-  when:
-    - item.stat is defined
-    - not item.stat.exists
-
-- name: STORAGE - Create data disk file
-  command: "virsh vol-create-as RHOSPVirtLab_storage {{ item.item.name }}_data.qcow2 --capacity {{ item.item.data_disk_size }} --allocation {{ item.item.data_disk_size }} --prealloc-metadata --format qcow2"
-  loop: "{{ data_disk_file.results }}"
-  become: yes
-  when:
-    - item.stat is defined
-    - not item.stat.exists
-    - item.item.data_disk_size is defined
-    - item.item.data_disk_size > 0
-
-- name: STORAGE - Set permissions to root disk files
-  file:
-    path: "{{ pool_location }}/{{ item.name }}_root.qcow2"
-    mode: "777"
-  loop: "{{ vms }}"
-  become: yes
-  when: inventory_hostname in item.hypervisor
-
-- name: STORAGE - Set permissions to data disk files
-  file:
-    path: "{{ pool_location }}/{{ item.name }}_data.qcow2"
-    mode: "777"
-  loop: "{{ vms }}"
-  become: yes
-  when:
-    - inventory_hostname in item.hypervisor
-    - item.data_disk_size is defined
-    - item.data_disk_size > 0
-
-- name: STORAGE - Prepare backing stored disk files and resize root partition
-  command: "virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
-  loop: "{{ disk_file.results }}"
-  become: yes
-  notify: HANDLER - Clean known_hosts file
-  when:
-    - item.stat is defined
-    - not item.stat.exists
-    - item.item.backing_store != ''
-    - not ((ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16))
+    - not rhel_image_stat.stat.exists
 
 - name: Download and unpack libguestfs binary appliance (unsupported workaround https://access.redhat.com/solutions/4073061)
   unarchive:
@@ -181,16 +80,9 @@
     mode: "0777"
   when: (ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16)
 
-- name: STORAGE - Prepare backing stored disk files and resize root partition (unsupported workaround https://access.redhat.com/solutions/4073061)
-  command: "virt-resize --expand {{ RHOSP_version_supported[RHOSP_version].rhel_image.main_partition }} {{ pool_location }}/{{ item.item.backing_store }} {{ pool_location }}/{{ item.item.name }}_root.qcow2"
-  environment:
-    LIBGUESTFS_BACKEND: direct
-    LIBGUESTFS_PATH: "/home/{{ ansible_user }}/appliance"
-  loop: "{{ disk_file.results }}"
-  become: yes
-  notify: HANDLER - Clean known_hosts file
-  when:
-    - item.stat is defined
-    - not item.stat.exists
-    - item.item.backing_store != ''
-    - (ansible_distribution_version | int < 8) and (RHOSP_version | int >= 16)
+- name: STORAGE - Create and prepare the disk volumes for each libvirt machine
+  include_tasks: create_libvirt_disks.yml
+  loop: "{{ libvirt_machines }}"
+  loop_control:
+    loop_var: machine
+  when: inventory_hostname in machine.libvirt.hypervisor

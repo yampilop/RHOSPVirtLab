@@ -1,9 +1,9 @@
 - name: VIRTUALBMC - Get node states
   shell: "{{ vbmc_path }} list 2>/dev/null | awk '/{{ item.name }}/ {print $4,$8}'"
   register: vbmc_status
-  loop: "{{ vms }}"
+  loop: "{{ libvirt_machines }}"
   changed_when: False
-  when: inventory_hostname in item.hypervisor
+  when: inventory_hostname in item.libvirt.hypervisor
 
 - name: VIRTUALBMC - Delete nodes
   command: "{{ vbmc_path }} delete {{ item.item.name }}"

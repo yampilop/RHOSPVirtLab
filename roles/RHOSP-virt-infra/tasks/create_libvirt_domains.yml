@@ -9,23 +9,22 @@
     command: define
     xml: "{{ lookup('template', 'domain.xml.j2') }}"
     autostart: yes
-  loop: "{{ vms }}"
+  loop: "{{ libvirt_machines }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname in item.libvirt.hypervisor
     - item.name not in all_vms.list_vms
 
-- name: DOMAINS - Stop undercloud if undercloud-init.iso changed in order to reboot
+- name: DOMAINS - Stop machines whose cloud-init ISO changed in order to re-apply it on reboot
   community.libvirt.virt:
-    name: undercloud
+    name: "{{ item }}"
     state: shutdown
   become: yes
-  when:
-    - inventory_hostname == 'localhost'
-    - overcloud_init_pool.changed
+  loop: "{{ cloud_init_changed_machines | default([]) }}"
+  when: item in all_vms.list_vms
 
-- name: DOMAINS - Wait for the undercloud to stop
+- name: DOMAINS - Wait for those machines to stop
   community.libvirt.virt:
     command: list_vms
     state: running
@@ -33,10 +32,8 @@
   register: running_vms
   retries: 3
   delay: 15
-  until: '"undercloud" not in running_vms.list_vms'
-  when:
-    - inventory_hostname == 'localhost'
-    - overcloud_init_pool.changed
+  until: (cloud_init_changed_machines | default([]) | intersect(running_vms.list_vms) | length) == 0
+  when: (cloud_init_changed_machines | default([]) | length) > 0
 
 - name: DOMAINS - Ensure undercloud domain is running
   community.libvirt.virt:
@@ -59,14 +56,16 @@
 - name: DOMAINS - Add management IPs entries to /etc/hosts on the local machines
   lineinfile:
     path: "/etc/hosts"
-    regexp: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
-    line: "{{ item.nics.RHOSPVirtLab_management }}\t{{ item.name }}"
+    regexp: "{{ hostvars[item.name].ansible_host }}\t{{ item.name }}"
+    line: "{{ hostvars[item.name].ansible_host }}\t{{ item.name }}"
     state: present
-  loop: "{{ vms }}"
+  loop: "{{ libvirt_machines }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
-    - item.nics.RHOSPVirtLab_management is defined
+    - inventory_hostname in item.libvirt.hypervisor
+    - item.libvirt.network.interfaces | selectattr('management', 'defined') | selectattr('management') | list | length > 0
+    - hostvars[item.name] is defined
+    - hostvars[item.name].ansible_host is defined
 
 - name: DOMAINS - Add overcloud IP entry to /etc/hosts on the local machines
   lineinfile:
