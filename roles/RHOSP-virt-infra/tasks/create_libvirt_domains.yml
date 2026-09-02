@@ -40,7 +40,9 @@
     name: undercloud
     state: running
   become: yes
-  when: inventory_hostname == 'localhost'
+  when:
+    - inventory_hostname == 'localhost'
+    - not undercloud_is_physical | bool
 
 - name: DOMAINS - Wait for the undercloud to start
   community.libvirt.virt:
@@ -51,7 +53,9 @@
   retries: 3
   delay: 15
   until: '"undercloud" in running_vms.list_vms'
-  when: inventory_hostname == 'localhost'
+  when:
+    - inventory_hostname == 'localhost'
+    - not undercloud_is_physical | bool
 
 - name: DOMAINS - Add management IPs entries to /etc/hosts on the local machines
   lineinfile:
@@ -66,6 +70,19 @@
     - item.libvirt.network.interfaces | selectattr('management', 'defined') | selectattr('management') | list | length > 0
     - hostvars[item.name] is defined
     - hostvars[item.name].ansible_host is defined
+
+- name: DOMAINS - Add the physical undercloud entry to /etc/hosts on the local machine
+  lineinfile:
+    path: "/etc/hosts"
+    regexp: "{{ hostvars['undercloud'].ansible_host }}\tundercloud"
+    line: "{{ hostvars['undercloud'].ansible_host }}\tundercloud"
+    state: present
+  become: yes
+  when:
+    - inventory_hostname == 'localhost'
+    - undercloud_is_physical | bool
+    - hostvars['undercloud'] is defined
+    - hostvars['undercloud'].ansible_host is defined
 
 - name: DOMAINS - Add overcloud IP entry to /etc/hosts on the local machines
   lineinfile:
