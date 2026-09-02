@@ -20,6 +20,18 @@
 #   openstack: OpenStack/overcloud placement.
 #     role         Overcloud role/profile (must be a virtual-capable profile for VMs).
 #     leaf         Leaf/DCN site the node belongs to (physical machines).
+#     ctlplane_ip  Static control-plane IP. REQUIRED on pre_provisioned overcloud
+#                  nodes (deployed servers): cloud-init assigns it to the node's
+#                  ctlplane NIC at first boot and the deployed-server port map uses
+#                  the same value. Must sit inside the ctlplane subnet but OUTSIDE the
+#                  undercloud DHCP and inspection ranges (with the defaults: not
+#                  .1-.3/.5-.55/.100-.120/.254; e.g. .4 or .121-.199). Ignored for the
+#                  undercloud (its ctlplane IP comes from undercloud.conf) and for
+#                  unprovisioned (ironic) nodes, which get their IP from neutron.
+#
+# NOTE: pre-provisioned (deployed-server) and ironic-provisioned overcloud nodes
+# cannot be mixed in the same stack/leaf. Within a given leaf every overcloud node
+# must share the same pre_provisioned value (the undercloud is exempt).
 #   pm:        Power management / BMC (both types).
 #     type         BMC driver (ipmi for virtualbmc VMs and real IPMI baremetal).
 #     user         BMC username.
@@ -95,12 +107,16 @@ machines:
 # Example overcloud VMs (uncomment and adjust to grow the lab):
 # These default to unprovisioned (ironic installs them later). Set
 # `pre_provisioned: true` at the top level to instead boot them from the RHEL base
-# image with a cloud-init cdrom (deployed-server style).
+# image with a cloud-init cdrom (deployed-server style); when you do, add
+# `ctlplane_ip` under `openstack:` (see the schema notes above) and make every
+# overcloud node in the leaf pre_provisioned as well.
 #
 # - name: controller0
 #   type: libvirt
+#   pre_provisioned: false
 #   openstack:
 #     role: controller
+#     # ctlplane_ip: 192.168.24.121   # required when pre_provisioned: true
 #   pm:
 #     type: ipmi
 #     user: admin
@@ -124,8 +140,10 @@ machines:
 #
 # - name: compute0
 #   type: libvirt
+#   pre_provisioned: false
 #   openstack:
 #     role: compute
+#     # ctlplane_ip: 192.168.24.122   # required when pre_provisioned: true
 #   pm:
 #     type: ipmi
 #     user: admin
@@ -153,9 +171,11 @@ machines:
 #
 # - name: computeovsdpdk0
 #   type: physical
+#   pre_provisioned: false
 #   openstack:
 #     role: computeovsdpdk
 #     leaf: overcloud
+#     # ctlplane_ip: 192.168.24.131   # required when pre_provisioned: true
 #   pm:
 #     type: ipmi
 #     user: admin
