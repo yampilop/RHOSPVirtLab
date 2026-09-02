@@ -53,6 +53,7 @@
   yum:
     name: '*'
     state: latest
+  when: UndercloudFullUpdate | default(true) | bool
   notify: HANDLER - Reboot the machine
 
 # On a libvirt undercloud the second NIC (management, DHCP over br-management)
@@ -61,7 +62,7 @@
 # dropping the connection we are running over.
 - name: NETWORKING - Define management network connection
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     mgmt_iface: "{{ undercloud.openstack.management_interface | default('eth1') }}"
     connection:
@@ -106,7 +107,6 @@
   loop: "{{ RHOSP_version_supported[RHOSP_version].images_directories }}"
 
 - name: IMAGES - Download images for testing
-  ignore_errors: true
   get_url:
     url: "{{ item.url }}"
     dest: "images/{{ item.name }}"

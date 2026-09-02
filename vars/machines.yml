@@ -167,8 +167,8 @@ machines:
     # ctlplane_ip: 192.168.24.121   # required when pre_provisioned: true
   pm:
     type: ipmi
-    user: admin
-    password: admin
+    user: "{{ BmcUsername }}"
+    password: "{{ BmcPassword }}"
     address: localhost
     port: 6231
     mode: bios
@@ -192,8 +192,8 @@ machines:
     # ctlplane_ip: 192.168.24.122   # required when pre_provisioned: true
   pm:
     type: ipmi
-    user: admin
-    password: admin
+    user: "{{ BmcUsername }}"
+    password: "{{ BmcPassword }}"
     address: localhost
     port: 6234
     mode: bios

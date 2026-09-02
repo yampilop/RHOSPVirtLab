@@ -10,7 +10,7 @@ users:
       - {{ ssh_public_key }}
 chpasswd:
   list: |
-    root:redhat
-    {{ ci_user }}:redhat
+    root:{{ VmRootPassword }}
+    {{ ci_user }}:{{ VmStackPassword }}
   expire: False
 ssh_pwauth: True

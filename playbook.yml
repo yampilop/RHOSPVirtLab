@@ -5,6 +5,8 @@
     - vars/options.yml
     - vars/machines.yml
     - vars/networks.yml
+    # Loaded last so vaulted overrides win over the lab defaults above.
+    - vault_credentials.yaml
 
   pre_tasks:
     - name: Set ansible_user to the admin current user
@@ -17,10 +19,11 @@
 - name: Openstack configuration
   hosts: openstack
   vars_files:
-    - vault_credentials.yaml
     - vars/options.yml
     - vars/networks.yml
     - vars/machines.yml
+    # Loaded last so vaulted overrides win over the lab defaults above.
+    - vault_credentials.yaml
   gather_facts: no
   
   pre_tasks:

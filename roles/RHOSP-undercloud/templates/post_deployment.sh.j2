@@ -2,7 +2,7 @@
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
 {% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
 {% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
-#/bin/bash
+#!/bin/bash
 
 source /home/stack/overcloudrc
 

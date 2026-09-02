@@ -52,22 +52,37 @@
     state: started
     enabled: yes
   become: yes
-  loop:
-    - "{% if ansible_distribution_version == '7.9' %}libvirtd.service{% else %}libvirtd.socket{% endif %}"
-    - NetworkManager.service
-    - firewalld.service
+  loop: "{{ libvirt_units + ['NetworkManager.service', 'firewalld.service'] }}"
 
-- name: SETUP - Update pip
+# On RHEL 7.9/8.4 the system interpreter is not externally managed, so pip
+# packages are installed into it as before.
+- name: SETUP - Update pip (legacy system interpreter)
   pip:
     name: pip
     executable: "pip3"
     state: latest
+  when: ansible_distribution_major_version | int < 9
 
-- name: SETUP - Install packages from pip
+- name: SETUP - Install packages from pip (legacy system interpreter)
   pip:
     name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
     executable: "pip3"
-  when: RHEL_version_supported[ansible_distribution_version].pip is defined
+  when:
+    - RHEL_version_supported[ansible_distribution_version].pip is defined
+    - ansible_distribution_major_version | int < 9
+
+# On RHEL 9/10 the system interpreter is externally managed (PEP 668), so
+# VirtualBMC is installed into a dedicated venv instead (netaddr comes from
+# the python3-netaddr RPM for the Ansible controller's ipaddr filters).
+- name: SETUP - Install packages from pip into a dedicated venv (PEP 668)
+  pip:
+    name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
+    virtualenv: "{{ vbmc_venv }}"
+    virtualenv_command: "python3 -m venv"
+  when:
+    - RHEL_version_supported[ansible_distribution_version].pip is defined
+    - ansible_distribution_major_version | int >= 9
+  become: yes
 
 - name: SETUP - Create stack alias to connect to undercloud
   lineinfile:
@@ -98,21 +113,43 @@
     enabled: yes
   become: yes
 
-- name: SETUP - Check the type of CPU technology
-  shell: "ls /sys/module/ | grep kvm_ | awk '{print $1; system(\"cat /sys/module/\"$1\"/parameters/nested\")}'"
-  register: nested_output
+- name: SETUP - Determine the KVM module for the host CPU vendor
+  set_fact:
+    kvm_module: >-
+      {{ 'kvm_intel' if ('GenuineIntel' in (ansible_processor | join(' ')))
+         else ('kvm_amd' if ('AuthenticAMD' in (ansible_processor | join(' ')))
+         else '') }}
+
+- name: SETUP - Read the nested virtualization parameter
+  slurp:
+    src: "/sys/module/{{ kvm_module }}/parameters/nested"
+  register: nested_slurp
   become: yes
+  when: kvm_module | length > 0
+  failed_when: false
+
+- name: SETUP - Register whether nested virtualization is enabled
+  set_fact:
+    nested_enabled: >-
+      {{ (kvm_module | length > 0)
+         and (nested_slurp.content is defined)
+         and ((nested_slurp.content | b64decode | trim) in ['1', 'Y']) }}
 
 - name: SETUP - Enable nested virtualization if needed
   lineinfile:
     path: /etc/modprobe.d/kvm.conf
-    regexp: "^options {{ nested_output.stdout_lines[0] }}"
-    insertafter: "^#options {{ nested_output.stdout_lines[0] }}"
-    line: "options {{ nested_output.stdout_lines[0] }} nested=1"
-  when: (nested_output.stdout_lines[1] == '0') or (nested_output.stdout_lines[1] == 'N')
+    regexp: "^options {{ kvm_module }}"
+    insertafter: "^#options {{ kvm_module }}"
+    line: "options {{ kvm_module }} nested=1"
+    create: yes
+  when:
+    - kvm_module | length > 0
+    - not nested_enabled | bool
   become: yes
 
 - name: SETUP - Notify to restart the machine if nested virtualization is disabled
   fail:
     msg: "Please restart the machine '{{ inventory_hostname }}' to enable nested virtualization and then run the playbook again."
-  when: (nested_output.stdout_lines[1] == '0') or (nested_output.stdout_lines[1] == 'N')
+  when:
+    - kvm_module | length > 0
+    - not nested_enabled | bool

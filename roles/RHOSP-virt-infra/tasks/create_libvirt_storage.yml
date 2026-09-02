@@ -43,7 +43,7 @@
   loop_control:
     loop_var: machine
     label: "{{ machine.name }}"
-  when: inventory_hostname in machine.libvirt.hypervisor
+  when: inventory_hostname == machine.libvirt.hypervisor
 
 - name: STORAGE - Download the rhel base image
   get_url:
@@ -85,4 +85,4 @@
   loop: "{{ libvirt_machines }}"
   loop_control:
     loop_var: machine
-  when: inventory_hostname in machine.libvirt.hypervisor
+  when: inventory_hostname == machine.libvirt.hypervisor

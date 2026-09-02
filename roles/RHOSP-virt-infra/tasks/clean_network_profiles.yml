@@ -1,6 +1,6 @@
 - name: NETWORKING - Delete bridges for networks linked with the hypervisor
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ item.bridge }}"
@@ -9,13 +9,13 @@
       state: down
       persistent_state: absent
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname == item.hypervisor
     - item.forward == 'bridge'
   loop: "{{ networks }}"
 
 - name: NETWORKING - Delete hypervisor interfaces
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ item.hypervisor_if }}"
@@ -24,13 +24,13 @@
       state: down
       persistent_state: absent
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname == item.hypervisor
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
   loop: "{{ networks }}"
 
 - name: NETWORKING - Define only the network configuration for the public interface of the DCN hypervisors without static routes
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ hypervisor_external_if }}"
@@ -44,7 +44,7 @@
 
 - name: NETWORKING - Define only the network configuration for the public interface of the localhost hypervisor without static routes
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ external_if }}"

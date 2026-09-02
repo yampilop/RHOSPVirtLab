@@ -163,3 +163,12 @@ networks:
         start: '192.168.250.100'
         end: '192.168.250.254'
         hosts: true
+
+# Credentials (lab-only weak defaults; override via vault_credentials.yaml).
+# BMC / IPMI credentials used to create the virtualbmc endpoints and consumed
+# via pm.user / pm.password in vars/machines.yml.
+BmcUsername: admin
+BmcPassword: admin
+# Passwords baked into each VM's cloud-init (root and the ci_user account).
+VmRootPassword: redhat
+VmStackPassword: redhat

@@ -5,7 +5,7 @@
   changed_when: False
   when:
     - item.pm is defined
-    - inventory_hostname in item.libvirt.hypervisor
+    - inventory_hostname == item.libvirt.hypervisor
 
 - name: VIRTUALBMC - Delete nodes
   command: "{{ vbmc_path }} delete {{ item.item.name }}"

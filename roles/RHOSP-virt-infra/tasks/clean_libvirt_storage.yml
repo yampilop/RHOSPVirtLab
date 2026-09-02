@@ -28,7 +28,7 @@
       - "{{ item.name }}_*.qcow2"
       - "{{ item.name }}-init.iso"
   loop: "{{ libvirt_machines }}"
-  when: inventory_hostname in item.libvirt.hypervisor
+  when: inventory_hostname == item.libvirt.hypervisor
   register: machine_disk_files
 
 - name: STORAGE - Delete the disk files

@@ -165,7 +165,7 @@ ComputeOvsHwOffloadProperties:
   hostmemory: 8192
   pcipassthrough:
     - devname: ens1f1
-      physical_network: 'sriov1'
+      physical_network: 'offload1'
       trusted: true
 
 # ComputeOvsDpdk default properties
@@ -205,6 +205,10 @@ ComputeOvsDpdkSriovProperties:
 CephStorageProperties:
   devices: ['/dev/sdb']
 
+# Run a full `yum update` of the undercloud host on every run (reboots if
+# needed). Set to False to skip the upgrade for faster, more predictable runs.
+UndercloudFullUpdate: True
+
 # Octavia parameters
 DeployOctavia: False
 
@@ -231,6 +235,17 @@ DCNLeafs: []
 
 # Snmpd configuration
 SnmpdReadonlyUserPassword: RHOSPVirtLab
+
+# Credentials (lab-only weak defaults; override via vault_credentials.yaml).
+# BMC / IPMI credentials consumed via pm.user / pm.password in vars/machines.yml
+# (instackenv and fencing configuration).
+BmcUsername: admin
+BmcPassword: admin
+# Overcloud admin account created by the undercloud.
+OvercloudAdminPassword: redhat
+OvercloudAdminEmail: admin@example.com
+# Password for the test admin user created in overcloud_resources.yaml.
+TestUserPassword: redhat
 
 # Disable telemetry
 DisableTelemetry: True

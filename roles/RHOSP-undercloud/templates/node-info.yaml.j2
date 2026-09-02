@@ -94,7 +94,7 @@ parameter_defaults:
     swap_size_mb: 8192
 {% endif %}
   instances:
-{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor)) %}
+{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "equalto", leaf.hypervisor)) %}
 {% if deployed_server[leaf.name] %}
   - name: {{ vm.name }}
     hostname: {{ vm.name }}

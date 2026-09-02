@@ -5,7 +5,7 @@
   changed_when: False
   when:
     - item.pm is defined
-    - inventory_hostname in item.libvirt.hypervisor
+    - inventory_hostname == item.libvirt.hypervisor
 
 - name: VIRTUALBMC - Ensure node exists
   command: "{{ vbmc_path }} add --username {{ item.item.pm.user }} --password {{ item.item.pm.password }} --port {{ item.item.pm.port }} {{ item.item.name }}"
@@ -21,7 +21,7 @@
   changed_when: False
   when:
     - item.pm is defined
-    - inventory_hostname in item.libvirt.hypervisor
+    - inventory_hostname == item.libvirt.hypervisor
 
 - name: VIRTUALBMC - Start node
   command: "{{ vbmc_path }} start {{ item.item.name }}"

@@ -9,11 +9,18 @@
   <memory>{{ item.libvirt.memory }}</memory>
   <currentMemory>{{ item.libvirt.memory }}</currentMemory>
   <vcpu placement="static">{{ item.libvirt.cpus }}</vcpu>
-  <os>
+  <os{% if (item.pm.mode | default('bios')) == 'uefi' and (ansible_distribution_major_version | int >= 9) %} firmware="efi"{% endif %}>
     <type arch="x86_64" machine="q35">hvm</type>
 {% if (item.pm.mode | default('bios')) == 'uefi' %}
+{% if ansible_distribution_major_version | int >= 9 %}
+    {# RHEL 9/10: let libvirt pick the OVMF descriptor (firmware="efi" above);
+       just declare non-secure-boot and a per-VM nvram store. #}
+    <loader secure="no"/>
+    <nvram>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
+{% else %}
     <loader readonly='yes' secure='no' type='pflash'>{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_CODE.secboot.fd</loader>
     <nvram template='{{ RHEL_version_supported[ansible_distribution_version].ovmf_path }}OVMF_VARS.fd'>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
+{% endif %}
 {% endif %}
     <bootmenu enable="no"/>
   </os>
@@ -76,19 +83,13 @@
       <source mode="bind"/>
       <target type="virtio" name="org.qemu.guest_agent.0"/>
     </channel>
-    <channel type="spicevmc">
-      <target type="virtio" name="com.redhat.spice.0"/>
-    </channel>
     <input type="tablet" bus="usb"/>
-    <graphics type="spice" port="-1" tlsPort="-1" autoport="yes">
-      <image compression="off"/>
-    </graphics>
-    <sound model="ich9"/>
+    {# SPICE/QXL were removed from qemu-kvm in RHEL 10 and are deprecated in
+       RHEL 9; use VNC + virtio graphics, which work across 8/9/10 hosts. #}
+    <graphics type="vnc" port="-1" autoport="yes" listen="127.0.0.1"/>
     <video>
-      <model type="qxl"/>
+      <model type="virtio"/>
     </video>
-    <redirdev bus="usb" type="spicevmc"/>
-    <redirdev bus="usb" type="spicevmc"/>
     <memballoon model="virtio"/>
     <rng model="virtio">
       <backend model="random">/dev/urandom</backend>

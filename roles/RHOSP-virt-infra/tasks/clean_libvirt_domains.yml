@@ -15,7 +15,7 @@
     name: "{{ item.name }}"
   loop: "{{ libvirt_machines }}"
   when:
-    - inventory_hostname in item.libvirt.hypervisor
+    - inventory_hostname == item.libvirt.hypervisor
     - item.name in running_vms.list_vms
 
 - name: DOMAINS - Undefine the domain
@@ -24,7 +24,7 @@
     name: "{{ item.name }}"
   loop: "{{ libvirt_machines }}"
   when:
-    - inventory_hostname in item.libvirt.hypervisor
+    - inventory_hostname == item.libvirt.hypervisor
     - item.name in all_vms.list_vms
     - (item.pm.mode | default('bios')) != 'uefi'
 
@@ -32,6 +32,6 @@
   shell: "virsh undefine --nvram {{ item.name }}"
   loop: "{{ libvirt_machines }}"
   when:
-    - inventory_hostname in item.libvirt.hypervisor
+    - inventory_hostname == item.libvirt.hypervisor
     - item.name in all_vms.list_vms
     - (item.pm.mode | default('bios')) == 'uefi'

@@ -32,7 +32,7 @@
   loop: "{{ networks }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname == item.hypervisor
     - ansible_libvirt_networks[item.name] is not defined
 
 - name: NETWORKS - Gather facts about libvirt networks again
@@ -46,7 +46,7 @@
   loop: "{{ networks }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname == item.hypervisor
     - ansible_libvirt_networks[item.name]['state'] != 'active'
 
 - name: NETWORKS - Enable autostart for the network
@@ -56,5 +56,5 @@
   loop: "{{ networks }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname == item.hypervisor
     - ansible_libvirt_networks[item.name]['autostart'] != 'yes'

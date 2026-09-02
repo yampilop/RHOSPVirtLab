@@ -193,6 +193,10 @@ ComputeOvsDpdkSriovProperties:
 CephStorageProperties:
   devices: ['/dev/sdb']
 
+# Run a full `yum update` of the undercloud host on every run (reboots if
+# needed). Set to False to skip the upgrade for faster, more predictable runs.
+UndercloudFullUpdate: True
+
 # Octavia parameters
 DeployOctavia: False
 
@@ -216,6 +220,24 @@ NeutronDriver: ovn
 
 # Snmpd configuration
 SnmpdReadonlyUserPassword: RHOSPVirtLab
+
+# Credentials (lab-only weak defaults).
+# These are intentionally weak defaults for a throwaway lab. To use real
+# secrets, override any of them in vault_credentials.yaml (gitignored and
+# loaded LAST in playbook.yml, so vaulted values win over these defaults):
+#   ansible-vault create vault_credentials.yaml
+# BMC / IPMI credentials for the virtualbmc VMs and physical nodes
+# (consumed via pm.user / pm.password in vars/machines.yml).
+BmcUsername: admin
+BmcPassword: admin
+# Overcloud admin account created by the undercloud.
+OvercloudAdminPassword: redhat
+OvercloudAdminEmail: admin@example.com
+# Password for the test admin user created in overcloud_resources.yaml.
+TestUserPassword: redhat
+# Passwords baked into each VM's cloud-init (root and the ci_user account).
+VmRootPassword: redhat
+VmStackPassword: redhat
 
 # Disable telemetry
 DisableTelemetry: True
