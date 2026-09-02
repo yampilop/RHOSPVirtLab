@@ -12,6 +12,7 @@
   register: cmd_res
   changed_when: false
   until: cmd_res is success
+  when: not undercloud_is_physical | bool
 
 - name: Configure swap file on the undercloud
   include_role:
@@ -54,25 +55,32 @@
     state: latest
   notify: HANDLER - Reboot the machine
 
+# On a libvirt undercloud the second NIC (management, DHCP over br-management)
+# is reconfigured here so Ansible keeps reaching the VM. A physical undercloud
+# is admin-prepared (its networking is already up); we do not touch it, to avoid
+# dropping the connection we are running over.
 - name: NETWORKING - Define management network connection
   set_fact:
     network_connections: "{{ network_connections + [connection] }}"
   vars:
+    mgmt_iface: "{{ undercloud_machine.openstack.management_interface | default('eth1') }}"
     connection:
-      name: "eth1"
-      interface_name: "eth1"
+      name: "{{ mgmt_iface }}"
+      interface_name: "{{ mgmt_iface }}"
       type: ethernet
       autoconnect: yes
       mtu: 1500
       state: up
       ip:
         dhcp4: yes
+  when: not undercloud_is_physical | bool
 
 - name: NETWORKING - Configure network using system role
   import_role:
     name: rhel-system-roles.network
   vars:
     network_allow_restart: yes
+  when: not undercloud_is_physical | bool
 
 - name: CONFIGFILES - Create images directory
   file:
