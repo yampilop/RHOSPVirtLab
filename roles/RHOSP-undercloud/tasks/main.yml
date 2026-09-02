@@ -119,7 +119,7 @@
   debug:
     msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
 
-- name: CHECKS - Verify vms and physical profiles
+- name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
 
 - name: CONFIGFILES - Set container images prepare file and custom undercloud parameters

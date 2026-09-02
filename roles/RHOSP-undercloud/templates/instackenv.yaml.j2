@@ -1,49 +1,45 @@
 nodes:
-{% for vm in vms if (not vm.profile == 'undercloud') and (vm.hypervisor in leaf.hypervisor) %}
-{% if vm.uefi %}
-{% set vm_capabilities='boot_mode:uefi' %}
-{% else %}
-{% set vm_capabilities='boot_mode:bios' %}
-{% endif %}
+{% set ctlplane_bridge = (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).bridge %}
+{% for vm in libvirt_machines if (not vm.openstack.role == 'undercloud') and (vm.libvirt.hypervisor in leaf.hypervisor) %}
   - ports:
-      - address: '{{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}'
-{% if vm.hypervisor in DefaultLeaf0.hypervisor %}
+      - address: '{{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}'
+{% if vm.libvirt.hypervisor in DefaultLeaf0.hypervisor %}
         physical_network: ctlplane
 {% else %}
         physical_network: {{ leaf.subnet.name }}
 {% endif %}
     name: "{{ leaf.name ~ '-' ~ vm.name }}"
-    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ vm.name, "boot_option:local", vm_capabilities] | join(',') }}"
-    cpu: {{ vm.vcpus }}
-    memory: {{ (vm.memory / 1024) | int }}
-    disk: {{ (vm.disk_size / 1073741824) | int }}
+    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ vm.name, "boot_option:local", 'boot_mode:' ~ vm.pm.mode] | join(',') }}"
+    cpu: {{ vm.libvirt.cpus }}
+    memory: {{ (vm.libvirt.memory / 1024) | int }}
+    disk: {{ ((vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first).size / 1073741824) | int }}
     arch: "x86_64"
-    pm_type: "ipmi"
-    pm_user: "admin"
-    pm_password: "admin"
-    pm_addr: "{% if vm.hypervisor == 'localhost' %}{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_management') | list | first).ipv4.address }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}"
-    pm_port: "{{ vm.bmcport }}"
+    pm_type: "{{ vm.pm.type }}"
+    pm_user: "{{ vm.pm.user }}"
+    pm_password: "{{ vm.pm.password }}"
+    pm_addr: "{% if vm.libvirt.hypervisor == 'localhost' %}{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_management') | list | first).ipv4.address }}{% else %}{{ hostvars[vm.libvirt.hypervisor].ansible_host }}{% endif %}"
+    pm_port: "{{ vm.pm.port }}"
 {% endfor %}
 
-{% for node in physical if node.leaf == leaf.name %}
+{% for node in physical_machines if node.openstack.leaf == leaf.name %}
   - ports:
-      - address: '{{ node.mac }}'
-{% if node.leaf == DefaultLeaf0.name %}
+      - address: '{{ node.physical.mac }}'
+{% if node.openstack.leaf == DefaultLeaf0.name %}
         physical_network: ctlplane
 {% else %}
         physical_network: {{ leaf.subnet.name }}
 {% endif %}
     name: "{{ leaf.name ~ '-' ~ node.name }}"
-    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", node.capabilities] | join(',') }}"
-    cpu: {{ node.cpus }}
-    memory: {{ (node.memory / 1024) | int }}
-    disk: {{ (node.disk_size / 1073741824) | int }}
+    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", 'boot_mode:' ~ node.pm.mode] | join(',') }}"
+    cpu: {{ node.physical.cpus }}
+    memory: {{ (node.physical.memory / 1024) | int }}
+    disk: {{ (node.physical.disk / 1073741824) | int }}
     arch: "x86_64"
-    pm_type: "{{ node.pm_type }}"
-{% if 'manual' not in node.pm_type and 'fake' not in node.pm_type %}
-    pm_user: "{{ node.pm_user }}"
-    pm_password: "{{ node.pm_password }}"
-    pm_addr: "{{ node.pm_addr }}"
-    pm_port: "{{ node.pm_port }}"
+    pm_type: "{{ node.pm.type }}"
+{% if 'manual' not in node.pm.type and 'fake' not in node.pm.type %}
+    pm_user: "{{ node.pm.user }}"
+    pm_password: "{{ node.pm.password }}"
+    pm_addr: "{{ node.pm.address }}"
+    pm_port: "{{ node.pm.port }}"
 {% endif %}
 {% endfor %}

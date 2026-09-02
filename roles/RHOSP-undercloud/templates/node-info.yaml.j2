@@ -80,29 +80,29 @@ parameter_defaults:
       - external
     swap_size_mb: 8192
   instances:
-{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "in", leaf.hypervisor)) %}
+{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor)) %}
   - name: {{ leaf.name }}-{{ vm.name }}
-{% if not vm.uefi %}
+{% if vm.pm.mode != 'uefi' %}
     image:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
-    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 9 }}
+    root_size_gb: {{ ((vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first).size / 1073741824) | int - 9 }}
 {% endif %}
 {% endfor %}
-{% for pm in (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name)) %}
+{% for pm in (physical_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("openstack.leaf", "equalto", leaf.name)) %}
   - name: {{ leaf.name }}-{{ pm.name }}
-{% if 'boot_mode:uefi' not in pm.capabilities %}
+{% if pm.pm.mode != 'uefi' %}
     image:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
-    root_size_gb: {{ (pm.disk_size / 1073741824) | int - 9 }}
+    root_size_gb: {{ (pm.physical.disk / 1073741824) | int - 9 }}
     network_config:
       net_config_data_lookup:
         {{ leaf.name }}-{{ pm.name }}:
-{% for nic, interface in pm.nics.items() %}
-          {{ nic }}: '{{ pm.mac if nic == 'nic1' else interface }}'
+{% for nic, interface in pm.physical.nics.items() %}
+          {{ nic }}: '{{ pm.physical.mac if nic == 'nic1' else interface }}'
 {% endfor %}
 {% endif %}
 {% endfor %}

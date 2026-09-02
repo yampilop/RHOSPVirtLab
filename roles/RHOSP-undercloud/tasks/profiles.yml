@@ -6,7 +6,7 @@
         {{ leaf.name }}:
         {
         {%- for role in overcloud_roles %}
-          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "in", leaf.hypervisor) | list | count) }},
+          {{ role.name }}: {{ (physical_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) + (libvirt_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor) | list | count) }},
         {%- endfor %}
         },
       {%- endfor %}
@@ -16,29 +16,30 @@
   set_fact:
     roles_count: "{{ roles_count | from_yaml }}"
 
-- name: PROFILES - Check all vms profiles are virtual
+- name: PROFILES - Check all libvirt machine profiles are virtual
   fail:
-    msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for vms."
+    msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for libvirt machines."
   when:
-    - item.name != 'undercloud'
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).virtual | bool)
-  loop: "{{ vms }}"
+    - item.openstack.role != 'undercloud'
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).virtual | bool)
+  loop: "{{ libvirt_machines }}"
 
-- name: PROFILES - Check only the right profiles are used in vms for leafs
+- name: PROFILES - Check only the right profiles are used in libvirt machines for leafs
   fail:
     msg: "ERROR in vm {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.hypervisor not in DefaultLeaf0.hypervisor
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
-  loop: "{{ vms }}"
+    - item.openstack.role != 'undercloud'
+    - item.libvirt.hypervisor not in DefaultLeaf0.hypervisor
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).distributed | bool)
+  loop: "{{ libvirt_machines }}"
 
-- name: PROFILES - Check only the right profiles are used in physical for leafs
+- name: PROFILES - Check only the right profiles are used in physical machines for leafs
   fail:
     msg: "ERROR in physical {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.leaf != DefaultLeaf0.name
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
-  loop: "{{ physical }}"
+    - item.openstack.leaf != DefaultLeaf0.name
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).distributed | bool)
+  loop: "{{ physical_machines }}"
 
 - name: PROFILES - Check no more than the max amount of nodes for a profile is used in each leaf
   fail:
