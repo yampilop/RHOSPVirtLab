@@ -1,14 +1,19 @@
 # Generate a per-machine NoCloud (cidata) cloud-init ISO for `machine`.
 # Included once per libvirt machine that is `pre_provisioned: true`. The ISO is named
 # after the machine (<machine>-init.iso) and attached as a cdrom by domain.xml.j2.
-# A network-config (static management IP from inventory) is added only when the
-# machine has a `management: true` interface.
+# A network-config is added when the machine has a `management: true` interface
+# (static management IP from inventory) and/or when it is a pre-provisioned overcloud
+# node (static ctlplane IP so the undercloud can reach it as a deployed server).
 # The seeded login user is `stack` for the undercloud role and the overcloud SSH
 # user (heat-admin on 16.2, tripleo-admin on 17.1) for every other role.
 
 - name: STORAGE - Determine if {{ machine.name }} has a management interface
   set_fact:
     ci_has_mgmt: "{{ machine.libvirt.network.interfaces | selectattr('management', 'defined') | selectattr('management') | list | length > 0 }}"
+
+- name: STORAGE - Determine if {{ machine.name }} needs a static ctlplane IP
+  set_fact:
+    ci_has_ctlplane: "{{ (machine.pre_provisioned | default(false)) and (machine.openstack.role != 'undercloud') and (machine.openstack.ctlplane_ip is defined) }}"
 
 - name: STORAGE - Determine the cloud-init user for {{ machine.name }}
   set_fact:
@@ -37,7 +42,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   register: ci_network_config
-  when: ci_has_mgmt | bool
+  when: ci_has_mgmt | bool or ci_has_ctlplane | bool
 
 - name: STORAGE - Create the {{ machine.name }} cloud-init ISO
   command: >-
@@ -45,7 +50,7 @@
     -volid cidata -joliet -rock
     /home/{{ ansible_user }}/{{ machine.name }}-user-data
     /home/{{ ansible_user }}/{{ machine.name }}-meta-data
-    {% if ci_has_mgmt | bool %}/home/{{ ansible_user }}/{{ machine.name }}-network-config{% endif %}
+    {% if ci_has_mgmt | bool or ci_has_ctlplane | bool %}/home/{{ ansible_user }}/{{ machine.name }}-network-config{% endif %}
   register: ci_iso
   when: ci_user_data.changed or ci_meta_data.changed or (ci_network_config.changed | default(false))
 

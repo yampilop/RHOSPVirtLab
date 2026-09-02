@@ -1,5 +1,6 @@
 version: 2
 ethernets:
+{# Management interface (e.g. the undercloud): static Ansible-access IP from inventory. #}
 {% for iface in machine.libvirt.network.interfaces if iface.management | default(false) %}
   {{ iface.name }}:
     match:
@@ -8,3 +9,19 @@ ethernets:
     addresses:
       - {{ hostvars[machine.name].ansible_host }}/24
 {% endfor %}
+{# Control-plane interface for pre-provisioned overcloud nodes (deployed servers): #}
+{# static ctlplane IP + default route so the undercloud can reach them over SSH.    #}
+{% if (machine.pre_provisioned | default(false)) and (machine.openstack.role != 'undercloud') and (machine.openstack.ctlplane_ip is defined) %}
+{% set ctlplane_net = networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first %}
+{% for iface in machine.libvirt.network.interfaces if iface.bridge == ctlplane_net.bridge %}
+  {{ iface.name }}:
+    match:
+      macaddress: '{{ iface.mac }}'
+    set-name: {{ iface.name }}
+    addresses:
+      - {{ machine.openstack.ctlplane_ip }}/24
+    routes:
+      - to: default
+        via: {{ ctlplane_net.ipv4.address }}
+{% endfor %}
+{% endif %}
