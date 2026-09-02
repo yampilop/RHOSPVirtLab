@@ -59,6 +59,7 @@ machines:
     pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
     openstack:
       role: PROFILE            # virtual-capable overcloud role, or 'undercloud'
+      ctlplane_ip: 192.168.24.121  # required when pre_provisioned (deployed server)
     pm:
       type: ipmi
       user: BMC_USER
@@ -95,6 +96,7 @@ machines:
     openstack:
       role: PROFILE
       leaf: LEAF_NAME
+      ctlplane_ip: 192.168.24.131  # required when pre_provisioned (deployed server)
     pm:
       type: "ipmi"|"redfish"|"ilo"|"idrac"
       user: "PM_USER_NAME"
@@ -147,7 +149,16 @@ machines:
   The cloud-init login user is `stack` for the undercloud role and the overcloud SSH
   user otherwise (`heat-admin` on 16.2, `tripleo-admin` on 17.1). When the machine has a
   `management: true` interface, its inventory `ansible_host` is seeded via network-config.
-  An **unprovisioned** VM gets empty disks and no cloud-init cdrom.
+  For a **pre_provisioned overcloud** node cloud-init also seeds the node's ctlplane NIC
+  with the static `openstack.ctlplane_ip` (defaulting the route to the ctlplane network
+  address) so the undercloud can reach it over SSH; the injected public key is the
+  hypervisor's, so the undercloud (carrying the matching private key) can drive the
+  deployed-server deployment. An **unprovisioned** VM gets empty disks and no cloud-init
+  cdrom.
+
+  Pre-provisioned (deployed-server) and ironic-provisioned overcloud nodes cannot be
+  mixed in the same stack: within a leaf every overcloud node must share the same
+  `pre_provisioned` value (the undercloud is exempt). The role validates this.
 
   Convenience views `libvirt_machines` and `physical_machines` (defined in the role
   `vars/main.yml`) filter this list by `type`.

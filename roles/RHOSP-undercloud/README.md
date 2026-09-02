@@ -82,6 +82,7 @@ machines:
     pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
     openstack:
       role: PROFILE            # virtual-capable overcloud role, or 'undercloud'
+      ctlplane_ip: 192.168.24.121  # required when pre_provisioned (deployed server)
     pm:
       type: ipmi
       user: BMC_USER
@@ -114,6 +115,7 @@ machines:
     openstack:
       role: PROFILE
       leaf: LEAF_NAME
+      ctlplane_ip: 192.168.24.131  # required when pre_provisioned (deployed server)
     pm:
       type: "ipmi"|"redfish"|"ilo"|"idrac"
       user: "PM_USER_NAME"
@@ -145,6 +147,18 @@ machines:
   from the RHEL base image with a cloud-init cdrom (see the RHOSP-virt-infra role for
   details); the cloud-init user is `stack` for the undercloud and the overcloud SSH user
   (`heat-admin` on 16.2, `tripleo-admin` on 17.1) for the other roles.
+
+  When overcloud nodes are `pre_provisioned` the role drives a TripleO **deployed-server**
+  deployment for that leaf instead of the ironic flow: node import/introspection are
+  skipped, each node keeps the static `openstack.ctlplane_ip` cloud-init assigned to its
+  ctlplane NIC, and the deploy is authored accordingly. On 16.2 this generates a
+  `DeployedServerPortMap` + `HostnameMap` (`deployed-server-ports.yaml`) alongside the
+  upstream `deployed-server-environment.yaml`; on 17.1 `openstack overcloud node provision`
+  is run with `managed: false` (per-node ctlplane `fixed_ip`) to emit
+  `overcloud-baremetal-deployed.yaml`. The deploy runs with `--disable-validations` and
+  `--overcloud-ssh-user`/`--overcloud-ssh-key` pointing at the hypervisor deploy key
+  copied to the undercloud. Pre-provisioned and ironic-provisioned overcloud nodes cannot
+  be mixed within the same leaf.
 
 networks:
   List of the virtual networks created. The role considers the defaults for RHOSP-virt-infra role:
