@@ -46,10 +46,51 @@ DefaultLeaf0:
 DCNLeafs:
   Variable used to define leafs when making a DCN deployment.
 
+undercloud:
+  The director host, defined separately from the overcloud `machines` list. It is a
+  single node tagged with a `type` discriminator: `libvirt` (a VM this role creates) or
+  `physical` (a pre-existing, admin-prepared host this role does not create). The dict is
+  intentionally minimal - only the fields that actually vary are set. The role injects the
+  constants that never change for the undercloud (name=undercloud, pre_provisioned=true,
+  openstack.role=undercloud) so they cannot be set wrong, and creates **no** virtualbmc for
+  it (it is the director and is not power-managed by the lab, so no `pm` block is used;
+  the domain boot mode defaults to bios - add `pm: {mode: uefi}` only for a uefi
+  undercloud). When it is a libvirt VM it is otherwise built like the overcloud VMs below
+  (this role appends it to its internal `libvirt_machines` view). Minimal example:
+
+```yaml
+undercloud:
+  type: libvirt
+  # openstack:                 # optional
+  #   local_interface: eth0    # control-plane NIC name (default eth0)
+  #   management_interface: eth1  # libvirt only, Ansible access NIC (default eth1)
+  libvirt:
+    title: 'VM_TITLE'
+    hypervisor: HYPERVISOR_NAME
+    cpus: AMOUNT_OF_CPUS
+    memory: RAM_IN_KIB
+    disks:
+    - root: true
+      size: DISK_SIZE_IN_BYTES
+    network:
+      interfaces:
+      - name: nic1
+        mac: 'XX:XX:XX:XX:XX:XX'
+        bridge: br-ctlplane
+      - name: nic2
+        mac: 'XX:XX:XX:XX:XX:XX'
+        bridge: br-management
+        management: true
+```
+
+  See `vars/machines.yml` for the full undercloud schema, and the **Physical undercloud**
+  note below for the `type: physical` case.
+
 machines:
-  Unified list of lab machines (both libvirt VMs and physical baremetal nodes).
-  Every entry shares common top-level parameters and is tagged with a `type`
-  discriminator; technology-specific parameters live in a block named after the type.
+  List of the overcloud nodes (both libvirt VMs and physical baremetal nodes). By default
+  one virtual controller and one virtual compute. Every entry shares common top-level
+  parameters and is tagged with a `type` discriminator; technology-specific parameters
+  live in a block named after the type.
 
   A libvirt VM (`type: libvirt`):
 
@@ -58,7 +99,7 @@ machines:
     type: libvirt
     pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
     openstack:
-      role: PROFILE            # virtual-capable overcloud role, or 'undercloud'
+      role: PROFILE            # virtual-capable overcloud role
       ctlplane_ip: 192.168.24.121  # required when pre_provisioned (deployed server)
     pm:
       type: ipmi
@@ -114,8 +155,9 @@ machines:
         nic2: 'ens1f1'
 ```
 
-  By default the role creates only the `undercloud` VM (with commented examples for
-  overcloud VMs and physical nodes). The role considers no physical machines by default.
+  By default `machines` contains one virtual controller and one virtual compute, so the
+  role creates those plus the `undercloud` VM (the defaults ship a commented example for
+  physical nodes).
 
   The `openstack.role` value can be one of the following:
     - controller
@@ -171,7 +213,9 @@ machines:
   `pre_provisioned` value (the undercloud is exempt). The role validates this.
 
   Convenience views `libvirt_machines` and `physical_machines` (defined in the role
-  `vars/main.yml`) filter this list by `type`.
+  `vars/main.yml`) filter this list by `type`. Because this role builds the undercloud,
+  a libvirt undercloud is appended to `libvirt_machines`; a physical undercloud is
+  admin-prepared and never appears in either view.
 
 networks:
   List of the virtual networks created. The default values are:

@@ -26,7 +26,7 @@
   when:
     - inventory_hostname in item.libvirt.hypervisor
     - item.name in all_vms.list_vms
-    - item.pm.mode != 'uefi'
+    - (item.pm.mode | default('bios')) != 'uefi'
 
 - name: DOMAINS - Undefine the domain manually when uefi
   shell: "virsh undefine --nvram {{ item.name }}"
@@ -34,4 +34,4 @@
   when:
     - inventory_hostname in item.libvirt.hypervisor
     - item.name in all_vms.list_vms
-    - item.pm.mode == 'uefi'
+    - (item.pm.mode | default('bios')) == 'uefi'

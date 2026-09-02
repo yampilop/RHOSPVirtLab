@@ -313,39 +313,35 @@ DefaultFlavorsSize:
     ephemeral: 0
     swap: 0
 
-# machines is the unified list of virtual and physical nodes to be created/managed.
-# The role defines a minimum of one undercloud, one controller node and one compute node
-# and no physical machines by default. See vars/machines.yml for the full schema.
+# undercloud is the director host, defined separately from the overcloud `machines`.
+# By default it is a libvirt VM created by the virt-infra role. Only the non-constant
+# fields are set here; the role injects the constants that never change for the
+# undercloud (name=undercloud, pre_provisioned=true, openstack.role=undercloud). See
+# vars/machines.yml for the full schema, including how to make it a physical host.
+undercloud:
+  type: libvirt
+  libvirt:
+    title: 'RHOSPVirtLab Undercloud'
+    hypervisor: localhost
+    cpus: 2
+    memory: 6291456
+    disks:
+      - root: true
+        size: 107374182400
+    network:
+      interfaces:
+        - name: nic1
+          mac: '0c:1f:0d:10:00:00'
+          bridge: br-ctlplane
+        - name: nic2
+          mac: '0c:1f:0d:10:00:02'
+          bridge: br-management
+          management: true
+
+# machines is the list of overcloud nodes (virtual and physical) to be created/managed.
+# The role defines one controller node and one compute node by default and no physical
+# machines. See vars/machines.yml for the full schema.
 machines:
-  - name: undercloud
-    type: libvirt
-    pre_provisioned: true
-    openstack:
-      role: undercloud
-    pm:
-      type: ipmi
-      user: admin
-      password: admin
-      address: localhost
-      port: 6230
-      mode: bios
-    libvirt:
-      title: 'RHOSPVirtLab Undercloud'
-      hypervisor: localhost
-      cpus: 2
-      memory: 6291456
-      disks:
-        - root: true
-          size: 107374182400
-      network:
-        interfaces:
-          - name: nic1
-            mac: '0c:1f:0d:10:00:00'
-            bridge: br-ctlplane
-          - name: nic2
-            mac: '0c:1f:0d:10:00:02'
-            bridge: br-management
-            management: true
   - name: controller0
     type: libvirt
     openstack:

@@ -63,7 +63,7 @@
   set_fact:
     network_connections: "{{ network_connections + [connection] }}"
   vars:
-    mgmt_iface: "{{ undercloud_machine.openstack.management_interface | default('eth1') }}"
+    mgmt_iface: "{{ undercloud.openstack.management_interface | default('eth1') }}"
     connection:
       name: "{{ mgmt_iface }}"
       interface_name: "{{ mgmt_iface }}"

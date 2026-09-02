@@ -3,7 +3,9 @@
   register: vbmc_status
   loop: "{{ libvirt_machines }}"
   changed_when: False
-  when: inventory_hostname in item.libvirt.hypervisor
+  when:
+    - item.pm is defined
+    - inventory_hostname in item.libvirt.hypervisor
 
 - name: VIRTUALBMC - Delete nodes
   command: "{{ vbmc_path }} delete {{ item.item.name }}"

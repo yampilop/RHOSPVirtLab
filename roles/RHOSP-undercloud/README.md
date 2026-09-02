@@ -68,11 +68,55 @@ Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service
 DCNLeafs:
   Variable used to define leafs when making a DCN deployment.
 
+undercloud:
+  The director host, defined separately from the overcloud `machines` list and shared
+  with the RHOSP-virt-infra role. It is a single node tagged with a `type` discriminator
+  (`libvirt` for a VM the lab creates, `physical` for a pre-existing admin-prepared
+  host). The dict is intentionally minimal - only the fields that actually vary are set.
+  The roles inject the constants that never change for the undercloud (name=undercloud,
+  pre_provisioned=true, openstack.role=undercloud) so they cannot be set wrong, and
+  create **no** virtualbmc for it (it is the director and is not power-managed by the lab,
+  so no `pm` block is used; the domain boot mode defaults to bios - add `pm: {mode: uefi}`
+  only for a uefi undercloud). By default it is a libvirt VM:
+
+```yaml
+  undercloud:
+    type: libvirt
+    # openstack:                   # optional
+    #   local_interface: eth0      # control-plane NIC (-> undercloud.conf), default eth0
+    #   management_interface: eth1 # libvirt only, Ansible-access NIC, default eth1
+    libvirt:
+      title: 'Undercloud'
+      hypervisor: HYPERVISOR_NAME
+      cpus: AMOUNT_OF_CPUS
+      memory: RAM_IN_KIB
+      disks:
+      - root: true
+        size: DISK_SIZE_IN_BYTES
+      network:
+        interfaces:
+        - name: nic1
+          mac: 'XX:XX:XX:XX:XX:XX'
+          bridge: br-ctlplane
+        - name: nic2
+          mac: 'XX:XX:XX:XX:XX:XX'
+          bridge: br-management
+          management: true         # Ansible access NIC (IP from inventory ansible_host)
+```
+
+  The undercloud may instead be `type: physical`. A physical undercloud is treated as
+  *admin-prepared* (RHEL installed, `stack` user with the hypervisor's SSH key, NICs
+  already up); this role skips the cloud-init wait and does not reconfigure its
+  management interface — it only runs subscription/repos/packages, writes
+  `undercloud.conf` and deploys. Set `openstack.local_interface` to the real
+  control-plane device name (default `eth0`); no `pm` block is needed (it is not
+  power-managed by the lab). See `vars/machines.yml` for the full schema.
+
 machines:
-  Unified list of lab machines (both libvirt VMs and physical baremetal nodes),
-  shared with the RHOSP-virt-infra role. Every entry shares common top-level parameters
-  and is tagged with a `type` discriminator; technology-specific parameters live in a
-  block named after the type.
+  List of the overcloud nodes (both libvirt VMs and physical baremetal nodes), shared
+  with the RHOSP-virt-infra role. By default one virtual controller and one virtual
+  compute. Every entry shares common top-level parameters and is tagged with a `type`
+  discriminator; technology-specific parameters live in a block named after the type.
 
   A libvirt VM (`type: libvirt`):
 
@@ -81,7 +125,7 @@ machines:
     type: libvirt
     pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
     openstack:
-      role: PROFILE            # virtual-capable overcloud role, or 'undercloud'
+      role: PROFILE            # virtual-capable overcloud role
       ctlplane_ip: 192.168.24.121  # required when pre_provisioned (deployed server)
     pm:
       type: ipmi
@@ -133,28 +177,20 @@ machines:
         nic2: 'ens1f1'
 ```
 
-  The role considers the defaults for the RHOSP-virt-infra role (only the `undercloud`
-  VM by default) and no physical machines by default.
+  By default `machines` contains one virtual controller and one virtual compute; the
+  RHOSP-virt-infra role defaults ship a commented physical-node example.
 
   The `openstack.role` value can be one of those listed in the `overcloud_roles`
   variable; VMs may only use profiles with `virtual: True`. Convenience views
   `libvirt_machines` and `physical_machines` (defined in the role `vars/main.yml`)
-  filter this list by `type`.
+  filter this list by `type`; the undercloud is defined separately and is not part of
+  them.
 
   The `pre_provisioned` flag (top level, both types) marks a node whose OS is already
-  loaded ("deployed server") versus one provisioned later by ironic (the default). The
-  undercloud is always `pre_provisioned: true`. A pre_provisioned libvirt VM is booted
-  from the RHEL base image with a cloud-init cdrom (see the RHOSP-virt-infra role for
-  details); the cloud-init user is `stack` for the undercloud and the overcloud SSH user
-  (`heat-admin` on 16.2, `tripleo-admin` on 17.1) for the other roles.
-
-  The undercloud may also be `type: physical`. A physical undercloud is treated as
-  *admin-prepared* (RHEL installed, `stack` user with the hypervisor's SSH key, NICs
-  already up); this role skips the cloud-init wait and does not reconfigure its
-  management interface — it only runs subscription/repos/packages, writes
-  `undercloud.conf` and deploys. Set `openstack.local_interface` to the real
-  control-plane device name (default `eth0`); it is written to `undercloud.conf` as
-  `local_interface`.
+  loaded ("deployed server") versus one provisioned later by ironic (the default). A
+  pre_provisioned libvirt VM is booted from the RHEL base image with a cloud-init cdrom
+  (see the RHOSP-virt-infra role for details); the cloud-init user is the overcloud SSH
+  user (`heat-admin` on 16.2, `tripleo-admin` on 17.1).
 
   When overcloud nodes are `pre_provisioned` the role drives a TripleO **deployed-server**
   deployment for that leaf instead of the ironic flow: node import/introspection are

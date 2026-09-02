@@ -67,6 +67,7 @@
   loop: "{{ libvirt_machines }}"
   become: yes
   when:
+    - item.pm is defined
     - inventory_hostname in DefaultLeaf0.hypervisor
 
 - name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for localhost and leafs
@@ -79,4 +80,5 @@
   loop: "{{ libvirt_machines }}"
   become: yes
   when:
+    - item.pm is defined
     - inventory_hostname == item.libvirt.hypervisor

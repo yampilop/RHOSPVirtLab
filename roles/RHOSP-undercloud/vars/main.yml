@@ -1,14 +1,16 @@
 ---
 # vars file for RHOSP-undercloud
 
-# Convenience views over the unified machines list
+# Convenience views over the overcloud machines list. `machines` holds only the
+# overcloud nodes; the undercloud is defined separately in the top-level
+# `undercloud` variable and is intentionally NOT part of these views (this role
+# authors the overcloud, so it never needs to iterate the undercloud).
 libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
-# The single undercloud machine and whether it is a pre-existing physical host
-# (as opposed to a libvirt VM the virt-infra role would create).
-undercloud_machine: "{{ machines | selectattr('openstack.role', 'equalto', 'undercloud') | list | first }}"
-undercloud_is_physical: "{{ (undercloud_machine.type | default('libvirt')) == 'physical' }}"
+# Whether the undercloud is a pre-existing physical host (admin-prepared) rather
+# than a libvirt VM created by the virt-infra role.
+undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
 RHEL_version_supported:
   '7.9':

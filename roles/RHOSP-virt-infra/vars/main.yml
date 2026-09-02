@@ -1,14 +1,25 @@
 ---
 # vars file for RHOSP-virt-infra
 
-# Convenience views over the unified machines list
-libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
-physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+# Whether the undercloud is a pre-existing physical host (admin-prepared) rather
+# than a libvirt VM this role creates. The undercloud is defined on its own in the
+# top-level `undercloud` variable, separate from the `machines` list.
+undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
-# The single undercloud machine and whether it is a pre-existing physical host
-# (as opposed to a libvirt VM this role would create).
-undercloud_machine: "{{ machines | selectattr('openstack.role', 'equalto', 'undercloud') | list | first }}"
-undercloud_is_physical: "{{ (undercloud_machine.type | default('libvirt')) == 'physical' }}"
+# The `undercloud` input dict is kept minimal to avoid human error. The fields the
+# build tasks require but that are CONSTANT for the undercloud are injected here so
+# they can never be set wrong: it is always named `undercloud`, always
+# pre_provisioned, and always openstack.role=undercloud. No `pm` is injected - the
+# undercloud is the director, is not power-managed by the lab, and gets no virtualbmc
+# (tasks that need power management skip machines without a `pm` block).
+undercloud_effective: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
+
+# Convenience views over the machines list. `machines` now holds only the overcloud
+# nodes; the undercloud lives in `undercloud`. This role BUILDS the undercloud when
+# it is a libvirt VM, so its libvirt view includes it (in its injected form); a
+# physical (admin-prepared) undercloud is never created here and never appears.
+libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
+physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 vbmc_path: "/usr/local/bin/vbmc"
