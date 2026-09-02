@@ -122,6 +122,24 @@
 - name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
 
+- name: SSH - Ensure the stack ssh directory exists
+  file:
+    path: /home/stack/.ssh
+    state: directory
+    owner: stack
+    group: stack
+    mode: '0700'
+  when: deployed_server.values() | select('bool') | list | length > 0
+
+- name: SSH - Provide the hypervisor deploy key so the undercloud can reach deployed servers
+  copy:
+    content: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa') }}"
+    dest: /home/stack/.ssh/deploy_key
+    owner: stack
+    group: stack
+    mode: '0600'
+  when: deployed_server.values() | select('bool') | list | length > 0
+
 - name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
   template:
     src: "{{ item }}.j2"

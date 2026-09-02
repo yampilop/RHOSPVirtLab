@@ -80,6 +80,7 @@ overcloud_roles:
 #    version: List of versions where the file will be included
 #    DCN: True if this will only be include in DCN deployments
 #    Leafs: All(Include in all the leafs)|Default(Include only in the default leaf)|NotDefault(Include only in the DCN leafs)
+#    DeployedServer: True to include the file only when the leaf runs in deployed-server (pre-provisioned) mode
 deployment_environment:
   - file: overcloud-baremetal-deployed.yaml
     absolute_path: False
@@ -101,6 +102,18 @@ deployment_environment:
     version: [ 16.2 ]
     DCN: False
     Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml
+    absolute_path: True
+    version: [ 16.2 ]
+    DCN: False
+    Leafs: All
+    DeployedServer: True
+  - file: deployed-server-ports.yaml
+    absolute_path: False
+    version: [ 16.2 ]
+    DCN: False
+    Leafs: All
+    DeployedServer: True
   - file: /home/stack/containers-prepare-parameter.yaml
     absolute_path: True
     version: [ 17.1, 16.2 ]

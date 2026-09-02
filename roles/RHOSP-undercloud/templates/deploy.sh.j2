@@ -37,17 +37,24 @@ time openstack overcloud deploy \
 --stack {{ leaf.name }} \
 -n /home/stack/templates/network_data.yaml \
 -r {{ templates_dir }}/roles_data.yaml \
+{% if deployed_server[leaf.name] %}
+--disable-validations \
+--overcloud-ssh-user {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} \
+--overcloud-ssh-key /home/stack/.ssh/deploy_key \
+{% endif %}
 {% for environment in deployment_environment %}
 {% if ((environment.DCN | bool) and (DCNLeafs | length > 0)) or not (environment.DCN | bool) %}
 {% if ((environment.Leafs == 'Default') and (leaf.name == DefaultLeaf0.name)) or ((environment.Leafs == 'NotDefault') and (leaf.name != DefaultLeaf0.name)) or (environment.Leafs == 'All') %}
 {% if RHOSP_version in environment.version %}
 {% if ((environment.Roles is defined) and ((roles_count[leaf.name].items() | selectattr(0, "in", environment.Roles) | sum(1)) > 0)) or (environment.Roles is not defined) %}
 {% if ((environment.Variable is defined) and (lookup('vars', environment.Variable) | bool)) or ((environment.Variable is defined) and (lookup('vars', environment.Variable) is mapping)) or (environment.Variable is not defined) %}
+{% if (environment.DeployedServer is not defined) or deployed_server[leaf.name] %}
 {% if environment.absolute_path | bool %}
 -e {{ environment.file }} \
 {% else %}
 -e {{ templates_dir }}/{{ environment.file }} \
 {% endif %}
+{%- endif %}
 {%- endif %}
 {%- endif %}
 {%- endif %}
