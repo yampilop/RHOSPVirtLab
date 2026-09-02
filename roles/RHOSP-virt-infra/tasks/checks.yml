@@ -11,20 +11,28 @@
     - inventory_hostname == 'localhost'
     - RHOSP_version_supported[RHOSP_version] is not defined
 
+# The capacity checks below only make sense when this host builds VMs; skip them
+# when there are no libvirt machines (a physical undercloud and no libvirt nodes).
 - name: CHECKS - Get total hypervisor memory planned
   set_fact:
     total_hypervisor_memory_mb: "{{ ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.memory') | list) | sum) / 1024 }}"
+  when: libvirt_required | bool
 
 - name: CHECKS - Check RAM usage wont be larger than the hypervisor capacity
   fail:
     msg: Please check your machines.yml file and make sure the memory usage ({{ total_hypervisor_memory_mb | int }} MB) is not larger than the hypervisor capacity ({{ ansible_memory_mb.real.total | int }} MB) considering 8192 MB for the host.
-  when: total_hypervisor_memory_mb | int + 8192 > ansible_memory_mb.real.total | int
+  when:
+    - libvirt_required | bool
+    - total_hypervisor_memory_mb | int + 8192 > ansible_memory_mb.real.total | int
 
 - name: CHECKS - Get total hypervisor cpus planned
   set_fact:
     total_hypervisor_cpus: "{{ ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.cpus') | list) | sum) }}"
+  when: libvirt_required | bool
 
 - name: CHECKS - Check CPU usage wont be larger than the hypervisor capacity
   fail:
     msg: Please check your machines.yml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 2 CPUs for the host.
-  when: total_hypervisor_cpus | int + 2 > ansible_processor_vcpus | int
+  when:
+    - libvirt_required | bool
+    - total_hypervisor_cpus | int + 2 > ansible_processor_vcpus | int

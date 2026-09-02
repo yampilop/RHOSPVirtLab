@@ -21,6 +21,20 @@ undercloud_effective: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'opens
 libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
+# Whether any libvirt resources are needed at all: true when there is at least one VM
+# to build (a libvirt undercloud and/or libvirt overcloud nodes in `machines`). When
+# false - a physical undercloud AND no libvirt machines - the role installs and creates
+# no libvirt resources and skips the nested-virtualization checks; only the host-level
+# plumbing (network bridges, firewall, SSH access to the undercloud) runs.
+libvirt_required: "{{ libvirt_machines | length > 0 }}"
+
+# Whether VirtualBMC is needed. It emulates a BMC so ironic can power-cycle a VM, so it
+# only matters for libvirt overcloud nodes (the libvirt entries of `machines`). The
+# undercloud is the director, is not power-managed by the lab and never gets a vbmc, so
+# it is deliberately excluded here: a lab with a libvirt undercloud but no libvirt
+# overcloud VMs installs and configures no VirtualBMC at all.
+vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
+
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 
 # VirtualBMC install location. On RHEL 9/10 the system interpreter is
@@ -59,7 +73,6 @@ RHEL_version_supported:
       - dhcp
     pip:
       - virtualbmc
-      - netaddr
       - argcomplete
     ovmf_path: '/usr/share/OVMF/'
   "8.4":
@@ -75,7 +88,6 @@ RHEL_version_supported:
       - dhcp-relay
     pip:
       - virtualbmc
-      - netaddr
     ovmf_path: '/usr/share/edk2/ovmf/'
   "9.6":
     packages:
@@ -84,7 +96,6 @@ RHEL_version_supported:
       - ipmitool
       - python3-lxml
       - python3-libvirt
-      - python3-netaddr
       - edk2-ovmf
       - dhcp-relay
     pip:
@@ -97,7 +108,6 @@ RHEL_version_supported:
       - ipmitool
       - python3-lxml
       - python3-libvirt
-      - python3-netaddr
       - edk2-ovmf
       # ISC dhcp/dhcrelay were removed in RHEL 10; dnsmasq provides the
       # DHCP relay (see dhcrelay.service.j2).

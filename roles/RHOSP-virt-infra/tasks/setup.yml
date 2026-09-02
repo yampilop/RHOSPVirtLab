@@ -29,6 +29,7 @@
     name: "{{ RHEL_version_supported[ansible_distribution_version].packages }}"
     state: present
   become: yes
+  when: libvirt_required | bool
 
 - name: SETUP - Ensure the needed groups exist
   group:
@@ -37,6 +38,7 @@
   loop:
     - libvirt
     - kvm
+  when: libvirt_required | bool
 
 - name: SETUP - Ensure the user belongs to the proper groups
   user:
@@ -45,41 +47,66 @@
       - libvirt
       - kvm
     append: yes
+  when: libvirt_required | bool
 
+# NetworkManager and firewalld are always needed (network bridges, forwarding);
+# the libvirt service/socket units are only enabled when there are VMs to build.
 - name: SETUP - Ensure required services are enabled and running
   systemd:
     name: "{{ item }}"
     state: started
     enabled: yes
   become: yes
-  loop: "{{ libvirt_units + ['NetworkManager.service', 'firewalld.service'] }}"
+  loop: "{{ (libvirt_units if (libvirt_required | bool) else []) + ['NetworkManager.service', 'firewalld.service'] }}"
 
-# On RHEL 7.9/8.4 the system interpreter is not externally managed, so pip
-# packages are installed into it as before.
+# netaddr powers the ipaddr filters used to build the host network bridges
+# (create_network_profiles) and render the overcloud network config, so it is needed
+# even for a fully physical lab. Install it on its own, independent of libvirt/vbmc:
+# the python3-netaddr RPM on RHEL 9/10, or pip on the legacy interpreter (7.9/8.4).
+- name: SETUP - Ensure netaddr RPM for ipaddr filters (RHEL 9/10)
+  yum:
+    name: python3-netaddr
+    state: present
+  become: yes
+  when: ansible_distribution_major_version | int >= 9
+
+- name: SETUP - Ensure netaddr via pip for ipaddr filters (legacy)
+  pip:
+    name: netaddr
+    executable: "pip3"
+  when: ansible_distribution_major_version | int < 9
+
+# VirtualBMC is only installed when there are libvirt overcloud VMs to power-cycle
+# (vbmc_required); a physical or libvirt-undercloud-only lab needs none of it.
+# On RHEL 7.9/8.4 the system interpreter is not externally managed, so pip installs
+# into it as before.
 - name: SETUP - Update pip (legacy system interpreter)
   pip:
     name: pip
     executable: "pip3"
     state: latest
-  when: ansible_distribution_major_version | int < 9
+  when:
+    - vbmc_required | bool
+    - ansible_distribution_major_version | int < 9
 
-- name: SETUP - Install packages from pip (legacy system interpreter)
+- name: SETUP - Install VirtualBMC from pip (legacy system interpreter)
   pip:
     name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
     executable: "pip3"
   when:
+    - vbmc_required | bool
     - RHEL_version_supported[ansible_distribution_version].pip is defined
     - ansible_distribution_major_version | int < 9
 
 # On RHEL 9/10 the system interpreter is externally managed (PEP 668), so
-# VirtualBMC is installed into a dedicated venv instead (netaddr comes from
-# the python3-netaddr RPM for the Ansible controller's ipaddr filters).
-- name: SETUP - Install packages from pip into a dedicated venv (PEP 668)
+# VirtualBMC is installed into a dedicated venv instead.
+- name: SETUP - Install VirtualBMC from pip into a dedicated venv (PEP 668)
   pip:
     name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
     virtualenv: "{{ vbmc_venv }}"
     virtualenv_command: "python3 -m venv"
   when:
+    - vbmc_required | bool
     - RHEL_version_supported[ansible_distribution_version].pip is defined
     - ansible_distribution_major_version | int >= 9
   become: yes
@@ -92,6 +119,7 @@
     state: present
   when: inventory_hostname == 'localhost'
 
+# VirtualBMC emulates the overcloud VMs' BMCs; set it up only when such VMs exist.
 - name: SETUP - Create VirtualBMC systemd unit
   template:
     src: "vbmcd.service.j2"
@@ -100,11 +128,13 @@
     group: root
     mode: "0644"
   become: yes
+  when: vbmc_required | bool
 
 - name: SETUP - Reload systemd daemon
   systemd:
     daemon_reload: yes
   become: yes
+  when: vbmc_required | bool
 
 - name: SETUP - Enable and start vbmcd service
   service:
@@ -112,20 +142,27 @@
     state: started
     enabled: yes
   become: yes
+  when: vbmc_required | bool
+  when: libvirt_required | bool
 
+# Nested virtualization is only relevant when this host runs VMs; skip the whole
+# check (and its restart prompt) when there are no libvirt machines to build.
 - name: SETUP - Determine the KVM module for the host CPU vendor
   set_fact:
     kvm_module: >-
       {{ 'kvm_intel' if ('GenuineIntel' in (ansible_processor | join(' ')))
          else ('kvm_amd' if ('AuthenticAMD' in (ansible_processor | join(' ')))
          else '') }}
+  when: libvirt_required | bool
 
 - name: SETUP - Read the nested virtualization parameter
   slurp:
     src: "/sys/module/{{ kvm_module }}/parameters/nested"
   register: nested_slurp
   become: yes
-  when: kvm_module | length > 0
+  when:
+    - libvirt_required | bool
+    - kvm_module | length > 0
   failed_when: false
 
 - name: SETUP - Register whether nested virtualization is enabled
@@ -134,6 +171,7 @@
       {{ (kvm_module | length > 0)
          and (nested_slurp.content is defined)
          and ((nested_slurp.content | b64decode | trim) in ['1', 'Y']) }}
+  when: libvirt_required | bool
 
 - name: SETUP - Enable nested virtualization if needed
   lineinfile:
@@ -143,6 +181,7 @@
     line: "options {{ kvm_module }} nested=1"
     create: yes
   when:
+    - libvirt_required | bool
     - kvm_module | length > 0
     - not nested_enabled | bool
   become: yes
@@ -151,5 +190,6 @@
   fail:
     msg: "Please restart the machine '{{ inventory_hostname }}' to enable nested virtualization and then run the playbook again."
   when:
+    - libvirt_required | bool
     - kvm_module | length > 0
     - not nested_enabled | bool

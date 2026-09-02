@@ -217,6 +217,27 @@ machines:
   a libvirt undercloud is appended to `libvirt_machines`; a physical undercloud is
   admin-prepared and never appears in either view.
 
+  **When libvirt / VirtualBMC work is skipped.** The role only touches the parts of the
+  hypervisor a given lab actually needs, driven by two derived flags in `vars/main.yml`:
+
+  - `libvirt_required` (`libvirt_machines | length > 0`) - there is at least one VM to
+    build (a libvirt undercloud and/or libvirt overcloud nodes). When it is **false** (a
+    *physical* undercloud **and** no libvirt machines), the role installs no libvirt
+    packages, does not enable the libvirt services, join the libvirt/kvm groups, or
+    create any libvirt networks/storage/domains, and **skips the nested-virtualization
+    checks** (no KVM-module probe and no "please reboot" prompt). Only the host-level
+    plumbing still runs: network bridges, firewall, and SSH access to the undercloud.
+  - `vbmc_required` (`machines | selectattr('type','equalto','libvirt') | length > 0`) -
+    there is at least one libvirt **overcloud** node. VirtualBMC only emulates a BMC so
+    ironic can power-cycle a VM, so the undercloud (the director, no `pm`, never
+    power-managed) is deliberately excluded. When it is **false**, the role installs and
+    configures no VirtualBMC at all - so a lab with a libvirt undercloud but no libvirt
+    overcloud VMs still builds the undercloud VM but sets up no vbmc.
+
+  `netaddr` (for the `ipaddr` filters that build the host bridges and render the network
+  config) is installed independently of both flags, since it is needed even for a fully
+  physical lab.
+
 networks:
   List of the virtual networks created. The default values are:
     - RHOSPVirtLab_ctlplane

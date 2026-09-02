@@ -27,19 +27,27 @@
 
 - name: VIRTUALBMC - Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - vbmc_required | bool
 
 - name: LIBVIRT - Clean libvirt domains
   import_tasks: clean_libvirt_domains.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
 
 - name: LIBVIRT - Clean libvirt storage pools and images
   import_tasks: clean_libvirt_storage.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
 
 - name: LIBVIRT - Clean libvirt networks
   import_tasks: clean_libvirt_networks.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
 
 # Create process
 
@@ -49,19 +57,27 @@
 
 - name: LIBVIRT - Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
-  when: create | bool
+  when:
+    - create | bool
+    - libvirt_required | bool
 
 - name: LIBVIRT - Configure libvirt storage pools and images
   import_tasks: create_libvirt_storage.yml
-  when: create | bool
+  when:
+    - create | bool
+    - libvirt_required | bool
 
 - name: LIBVIRT - Configure libvirt domains
   import_tasks: create_libvirt_domains.yml
-  when: create | bool
+  when:
+    - create | bool
+    - libvirt_required | bool
 
 - name: VIRTUALBMC - Configure VirtualBMC
   import_tasks: create_virtualbmc.yml
-  when: create | bool
+  when:
+    - create | bool
+    - vbmc_required | bool
 
 - name: FIREWALL - Configure firewall
   import_tasks: configure_firewall.yml
