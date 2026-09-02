@@ -4,8 +4,26 @@
 {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
 {%- endfor %}
 {% set min_viable_mtu = mtu_list | max %}
-network_config:
 {% endraw %}
+network_config:
+{% if not DefaultLeaf0.networks %}{# IF 1 #}
+{% if 'Dpdk' in item.name %}
+- type: linux_bridge
+{% else %}
+- type: ovs_bridge
+{% endif %}
+  name: br-ex
+  use_dhcp: false
+  dns_servers: {{ ctlplane_dns_nameservers }}
+  domain: {{ dns_search_domains }}
+  addresses:
+  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
+  routes: {{ ctlplane_host_routes }}
+  members:
+  - type: interface
+    name: {{ interfaces[item.name].ControlPlane }}
+    primary: true
+{% else %}{# IF 1 #}
 {% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}
@@ -84,6 +102,7 @@ network_config:
 {% endraw %}
 {% endif %}
 {% endif %}
+{% endif %}{# IF 1 #}
 {% if interfaces[item.name].Sriov is defined %}
 {% for sriovif in interfaces[item.name].Sriov %}
 - type: sriov_pf

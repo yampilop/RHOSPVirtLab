@@ -109,6 +109,35 @@ resources:
 {% else %}
               - type: ovs_bridge
 {% endif %}
+{% if not DefaultLeaf0.networks %}{# IF 1 #}
+                name: br-ex
+                mtu:
+                  get_attr: [MinViableMtu, value]
+                use_dhcp: false
+                dns_servers:
+                  get_param: DnsServers
+                domain:
+                  get_param: DnsSearchDomains
+                addresses:
+                - ip_netmask:
+                    list_join:
+                    - /
+                    - - get_param: ControlPlaneIp
+                      - get_param: ControlPlaneSubnetCidr
+                routes:
+                  list_concat_unique:
+                    - get_param: ControlPlaneStaticRoutes
+                    - - default: true
+                        next_hop:
+                          get_param: ControlPlaneDefaultRoute
+                members:
+                - type: interface
+                  name: {{ interfaces[item.name].ControlPlane }}
+                  mtu:
+                    get_attr: [MinViableMtu, value]
+                  # force the MAC address of the bridge to this interface
+                  primary: true
+{% else %}{# IF 1 #}
 {% if 'RHOSPVirtLab_ctlplane' not in leaf.networks.External.network %}
                 name: br-vlans
 {% else %}
@@ -203,7 +232,7 @@ resources:
                       - get_param: {{ network }}InterfaceRoutes
 {% endfor %}
 {% endif %}
-
+{% endif %}{# IF 1 #}
 {% if ('Dpdk' in item.name) and (interfaces[item.name].DpdkBonds is defined) and (interfaces[item.name].DpdkBonds|length > 0) %}
               - type: ovs_user_bridge
                 name: br-dpdk
