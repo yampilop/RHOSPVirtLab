@@ -1,6 +1,10 @@
 ---
 # vars file for RHOSP-virt-infra
 
+# Convenience views over the unified machines list
+libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 vbmc_path: "/usr/local/bin/vbmc"
 vbmcd_path: "/usr/local/bin/vbmcd"
@@ -75,9 +79,11 @@ RHOSP_version_supported:
       name: 'rhel-9.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda4'
     rhel_release: '9.2'
+    overcloud_ssh_user: tripleo-admin
   16.2:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
+    overcloud_ssh_user: heat-admin

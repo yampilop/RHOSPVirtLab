@@ -3,7 +3,7 @@
   hosts: infrastructure
   vars_files:
     - vars/options.yml
-    - vars/vms.yml
+    - vars/machines.yml
     - vars/networks.yml
 
   pre_tasks:
@@ -20,8 +20,7 @@
     - vault_credentials.yaml
     - vars/options.yml
     - vars/networks.yml
-    - vars/vms.yml
-    - vars/physical.yml
+    - vars/machines.yml
   gather_facts: no
   
   pre_tasks:

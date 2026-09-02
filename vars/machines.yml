@@ -1,0 +1,173 @@
+---
+# Unified inventory of lab machines (virtual and physical).
+#
+# Every entry shares a common set of top-level parameters and is tagged with a
+# `type` discriminator. Technology-specific parameters live in a block named
+# after that type (`libvirt:` for VMs, `physical:` for baremetal). New
+# virtualization technologies can be added by defining a new type + block.
+#
+# Common (top level, all types):
+#   name       Unique machine name.
+#   type       Machine technology: libvirt | physical.
+#   pre_provisioned  Optional (default false). Whether the node already has an OS
+#                loaded (pre-provisioned / "deployed server") or will be provisioned
+#                later by ironic (unprovisioned). Works for both VMs and baremetal.
+#                For a pre-provisioned libvirt VM the root disk is backed by the RHEL
+#                base image and a cloud-init cdrom is generated to seed users/network
+#                (stack user for the undercloud; heat-admin/tripleo-admin otherwise).
+#                An unprovisioned VM gets an empty root disk and no cloud-init cdrom.
+#                The undercloud is always pre-provisioned.
+#   openstack: OpenStack/overcloud placement.
+#     role         Overcloud role/profile (must be a virtual-capable profile for VMs).
+#     leaf         Leaf/DCN site the node belongs to (physical machines).
+#   pm:        Power management / BMC (both types).
+#     type         BMC driver (ipmi for virtualbmc VMs and real IPMI baremetal).
+#     user         BMC username.
+#     password     BMC password.
+#     address      BMC host: localhost/hypervisor for VMs, IPMI address for baremetal.
+#     port         BMC port (virtualbmc port for VMs).
+#     mode         Boot mode: bios | uefi (drives introspection boot_mode too).
+#
+# libvirt block (type: libvirt) - editable VM sizing and wiring:
+#   title      Human-readable domain title.
+#   hypervisor Inventory host running the domain.
+#   cpus       Number of vCPUs.
+#   memory     RAM in KiB.
+#   disks:     Libvirt storage layout (one or more disks; exactly one root). The root
+#              disk is backed by the RHEL base image automatically when the machine is
+#              pre_provisioned; otherwise all disks start empty. No per-disk backing
+#              image is configured here.
+#     - root: true             Root volume (exactly one).
+#       size: <bytes>
+#     - size: <bytes>          Additional data disk(s).
+#   network.interfaces:  Libvirt NIC wiring. Each interface attaches to a
+#                        hypervisor bridge, decoupling machines from the
+#                        networks list (any bridge can be targeted).
+#     - name: <label>          Logical interface name (e.g. nic1).
+#       mac:  <MAC>            Explicit MAC address.
+#       bridge: <bridge>       Hypervisor bridge to attach to (defined in vars/networks.yml).
+#       management: true       Optional. Marks the Ansible access interface. Its IP is
+#                              NOT stored here: it is taken from the machine's inventory
+#                              `ansible_host`. For a libvirt undercloud cloud-init applies
+#                              that address at first boot (assumes a /24); os-net-config
+#                              later reuses the same address. Overcloud data-plane
+#                              isolation IPs are NOT set here.
+#
+# physical block (type: physical) - fixed hardware facts + BMC wiring:
+#   cpus       Number of CPUs (for introspection/flavor matching).
+#   memory     RAM in KiB.
+#   disk       Disk size in bytes.
+#   mac        Boot NIC MAC address (used for introspection).
+#   nics:      Logical-nic -> physical device map for os-net-config.
+
+machines:
+- name: undercloud
+  type: libvirt
+  pre_provisioned: true
+  openstack:
+    role: undercloud
+  pm:
+    type: ipmi
+    user: admin
+    password: admin
+    address: localhost
+    port: 6230
+    mode: bios
+  libvirt:
+    title: 'RHOSPVirtLab Undercloud'
+    hypervisor: localhost
+    cpus: 4
+    memory: 16777216
+    disks:
+    - root: true
+      size: 107374182400
+    network:
+      interfaces:
+      - name: nic1
+        mac: '0c:1f:0d:10:00:00'
+        bridge: br-ctlplane
+      - name: nic2
+        mac: '0c:1f:0d:10:00:02'
+        bridge: br-management
+        management: true
+
+
+# Example overcloud VMs (uncomment and adjust to grow the lab):
+# These default to unprovisioned (ironic installs them later). Set
+# `pre_provisioned: true` at the top level to instead boot them from the RHEL base
+# image with a cloud-init cdrom (deployed-server style).
+#
+# - name: controller0
+#   type: libvirt
+#   openstack:
+#     role: controller
+#   pm:
+#     type: ipmi
+#     user: admin
+#     password: admin
+#     address: localhost
+#     port: 6231
+#     mode: bios
+#   libvirt:
+#     title: 'RHOSPVirtLab Virtual Controller 0'
+#     hypervisor: localhost
+#     cpus: 2
+#     memory: 8388608
+#     disks:
+#     - root: true
+#       size: 53687091200
+#     network:
+#       interfaces:
+#       - name: nic1
+#         mac: '0c:1f:0d:11:00:00'
+#         bridge: br-ctlplane
+#
+# - name: compute0
+#   type: libvirt
+#   openstack:
+#     role: compute
+#   pm:
+#     type: ipmi
+#     user: admin
+#     password: admin
+#     address: localhost
+#     port: 6234
+#     mode: bios
+#   libvirt:
+#     title: 'RHOSPVirtLab Virtual Compute 0'
+#     hypervisor: localhost
+#     cpus: 10
+#     memory: 31457280
+#     disks:
+#     - root: true
+#       size: 53687091200
+#     network:
+#       interfaces:
+#       - name: nic1
+#         mac: '0c:1f:0d:12:00:00'
+#         bridge: br-ctlplane
+
+
+# Example physical (baremetal) machines:
+# Also default to unprovisioned; set `pre_provisioned: true` for deployed servers.
+#
+# - name: computeovsdpdk0
+#   type: physical
+#   openstack:
+#     role: computeovsdpdk
+#     leaf: overcloud
+#   pm:
+#     type: ipmi
+#     user: admin
+#     password: admin
+#     address: 192.168.122.1
+#     port: 623
+#     mode: bios
+#   physical:
+#     cpus: 4
+#     memory: 4194304
+#     disk: 53687091200
+#     mac: '52:54:00:24:61:07'
+#     nics:
+#       nic1: 'ens1f0'
+#       nic2: 'ens1f1'

@@ -1,6 +1,10 @@
 ---
 # vars file for RHOSP-undercloud
 
+# Convenience views over the unified machines list
+libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+
 RHEL_version_supported:
   '7.9':
   '8.4':
@@ -378,6 +382,7 @@ RHOSP_version_supported:
       name: 'rhel-9.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda4'
     rhel_release: '9.2'
+    overcloud_ssh_user: tripleo-admin
     undercloud_repos:
       - rhel-9-for-x86_64-baseos-eus-rpms
       - rhel-9-for-x86_64-appstream-eus-rpms
@@ -416,6 +421,7 @@ RHOSP_version_supported:
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
+    overcloud_ssh_user: heat-admin
     undercloud_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms

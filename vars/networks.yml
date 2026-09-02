@@ -9,15 +9,6 @@ networks:
       address: '192.168.24.254'
       netmask: '255.255.255.0'
       dhcp: false
-  - name: RHOSPVirtLab_external
-    hypervisor: localhost
-    bridge: br-external
-    forward: bridge
-    mac_suffix: '01'
-    ipv4:
-      address: '10.0.0.1'
-      netmask: '255.255.255.0'
-      dhcp: false
   - name: RHOSPVirtLab_management
     hypervisor: localhost
     bridge: br-management
