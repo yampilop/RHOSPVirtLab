@@ -136,6 +136,16 @@ machines:
   applies that address statically at first boot and os-net-config later reuses it; for
   a physical undercloud the address is simply reachable via the inventory.
 
+  **Physical undercloud.** The undercloud may be `type: physical` instead of a libvirt
+  VM. Such a host is assumed to be *admin-prepared*: RHEL installed, the `stack` user
+  present with the hypervisor's SSH public key authorized, and its NICs already up (the
+  control-plane NIC on the ctlplane L2, plus a management/access IP matching its
+  inventory `ansible_host`). This role does **not** create it, start a domain for it,
+  wait on cloud-init, or reconfigure its interfaces; it only adds an `/etc/hosts` entry
+  so the `stack@undercloud` alias resolves. Set `openstack.local_interface` (default
+  `eth0`) to the real control-plane device name; `openstack.management_interface`
+  (default `eth1`) applies only to a libvirt undercloud.
+
   The `pre_provisioned` flag (top level, both types) records whether the node already
   has an OS loaded ("deployed server") or will be provisioned later by ironic
   (unprovisioned, the default). The undercloud is always `pre_provisioned: true`; the

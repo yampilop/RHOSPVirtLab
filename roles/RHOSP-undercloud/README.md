@@ -148,6 +148,14 @@ machines:
   details); the cloud-init user is `stack` for the undercloud and the overcloud SSH user
   (`heat-admin` on 16.2, `tripleo-admin` on 17.1) for the other roles.
 
+  The undercloud may also be `type: physical`. A physical undercloud is treated as
+  *admin-prepared* (RHEL installed, `stack` user with the hypervisor's SSH key, NICs
+  already up); this role skips the cloud-init wait and does not reconfigure its
+  management interface — it only runs subscription/repos/packages, writes
+  `undercloud.conf` and deploys. Set `openstack.local_interface` to the real
+  control-plane device name (default `eth0`); it is written to `undercloud.conf` as
+  `local_interface`.
+
   When overcloud nodes are `pre_provisioned` the role drives a TripleO **deployed-server**
   deployment for that leaf instead of the ironic flow: node import/introspection are
   skipped, each node keeps the static `openstack.ctlplane_ip` cloud-init assigned to its

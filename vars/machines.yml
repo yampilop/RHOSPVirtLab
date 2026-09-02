@@ -18,8 +18,15 @@
 #                An unprovisioned VM gets an empty root disk and no cloud-init cdrom.
 #                The undercloud is always pre-provisioned.
 #   openstack: OpenStack/overcloud placement.
-#     role         Overcloud role/profile (must be a virtual-capable profile for VMs).
+#     role         Overcloud role/profile (must be a virtual-capable profile for VMs),
+#                  or 'undercloud'.
 #     leaf         Leaf/DCN site the node belongs to (physical machines).
+#     local_interface  Undercloud only, optional (default eth0). Name of the NIC the
+#                  undercloud uses for the control plane (written to undercloud.conf).
+#                  Override for a physical undercloud whose NIC is e.g. eno1/enp3s0.
+#     management_interface  Libvirt undercloud only, optional (default eth1). Name of
+#                  the NIC reconfigured for Ansible/management access at first boot.
+#                  Unused for a physical undercloud (its networking is left untouched).
 #     ctlplane_ip  Static control-plane IP. REQUIRED on pre_provisioned overcloud
 #                  nodes (deployed servers): cloud-init assigns it to the node's
 #                  ctlplane NIC at first boot and the deployed-server port map uses
@@ -32,7 +39,10 @@
 # NOTE: pre-provisioned (deployed-server) and ironic-provisioned overcloud nodes
 # cannot be mixed in the same stack/leaf. Within a given leaf every overcloud node
 # must share the same pre_provisioned value (the undercloud is exempt).
-#   pm:        Power management / BMC (both types).
+#   pm:        Power management / BMC. Required for every node ironic must power-cycle
+#              (all libvirt VMs via virtualbmc, and physical overcloud nodes via their
+#              real BMC). NOT needed for a physical undercloud: it is the director, is
+#              never enrolled in ironic, and is not power-managed by the lab.
 #     type         BMC driver (ipmi for virtualbmc VMs and real IPMI baremetal).
 #     user         BMC username.
 #     password     BMC password.
@@ -71,6 +81,17 @@
 #   disk       Disk size in bytes.
 #   mac        Boot NIC MAC address (used for introspection).
 #   nics:      Logical-nic -> physical device map for os-net-config.
+#
+# NOTE (physical undercloud): the undercloud may be `type: physical` instead of a
+# libvirt VM. A physical undercloud is assumed to be admin-prepared: RHEL already
+# installed, the `stack` user present with the hypervisor's SSH public key
+# authorized, and its NICs already up (the control-plane NIC on the ctlplane L2,
+# plus a management/access IP matching its inventory `ansible_host`). The lab does
+# NOT create it, wait on cloud-init, or reconfigure its interfaces; it only runs
+# subscription/repos/packages, writes undercloud.conf and deploys. Set
+# `openstack.local_interface` to the real control-plane device name. The physical
+# block's `cpus/memory/disk/mac/nics` are ignored for the undercloud, and the `pm`
+# block is not needed (nothing power-manages the undercloud).
 
 machines:
 - name: undercloud
@@ -102,6 +123,20 @@ machines:
         mac: '0c:1f:0d:10:00:02'
         bridge: br-management
         management: true
+
+
+# Alternative: a PHYSICAL undercloud (replace the libvirt entry above). The box
+# must be admin-prepared (see the "physical undercloud" note in the schema) and its
+# inventory `ansible_host` must be its reachable management IP. `local_interface`
+# names the real control-plane NIC. The physical block is optional/ignored here.
+#
+# - name: undercloud
+#   type: physical
+#   pre_provisioned: true
+#   openstack:
+#     role: undercloud
+#     local_interface: eno1        # control-plane NIC name inside the undercloud
+#   # no pm block: the undercloud is not power-managed by the lab
 
 
 # Example overcloud VMs (uncomment and adjust to grow the lab):
