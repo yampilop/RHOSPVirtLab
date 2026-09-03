@@ -209,8 +209,12 @@ machines:
   cdrom.
 
   Pre-provisioned (deployed-server) and ironic-provisioned overcloud nodes cannot be
-  mixed in the same stack: within a leaf every overcloud node must share the same
-  `pre_provisioned` value (the undercloud is exempt). The role validates this.
+  mixed: every overcloud node in `machines` must share the same `pre_provisioned` value
+  (the undercloud is defined separately and is exempt). The role validates this and
+  fails early otherwise. This is currently a global check; a future leaf refactor
+  (making `openstack.leaf` the single leaf identifier for both VMs and physical nodes)
+  will make it per-leaf, so a leaf rather than the whole deployment is the unit that
+  cannot mix.
 
   Convenience views `libvirt_machines` and `physical_machines` (defined in the role
   `vars/main.yml`) filter this list by `type`. Because this role builds the undercloud,

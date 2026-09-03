@@ -143,7 +143,6 @@
     enabled: yes
   become: yes
   when: vbmc_required | bool
-  when: libvirt_required | bool
 
 # Nested virtualization is only relevant when this host runs VMs; skip the whole
 # check (and its restart prompt) when there are no libvirt machines to build.

@@ -75,8 +75,10 @@
 #                  unprovisioned (ironic) nodes, which get their IP from neutron.
 #
 # NOTE: pre-provisioned (deployed-server) and ironic-provisioned overcloud nodes
-# cannot be mixed in the same stack/leaf. Within a given leaf every overcloud node
-# must share the same pre_provisioned value.
+# cannot be mixed. Every overcloud node here must share the same pre_provisioned value
+# (the undercloud is defined separately and is exempt); the role validates this and
+# fails early otherwise. (This is a global check for now; a future leaf refactor will
+# make it per-leaf.)
 #   pm:        Power management / BMC. Required for every overcloud node ironic must
 #              power-cycle (all libvirt VMs via virtualbmc, and physical nodes via
 #              their real BMC).

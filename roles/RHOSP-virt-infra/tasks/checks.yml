@@ -11,6 +11,30 @@
     - inventory_hostname == 'localhost'
     - RHOSP_version_supported[RHOSP_version] is not defined
 
+# Deployed-server (pre_provisioned) and ironic-provisioned overcloud nodes cannot be
+# mixed in the same deployment: every overcloud node must share the same
+# `pre_provisioned` value. Only `machines` (the overcloud nodes) are considered - the
+# undercloud lives in its own variable and is exempt. A node with no `pre_provisioned`
+# key defaults to unprovisioned, so the deployment is mixed when some (but not all) of
+# the nodes are pre_provisioned: true.
+# TODO(leafs): this is a GLOBAL check for now. Once the leaf model is refactored so
+# `openstack.leaf` is the single leaf identifier for both VMs and physical nodes,
+# make this per-leaf (a leaf, not the whole deployment, is the unit that cannot mix
+# pre_provisioned values) - see the leaf-membership tests in the undercloud templates.
+- name: CHECKS - Fail if pre-provisioned and unprovisioned overcloud nodes are mixed
+  vars:
+    preprovisioned_count: "{{ machines | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned', 'equalto', true) | list | length }}"
+  fail:
+    msg: >-
+      vars/machines.yml mixes deployed-server (pre_provisioned: true) and
+      ironic-provisioned (pre_provisioned: false, the default) overcloud nodes. Every
+      overcloud node must share the same pre_provisioned value (the undercloud is
+      defined separately and is exempt).
+  when:
+    - inventory_hostname == 'localhost'
+    - preprovisioned_count | int > 0
+    - preprovisioned_count | int < (machines | length)
+
 # The capacity checks below only make sense when this host builds VMs; skip them
 # when there are no libvirt machines (a physical undercloud and no libvirt nodes).
 - name: CHECKS - Get total hypervisor memory planned

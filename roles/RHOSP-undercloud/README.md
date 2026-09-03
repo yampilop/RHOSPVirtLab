@@ -202,7 +202,9 @@ machines:
   `overcloud-baremetal-deployed.yaml`. The deploy runs with `--disable-validations` and
   `--overcloud-ssh-user`/`--overcloud-ssh-key` pointing at the hypervisor deploy key
   copied to the undercloud. Pre-provisioned and ironic-provisioned overcloud nodes cannot
-  be mixed within the same leaf.
+  be mixed: every overcloud node must share the same `pre_provisioned` value (validated by
+  the RHOSP-virt-infra role, which fails early otherwise). This is a global check for now;
+  a future leaf refactor will make it per-leaf.
 
 networks:
   List of the virtual networks created. The role considers the defaults for RHOSP-virt-infra role:
