@@ -106,18 +106,32 @@
     remote_src: yes
   loop: "{{ RHOSP_version_supported[RHOSP_version].images_directories }}"
 
-- name: IMAGES - Download images for testing
-  get_url:
-    url: "{{ item.url }}"
-    dest: "images/{{ item.name }}"
-    owner: stack
-    group: stack
-    timeout: 30
+- name: IMAGES - Check which test images already exist
+  stat:
+    path: "images/{{ item.name }}"
   loop:
     - url: "{{ CustomRhelImage }}"
       name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
     - url: "{{ CirrOSDownloadLink }}"
       name: "cirros.qcow2"
+  loop_control:
+    label: "{{ item.name }}"
+  register: test_images_stat
+
+# Skip the download for any image already present (these are large files); the loop
+# runs over the stat results so `item.item` is the original url/name and
+# `item.stat.exists` tells us whether it is already there.
+- name: IMAGES - Download images for testing
+  get_url:
+    url: "{{ item.item.url }}"
+    dest: "images/{{ item.item.name }}"
+    owner: stack
+    group: stack
+    timeout: 30
+  loop: "{{ test_images_stat.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: not item.stat.exists
   retries: 3
   delay: 10
   register: result
