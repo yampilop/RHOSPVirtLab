@@ -151,7 +151,7 @@
     owner: stack
     group: stack
     mode: '0700'
-  when: deployed_server.values() | select('bool') | list | length > 0
+  when: true in (deployed_server.values() | map('bool') | list)
 
 - name: SSH - Provide the hypervisor deploy key so the undercloud can reach deployed servers
   copy:
@@ -160,7 +160,7 @@
     owner: stack
     group: stack
     mode: '0600'
-  when: deployed_server.values() | select('bool') | list | length > 0
+  when: true in (deployed_server.values() | map('bool') | list)
 
 - name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
   template:
