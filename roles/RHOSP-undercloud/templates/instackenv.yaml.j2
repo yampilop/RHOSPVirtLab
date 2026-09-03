@@ -17,7 +17,7 @@ nodes:
     pm_type: "{{ vm.pm.type }}"
     pm_user: "{{ vm.pm.user }}"
     pm_password: "{{ vm.pm.password }}"
-    pm_addr: "{% if vm.libvirt.hypervisor == 'localhost' %}{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_management') | list | first).ipv4.address }}{% else %}{{ hostvars[vm.libvirt.hypervisor].ansible_host }}{% endif %}"
+    pm_addr: "{% if vm.libvirt.hypervisor == 'localhost' %}{{ libvirt_management_network.ipv4.address }}{% else %}{{ hostvars[vm.libvirt.hypervisor].ansible_host }}{% endif %}"
     pm_port: "{{ vm.pm.port }}"
 {% endfor %}
 

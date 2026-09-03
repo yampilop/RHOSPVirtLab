@@ -15,6 +15,9 @@
     {% if item.ipv4.dhcp %}
     <dhcp>
       <range start="{{ item.ipv4.dhcp.start }}" end="{{ item.ipv4.dhcp.end }}" />
+      {% for host in item.ipv4.dhcp.hosts | default([]) %}
+      <host mac="{{ host.mac }}" name="{{ host.name }}" ip="{{ host.ip }}"/>
+      {% endfor %}
     </dhcp>
     {% endif %}
   </ip>

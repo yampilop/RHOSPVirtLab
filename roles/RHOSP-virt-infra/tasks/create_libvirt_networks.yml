@@ -18,6 +18,12 @@
   notify: HANDLER - restart libvirtd service
   when:
     - inventory_hostname == 'localhost'
+    # TODO(leafs): this port-forward hook fired when the External network was NAT. Its
+    # old sources (`networks`, `DefaultLeaf0`) were removed with the network refactor, so
+    # the definedness guards below keep it skipped (no crash) until the External network
+    # is provided by the leaf model and this condition is rewired.
+    - DefaultLeaf0 is defined
+    - networks is defined
     - (networks | selectattr('name', 'search', DefaultLeaf0.networks.External.network) | list | first).forward == 'nat'
 
 - name: NETWORKS - Gather facts about libvirt networks
@@ -29,7 +35,7 @@
     command: define
     name: "{{ item.name }}"
     xml: "{{ lookup('template', 'network.xml.j2') }}"
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   become: yes
   when:
     - inventory_hostname == item.hypervisor
@@ -43,7 +49,7 @@
   community.libvirt.virt_net:
     state: active
     name: "{{ item.name }}"
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   become: yes
   when:
     - inventory_hostname == item.hypervisor
@@ -53,7 +59,7 @@
   community.libvirt.virt_net:
     autostart: yes
     name: "{{ item.name }}"
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   become: yes
   when:
     - inventory_hostname == item.hypervisor

@@ -1,7 +1,7 @@
 version: 2
 ethernets:
 {# Management interface (e.g. the undercloud): static Ansible-access IP from inventory. #}
-{% for iface in machine.libvirt.network.interfaces if iface.management | default(false) %}
+{% for iface in machine.libvirt.network.interfaces if iface.name == management_interface_name %}
   {{ iface.name }}:
     match:
       macaddress: '{{ iface.mac }}'

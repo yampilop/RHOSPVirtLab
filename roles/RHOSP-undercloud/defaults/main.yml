@@ -345,13 +345,11 @@ undercloud:
         size: 107374182400
     network:
       interfaces:
+        # Only the control-plane NIC is defined; the virt-infra role injects the
+        # management (`mgmt`) NIC with a fixed MAC pinned to a static DHCP lease.
         - name: nic1
           mac: '0c:1f:0d:10:00:00'
           bridge: br-ctlplane
-        - name: nic2
-          mac: '0c:1f:0d:10:00:02'
-          bridge: br-management
-          management: true
 
 # machines is the list of overcloud nodes (virtual and physical) to be created/managed.
 # The role defines one controller node and one compute node by default and no physical
@@ -405,27 +403,3 @@ machines:
           - name: nic1
             mac: '0c:1f:0d:12:00:00'
             bridge: br-ctlplane
-
-# networks is a list to define the virtual networks to be created
-networks:
-  - name: RHOSPVirtLab_ctlplane
-    hypervisor: localhost
-    bridge: br-ctlplane
-    forward: bridge
-    mac_suffix: '00'
-    ipv4:
-      address: '192.168.24.254'
-      netmask: '255.255.255.0'
-      dhcp: false
-  - name: RHOSPVirtLab_management
-    hypervisor: localhost
-    bridge: br-management
-    forward: nat
-    mac_suffix: '02'
-    ipv4:
-      address: '192.168.250.1'
-      netmask: '255.255.255.0'
-      dhcp:
-        start: '192.168.250.100'
-        end: '192.168.250.254'
-        hosts: true

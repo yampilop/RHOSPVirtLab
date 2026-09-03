@@ -7,6 +7,15 @@
 - name: SETUP - Make the hypervisor setup
   import_tasks: tasks/setup.yml
 
+# Assemble the libvirt networks this host must manage, replacing the old static
+# `networks` list. Starts from the management (NAT) network when required (a libvirt
+# undercloud or a pre-provisioned libvirt VM on localhost).
+# TODO(leafs): append the per-leaf ctlplane/external networks needed wherever libvirt
+# VMs are present, so they are created dynamically from the leaf definitions.
+- name: NETWORKING - Assemble the list of libvirt networks to manage
+  set_fact:
+    libvirt_networks: "{{ [libvirt_management_network] if (management_network_required | bool) else [] }}"
+
 # Cleanup process
 
 - name: DHCRELAY - Clean DHCP relay

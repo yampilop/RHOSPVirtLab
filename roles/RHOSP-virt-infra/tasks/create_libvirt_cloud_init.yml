@@ -1,15 +1,15 @@
 # Generate a per-machine NoCloud (cidata) cloud-init ISO for `machine`.
 # Included once per libvirt machine that is `pre_provisioned: true`. The ISO is named
 # after the machine (<machine>-init.iso) and attached as a cdrom by domain.xml.j2.
-# A network-config is added when the machine has a `management: true` interface
-# (static management IP from inventory) and/or when it is a pre-provisioned overcloud
+# A network-config is added when the machine has a management interface (named
+# `mgmt`, static management IP from inventory) and/or when it is a pre-provisioned overcloud
 # node (static ctlplane IP so the undercloud can reach it as a deployed server).
 # The seeded login user is `stack` for the undercloud role and the overcloud SSH
 # user (heat-admin on 16.2, tripleo-admin on 17.1) for every other role.
 
 - name: STORAGE - Determine if {{ machine.name }} has a management interface
   set_fact:
-    ci_has_mgmt: "{{ machine.libvirt.network.interfaces | selectattr('management', 'defined') | selectattr('management') | list | length > 0 }}"
+    ci_has_mgmt: "{{ machine.libvirt.network.interfaces | selectattr('name', 'equalto', management_interface_name) | list | length > 0 }}"
 
 - name: STORAGE - Determine if {{ machine.name }} needs a static ctlplane IP
   set_fact:

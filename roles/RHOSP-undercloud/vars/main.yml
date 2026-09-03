@@ -12,6 +12,15 @@ physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | li
 # than a libvirt VM created by the virt-infra role.
 undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
+# Management (NAT) network gateway address, used as the pm_addr for localhost libvirt
+# VMs in instackenv. The full network is defined in the RHOSP-virt-infra role, but role
+# vars/main.yml are play-scoped and not visible in this (openstack) play, so only the
+# gateway address needed here is duplicated. Keep in sync with
+# roles/RHOSP-virt-infra/vars/main.yml (libvirt_management_network.ipv4.address).
+libvirt_management_network:
+  ipv4:
+    address: '192.168.250.1'
+
 RHEL_version_supported:
   '7.9':
   '8.4':

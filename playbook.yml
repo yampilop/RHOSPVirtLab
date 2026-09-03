@@ -4,7 +4,6 @@
   vars_files:
     - vars/options.yml
     - vars/machines.yml
-    - vars/networks.yml
     # Loaded last so vaulted overrides win over the lab defaults above.
     - vault_credentials.yaml
 
@@ -20,7 +19,6 @@
   hosts: openstack
   vars_files:
     - vars/options.yml
-    - vars/networks.yml
     - vars/machines.yml
     # Loaded last so vaulted overrides win over the lab defaults above.
     - vault_credentials.yaml

@@ -35,10 +35,11 @@
 #                      the NIC reconfigured for Ansible/management access at first
 #                      boot. Unused for a physical undercloud (networking untouched).
 #   libvirt:   VM sizing and wiring for a libvirt undercloud (see the libvirt block
-#              schema below). The `management: true` interface marks the Ansible
-#              access NIC; its IP comes from the undercloud's inventory `ansible_host`.
-#              No `pm` block is needed; the domain boot mode defaults to bios (add
-#              `pm: {mode: uefi}` only if you need a uefi undercloud).
+#              schema below). Define only the control-plane NIC(s); the role injects the
+#              management/Ansible-access NIC (`mgmt`) with a fixed MAC pinned to a static
+#              DHCP lease (192.168.250.10) on the management network, so it must not be
+#              listed here. No `pm` block is needed; the domain boot mode defaults to bios
+#              (add `pm: {mode: uefi}` only if you need a uefi undercloud).
 #
 # NOTE (physical undercloud): a `type: physical` undercloud is assumed to be
 # admin-prepared: RHEL already installed, the `stack` user present with the
@@ -104,12 +105,12 @@
 #   network.interfaces:  Libvirt NIC wiring. Each interface attaches to a
 #                        hypervisor bridge, decoupling machines from the
 #                        networks list (any bridge can be targeted).
-#     - name: <label>          Logical interface name (e.g. nic1).
+#     - name: <label>          Logical interface name (e.g. nic1). The reserved name
+#                              `mgmt` denotes the Ansible/management access NIC; for the
+#                              undercloud the role injects it automatically, so it is not
+#                              listed here.
 #       mac:  <MAC>            Explicit MAC address.
-#       bridge: <bridge>       Hypervisor bridge to attach to (defined in vars/networks.yml).
-#       management: true       Optional. Marks the Ansible access interface. Its IP is
-#                              NOT stored here: it is taken from the machine's inventory
-#                              `ansible_host`.
+#       bridge: <bridge>       Hypervisor bridge to attach to.
 #
 # physical block (type: physical) - fixed hardware facts + BMC wiring:
 #   cpus       Number of CPUs (for introspection/flavor matching).
@@ -137,10 +138,8 @@ undercloud:
       - name: nic1
         mac: '0c:1f:0d:10:00:00'
         bridge: br-ctlplane
-      - name: nic2
-        mac: '0c:1f:0d:10:00:02'
-        bridge: br-management
-        management: true
+      # The management/Ansible-access NIC (`mgmt`) is NOT listed here: the role injects
+      # it automatically (fixed MAC pinned to a static DHCP lease at 192.168.250.10).
 
 
 # Alternative: a PHYSICAL undercloud (replace the libvirt definition above). The box
@@ -166,6 +165,7 @@ machines:
   type: libvirt
   openstack:
     role: controller
+    leaf: overcloud
     # ctlplane_ip: 192.168.24.121   # required when pre_provisioned: true
   pm:
     type: ipmi
@@ -191,6 +191,7 @@ machines:
   type: libvirt
   openstack:
     role: compute
+    leaf: overcloud
     # ctlplane_ip: 192.168.24.122   # required when pre_provisioned: true
   pm:
     type: ipmi

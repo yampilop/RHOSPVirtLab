@@ -67,7 +67,7 @@
   become: yes
   when:
     - inventory_hostname == item.libvirt.hypervisor
-    - item.libvirt.network.interfaces | selectattr('management', 'defined') | selectattr('management') | list | length > 0
+    - item.libvirt.network.interfaces | selectattr('name', 'equalto', management_interface_name) | list | length > 0
     - hostvars[item.name] is defined
     - hostvars[item.name].ansible_host is defined
 
