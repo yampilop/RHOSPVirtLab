@@ -112,7 +112,7 @@
   loop:
     - url: "{{ CustomRhelImage }}"
       name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
-    - url: "{{ CirrOSDownloadLink }}"
+    - url: "{{ CustomCirrOSImage }}"
       name: "cirros.qcow2"
   loop_control:
     label: "{{ item.name }}"

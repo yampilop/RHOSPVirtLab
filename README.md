@@ -401,12 +401,15 @@ on, for example:
 undercloud ansible_host=192.168.250.10 ansible_user=stack ...
 ```
 
-#### Customizing RHEL image
+#### Customizing images
 
-If you are not connected to the Red Hat VPN, you will need to download the RHEL base image from somewhere else. To do so you can either:
-
-- Use a valid URL to the qcow2 image file (`CustomRhelImage: "<url>"`).
-- Download the image and use the path to the file (`CustomRhelImage: "file://<full_path>"`). As you need to use the full path, the value will have a triple dash, for instance `"file:///home/admin/rhel.qcow2"`
+- Use a valid URL to the qcow2 image file:
+  - `CustomRhelImage: "<url>"`
+  - `CustomCirrOSImage: "<url>"`
+- Download the image and use the path to the file:
+  - `CustomRhelImage: "file://<full_path>"`
+  - `CustomCirrOSImage: "file://<full_path>"`
+  As you need to use the full path, the value will have a triple dash, for instance `"file:///home/admin/rhel.qcow2"`
 
 #### Customizing networks
 
