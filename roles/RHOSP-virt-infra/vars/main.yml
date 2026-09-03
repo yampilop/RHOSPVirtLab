@@ -35,6 +35,17 @@ libvirt_required: "{{ libvirt_machines | length > 0 }}"
 # overcloud VMs installs and configures no VirtualBMC at all.
 vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
 
+# Whether the hypervisor must build the lab's L2 bridges (and their VLAN gateways /
+# firewall zoning). This is broader than libvirt: the bridges host libvirt VMs, but
+# physical nodes also join the lab by trunking a real NIC into the ctlplane/external
+# bridges via a network's `hypervisor_if`. So bridges are needed when there is at least
+# one VM to attach OR at least one network declares a physical uplink. When false - a
+# fully physical lab whose nodes sit on external switches with no uplink trunked here,
+# or a lab with nothing on the hypervisor networks at all - the bridge/VLAN profiles and
+# their firewall zoning are skipped. The uplink ethernet/port tasks are self-gated on
+# `hypervisor_if is defined` and need no extra guard.
+bridges_required: "{{ (libvirt_required | bool) or ((networks | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
+
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 
 # VirtualBMC install location. On RHEL 9/10 the system interpreter is

@@ -19,6 +19,7 @@
       mtu: 1500
       state: up
   when:
+    - bridges_required | bool
     - item.hypervisor == inventory_hostname
     - (item.forward == 'bridge')
   loop: "{{ networks }}"
@@ -78,6 +79,7 @@
         address:
           - "{{ DefaultLeaf0.networks[item].prefix ~ '.1/24' }}"
   when:
+    - bridges_required | bool
     - inventory_hostname == 'localhost'
     - DefaultLeaf0.networks[item].vlan is defined
   loop: "{{ DefaultLeaf0.networks.keys() | list }}"
@@ -106,6 +108,11 @@
     - "{{ DCNLeafs }}"
     - "{{ DefaultLeaf0.networks.keys() | list }}"
 
+# These routes are consumed only by the DCN-hypervisor connection below (the task
+# gated `inventory_hostname != 'localhost'`), so skip the whole thing - and its
+# dereference of localhost's `ansible_{{ external_if }}` fact - when there are no DCN
+# leafs. Without this a single-host lab fails here if `external_if` does not match a
+# NIC that currently has an IPv4 address.
 - name: NETWORKING - Register DCN hypervisor routes
   set_fact:
     hypervisor_routes: |-
@@ -137,6 +144,7 @@
       {% endfor %}
       {% endfor %}
       ]
+  when: DCNLeafs | length > 0
 
 - name: NETWORKING - Define network configuration for the public interface of the DCN hypervisors and add static route
   set_fact:
@@ -152,7 +160,9 @@
       ip:
         dhcp4: yes
         route: "{{ hypervisor_routes }}"
-  when: inventory_hostname != 'localhost'
+  when:
+    - DCNLeafs | length > 0
+    - inventory_hostname != 'localhost'
 
 - name: Register localhost routes
   set_fact:

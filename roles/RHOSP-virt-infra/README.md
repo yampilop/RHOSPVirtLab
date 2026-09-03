@@ -236,11 +236,27 @@ machines:
     ironic can power-cycle a VM, so the undercloud (the director, no `pm`, never
     power-managed) is deliberately excluded. When it is **false**, the role installs and
     configures no VirtualBMC at all - so a lab with a libvirt undercloud but no libvirt
-    overcloud VMs still builds the undercloud VM but sets up no vbmc.
+    overcloud VMs still builds the undercloud VM but sets up no vbmc. This also gates the
+    VirtualBMC firewall port rules.
+  - `bridges_required` (`libvirt_required` **or** any network declares a `hypervisor_if`)
+    - the hypervisor must build the lab's L2 bridges. This is broader than libvirt: the
+    ctlplane/external bridges host libvirt VMs, but physical nodes also join the lab by
+    trunking a real NIC into those bridges via a network's `hypervisor_if`. When it is
+    **false** (no VMs to attach and no physical uplink trunked here), the role skips the
+    bridge and VLAN-gateway network profiles and their firewall zoning. The uplink
+    ethernet/port tasks remain self-gated on `hypervisor_if is defined`, and the host's
+    own external interface (`external_if`), the public-zone masquerade, and the
+    port-forwarding-to-`overcloud_ip` rules always run (they serve any overcloud). The
+    DCN-only route tasks are additionally gated on `DCNLeafs | length > 0`, so a
+    single-host lab never dereferences a leaf hypervisor's or `external_if`'s facts.
+
+  Because `external_if` is always configured as the host's uplink, it must name a real
+  interface on the hypervisor (the default `eno1` is almost always wrong for a given
+  host); set it in `vars/options.yml`.
 
   `netaddr` (for the `ipaddr` filters that build the host bridges and render the network
-  config) is installed independently of both flags, since it is needed even for a fully
-  physical lab.
+  config) is installed independently of all these flags, since it is needed even for a
+  fully physical lab.
 
 networks:
   List of the virtual networks created. The default values are:

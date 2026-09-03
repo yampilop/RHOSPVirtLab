@@ -1,3 +1,5 @@
+# The libvirt firewalld zone only holds the NAT/management libvirt networks and the
+# vbmc ports, so it is only needed when there are libvirt resources.
 - name: FIREWALLD - Ensure libvirt zone exists
   firewalld:
     zone: libvirt
@@ -5,6 +7,7 @@
     permanent: yes
   become: yes
   register: firewalld_create_zone
+  when: libvirt_required | bool
 
 - name: FIREWALLD - Reload firewall after creating the zone
   command: "firewall-cmd --reload"
@@ -20,6 +23,7 @@
     state: enabled
   loop: "{{ networks }}"
   when:
+    - bridges_required | bool
     - inventory_hostname == item.hypervisor
     - (item.name == forward_network) or (item.forward == 'bridge')
 
@@ -32,9 +36,12 @@
     state: enabled
   loop: "{{ networks }}"
   when:
+    - libvirt_required | bool
     - inventory_hostname == item.hypervisor
     - (item.name != forward_network) and (item.forward != 'bridge')
 
+# Masquerade on the public zone is always needed (external access / port forwarding);
+# the libvirt zone only exists when there are libvirt resources.
 - name: FIREWALL - Enable masquerade in the firewall to allow external traffic
   firewalld:
     zone: "{{ item }}"
@@ -42,9 +49,7 @@
     permanent: yes
     immediate: yes
     state: enabled
-  loop:
-    - public
-    - libvirt
+  loop: "{{ ['public'] + (['libvirt'] if (libvirt_required | bool) else []) }}"
   become: yes
 
 - name: FIREWALL - Set port forwarding rules
@@ -67,6 +72,7 @@
   loop: "{{ libvirt_machines }}"
   become: yes
   when:
+    - vbmc_required | bool
     - item.pm is defined
     - inventory_hostname == DefaultLeaf0.hypervisor
 
@@ -80,5 +86,6 @@
   loop: "{{ libvirt_machines }}"
   become: yes
   when:
+    - vbmc_required | bool
     - item.pm is defined
     - inventory_hostname == item.libvirt.hypervisor
