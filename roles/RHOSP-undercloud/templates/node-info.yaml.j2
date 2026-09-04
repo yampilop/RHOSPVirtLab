@@ -23,26 +23,10 @@ parameter_defaults:
       fixed_ip: {{ ctlplane_ip }}
 {% endif %}
       vif: true
-{% if 'Storage' in roles_networks[ocrole.name] %}
-    - network: storage
-      subnet: storage_subnet{{ name }}
-{% endif %}
-{% if 'StorageMgmt' in roles_networks[ocrole.name] %}
-    - network: storage_mgmt
-      subnet: storage_mgmt_subnet{{ name }}
-{% endif %}
-{% if 'InternalApi' in roles_networks[ocrole.name] %}
-    - network: internal_api
-      subnet: internal_api_subnet{{ name }}
-{% endif %}
-{% if 'Tenant' in roles_networks[ocrole.name] %}
-    - network: tenant
-      subnet: tenant_subnet{{ name }}
-{% endif %}
-{% if 'External' in roles_networks[ocrole.name] %}
-    - network: external
-      subnet: external_subnet{{ name }}
-{% endif %}
+{% for network in leaf.networks if network in roles_networks[ocrole.name] %}
+    - network: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+      subnet: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet{{ name }}
+{% endfor %}
 {%- endmacro %}
 
 {% for ocrole in overcloud_roles %}
@@ -90,7 +74,9 @@ parameter_defaults:
       network_config_update: true
       template: /home/stack/templates/{{ leaf.name ~ "/" if leaf.name != default_leaf.name else "" }}nic-configs/{{ ocrole.profile }}.j2
       default_route_network:
-      - external
+      - {{ (leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else 'ctlplane' }}
     swap_size_mb: 8192
 {% endif %}
   instances:
