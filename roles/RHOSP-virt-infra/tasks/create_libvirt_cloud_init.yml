@@ -41,6 +41,12 @@
   register: ci_network_config
   when: ci_has_mgmt | bool or ci_has_ctlplane | bool
 
+- name: STORAGE - Check whether the {{ machine.name }} cloud-init ISO exists in the pool
+  stat:
+    path: "{{ pool_location }}/{{ machine.name }}-init.iso"
+  become: yes
+  register: ci_iso_pool_stat
+
 - name: STORAGE - Create the {{ machine.name }} cloud-init ISO
   # NoCloud (cidata) requires the files be named user-data/meta-data/network-config at
   # the ISO root; -graft-points maps the per-machine source files onto those names.
@@ -51,7 +57,9 @@
     meta-data=/home/{{ ansible_user }}/{{ machine.name }}-meta-data
     {% if ci_has_mgmt | bool or ci_has_ctlplane | bool %}network-config=/home/{{ ansible_user }}/{{ machine.name }}-network-config{% endif %}
   register: ci_iso
-  when: ci_user_data.changed or ci_meta_data.changed or (ci_network_config.changed | default(false))
+  # Rebuild when the rendered seed changed or the pool ISO is missing, so deleting a
+  # stale/broken ISO and re-running regenerates it even though the content is unchanged.
+  when: ci_user_data.changed or ci_meta_data.changed or (ci_network_config.changed | default(false)) or (not ci_iso_pool_stat.stat.exists)
 
 - name: STORAGE - Copy the {{ machine.name }} cloud-init ISO to the pool location
   copy:
