@@ -20,7 +20,7 @@ custom_env_files = /home/stack/custom-undercloud-params.yaml
 enable_node_discovery = true
 #enable_nova = true
 #enable_novajoin = false
-{% if DCNLeafs | length > 0 %}
+{% if dcn_leafs | length > 0 %}
 enable_routed_networks = true
 {% else %}
 #enable_routed_networks = false
@@ -44,9 +44,9 @@ enabled_hardware_types = ipmi,redfish,ilo,idrac,manual-management
 #ironic_default_network_interface = flat
 #ironic_enabled_network_interfaces = flat
 local_interface = {{ undercloud.openstack.local_interface | default('eth0') }}
-local_ip = {{ DefaultLeaf0.subnet.cidr | ipaddr('1') }}
+local_ip = {{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') }}
 #local_mtu = 1500
-local_subnet = {{ DefaultLeaf0.subnet.name }}
+local_subnet = {{ default_leaf.ctlplane_subnet.name }}
 #net_config_override = 
 #networks_file = <None>
 #output_dir = /builddir
@@ -54,14 +54,14 @@ overcloud_domain_name = localdomain
 #roles_file = <None>
 #scheduler_max_attempts = 30
 #service_principal =
-{% if DCNLeafs | length > 0 %}
-subnets = {{ DefaultLeaf0.subnet.name }},{% for leaf in DCNLeafs %}{{ leaf.subnet.name }}{% if not loop.last %},{% endif %}{% endfor %}
+{% if dcn_leafs | length > 0 %}
+subnets = {{ default_leaf.ctlplane_subnet.name }},{% for leaf in dcn_leafs %}{{ leaf.ctlplane_subnet.name }}{% if not loop.last %},{% endif %}{% endfor %}
 
 {% else %}
-#subnets = {{ DefaultLeaf0.subnet.name }}
+#subnets = {{ default_leaf.ctlplane_subnet.name }}
 {% endif %}
 #templates =
-undercloud_admin_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('3') | ipaddr('address') }}
+undercloud_admin_host = {{ default_leaf.ctlplane_subnet.cidr | ipaddr('3') | ipaddr('address') }}
 #undercloud_debug = true
 #undercloud_enable_paunch = true
 #undercloud_enable_selinux = true
@@ -69,32 +69,32 @@ undercloud_admin_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('3') | ipaddr('addr
 #undercloud_log_file = install-undercloud.log
 undercloud_nameservers = {{ dns_servers | join(',') }}
 undercloud_ntp_servers = {{ ntp_servers | join(',') }}
-undercloud_public_host = {{ DefaultLeaf0.subnet.cidr | ipaddr('2') | ipaddr('address') }}
+undercloud_public_host = {{ default_leaf.ctlplane_subnet.cidr | ipaddr('2') | ipaddr('address') }}
 #undercloud_service_certificate =
 #undercloud_timezone = <None>
 #undercloud_update_packages = false
 #upgrade_cleanup = false
 
-[{{ DefaultLeaf0.subnet.name }}]
-cidr = {{ DefaultLeaf0.subnet.cidr }}
-dhcp_end = {{ DefaultLeaf0.subnet.dhcp_end }}
+[{{ default_leaf.ctlplane_subnet.name }}]
+cidr = {{ default_leaf.ctlplane_subnet.cidr }}
+dhcp_end = {{ default_leaf.ctlplane_subnet.dhcp_end }}
 #dhcp_exclude =
-dhcp_start = {{ DefaultLeaf0.subnet.dhcp_start }}
+dhcp_start = {{ default_leaf.ctlplane_subnet.dhcp_start }}
 #dns_nameservers =
-gateway = {{ DefaultLeaf0.subnet.gateway }}
+gateway = {{ default_leaf.ctlplane_subnet.gateway }}
 #host_routes = [{destination: 10.10.10.0/24, nexthop: 192.168.24.1}]
-inspection_iprange = {{ DefaultLeaf0.subnet.inspection_iprange }}
-masquerade = {{ DefaultLeaf0.subnet.masquerade }}
+inspection_iprange = {{ default_leaf.ctlplane_subnet.inspection_iprange }}
+masquerade = {{ default_leaf.ctlplane_subnet.masquerade }}
 
-{% for leaf in DCNLeafs %}
-[{{ leaf.subnet.name }}]
-cidr = {{ leaf.subnet.cidr }}
-dhcp_end = {{ leaf.subnet.dhcp_end }}
+{% for leaf in dcn_leafs %}
+[{{ leaf.ctlplane_subnet.name }}]
+cidr = {{ leaf.ctlplane_subnet.cidr }}
+dhcp_end = {{ leaf.ctlplane_subnet.dhcp_end }}
 #dhcp_exclude =
-dhcp_start = {{ leaf.subnet.dhcp_start }}
+dhcp_start = {{ leaf.ctlplane_subnet.dhcp_start }}
 #dns_nameservers =
-gateway = {{ leaf.subnet.gateway }}
+gateway = {{ leaf.ctlplane_subnet.gateway }}
 #host_routes = [{destination: 10.10.10.0/24, nexthop: 192.168.24.1}]
-inspection_iprange = {{ leaf.subnet.inspection_iprange }}
-masquerade = {{ leaf.subnet.masquerade }}
+inspection_iprange = {{ leaf.ctlplane_subnet.inspection_iprange }}
+masquerade = {{ leaf.ctlplane_subnet.masquerade }}
 {% endfor %}

@@ -2,7 +2,7 @@
 resource_registry:
 {% for ocrole in overcloud_roles %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
-{% if leaf.hypervisor == DefaultLeaf0.hypervisor %}
+{% if leaf.hypervisor == default_leaf.hypervisor %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/nic-configs/{{ ocrole.profile }}.yaml
 {% else %}
   OS::TripleO::{{ ocrole.name }}::Net::SoftwareConfig: /home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.profile }}.yaml
@@ -20,7 +20,7 @@ parameter_defaults:
 {% else %}
 {% for ocrole in overcloud_roles %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
-{% if leaf.hypervisor == DefaultLeaf0.hypervisor %}
+{% if leaf.hypervisor == default_leaf.hypervisor %}
   {{ ocrole.name }}NetworkConfigTemplate: '/home/stack/templates/nic-configs/{{ ocrole.profile }}.j2'
 {% else %}
   {{ ocrole.name }}NetworkConfigTemplate: '/home/stack/templates/{{ leaf.name }}/nic-configs/{{ ocrole.profile }}.j2'
@@ -31,8 +31,8 @@ parameter_defaults:
 {% endif %}
   DnsServers: {{ dns_servers | join(',') }}
   NtpServer: {{ ntp_servers | join(',') }}
-  ControlPlaneDefaultRoute: {{ leaf.subnet.gateway }}
-  ControlPlaneSubnet: {{ leaf.subnet.name }}
+  ControlPlaneDefaultRoute: {{ leaf.ctlplane_subnet.gateway }}
+  ControlPlaneSubnet: {{ leaf.ctlplane_subnet.name }}
   
   NeutronBridgeMappings: "{{ BridgeMappings }}"
   NeutronPhysicalBridge: "br-ex"
@@ -67,17 +67,17 @@ parameter_defaults:
     - NUMATopologyFilter
     - PciPassthroughFilter
 
-{% if DCNLeafs | length > 0 %}
-  NeutronDefaultAvailabilityZones: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
+{% if dcn_leafs | length > 0 %}
+  NeutronDefaultAvailabilityZones: '{{ default_leaf.name }},{% for leaf in dcn_leafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
 {% if NeutronDriver == 'ovs' %}
-  NeutronL3AgentAvailabilityZone: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
-  NeutronDhcpAgentAvailabilityZone: '{{ DefaultLeaf0.name }},{% for leaf in DCNLeafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
+  NeutronL3AgentAvailabilityZone: '{{ default_leaf.name }},{% for leaf in dcn_leafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
+  NeutronDhcpAgentAvailabilityZone: '{{ default_leaf.name }},{% for leaf in dcn_leafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
 {% endif %}
 {% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
 {% if roles_count[leaf.name][ocrole.name] > 0 %}
-  {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.subnet.name }}
+  {{ ocrole.name }}ControlPlaneSubnet: {{ leaf.ctlplane_subnet.name }}
   {{ ocrole.name }}Parameters:
-{% if leaf.name != DefaultLeaf0.name %}
+{% if leaf.name != default_leaf.name %}
     NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex"
@@ -89,7 +89,7 @@ parameter_defaults:
   OVNRemoteProbeInterval: 180000
   OVNOpenflowProbeInterval: 180
   ControllerParameters:
-    OVNCMSOptions: "enable-chassis-as-gw,availability-zones={{ DefaultLeaf0.name }}:{% for leaf in DCNLeafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
+    OVNCMSOptions: "enable-chassis-as-gw,availability-zones={{ default_leaf.name }}:{% for leaf in dcn_leafs %}{{ leaf.name }}{{ ":" if not loop.last else "" }}{% endfor %}"
 {% endif %}
 
 {% endif %}

@@ -3,10 +3,10 @@ nodes:
 {% for vm in libvirt_machines if (vm.libvirt.hypervisor == leaf.hypervisor) and (not vm.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}'
-{% if vm.libvirt.hypervisor == DefaultLeaf0.hypervisor %}
+{% if vm.libvirt.hypervisor == default_leaf.hypervisor %}
         physical_network: ctlplane
 {% else %}
-        physical_network: {{ leaf.subnet.name }}
+        physical_network: {{ leaf.ctlplane_subnet.name }}
 {% endif %}
     name: "{{ leaf.name ~ '-' ~ vm.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ vm.name, "boot_option:local", 'boot_mode:' ~ vm.pm.mode] | join(',') }}"
@@ -24,10 +24,10 @@ nodes:
 {% for node in physical_machines if node.openstack.leaf == leaf.name and (not node.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ node.physical.mac }}'
-{% if node.openstack.leaf == DefaultLeaf0.name %}
+{% if node.openstack.leaf == default_leaf.name %}
         physical_network: ctlplane
 {% else %}
-        physical_network: {{ leaf.subnet.name }}
+        physical_network: {{ leaf.ctlplane_subnet.name }}
 {% endif %}
     name: "{{ leaf.name ~ '-' ~ node.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", 'boot_mode:' ~ node.pm.mode] | join(',') }}"

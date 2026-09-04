@@ -12,6 +12,13 @@ physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | li
 # than a libvirt VM created by the virt-infra role.
 undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
+# Derived views over the `leafs` list (replaces the old DefaultLeaf0 / DCNLeafs
+# split). The default (control-plane) leaf is always named `overcloud`; the rest
+# are the DCN leafs. Derived by name - not list position - so authoring order in
+# vars/options.yml does not affect correctness.
+default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+
 # Management (NAT) network gateway address, used as the pm_addr for localhost libvirt
 # VMs in instackenv. The full network is defined in the RHOSP-virt-infra role, but role
 # vars/main.yml are play-scoped and not visible in this (openstack) play, so only the
@@ -150,7 +157,7 @@ deployment_environment:
     version: [ 16.2 ]
     DCN: True
     Leafs: NotDefault
-  - file: /home/stack/overcloud-deploy/{{ DefaultLeaf0.name }}/overcloud-export.yaml
+  - file: /home/stack/overcloud-deploy/{{ default_leaf.name }}/overcloud-export.yaml
     absolute_path: True
     version: [ 17.1 ]
     DCN: True
@@ -165,13 +172,13 @@ deployment_environment:
     version: [ 16.2 ]
     DCN: False
     Leafs: All
-    Variable: DefaultLeaf0.networks
+    Variable: default_leaf.networks
   - file: /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml
     absolute_path: True
     version: [ 16.2 ]
     DCN: False
     Leafs: All
-    Variable: DefaultLeaf0.networks
+    Variable: default_leaf.networks
   - file: "/usr/share/openstack-tripleo-heat-templates/environments/services/neutron-{{ NeutronDriver }}-dpdk.yaml"
     absolute_path: True
     version: [ 17.1, 16.2 ]

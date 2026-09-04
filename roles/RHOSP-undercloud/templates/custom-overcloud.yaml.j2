@@ -1,7 +1,7 @@
 {% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
 {% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
-{% set DefaultLeaf0_ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
-{% set DefaultLeaf0_hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
+{% set default_leaf_ceph_count = (roles_count[default_leaf.name]["CephStorage"] + roles_count[default_leaf.name]["CephAll"]) %}
+{% set default_leaf_hci_count = (roles_count[default_leaf.name]["ComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCIScaleOut"]) %}
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 1 #}
 # For Telemetry
@@ -10,8 +10,8 @@ resource_registry:
 {% endif %}{# IF 1 #}
 
 parameter_defaults:
-{% if leaf.name == DefaultLeaf0.name %}{# IF 2 #}
-{% if DCNLeafs | length > 0 %}{# IF 2.1 #}
+{% if leaf.name == default_leaf.name %}{# IF 2 #}
+{% if dcn_leafs | length > 0 %}{# IF 2.1 #}
 {% if (ceph_count + hci_count) > 0 %}{# IF 2.1.1 #}
   GlanceEnabledImportMethods: web-download,copy-image
   GlanceBackend: rbd
@@ -22,7 +22,7 @@ parameter_defaults:
   CinderStorageAvailabilityZone: {{ leaf.name }}
 # Uncomment the following after deploying the leafs
 #  GlanceMultistoreConfig:
-{% for dcn_leaf in DCNLeafs %}{# IF 2.1.1 FOR 1 #}
+{% for dcn_leaf in dcn_leafs %}{# IF 2.1.1 FOR 1 #}
 {% if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{# IF 1.1.1 FOR 1 IF 1 #}
 #    {{ dcn_leaf.name }}:
 #      GlanceBackend: rbd
@@ -71,12 +71,12 @@ parameter_defaults:
   GlanceBackend: cinder
 {% endif %}{# IF 2.3.1 #}
 {% endif %}{# IF 2.3 #}
-{% if (DefaultLeaf0_ceph_count + DefaultLeaf0_hci_count) > 0 %}{# IF 2.4 #}
+{% if (default_leaf_ceph_count + default_leaf_hci_count) > 0 %}{# IF 2.4 #}
   GlanceMultistoreConfig:
-    {{ DefaultLeaf0.name }}:
+    {{ default_leaf.name }}:
       GlanceBackend: rbd
-      GlanceStoreDescription: '{{ DefaultLeaf0.name }} rbd glance store'
-      CephClusterName: {{ DefaultLeaf0.name }}
+      GlanceStoreDescription: '{{ default_leaf.name }} rbd glance store'
+      CephClusterName: {{ default_leaf.name }}
       GlanceRbdPoolName: images
       CephClientUserName: openstack
 {% endif %}{# IF 2.4 #}
@@ -88,7 +88,7 @@ parameter_defaults:
   NovaComputeAvailabilityZone: {{ leaf.name }}
 {% if RHOSP_version < 17.1 %}{# IF 2.6 #}
   ManageNetworks: false
-  RootStackName: {{ DefaultLeaf0.name }}
+  RootStackName: {{ default_leaf.name }}
 {% endif %}{# IF 2.6 #}
 {% endif %}{# IF 2 #}
 {% if RHOSP_version < 17.1 %}{# IF 3 #}
@@ -131,7 +131,7 @@ parameter_defaults:
     rhsm_release: {{ RHOSP_version_supported[RHOSP_version].rhel_release }}
 {% endif %}{# IF 4 #}
 
-{% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == DefaultLeaf0.name)) %}{# IF 6 #}
+{% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == default_leaf.name)) %}{# IF 6 #}
   # Fencing parameters
   EnableFencing: true
   FencingConfig:
@@ -144,7 +144,7 @@ parameter_defaults:
       params:
         login: {{ vm.pm.user }}
         passwd: {{ vm.pm.password }}
-        ipaddr: {% if vm.libvirt.hypervisor == 'localhost' %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.libvirt.hypervisor].ansible_host }}{% endif %}
+        ipaddr: {% if vm.libvirt.hypervisor == 'localhost' %}{{ default_leaf.ctlplane_subnet.gateway }}{% else %}{{ hostvars[vm.libvirt.hypervisor].ansible_host }}{% endif %}
 
         ipport: {{ vm.pm.port }}
         lanplus: true
@@ -167,7 +167,7 @@ parameter_defaults:
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 7 #}
 # Telemetry definitions
-{% if leaf.name == DefaultLeaf0.name %}{# IF 7.1 #}
+{% if leaf.name == default_leaf.name %}{# IF 7.1 #}
   ExtraHostFileEntries:
     - "{{ Telemetry.MetricsConnectorIPAddress }} {{ Telemetry.MetricsConnectorHost }}"
 {% endif %}{# IF 7.1 #}

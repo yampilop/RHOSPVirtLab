@@ -1,7 +1,7 @@
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
-{% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
-{% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
+{% set ceph_count = (roles_count[default_leaf.name]["CephStorage"] + roles_count[default_leaf.name]["CephAll"]) %}
+{% set hci_count = (roles_count[default_leaf.name]["ComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCIScaleOut"]) %}
 #!/bin/bash
 
 source /home/stack/overcloudrc
@@ -10,9 +10,9 @@ source /home/stack/overcloudrc
 ### Overcloud images ###########################################################
 ################################################################################
 
-{% if (DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0) %}
-openstack image show '{{ rhel_image_name }}' &>/dev/null || (qemu-img convert -f qcow2 -O raw images/{{ rhel_image_file }} images/{{ rhel_image_file }}.raw && glance image-create --disk-format raw --container-format bare --name '{{ rhel_image_name }}' --file images/{{ rhel_image_file }}.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show '{{ rhel_image_name }}' -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
-openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw images/cirros.qcow2 images/cirros.raw && glance image-create --disk-format raw --container-format bare --name CirrOS --file images/cirros.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show CirrOS -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
+{% if (dcn_leafs | length > 0) and ((ceph_count + hci_count) > 0) %}
+openstack image show '{{ rhel_image_name }}' &>/dev/null || (qemu-img convert -f qcow2 -O raw images/{{ rhel_image_file }} images/{{ rhel_image_file }}.raw && glance image-create --disk-format raw --container-format bare --name '{{ rhel_image_name }}' --file images/{{ rhel_image_file }}.raw --visibility public --store {{ default_leaf.name }} && glance image-import $(openstack image show '{{ rhel_image_name }}' -c id -f value) --stores {% for dcn_leaf in dcn_leafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
+openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw images/cirros.qcow2 images/cirros.raw && glance image-create --disk-format raw --container-format bare --name CirrOS --file images/cirros.raw --visibility public --store {{ default_leaf.name }} && glance image-import $(openstack image show CirrOS -c id -f value) --stores {% for dcn_leaf in dcn_leafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
 {% else %}
 openstack image show '{{ rhel_image_name }}' &>/dev/null || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
 openstack image show CirrOS &>/dev/null || openstack image create --disk-format qcow2 --min-disk 2 --min-ram 512 --file images/cirros.qcow2 --public CirrOS
@@ -53,20 +53,20 @@ source ~/stackrc
 export ANSIBLE_HOST_KEY_CHECKING=False
 
 {% if (RHOSP_version >= 17) %}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' undercloud,{{ DefaultLeaf0.name }}
-{% for leaf in DCNLeafs %}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' undercloud,{{ default_leaf.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' undercloud,{{ default_leaf.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' undercloud,{{ default_leaf.name }}
+{% for leaf in dcn_leafs %}
 ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' {{ leaf.name }}
 ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' {{ leaf.name }}
 ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' {{ leaf.name }}
 {% endfor %}
 {% else %}
 tripleo-ansible-inventory --static-yaml-inventory ~/tripleo-ansible-inventory.yaml
-ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' undercloud,{{ DefaultLeaf0.name }}
-{% for leaf in DCNLeafs %}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' undercloud,{{ default_leaf.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' undercloud,{{ default_leaf.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' undercloud,{{ default_leaf.name }}
+{% for leaf in dcn_leafs %}
 ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' {{ leaf.name }}
 ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' {{ leaf.name }}
 ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' {{ leaf.name }}

@@ -182,12 +182,12 @@
 - name: STACK - Import tasks for the main stack
   include_tasks: tasks/overcloud.yml
   loop:
-    - "{{ DefaultLeaf0 }}"
+    - "{{ default_leaf }}"
   loop_control:
     loop_var: leaf
 
 - name: DCN - Import tasks for each DCN Leaf
   include_tasks: tasks/leafs.yml
-  loop: "{{ DCNLeafs }}"
+  loop: "{{ dcn_leafs }}"
   loop_control:
     loop_var: leaf

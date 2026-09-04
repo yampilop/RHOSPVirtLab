@@ -16,10 +16,10 @@ parameter_defaults:
       fixed_ips:
         - ip_address: {{ node.openstack.ctlplane_ip }}
       subnets:
-        - cidr: {{ leaf.subnet.cidr }}
+        - cidr: {{ leaf.ctlplane_subnet.cidr }}
       network:
         tags:
-          - {{ leaf.subnet.cidr }}
+          - {{ leaf.ctlplane_subnet.cidr }}
 {% endfor %}
 {% endfor %}
   HostnameMap:

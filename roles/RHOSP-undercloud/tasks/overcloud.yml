@@ -43,7 +43,7 @@
     group: stack
   when:
     - RHOSP_version < 17.1
-    - roles_count[DefaultLeaf0.name][item.name] > 0
+    - roles_count[default_leaf.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
 
 - name: TEMPLATES - RHOSP >= 17.1 nic-config files
@@ -54,7 +54,7 @@
     group: stack
   when:
     - RHOSP_version >= 17.1
-    - roles_count[DefaultLeaf0.name][item.name] > 0
+    - roles_count[default_leaf.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
 
 - name: SCRIPTS - Prepare the scripts
