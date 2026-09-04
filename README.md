@@ -266,15 +266,14 @@ When using DCN Leafs, the playbook sets up the following environment:
 
 ## Multiple hypervisors deployment
 
-When using multiple hypervisors for a single leaf, add your hypervisor to the `DefaultLeaf0` variable in `vars/options.yaml` this way:
+When using multiple hypervisors for a single leaf, list them (comma-separated) in the
+`hypervisor` field of the control-plane leaf (`overcloud`) in the `leafs` variable this way:
 
 ```yaml
-# Default leaf configuration
-DefaultLeaf0:
-  name: overcloud
+leafs:
+- name: overcloud
   hypervisor: localhost,<hypervisor1_name>,<hypervisor2_name>,...
-  subnet:
-...
+  ...
 ```
 
 The playbook sets up the following environment:
@@ -285,11 +284,15 @@ The playbook sets up the following environment:
 
 If you want to customize the default environment created by the playbook, you need to edit the files:
 
-- `vars/networks.yml` (The virtual networks and their connection to the physical interfaces of the hypervisor)
 - `vars/machines.yml` (The unified inventory of lab machines: both libvirt VMs and physical baremetal nodes)
-- `vars/options.yml` (Customizable parameters like the version of RHOSP to deploy, the cleanup parameter, etc.)
+- `vars/options.yml` (Customizable parameters like the version of RHOSP to deploy, the cleanup parameter, the `leafs` and `RoleBridgeMappings` networking model, etc.)
 
 You also can add to vars/options.yml any value overriding the default values from the roles.
+
+The `leafs`, `RoleBridgeMappings` and derived-network (`Networks`) model is documented
+field by field in the role READMEs (`roles/RHOSP-undercloud/README.md` and
+`roles/RHOSP-virt-infra/README.md`). The virtual networks are no longer configured in a
+separate file: they are derived from the `leafs` model (plus the management NAT network).
 
 #### The unified machines model
 
@@ -336,10 +339,9 @@ A `libvirt` machine adds a `libvirt:` block:
       - name: nic1
         mac: '0c:1f:0d:10:00:00'
         bridge: br-ctlplane
-      - name: nic2
+      - name: mgmt          # access NIC: detected by the name `mgmt` (see below)
         mac: '0c:1f:0d:10:00:02'
         bridge: br-management
-        management: true    # marks the Ansible access interface (see below)
 ```
 
 A `physical` machine adds a `physical:` block:
@@ -370,13 +372,14 @@ Notes on the new model:
   ISO — `<machine>-init.iso` — from `user-data` / `meta-data` / `network-config` and
   attaches it as a SATA cdrom. The cloud-init login user is `stack` for the undercloud role
   and the overcloud SSH user for the rest (`heat-admin` on 16.2, `tripleo-admin` on 17.1).
-  When the machine has a `management: true` interface, its inventory `ansible_host` address
+  When the machine has an interface named `mgmt`, its inventory `ansible_host` address
   is seeded through `network-config`. An **unprovisioned** VM gets empty disks and no
   cloud-init cdrom. There is no separate `cloud_init` or per-disk `backing_store` setting.
 - **NICs attach to bridges directly.** Each interface names the hypervisor `bridge` it
-  attaches to (defined in `vars/networks.yml`), decoupling machines from the networks
-  list. All interfaces are rendered as `type=bridge`; guests that need NAT simply attach
-  to the libvirt-managed NAT bridge, so NAT still works without a dedicated NIC type.
+  attaches to (a leaf's `ctlplane_bridge`/`additional_bridges`, or the management bridge),
+  decoupling machines from the networks. All interfaces are rendered as `type=bridge`;
+  guests that need NAT simply attach to the libvirt-managed NAT bridge, so NAT still works
+  without a dedicated NIC type.
 
 #### Management/access IP (SSH) — VM vs physical undercloud
 
@@ -385,10 +388,12 @@ access/management IP used by Ansible to SSH in is **not hardcoded** in
 `vars/machines.yml`; it comes from the machine's entry in the `./inventory` file
 (`ansible_host`), which is the single source of truth.
 
-- On a **libvirt undercloud**, mark the access NIC in `machines.yml` with
-  `management: true`. cloud-init applies the inventory `ansible_host` address statically
-  to that interface at first boot (a `/24` prefix is assumed), and os-net-config later
-  reuses the same address for that interface.
+- On a **libvirt undercloud**, the role injects the access NIC (named `mgmt`)
+  automatically, so it is not listed in the `undercloud` variable. On other libvirt
+  machines, add the access NIC by naming an interface `mgmt` (the NIC is detected by
+  name). cloud-init applies the inventory `ansible_host` address statically to that
+  interface at first boot (a `/24` prefix is assumed), and os-net-config later reuses
+  the same address for that interface.
 - On a **physical undercloud**, the machine already boots with its own address; Ansible
   simply uses the inventory `ansible_host` to reach it. No cloud-init addressing is
   applied.
@@ -414,7 +419,7 @@ undercloud ansible_host=192.168.250.10 ansible_user=stack ...
 #### Customizing networks
 
 - The default configuration should work for most cases.
-- If you will add physical nodes, you need to define `hypervisor_if: {{ifname}}` parameter on `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` networks, setting the interfaces that will be attached to the bridges. Make sure those interfaces are configured as trunks with a native vlan in the switch.
+- If you will add physical nodes, trunk a real hypervisor NIC into the leaf bridges by setting the `interface` field on the control-plane leaf's `ctlplane_bridge` and the relevant `additional_bridges` (e.g. `br-external`) in the `leafs` variable. Make sure those interfaces are configured as trunks with a native vlan in the switch.
 
 #### Customizing VMs (`type: libvirt`)
 
@@ -458,34 +463,47 @@ This are the mandatory parameter you most probably need to customize:
 - Choose to deploy FRR with `DeployFrr: True`.
 - Choose to register the nodes with `RegisterNodes: True`.
 
-#### DCNLeafs customization
+#### DCN leafs customization
 
 For DCN leafs you need the following customizations to the vars files:
 
-- `vars/networks.yml`:
-    - `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` should be `forward: bridge`. RHOSPVirtLab_management remains as `forward: nat`.
-    - Create `RHOSPVirtLab_ctlplane_{{leaf.name}}` and `RHOSPVirtLab_external_{{leaf.name}}` networks for every leaf, with `forward: bridge` and consistent configuration.
-    - Define `hypervisor_if: {{interface_name}}` for both networks if you plan to attach physical nodes to that leaf.
+- `vars/options.yml`:
+    - Add a leaf entry to the `leafs` list (after the control-plane `overcloud` leaf), with its own `hypervisor`, `ctlplane_bridge`, `ctlplane_subnet`, `additional_bridges` and `networks`. The underlying libvirt networks/bridges are derived from this model, so there is no separate networks file to edit. The full leaf schema and a complete DCN example are in the role README (`roles/RHOSP-undercloud/README.md`, the `leafs` section). For example:
 
 ```yaml
-  - name: RHOSPVirtLab_ctlplane_leaf1
-    hypervisor: hypervisor_name
+leafs:
+- name: overcloud            # control-plane leaf (as shipped)
+  ...
+- name: leaf1                # DCN leaf
+  hypervisor: hypervisor_name
+  additional_bridges:
+  - name: br-external
+    interface: null          # set to a NIC name to trunk a physical uplink into the bridge
+    ipv4:
+      address: 10.1.0.254
+  ctlplane_bridge:
+    name: br-ctlplane
+    interface: null          # set to a NIC name to attach physical nodes to this leaf
+  ctlplane_subnet:
+    name: leaf1-subnet
+    cidr: 192.168.25.0/24
+    dhcp_start: 192.168.25.5
+    dhcp_end: 192.168.25.99
+    inspection_iprange: 192.168.25.100,192.168.25.120
+    gateway: 192.168.25.254
+    masquerade: false
+  networks:                  # same shape as the overcloud leaf, on the leaf's subnets
+  - name: Tenant
     bridge: br-ctlplane
-    forward: bridge
-    mac_suffix: '00'
-    ipv4:
-      address: '192.168.25.1'
-      netmask: '255.255.255.0'
-      dhcp: false
-  - name: RHOSPVirtLab_external_leaf1
-    hypervisor: hypervisor_name
-    bridge: br-external
-    forward: bridge
-    mac_suffix: '05'
-    ipv4:
-      address: '10.1.0.1'
-      netmask: '255.255.255.0'
-      dhcp: false
+    vip: false
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.17.0.0/24
+      allocation_pools:
+      - start: 172.17.0.5
+        end: 172.17.0.99
+      vlan: 10
+  # ... Storage, InternalApi, StorageMgmt, External (see the role README)
 ```
 
 - `vars/machines.yml`:
@@ -516,10 +534,10 @@ For DCN leafs you need the following customizations to the vars files:
         interfaces:
         - name: nic1
           mac: '0c:1f:0d:12:02:00'
-          bridge: br-ctlplane-leaf1
+          bridge: br-ctlplane
         - name: nic2
           mac: '0c:1f:0d:12:02:05'
-          bridge: br-external-leaf1
+          bridge: br-external
 ```
 
     - Create physical nodes (`type: physical`) with `openstack.leaf: {{leaf.name}}` and the proper configuration, for example:
@@ -547,70 +565,22 @@ For DCN leafs you need the following customizations to the vars files:
         nic2: 'ens1f1'
 ```
 
-- `vars/options.yml`:
-    - Define your leafs using the `DCNLeafs` list with the proper format, for example:
-
-```yaml
-DCNLeafs:
- - name: leaf1
-   hypervisor: hypervisor_name
-   subnet:
-     name: leaf1-subnet
-     cidr: 192.168.25.0/24
-     dhcp_start: 192.168.25.5
-     dhcp_end: 192.168.25.55
-     inspection_iprange: 192.168.25.100,192.168.25.120
-     gateway: 192.168.25.1
-     masquerade: false
-   networks:
-     Tenant:
-       prefix: '172.17.0'
-       vlan: 10
-       network: RHOSPVirtLab_ctlplane_leaf1
-     Storage:
-       prefix: '172.17.1'
-       vlan: 20
-       network: RHOSPVirtLab_ctlplane_leaf1
-     InternalApi:
-       prefix: '172.17.2'
-       vlan: 30
-       network: RHOSPVirtLab_ctlplane_leaf1
-     StorageMgmt:
-       prefix: '172.17.3'
-       vlan: 40
-       network: RHOSPVirtLab_ctlplane_leaf1
-     External:
-       prefix: '10.1.0'
-       network: RHOSPVirtLab_external_leaf1
-     Management:
-       prefix: '10.1.1'
-       vlan: 60
-       network: RHOSPVirtLab_ctlplane_leaf1
-```
-
 ## Multiple hypervisors customization
 
 When using multiple hypervisors for a single leaf you need the following customizations to the vars files:
 
-- `vars/networks.yml`:
-    - `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` should be `forward: bridge`. RHOSPVirtLab_management remains as `forward: nat`.
-    - Create `RHOSPVirtLab_ctlplane_{{something}}` and `RHOSPVirtLab_external_{{something}}` networks for every hypervisor, with `forward: bridge`, consistent configuration and no ipv4 addressing, for example:
+- `vars/options.yml`:
+    - List all the hypervisors (comma-separated) in the `hypervisor` field of the control-plane leaf (`overcloud`) in the `leafs` variable. The leaf's bridges are then derived and created on every listed hypervisor:
 
 ```yaml
-  - name: RHOSPVirtLab_ctlplane_1
-    hypervisor: hypervisor_name
-    bridge: br-ctlplane
-    forward: bridge
-    mac_suffix: '00'
-  - name: RHOSPVirtLab_external_1
-    hypervisor: hypervisor_name
-    bridge: br-external
-    forward: bridge
-    mac_suffix: '05'
+leafs:
+- name: overcloud
+  hypervisor: localhost,hypervisor_name
+  ...
 ```
 
 - `vars/machines.yml`:
-    - Create VMs (`type: libvirt`) with `libvirt.hypervisor: {{hypervisorname}}`, consistent configuration and interfaces attached to the proper hypervisor bridges, for example:
+    - Create VMs (`type: libvirt`) with `libvirt.hypervisor: {{hypervisorname}}`, consistent configuration and interfaces attached to the leaf bridges, for example:
 
 ```yaml
   - name: compute0
@@ -636,10 +606,10 @@ When using multiple hypervisors for a single leaf you need the following customi
         interfaces:
         - name: nic1
           mac: '0c:1f:0d:12:02:00'
-          bridge: br-ctlplane-1
+          bridge: br-ctlplane
         - name: nic2
           mac: '0c:1f:0d:12:02:05'
-          bridge: br-external-1
+          bridge: br-external
 ```
 
 ## Last steps
@@ -714,8 +684,8 @@ The output should end with the following:
 
 ```
 Ansible passed. Overcloud configuration completed.
-Overcloud Endpoint: http://10.0.0.254:5000
-Overcloud Horizon Dashboard URL: http://10.0.0.254:80/dashboard
+Overcloud Endpoint: http://10.0.0.253:5000
+Overcloud Horizon Dashboard URL: http://10.0.0.253:80/dashboard
 Overcloud rc file: /home/stack/overcloudrc
 Overcloud Deployed without error
 ```
