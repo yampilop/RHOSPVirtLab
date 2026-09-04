@@ -27,7 +27,7 @@
       state: down
       persistent_state: absent
   when:
-    - item.0.hypervisor == inventory_hostname
+    - inventory_hostname == item.0.hypervisor.split(',')[0]
     - item.1.subnet.vlan is defined
   with_subelements:
     - "{{ dcn_leafs }}"
@@ -44,7 +44,7 @@
       state: down
       persistent_state: absent
   when:
-    - inventory_hostname == item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - item.forward == 'bridge'
   loop: "{{ libvirt_networks }}"
 
@@ -59,7 +59,7 @@
       state: down
       persistent_state: absent
   when:
-    - inventory_hostname == item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
   loop: "{{ libvirt_networks }}"
 

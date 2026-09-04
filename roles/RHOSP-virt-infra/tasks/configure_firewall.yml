@@ -23,7 +23,7 @@
   loop: "{{ libvirt_networks }}"
   when:
     - bridges_required | bool
-    - inventory_hostname == item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - (item.name == forward_network) or (item.forward == 'bridge')
 
 - name: FIREWALL - Ensure the other interfaces belong to libvirt zone
@@ -36,7 +36,7 @@
   loop: "{{ libvirt_networks }}"
   when:
     - libvirt_required | bool
-    - inventory_hostname == item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - (item.name != forward_network) and (item.forward != 'bridge')
 
 # Public-zone masquerade is always needed; the libvirt zone only when libvirt resources exist.
@@ -72,7 +72,7 @@
   when:
     - vbmc_required | bool
     - item.pm is defined
-    - inventory_hostname == default_leaf.hypervisor
+    - inventory_hostname == default_leaf.hypervisor.split(',')[0]
 
 - name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for localhost and leafs
   firewalld:

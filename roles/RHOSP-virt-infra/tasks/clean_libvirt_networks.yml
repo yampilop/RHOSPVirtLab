@@ -8,7 +8,7 @@
     name: "{{ item.name }}"
   loop: "{{ libvirt_networks }}"
   when:
-    - inventory_hostname == item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - ansible_libvirt_networks[item.name] is defined
 
 - name: NETWORKS - Undefine the network
@@ -17,5 +17,5 @@
     name: "{{ item.name }}"
   loop: "{{ libvirt_networks }}"
   when:
-    - inventory_hostname == item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - ansible_libvirt_networks[item.name] is defined

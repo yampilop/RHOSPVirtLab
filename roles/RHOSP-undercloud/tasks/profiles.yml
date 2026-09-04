@@ -6,7 +6,7 @@
         {{ leaf.name }}:
         {
         {%- for role in overcloud_roles %}
-          {{ role.name }}: {{ (physical_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) + (libvirt_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("libvirt.hypervisor", "equalto", leaf.hypervisor) | list | count) }},
+          {{ role.name }}: {{ (physical_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) + (libvirt_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(',')) | list | count) }},
         {%- endfor %}
         },
       {%- endfor %}
@@ -22,7 +22,7 @@
       {
       {%- for leaf in leafs %}
         {{ leaf.name }}: {{
-          ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', leaf.hypervisor) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)
+          ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', leaf.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)
            + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)) > 0
         }},
       {%- endfor %}
@@ -40,8 +40,8 @@
       pre_provisioned consistently for all overcloud nodes in this leaf.
   when:
     - deployed_server[item.name] | bool
-    - ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', item.hypervisor) | rejectattr('pre_provisioned', 'defined') | list | count)
-       + (libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', item.hypervisor) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
+    - ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | rejectattr('pre_provisioned', 'defined') | list | count)
+       + (libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
        + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | rejectattr('pre_provisioned', 'defined') | list | count)
        + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
   loop: "{{ leafs }}"
@@ -99,7 +99,7 @@
   fail:
     msg: "ERROR in vm {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.libvirt.hypervisor != default_leaf.hypervisor
+    - item.libvirt.hypervisor not in default_leaf.hypervisor.split(',')
     - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).distributed | bool)
   loop: "{{ libvirt_machines }}"
 

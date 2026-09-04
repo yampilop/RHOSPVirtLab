@@ -6,7 +6,7 @@ resource_registry:
 parameter_defaults:
   DeployedServerPortMap:
 {% for ocrole in overcloud_roles if roles_count[leaf.name][ocrole.name] > 0 %}
-{% set nodes = (libvirt_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('libvirt.hypervisor', 'equalto', leaf.hypervisor) | list) + (physical_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('openstack.leaf', 'equalto', leaf.name) | list) %}
+{% set nodes = (libvirt_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('libvirt.hypervisor', 'in', leaf.hypervisor.split(',')) | list) + (physical_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('openstack.leaf', 'equalto', leaf.name) | list) %}
 {% for node in nodes %}
     {{ node.name }}-ctlplane:
       fixed_ips:
@@ -20,7 +20,7 @@ parameter_defaults:
 {% endfor %}
   HostnameMap:
 {% for ocrole in overcloud_roles if roles_count[leaf.name][ocrole.name] > 0 %}
-{% set nodes = (libvirt_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('libvirt.hypervisor', 'equalto', leaf.hypervisor) | list) + (physical_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('openstack.leaf', 'equalto', leaf.name) | list) %}
+{% set nodes = (libvirt_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('libvirt.hypervisor', 'in', leaf.hypervisor.split(',')) | list) + (physical_machines | selectattr('openstack.role', 'equalto', ocrole.profile) | selectattr('openstack.leaf', 'equalto', leaf.name) | list) %}
 {% for node in nodes %}
     {{ leaf.name }}-{{ ocrole.name | lower }}-{{ loop.index0 }}: {{ node.name }}
 {% endfor %}

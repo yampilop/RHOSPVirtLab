@@ -15,12 +15,15 @@
       interface_name: "{{ item.bridge }}"
       type: bridge
       autoconnect: yes
-      ip: "{% if item.ipv4 is defined %}{{ ip }}{% else %}{{ noip }}{% endif %}"
+      # A leaf may span several hypervisors (comma-separated `hypervisor`). The bridge is
+      # created on every listed host for L2 continuity, but the gateway IP is assigned only
+      # on the primary (first) host; the others are pure L2 endpoints trunked to it.
+      ip: "{% if item.ipv4 is defined and inventory_hostname == item.hypervisor.split(',')[0] %}{{ ip }}{% else %}{{ noip }}{% endif %}"
       mtu: 1500
       state: up
   when:
     - bridges_required | bool
-    - item.hypervisor == inventory_hostname
+    - inventory_hostname in item.hypervisor.split(',')
     - (item.forward == 'bridge')
   loop: "{{ libvirt_networks }}"
 
@@ -39,7 +42,7 @@
       mtu: 1500
       state: up
   when:
-    - item.hypervisor == inventory_hostname
+    - inventory_hostname in item.hypervisor.split(',')
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
   loop: "{{ libvirt_networks }}"
 
@@ -57,7 +60,7 @@
       mtu: 1500
       state: up
   when:
-    - item.hypervisor == inventory_hostname
+    - inventory_hostname in item.hypervisor.split(',')
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
   loop: "{{ libvirt_networks }}"
 
@@ -102,7 +105,7 @@
         auto6: no
         address: "{{ [item.1.subnet.gateway ~ '/' ~ (item.1.subnet.ip_subnet | ipaddr('prefix'))] if item.1.subnet.gateway is defined else [] }}"
   when:
-    - item.0.hypervisor == inventory_hostname
+    - inventory_hostname == item.0.hypervisor.split(',')[0]
     - item.1.subnet.vlan is defined
   with_subelements:
     - "{{ dcn_leafs }}"
@@ -127,17 +130,18 @@
           "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
         },
       {% endfor %}
-      {% for leaf in dcn_leafs if (inventory_hostname != leaf.hypervisor) %}
+      {% for leaf in dcn_leafs if (inventory_hostname not in leaf.hypervisor.split(',')) %}
+      {% set leaf_primary = leaf.hypervisor.split(',')[0] %}
         {
           "network": "{{ leaf.ctlplane_subnet.cidr | ipaddr('network') }}",
           "prefix": "{{ leaf.ctlplane_subnet.cidr | ipaddr('prefix') }}",
-          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+          "gateway": "{{ hostvars[leaf_primary]['ansible_'~(hostvars[leaf_primary].hypervisor_external_if)].ipv4.address }}"
         },
       {% for net in leaf.networks %}
         {
           "network": "{{ net.subnet.ip_subnet | ipaddr('network') }}",
           "prefix": "{{ net.subnet.ip_subnet | ipaddr('prefix') }}",
-          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+          "gateway": "{{ hostvars[leaf_primary]['ansible_'~(hostvars[leaf_primary].hypervisor_external_if)].ipv4.address }}"
         },
       {% endfor %}
       {% endfor %}
@@ -167,16 +171,17 @@
     localhost_routes: |-
       [
       {% for leaf in dcn_leafs %}
+      {% set leaf_primary = leaf.hypervisor.split(',')[0] %}
         {
           "network": "{{ leaf.ctlplane_subnet.cidr | ipaddr('network') }}",
           "prefix": "{{ leaf.ctlplane_subnet.cidr | ipaddr('prefix') }}",
-          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+          "gateway": "{{ hostvars[leaf_primary]['ansible_'~(hostvars[leaf_primary].hypervisor_external_if)].ipv4.address }}"
         },
       {% for net in leaf.networks %}
         {
           "network": "{{ net.subnet.ip_subnet | ipaddr('network') }}",
           "prefix": "{{ net.subnet.ip_subnet | ipaddr('prefix') }}",
-          "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
+          "gateway": "{{ hostvars[leaf_primary]['ansible_'~(hostvars[leaf_primary].hypervisor_external_if)].ipv4.address }}"
         },
       {% endfor %}
       {% endfor %}

@@ -137,7 +137,7 @@ parameter_defaults:
   FencingConfig:
     devices:
 {% set ctlplane_bridge = leaf.ctlplane_bridge.name %}
-{% for vm in libvirt_machines if ((vm.openstack.role == 'computeinstanceha') or (vm.openstack.role == 'controller')) and (vm.libvirt.hypervisor == leaf.hypervisor) %}{# IF 6 FOR 1 #}
+{% for vm in libvirt_machines if ((vm.openstack.role == 'computeinstanceha') or (vm.openstack.role == 'controller')) and (vm.libvirt.hypervisor in leaf.hypervisor.split(',')) %}{# IF 6 FOR 1 #}
     # {{ vm.name }}
     - agent: fence_ipmilan
       host_mac: {{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}
