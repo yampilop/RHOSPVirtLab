@@ -1,37 +1,39 @@
-- name: SUBSCRIPTION - Check subscription-manager status
-  shell: "subscription-manager status"
-  register: status
+- name: SUBSCRIPTION - Check whether the undercloud is already registered
+  command: "subscription-manager identity"
+  register: sub_identity
   changed_when: false
   failed_when: false
 
-- name: SUBSCRIPTION - Register, attach and set release (with OrgID and Activation Key)
+- name: SUBSCRIPTION - Register the undercloud (with OrgID and Activation Key)
   redhat_subscription:
     state: present
     org_id: "{{ rh_orgid }}"
     activationkey: "{{ rh_activationkey }}"
-    pool: "{% if rh_pool is defined %}{{ rh_pool }}{% else %}Red Hat OpenStack{% endif %}"
+    # Only attach a pool when one is explicitly configured. Under Simple Content Access
+    # (SCA, the default for hosted Red Hat orgs) there are no pools and attaching is
+    # disabled, so omit it and let registration alone grant content.
+    pool: "{{ rh_pool | default(omit) }}"
     release: "{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
     force_register: yes
-  when: (status is not search('Current')) and (status is not search('Content Access Mode')) and ( (rh_orgid is defined) and (rh_activationkey is defined) )
-  failed_when: false
+  when:
+    - sub_identity.rc != 0
+    - rh_orgid is defined
+    - rh_activationkey is defined
 
-- name: SUBSCRIPTION - Register, attach and set release (with username and password)
+- name: SUBSCRIPTION - Register the undercloud (with username and password)
   redhat_subscription:
     state: present
     username: "{{ rh_username }}"
     password: "{{ rh_password }}"
-    pool: "{% if rh_pool is defined %}{{ rh_pool }}{% else %}Red Hat OpenStack{% endif %}"
+    pool: "{{ rh_pool | default(omit) }}"
     release: "{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
     force_register: yes
-  when: (status is not search('Current')) and (status is not search('Content Access Mode')) and ( (rh_orgid is not defined) or (rh_activationkey is not defined) )
-  failed_when: false
+  when:
+    - sub_identity.rc != 0
+    - (rh_orgid is not defined) or (rh_activationkey is not defined)
 
 - name: SUBSCRIPTION - Verify the undercloud is registered
-  # Under Simple Content Access (SCA, now the default for all Red Hat orgs) there are no
-  # attached entitlements, so `subscription-manager status` reports "Overall Status:
-  # Unknown"/"Disabled" and rc 1 (never "Current"). Confirm the outcome via `identity`
-  # instead, which returns rc 0 when the host is registered regardless of SCA state.
-  shell: "subscription-manager identity"
-  register: status_new
+  # Registration-based check, immune to SCA (where `subscription-manager status` reports
+  # "Overall Status: Unknown"); rc is non-zero only when the host is not registered.
+  command: "subscription-manager identity"
   changed_when: false
-  failed_when: status_new.rc != 0
