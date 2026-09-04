@@ -271,6 +271,17 @@ machines:
   config) is installed independently of all these flags, since it is needed even for a
   fully physical lab.
 
+Credentials (lab-only weak defaults; override in `vault_credentials.yaml`):
+
+BmcUsername / BmcPassword: **admin** / **admin**
+  Credentials for the VirtualBMC endpoints this role creates (and physical-node BMC/IPMI access).
+
+VmRootPassword: **redhat**
+  Password baked into each libvirt VM's cloud-init for the `root` account.
+
+VmStackPassword: **redhat**
+  Password baked into each libvirt VM's cloud-init for the ci_user account (`stack`/overcloud SSH user).
+
 Networks:
   There is no longer a standalone `networks` variable. The role assembles the libvirt
   networks/bridges it must manage into a derived `libvirt_networks` list (in

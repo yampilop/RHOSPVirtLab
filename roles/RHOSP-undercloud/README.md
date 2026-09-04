@@ -237,6 +237,44 @@ DisableTelemetry: **True** | False
 Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local, MetricsConnectorIPAddress: 10.8.223.249, Cloud: cloud1 }
   Variable used to define telemetry parameters.
 
+LowMemUsage: **True** | False
+  Adds the low-memory-usage environment to the default leaf deploy to reduce the services' memory footprint.
+
+ControllersFencing: **True** | False
+  Enables STONITH fencing for the controllers (also forced on when a ComputeInstanceHA role is present).
+
+BridgeMappings: **'datacentre:br-ex'**
+  Default Neutron bridge_mappings applied to the compute nodes.
+
+NetworkVlanRanges: **'datacentre:1:1000'**
+  Neutron network VLAN ranges for the `datacentre` physical network.
+
+SnmpdReadonlyUserPassword: **RHOSPVirtLab**
+  Password for the read-only snmpd user configured on the undercloud and overcloud.
+
+UndercloudFullUpdate: **True** | False
+  Runs a full `yum update` of the undercloud host on every run (reboots if needed). Set to False for faster, more predictable runs.
+
+UndercloudExtraFirewallRules: **[]** | *dict of rules*
+  Extra firewalld rules to open on the undercloud, keyed by rule name (see the commented example in `vars/options.yml`).
+
+vncproxy: **''**
+  Nova VNC proxy host set on the overcloud; leave empty for the default, or set the public/VIP address to enable noVNC console access.
+
+Credentials (lab-only weak defaults; override in `vault_credentials.yaml`):
+
+BmcUsername / BmcPassword: **admin** / **admin**
+  Credentials for the VirtualBMC endpoints and physical-node BMC/IPMI access.
+
+OvercloudAdminPassword: **redhat**
+  The overcloud Keystone `admin` password.
+
+OvercloudAdminEmail: **admin@example.com**
+  The overcloud `admin` account email.
+
+TestUserPassword: **redhat**
+  Password for the test `admin` user created by `overcloud_resources.yaml`.
+
 undercloud:
   The director host, defined separately from the overcloud `machines` list and shared
   with the RHOSP-virt-infra role. It is a single node tagged with a `type` discriminator
