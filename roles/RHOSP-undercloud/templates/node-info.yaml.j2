@@ -22,8 +22,14 @@ parameter_defaults:
 {% if ctlplane_ip %}
       fixed_ip: {{ ctlplane_ip }}
 {% endif %}
+{#- vif:true delegates ctlplane port creation to metalsmith, which is short-circuited #}
+{#- for managed:false (deployed-server) nodes. Omitting vif lets the provision       #}
+{#- workflow create the neutron port and populate DeployedServerPortMap; otherwise    #}
+{#- the map is empty and node provision fails with KeyError 'ctlplane'.               #}
+{% if not deployed_server[leaf.name] %}
       vif: true
-{% for network in leaf.networks if network in roles_networks[ocrole.name] %}
+{% endif %}
+{% for network in leaf.networks if network.name in roles_networks[ocrole.name] %}
     - network: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
       subnet: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet{{ name }}
 {% endfor %}

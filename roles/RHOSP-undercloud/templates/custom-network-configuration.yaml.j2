@@ -46,7 +46,12 @@ parameter_defaults:
   NeutronOVSFirewallDriver: openvswitch
 {% endif %}
   
-{% if (RHOSP_version < 17.1) and (physical_machines | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) > 0 %}
+{# nic-name -> device mapping for os-net-config. On 16.2 it always comes from here; on #}
+{# 17.1 ironic-provisioned nodes get it from node-info.yaml (node provision            #}
+{# --network-config), but deployed-server (managed:false) nodes never run that step, so #}
+{# the mapping must be supplied here for 17.1 too. Keyed by nic1's MAC, so it is robust #}
+{# to interface renaming on the node.                                                   #}
+{% if ((RHOSP_version < 17.1) or deployed_server[leaf.name]) and (physical_machines | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) > 0 %}
   NetConfigDataLookup:
 {% for pm in physical_machines if pm.openstack.leaf == leaf.name %}
     node{{ loop.index }}:
