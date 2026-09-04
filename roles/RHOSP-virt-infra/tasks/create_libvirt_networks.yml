@@ -18,12 +18,10 @@
   notify: HANDLER - restart libvirtd service
   when:
     - inventory_hostname == 'localhost'
-    # This libvirt port-forward hook is only relevant when the External network is NAT.
-    # In the leaf model every leaf bridge (ctlplane and additional_bridges, incl.
-    # br-external) is wired into libvirt_networks as forward:bridge, so this guard is
-    # false and the hook stays disabled - port forwarding to the overcloud is handled by
-    # the firewalld rich rules in configure_firewall.yml. The guard still fires the hook
-    # automatically should a NAT-mode external network ever be added.
+    # This hook is only needed for a NAT external network. In the leaf model every
+    # bridge is forward:bridge, so it stays disabled (port forwarding is handled by the
+    # firewalld rich rules in configure_firewall.yml); it fires if a NAT external network
+    # is ever added.
     - (libvirt_networks | selectattr('name', 'search', 'external') | selectattr('forward', 'equalto', 'nat') | list | length) > 0
 
 - name: NETWORKS - Gather facts about libvirt networks

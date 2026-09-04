@@ -6,12 +6,9 @@
 {% set min_viable_mtu = mtu_list | max %}
 {% endraw %}
 network_config:
-{#- The bridges for this role come from RoleBridgeMappings[<role>], falling back  #}
-{#- to RoleBridgeMappings.Default. `native` is the untagged network whose IP sits #}
-{#- on the bridge (CtlPlane => ctlplane address + DNS); `vlans` are the tagged    #}
-{#- sub-interfaces. Per-network values (IP/MTU/VLAN id) are resolved on the       #}
-{#- overcloud node by os-net-config, so they are emitted as literal Jinja that a  #}
-{#- second render pass expands - the VLAN loops iterate role_networks there.      #}
+{#- Bridges from RoleBridgeMappings[<role>] (else .Default): `native` is the untagged net #}
+{#- (IP on the bridge), `vlans` the tagged sub-interfaces. Per-network values are emitted #}
+{#- as literal Jinja for a second render pass by os-net-config on the overcloud node.     #}
 {%- set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
 {%- for bridge in role_bridges %}
 {%- if bridge.type == 'sriov_pf' %}

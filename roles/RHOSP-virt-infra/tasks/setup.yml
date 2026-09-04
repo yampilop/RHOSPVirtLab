@@ -49,8 +49,7 @@
     append: yes
   when: libvirt_required | bool
 
-# NetworkManager and firewalld are always needed (network bridges, forwarding);
-# the libvirt service/socket units are only enabled when there are VMs to build.
+# NetworkManager and firewalld are always needed; libvirt units only when building VMs.
 - name: SETUP - Ensure required services are enabled and running
   systemd:
     name: "{{ item }}"
@@ -59,9 +58,7 @@
   become: yes
   loop: "{{ (libvirt_units if (libvirt_required | bool) else []) + ['NetworkManager.service', 'firewalld.service'] }}"
 
-# netaddr powers the ipaddr filters used to build the host network bridges
-# (create_network_profiles) and render the overcloud network config, so it is needed
-# even for a fully physical lab. Install it on its own, independent of libvirt/vbmc:
+# netaddr powers the ipaddr filters and is needed even for a fully physical lab:
 # the python3-netaddr RPM on RHEL 9/10, or pip on the legacy interpreter (7.9/8.4).
 - name: SETUP - Ensure netaddr RPM for ipaddr filters (RHEL 9/10)
   yum:
@@ -76,10 +73,8 @@
     executable: "pip3"
   when: ansible_distribution_major_version | int < 9
 
-# VirtualBMC is only installed when there are libvirt overcloud VMs to power-cycle
-# (vbmc_required); a physical or libvirt-undercloud-only lab needs none of it.
-# On RHEL 7.9/8.4 the system interpreter is not externally managed, so pip installs
-# into it as before.
+# VirtualBMC is only installed when there are libvirt overcloud VMs (vbmc_required).
+# On RHEL 7.9/8.4 the system interpreter is not externally managed, so pip installs into it.
 - name: SETUP - Update pip (legacy system interpreter)
   pip:
     name: pip
@@ -98,8 +93,7 @@
     - RHEL_version_supported[ansible_distribution_version].pip is defined
     - ansible_distribution_major_version | int < 9
 
-# On RHEL 9/10 the system interpreter is externally managed (PEP 668), so
-# VirtualBMC is installed into a dedicated venv instead.
+# On RHEL 9/10 the interpreter is externally managed (PEP 668); use a dedicated venv.
 - name: SETUP - Install VirtualBMC from pip into a dedicated venv (PEP 668)
   pip:
     name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
@@ -119,7 +113,7 @@
     state: present
   when: inventory_hostname == 'localhost'
 
-# VirtualBMC emulates the overcloud VMs' BMCs; set it up only when such VMs exist.
+# Set up the VirtualBMC service only when overcloud VMs exist.
 - name: SETUP - Create VirtualBMC systemd unit
   template:
     src: "vbmcd.service.j2"
@@ -144,8 +138,7 @@
   become: yes
   when: vbmc_required | bool
 
-# Nested virtualization is only relevant when this host runs VMs; skip the whole
-# check (and its restart prompt) when there are no libvirt machines to build.
+# Nested virtualization only matters when this host runs VMs.
 - name: SETUP - Determine the KVM module for the host CPU vendor
   set_fact:
     kvm_module: >-

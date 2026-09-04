@@ -1,10 +1,8 @@
-# Cleanup is deliberately NOT gated on bridges_required/dcn_leafs: it must remove
-# whatever a previous run may have created even if the vars changed since. Marking an
-# already-absent connection `persistent_state: absent` is an idempotent no-op.
+# Cleanup is intentionally ungated: it must remove whatever a previous run created.
+# Marking an already-absent connection absent is an idempotent no-op.
 
-# Remove the VLAN sub-interfaces first (children of the bridges). The create side names
-# them "<bridge>.<vlan>"; mirror that exactly so they are actually deleted - otherwise
-# they are orphaned in NetworkManager when only the parent bridge is removed.
+# Remove VLAN sub-interfaces first, mirroring the create-side "<bridge>.<vlan>" naming
+# so they aren't orphaned in NetworkManager when the parent bridge is removed.
 - name: NETWORKING - Delete vlans belonging to libvirt bridges in localhost
   set_fact:
     network_connections: "{{ (network_connections | default([])) + [connection] }}"

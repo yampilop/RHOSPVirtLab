@@ -1,67 +1,39 @@
 ---
 # vars file for RHOSP-virt-infra
 
-# Whether the undercloud is a pre-existing physical host (admin-prepared) rather
-# than a libvirt VM this role creates. The undercloud is defined on its own in the
-# top-level `undercloud` variable, separate from the `machines` list.
+# True when the undercloud is an admin-prepared physical host rather than a libvirt VM.
 undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
-# The `undercloud` input dict is kept minimal to avoid human error. The fields the
-# build tasks require but that are CONSTANT for the undercloud are injected here so
-# they can never be set wrong: it is always named `undercloud`, always
-# pre_provisioned, and always openstack.role=undercloud. No `pm` is injected - the
-# undercloud is the director, is not power-managed by the lab, and gets no virtualbmc
-# (tasks that need power management skip machines without a `pm` block).
+# Inject the undercloud's constant fields so they cannot be set wrong (always named
+# `undercloud`, pre_provisioned, role=undercloud; no `pm`, so it gets no vbmc).
 undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
 
-# For a libvirt undercloud the management/Ansible-access NIC is NOT user-editable: its
-# MAC must match the static DHCP lease pinned by the management network (see
-# libvirt_management_network / undercloud_management_interface below), so the role
-# appends the fixed management interface to whatever control-plane NIC(s) the user
-# defined in the `undercloud` dict. A physical undercloud has no libvirt block and gets
-# nothing injected.
+# Append the fixed management NIC to a libvirt undercloud (its MAC must match the static
+# DHCP lease pinned by the management network); a physical undercloud gets nothing.
 undercloud_effective: >-
   {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
         ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
      }}}, recursive=true))
      if not (undercloud_is_physical | bool) else undercloud_base }}
 
-# Convenience views over the machines list. `machines` now holds only the overcloud
-# nodes; the undercloud lives in `undercloud`. This role BUILDS the undercloud when
-# it is a libvirt VM, so its libvirt view includes it (in its injected form); a
-# physical (admin-prepared) undercloud is never created here and never appears.
+# Convenience views over `machines` (overcloud nodes only). A libvirt undercloud is
+# built by this role so it joins libvirt_machines; a physical undercloud never appears.
 libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
-# Whether any libvirt resources are needed at all: true when there is at least one VM
-# to build (a libvirt undercloud and/or libvirt overcloud nodes in `machines`). When
-# false - a physical undercloud AND no libvirt machines - the role installs and creates
-# no libvirt resources and skips the nested-virtualization checks; only the host-level
-# plumbing (network bridges, firewall, SSH access to the undercloud) runs.
+# Need-based gating flags (see README "When libvirt / VirtualBMC work is skipped").
+# libvirt_required: any VM to build (libvirt undercloud and/or libvirt overcloud nodes).
 libvirt_required: "{{ libvirt_machines | length > 0 }}"
 
-# Whether VirtualBMC is needed. It emulates a BMC so ironic can power-cycle a VM, so it
-# only matters for libvirt overcloud nodes (the libvirt entries of `machines`). The
-# undercloud is the director, is not power-managed by the lab and never gets a vbmc, so
-# it is deliberately excluded here: a lab with a libvirt undercloud but no libvirt
-# overcloud VMs installs and configures no VirtualBMC at all.
+# vbmc_required: any libvirt overcloud node (the undercloud has no `pm`, so it is excluded).
 vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
 
-# Whether the hypervisor must build the lab's L2 bridges (and their VLAN gateways /
-# firewall zoning). This is broader than libvirt: the bridges host libvirt VMs, but
-# physical nodes also join the lab by trunking a real NIC into the ctlplane/external
-# bridges via a network's `hypervisor_if`. So bridges are needed when there is at least
-# one VM to attach OR at least one network declares a physical uplink. When false - a
-# fully physical lab whose nodes sit on external switches with no uplink trunked here,
-# or a lab with nothing on the hypervisor networks at all - the bridge/VLAN profiles and
-# their firewall zoning are skipped. The uplink ethernet/port tasks are self-gated on
-# `hypervisor_if is defined` and need no extra guard.
+# bridges_required: any VM to attach OR any network trunking a physical uplink
+# (`hypervisor_if`); gates the L2 bridges, VLAN gateways and their firewall zoning.
 bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default([]) | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
 
-# Whether the management (NAT) network must be created on localhost. It provides the
-# Ansible/management access NIC, so it is only needed when something on localhost has a
-# management interface: a libvirt undercloud (created by this role), or a pre-provisioned
-# libvirt overcloud VM on localhost (a deployed server the undercloud must reach).
+# management_network_required: the NAT/access network is needed on localhost only when
+# something there has a mgmt NIC - a libvirt undercloud, or a pre-provisioned localhost VM.
 management_network_required: >-
   {{ (not (undercloud_is_physical | bool))
      or ((machines | selectattr('type', 'equalto', 'libvirt')
@@ -69,10 +41,8 @@ management_network_required: >-
                    | selectattr('pre_provisioned', 'defined')
                    | selectattr('pre_provisioned') | list | length) > 0) }}
 
-# Derived views over the `leafs` list (replaces the old DefaultLeaf0 / DCNLeafs
-# split). The default (control-plane) leaf is always named `overcloud`; the rest
-# are the DCN leafs. Derived by name - not list position - so authoring order in
-# vars/options.yml does not affect correctness.
+# Derived views over `leafs`: the control-plane leaf `overcloud` and the DCN leafs.
+# Selected by name (not list position), so authoring order does not matter.
 default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
 dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
 
@@ -173,16 +143,12 @@ RHOSP_version_supported:
     rhel_release: '8.4'
     overcloud_ssh_user: heat-admin
 
-# Logical name of the management/Ansible-access interface. A machine exposes a
-# management NIC by including an interface with this name; this replaces the old
-# per-interface `management: true` flag. The name (not nicN) never collides with
-# user-added NICs and maps to the real device in the os-net-config file later.
+# Logical name of the management/Ansible-access NIC (a machine exposes one by including
+# an interface with this name).
 management_interface_name: mgmt
 
-# Fixed management-access wiring for a libvirt undercloud. The MAC must be known ahead
-# of time so the management network can pin a static DHCP lease to it (see
-# libvirt_management_network.ipv4.dhcp.hosts), so the interface is a role constant that
-# is injected into undercloud_effective rather than being editable in vars/machines.yml.
+# Fixed management wiring for a libvirt undercloud: a role constant (its MAC must match
+# the static DHCP lease below) injected into undercloud_effective, not user-editable.
 undercloud_management_mac: '0c:1f:0d:10:00:02'
 undercloud_management_ip: '192.168.250.10'
 undercloud_management_interface:
@@ -190,11 +156,8 @@ undercloud_management_interface:
   mac: "{{ undercloud_management_mac }}"
   bridge: "{{ libvirt_management_network.bridge }}"
 
-# The management (NAT) libvirt network. Moved here from vars/networks.yml: it is not
-# part of the per-leaf network model and is created on localhost only, gated by
-# management_network_required. Its DHCP hands the undercloud a static lease at
-# undercloud_management_ip (VM undercloud only; a physical undercloud brings its own
-# address so no lease is reserved).
+# The management (NAT) libvirt network: outside the per-leaf model, created on localhost
+# only (gated by management_network_required). Pins a static DHCP lease for a VM undercloud.
 libvirt_management_network:
   name: RHOSPVirtLab_management
   hypervisor: localhost

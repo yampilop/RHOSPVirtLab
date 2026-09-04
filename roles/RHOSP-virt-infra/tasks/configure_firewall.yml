@@ -1,5 +1,4 @@
-# The libvirt firewalld zone only holds the NAT/management libvirt networks and the
-# vbmc ports, so it is only needed when there are libvirt resources.
+# The libvirt firewalld zone is only needed when there are libvirt resources.
 - name: FIREWALLD - Ensure libvirt zone exists
   firewalld:
     zone: libvirt
@@ -40,8 +39,7 @@
     - inventory_hostname == item.hypervisor
     - (item.name != forward_network) and (item.forward != 'bridge')
 
-# Masquerade on the public zone is always needed (external access / port forwarding);
-# the libvirt zone only exists when there are libvirt resources.
+# Public-zone masquerade is always needed; the libvirt zone only when libvirt resources exist.
 - name: FIREWALL - Enable masquerade in the firewall to allow external traffic
   firewalld:
     zone: "{{ item }}"

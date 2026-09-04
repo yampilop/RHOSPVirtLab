@@ -77,10 +77,7 @@ parameters:
 resources:
 
   MinViableMtu:
-    # This resource resolves the minimum viable MTU for interfaces, bonds and
-    # bridges that carry multiple VLANs. Each VLAN may have different MTU. The
-    # bridge, bond or interface must have an MTU to allow the VLAN with the
-    # largest MTU.
+    # Minimum viable MTU: max across the carried VLANs so the bridge/bond fits the largest
     type: OS::Heat::Value
     properties:
       type: number
@@ -104,11 +101,8 @@ resources:
           params:
             $network_config:
               network_config:
-{#- The bridges for this role come from RoleBridgeMappings[<role>], falling back  #}
-{#- to RoleBridgeMappings.Default. Each bridge lists its members (NICs), the      #}
-{#- untagged `native` network whose IP sits on the bridge, and the tagged        #}
-{#- `vlans`. VLANs and native addresses are filtered to the networks the role    #}
-{#- actually carries (roles_networks[<role>]).                                    #}
+{#- Bridges from RoleBridgeMappings[<role>] (else .Default): each has members (NICs), an  #}
+{#- untagged `native` net (IP on the bridge) and tagged `vlans`, filtered to roles_networks. #}
 {%- set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
 {%- for bridge in role_bridges %}
 {%- if bridge.type == 'sriov_pf' %}

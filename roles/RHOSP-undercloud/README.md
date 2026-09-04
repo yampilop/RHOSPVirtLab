@@ -58,6 +58,83 @@ leafs:
     address pinned in `vip_data.yaml`; the External network VIP - or the control-plane
     VIP when External is not defined - is also used as the overcloud's public IP.
 
+  A DCN (edge) leaf is a second entry with its own hypervisor, subnets and networks, e.g.:
+
+```yaml
+leafs:
+- name: overcloud            # control-plane leaf (as shipped)
+  ...
+- name: leaf1                # DCN leaf
+  hypervisor: <hypervisor_name>
+  additional_bridges:
+  - name: br-external
+    interface: null
+    ipv4:
+      address: 10.1.0.254
+  ctlplane_bridge:
+    name: br-ctlplane
+    interface: null
+  ctlplane_subnet:
+    name: leaf1-subnet
+    cidr: 192.168.25.0/24
+    dhcp_start: 192.168.25.5
+    dhcp_end: 192.168.25.99
+    inspection_iprange: 192.168.25.100,192.168.25.120
+    gateway: 192.168.25.254
+    masquerade: false
+  networks:                  # same shape as the overcloud leaf, on the leaf's subnets
+  - name: Tenant
+    bridge: br-ctlplane
+    vip: false
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.17.0.0/24
+      allocation_pools:
+      - start: 172.17.0.5
+        end: 172.17.0.99
+      vlan: 10
+  - name: Storage
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.17.1.0/24
+      allocation_pools:
+      - start: 172.17.1.5
+        end: 172.17.1.99
+      vlan: 11
+  - name: InternalApi
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.17.2.0/24
+      allocation_pools:
+      - start: 172.17.2.5
+        end: 172.17.2.99
+      vlan: 12
+  - name: StorageMgmt
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.17.3.0/24
+      allocation_pools:
+      - start: 172.17.3.5
+        end: 172.17.3.99
+      vlan: 13
+  - name: External
+    bridge: br-external
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 10.1.0.0/24
+      allocation_pools:
+      - start: 10.1.0.5
+        end: 10.1.0.99
+      gateway: 10.1.0.254
+```
+
 RoleBridgeMappings:
   Per-role bridge/NIC layout rendered into each node's nic-config template (replaces the
   old flat `interfaces` list). A dict keyed by overcloud role name; a role not listed
@@ -76,8 +153,62 @@ RoleBridgeMappings:
     networks the role actually carries (so the same list is safe to reuse across roles).
 
   A `sriov_pf` entry also takes `numvfs` and an optional `link_mode: switchdev` (for
-  hardware offload). See `vars/options.yml` for worked archetypes (SR-IOV, DPDK,
-  HW-offload).
+  hardware offload).
+
+  Common archetypes (add a role key with a list like these; unlisted roles use `Default`):
+
+```yaml
+# Controller - only the control plane on br-ex
+Controller:
+- {type: ovs_bridge, name: br-ex, members: [nic1], native: CtlPlane, vlans: []}
+
+# Compute - single-nic-vlans (External also tagged on the same bridge)
+Compute:
+- type: ovs_bridge
+  name: br-ex
+  members: [nic1]
+  native: CtlPlane
+  vlans: [Tenant, Storage, InternalApi, StorageMgmt, External]
+
+# ComputeSriov - dedicated SR-IOV PF; VF 0 backs the External bridge
+ComputeSriov:
+- {type: ovs_bridge, name: br-vlans, members: [nic1], native: CtlPlane, vlans: [Tenant, Storage, InternalApi, StorageMgmt]}
+- {type: ovs_bridge, name: br-ex, members: [nic2v0], native: External, vlans: []}   # nic2v0 = VF 0 of nic2
+- {type: sriov_pf, name: nic2, numvfs: 8}
+
+# ComputeOvsHwOffload - as SR-IOV, but the PF in switchdev mode
+ComputeOvsHwOffload:
+- {type: ovs_bridge, name: br-vlans, members: [nic1], native: CtlPlane, vlans: [Tenant, Storage, InternalApi, StorageMgmt]}
+- {type: ovs_bridge, name: br-ex, members: [nic2v0], native: External, vlans: []}
+- {type: sriov_pf, name: nic2, numvfs: 8, link_mode: switchdev}
+
+# ComputeOvsDpdk - control/External on linux bridges, DPDK bond on an OVS user bridge
+ComputeOvsDpdk:
+- {type: linux_bridge, name: br-vlans, members: [nic1], native: CtlPlane, vlans: [Tenant, Storage, InternalApi, StorageMgmt]}
+- {type: linux_bridge, name: br-ex, members: [nic2], native: External, vlans: []}
+- type: ovs_user_bridge
+  name: br-dpdk
+  members:
+  - type: ovs_dpdk_bond
+    name: dpdkbond0
+    members:
+    - {type: ovs_dpdk_port, name: dpdk0, driver: vfio-pci, members: [nic3]}
+    - {type: ovs_dpdk_port, name: dpdk1, driver: vfio-pci, members: [nic4]}
+
+# ComputeOvsDpdkSriov - a DPDK bond built on SR-IOV VFs of the same PF (nic2)
+ComputeOvsDpdkSriov:
+- {type: linux_bridge, name: br-vlans, members: [nic1], native: CtlPlane, vlans: [Tenant, Storage, InternalApi, StorageMgmt]}
+- {type: linux_bridge, name: br-ex, members: [nic2v0], native: External, vlans: []}
+- {type: sriov_pf, name: nic2, numvfs: 8}
+- type: ovs_user_bridge
+  name: br-dpdk
+  members:
+  - type: ovs_dpdk_bond
+    name: dpdkbond0
+    members:
+    - {type: ovs_dpdk_port, name: dpdk0, driver: vfio-pci, members: [nic2v1]}
+    - {type: ovs_dpdk_port, name: dpdk1, driver: vfio-pci, members: [nic2v2]}
+```
 
 ComputeSriovProperties, ComputeOvsHwOffloadProperties, ComputeOvsDpdkProperties, ComputeOvsDpdkSriovProperties:
   Default properties for NFV roles

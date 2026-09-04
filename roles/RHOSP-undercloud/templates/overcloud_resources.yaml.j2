@@ -1,8 +1,5 @@
-{#- Largest contiguous block of free addresses in an External network's subnet,
-    used as the neutron provider (floating IP) allocation pool. Enumerates the
-    occupied addresses (every allocation_pool interval plus the gateway) within the
-    usable range of ip_subnet and returns the widest remaining gap as "start end".
-    Makes no assumption about where the gateway sits. -#}
+{#- Widest free gap in an External subnet (excluding allocation_pools and gateway),
+    returned as "start end" for use as the neutron provider floating-IP pool. -#}
 {%- macro external_floating_pool(ext) -%}
 {%- set lo = (ext.subnet.ip_subnet | ansible.utils.ipaddr('network') | ansible.utils.ipaddr('int') | int) + 1 -%}
 {%- set hi = (ext.subnet.ip_subnet | ansible.utils.ipaddr('broadcast') | ansible.utils.ipaddr('int') | int) - 1 -%}

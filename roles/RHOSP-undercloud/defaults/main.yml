@@ -24,9 +24,7 @@ ntp_servers:
   - '2.pool.ntp.org'
   - '3.pool.ntp.org'
 
-# Leaf configuration. The first leaf, always named `overcloud`, is the default
-# (control-plane) leaf; any further entries are DCN leafs. See vars/options.yml
-# for the full, documented schema.
+# Leaf configuration (control-plane leaf `overcloud` + optional DCN leafs). See README.
 leafs:
 - name: overcloud
   hypervisor: localhost
@@ -98,9 +96,8 @@ leafs:
         end: 10.0.0.99
       gateway: 10.0.0.254
 
-# Per-role bridge/NIC layout rendered into each nic-config. A role that is not
-# listed here falls back to `Default`. See vars/options.yml for the schema and
-# advanced (SR-IOV / DPDK / HW-offload) archetypes.
+# Per-role nic-config bridge/NIC layout; a role not listed falls back to `Default`.
+# See README for the entry schema and archetypes (SR-IOV / DPDK / HW-offload).
 RoleBridgeMappings:
   Default:
   - type: ovs_bridge
@@ -215,9 +212,8 @@ NeutronDriver: ovn
 # Snmpd configuration
 SnmpdReadonlyUserPassword: RHOSPVirtLab
 
-# Credentials (lab-only weak defaults; override via vault_credentials.yaml).
-# BMC / IPMI credentials consumed via pm.user / pm.password in vars/machines.yml
-# (instackenv and fencing configuration).
+# Credentials (lab-only weak defaults; override via vault_credentials.yaml — see README).
+# BMC / IPMI credentials (instackenv and fencing configuration).
 BmcUsername: admin
 BmcPassword: admin
 # Overcloud admin account created by the undercloud.
@@ -307,11 +303,8 @@ DefaultFlavorsSize:
     ephemeral: 0
     swap: 0
 
-# undercloud is the director host, defined separately from the overcloud `machines`.
-# By default it is a libvirt VM created by the virt-infra role. Only the non-constant
-# fields are set here; the role injects the constants that never change for the
-# undercloud (name=undercloud, pre_provisioned=true, openstack.role=undercloud). See
-# vars/machines.yml for the full schema, including how to make it a physical host.
+# The director host, defined separately from the overcloud `machines` (libvirt VM by
+# default; the role injects its constants). See README for the full schema.
 undercloud:
   type: libvirt
   libvirt:
@@ -324,15 +317,13 @@ undercloud:
         size: 107374182400
     network:
       interfaces:
-        # Only the control-plane NIC is defined; the virt-infra role injects the
-        # management (`mgmt`) NIC with a fixed MAC pinned to a static DHCP lease.
+        # Only the control-plane NIC; the role injects the mgmt NIC (see README).
         - name: nic1
           mac: '0c:1f:0d:10:00:00'
           bridge: br-ctlplane
 
-# machines is the list of overcloud nodes (virtual and physical) to be created/managed.
-# The role defines one controller node and one compute node by default and no physical
-# machines. See vars/machines.yml for the full schema.
+# The overcloud nodes (virtual and physical); default: one controller + one compute.
+# See README for the full schema.
 machines:
   - name: controller0
     type: libvirt

@@ -6,9 +6,8 @@
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
-# The public IP the overcloud is reachable on (used for PublicVirtualFixedIPs).
-# Derived from the default leaf: the External network VIP when External is defined,
-# otherwise the ctlplane VIP. Replaces the old hardcoded `overcloud_ip` parameter.
+# The overcloud public IP (used for PublicVirtualFixedIPs): the default leaf's External
+# VIP, else its ctlplane VIP.
 - name: NETWORKING - Derive the overcloud public IP
   set_fact:
     overcloud_ip: >-
@@ -66,10 +65,8 @@
   when: UndercloudFullUpdate | default(true) | bool
   notify: HANDLER - Reboot the machine
 
-# On a libvirt undercloud the second NIC (management, DHCP over br-management)
-# is reconfigured here so Ansible keeps reaching the VM. A physical undercloud
-# is admin-prepared (its networking is already up); we do not touch it, to avoid
-# dropping the connection we are running over.
+# Reconfigure the mgmt NIC (DHCP over br-management) on a libvirt undercloud so Ansible
+# keeps reaching it; a physical undercloud is admin-prepared and left untouched.
 - name: NETWORKING - Define management network connection
   set_fact:
     network_connections: "{{ (network_connections | default([])) + [connection] }}"
@@ -128,9 +125,7 @@
     label: "{{ item.name }}"
   register: test_images_stat
 
-# Skip the download for any image already present (these are large files); the loop
-# runs over the stat results so `item.item` is the original url/name and
-# `item.stat.exists` tells us whether it is already there.
+# Skip any image already present (large files); loops over the stat results.
 - name: IMAGES - Download images for testing
   get_url:
     url: "{{ item.item.url }}"

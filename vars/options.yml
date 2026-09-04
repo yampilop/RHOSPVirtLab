@@ -102,75 +102,8 @@ leafs:
         end: 10.0.0.99
       gateway: 10.0.0.254
       vip: 10.0.0.253
-# - name: leaf1
-#   hypervisor: <hypervisor_name>
-#   additional_bridges:
-#   - name: br-external
-#     interface: null # Optional when external connection is needed
-#     ipv4:
-#       address: 10.1.0.254
-#   ctlplane_bridge:
-#     name: br-ctlplane
-#     interface: null # Optional when external connection is needed
-#   ctlplane_subnet:
-#     name: leaf1-subnet
-#     cidr: 192.168.25.0/24
-#     dhcp_start: 192.168.25.5
-#     dhcp_end: 192.168.25.99
-#     inspection_iprange: 192.168.25.100,192.168.25.120
-#     gateway: 192.168.25.254
-#     masquerade: false
-#   networks:
-#   - name: Tenant
-#     bridge: br-ctlplane
-#     vip: false
-#     mtu: 1500
-#     subnet:
-#       ip_subnet: 172.17.0.0/24
-#       allocation_pools:
-#       - start: 172.17.0.5
-#         end: 172.17.0.99
-#       vlan: 10
-#   - name: Storage
-#     bridge: br-ctlplane
-#     vip: true
-#     mtu: 1500
-#     subnet:
-#       ip_subnet: 172.17.1.0/24
-#       allocation_pools:
-#       - start: 172.17.1.5
-#         end: 172.17.1.99
-#       vlan: 11
-#   - name: InternalApi
-#     bridge: br-ctlplane
-#     vip: true
-#     mtu: 1500
-#     subnet:
-#       ip_subnet: 172.17.2.0/24
-#       allocation_pools:
-#       - start: 172.17.2.5
-#         end: 172.17.2.99
-#       vlan: 12
-#   - name: StorageMgmt
-#     bridge: br-ctlplane
-#     vip: true
-#     mtu: 1500
-#     subnet:
-#       ip_subnet: 172.17.3.0/24
-#       allocation_pools:
-#       - start: 172.17.3.5
-#         end: 172.17.3.99
-#       vlan: 13
-#   - name: External
-#     bridge: br-external
-#     vip: true
-#     mtu: 1500
-#     subnet:
-#       ip_subnet: 10.1.0.0/24
-#       allocation_pools:
-#       - start: 10.1.0.5
-#         end: 10.1.0.99
-#       gateway: 10.1.0.254
+# Add further entries for DCN (edge) leafs; see the role README (leafs) for a
+# full DCN leaf example.
 
 RoleBridgeMappings:
   Default:
@@ -186,117 +119,8 @@ RoleBridgeMappings:
     - nic2
     native: External
     vlans: []
-# If a role is not explicitly listed here, its bridges come from Default.
-# Each bridge entry:
-#   type    - ovs_bridge | linux_bridge | ovs_user_bridge | sriov_pf
-#   name    - the bridge (or PF) name
-#   members - devices on the bridge, in order (the first plain interface becomes
-#             the bridge's primary MAC). A bare "nicN" is a plain interface;
-#             "nicNvM" is SR-IOV VF M of nicN; a dict is a nested device
-#             (ovs_dpdk_bond / ovs_dpdk_port).
-#   native  - the untagged network whose IP sits on the bridge itself. "CtlPlane"
-#             gets the control-plane IP + DNS + default route; a network name gets
-#             that network's IP (External also gets the default route); omit for an
-#             address-less bridge (e.g. a DPDK user bridge).
-#   vlans   - tagged networks carried as VLAN sub-interfaces. Listed vlans are
-#             filtered down to the networks the role actually carries, so the same
-#             list is safe to reuse across roles.
-#
-# Examples (uncomment and adapt per role):
-#
-# # Controller with only the control-plane network on br-ex
-# Controller:
-# - type: ovs_bridge
-#   name: br-ex
-#   members: [nic1]
-#   native: CtlPlane
-#   vlans: []
-#
-# # Compute as single-nic-vlans (External also tagged on the same bridge)
-# Compute:
-# - type: ovs_bridge
-#   name: br-ex
-#   members: [nic1]
-#   native: CtlPlane
-#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt', 'External']
-#
-# # ComputeSriov - dedicated SR-IOV PF, with VF 0 backing the External bridge
-# ComputeSriov:
-# - type: ovs_bridge
-#   name: br-vlans
-#   members: [nic1]
-#   native: CtlPlane
-#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
-# - type: ovs_bridge
-#   name: br-ex
-#   members: [nic2v0]          # VF 0 of nic2
-#   native: External
-#   vlans: []
-# - type: sriov_pf
-#   name: nic2
-#   numvfs: 8
-#
-# # ComputeOvsHwOffload - as SR-IOV, but the PF in switchdev mode for HW offload
-# ComputeOvsHwOffload:
-# - type: ovs_bridge
-#   name: br-vlans
-#   members: [nic1]
-#   native: CtlPlane
-#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
-# - type: ovs_bridge
-#   name: br-ex
-#   members: [nic2v0]
-#   native: External
-#   vlans: []
-# - type: sriov_pf
-#   name: nic2
-#   numvfs: 8
-#   link_mode: switchdev
-#
-# # ComputeOvsDpdk - control/External on linux bridges, DPDK bond on a user bridge
-# ComputeOvsDpdk:
-# - type: linux_bridge
-#   name: br-vlans
-#   members: [nic1]
-#   native: CtlPlane
-#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
-# - type: linux_bridge
-#   name: br-ex
-#   members: [nic2]
-#   native: External
-#   vlans: []
-# - type: ovs_user_bridge
-#   name: br-dpdk
-#   members:
-#   - type: ovs_dpdk_bond
-#     name: dpdkbond0
-#     members:
-#     - {type: ovs_dpdk_port, name: dpdk0, driver: vfio-pci, members: [nic3]}
-#     - {type: ovs_dpdk_port, name: dpdk1, driver: vfio-pci, members: [nic4]}
-#
-# # ComputeOvsDpdkSriov - a DPDK bond built on SR-IOV VFs of the same PF (nic2)
-# ComputeOvsDpdkSriov:
-# - type: linux_bridge
-#   name: br-vlans
-#   members: [nic1]
-#   native: CtlPlane
-#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
-# - type: linux_bridge
-#   name: br-ex
-#   members: [nic2v0]
-#   native: External
-#   vlans: []
-# - type: sriov_pf
-#   name: nic2
-#   numvfs: 8
-# - type: ovs_user_bridge
-#   name: br-dpdk
-#   members:
-#   - type: ovs_dpdk_bond
-#     name: dpdkbond0
-#     members:
-#     - {type: ovs_dpdk_port, name: dpdk0, driver: vfio-pci, members: [nic2v1]}
-#     - {type: ovs_dpdk_port, name: dpdk1, driver: vfio-pci, members: [nic2v2]}
+# A role not listed here uses `Default`. See the RHOSP-undercloud role README
+# (RoleBridgeMappings) for the entry schema and archetypes (SR-IOV/DPDK/HW-offload).
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
@@ -397,13 +221,8 @@ NeutronDriver: ovn
 # Snmpd configuration
 SnmpdReadonlyUserPassword: RHOSPVirtLab
 
-# Credentials (lab-only weak defaults).
-# These are intentionally weak defaults for a throwaway lab. To use real
-# secrets, override any of them in vault_credentials.yaml (gitignored and
-# loaded LAST in playbook.yml, so vaulted values win over these defaults):
-#   ansible-vault create vault_credentials.yaml
-# BMC / IPMI credentials for the virtualbmc VMs and physical nodes
-# (consumed via pm.user / pm.password in vars/machines.yml).
+# Credentials (lab-only weak defaults; override in vault_credentials.yaml — see README).
+# BMC / IPMI credentials for the virtualbmc VMs and physical nodes.
 BmcUsername: admin
 BmcPassword: admin
 # Overcloud admin account created by the undercloud.

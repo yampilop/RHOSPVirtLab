@@ -13,7 +13,7 @@
     <type arch="x86_64" machine="q35">hvm</type>
 {% if (item.pm.mode | default('bios')) == 'uefi' %}
 {% if ansible_distribution_major_version | int >= 9 %}
-    {# RHEL 9/10: let libvirt pick the OVMF descriptor (firmware="efi" above);
+    {# RHEL 9/10: libvirt picks the OVMF descriptor (firmware="efi" above);
        just declare non-secure-boot and a per-VM nvram store. #}
     <loader secure="no"/>
     <nvram>{{ pool_location }}/{{ item.name }}_VARS.fd</nvram>
@@ -84,8 +84,7 @@
       <target type="virtio" name="org.qemu.guest_agent.0"/>
     </channel>
     <input type="tablet" bus="usb"/>
-    {# SPICE/QXL were removed from qemu-kvm in RHEL 10 and are deprecated in
-       RHEL 9; use VNC + virtio graphics, which work across 8/9/10 hosts. #}
+    {# SPICE/QXL gone in RHEL 10, deprecated in 9; use VNC + virtio (works on 8/9/10). #}
     <graphics type="vnc" port="-1" autoport="yes" listen="127.0.0.1"/>
     <video>
       <model type="virtio"/>

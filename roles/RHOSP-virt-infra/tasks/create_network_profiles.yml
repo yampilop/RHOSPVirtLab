@@ -76,9 +76,8 @@
       ip:
         dhcp4: no
         auto6: no
-        # Only isolated networks that declare a gateway get an address on the
-        # hypervisor VLAN interface (that address IS the gateway); otherwise the
-        # VLAN is a pure L2 trunk endpoint.
+        # Only networks declaring a gateway get an address here (that address IS the
+        # gateway); otherwise the VLAN is a pure L2 trunk endpoint.
         address: "{{ [item.subnet.gateway ~ '/' ~ (item.subnet.ip_subnet | ipaddr('prefix'))] if item.subnet.gateway is defined else [] }}"
   when:
     - bridges_required | bool
@@ -109,11 +108,9 @@
     - "{{ dcn_leafs }}"
     - networks
 
-# These routes are consumed only by the DCN-hypervisor connection below (the task
-# gated `inventory_hostname != 'localhost'`), so skip the whole thing - and its
-# dereference of localhost's `ansible_{{ external_if }}` fact - when there are no DCN
-# leafs. Without this a single-host lab fails here if `external_if` does not match a
-# NIC that currently has an IPv4 address.
+# These routes feed only the DCN-hypervisor connection below, so skip them (and the
+# localhost external_if fact dereference) when there are no DCN leafs - otherwise a
+# single-host lab fails if external_if has no IPv4 address.
 - name: NETWORKING - Register DCN hypervisor routes
   set_fact:
     hypervisor_routes: |-

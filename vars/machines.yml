@@ -1,123 +1,11 @@
 ---
-# Inventory of lab machines.
-#
-# The lab has two distinct concepts, defined in two separate variables:
-#
-#   undercloud:  the single director host (this section). It is a special node -
-#                never enrolled in ironic, never power-managed by the lab when
-#                physical - so it is kept apart from the overcloud nodes.
-#   machines:    the list of overcloud nodes (further down). Every entry there is
-#                a node the undercloud provisions/manages.
-#
-# Both the undercloud and each machine share a common shape: a `type` discriminator
-# (libvirt | physical) with technology-specific parameters in a block named after
-# that type (`libvirt:` for VMs, `physical:` for baremetal). New virtualization
-# technologies can be added by defining a new type + block.
-#
-#
-# ============================================================================
-# undercloud - the director host
-# ============================================================================
-#
-# The undercloud dict is intentionally minimal: only fields that actually vary are
-# set. The role injects the constants that never change for the undercloud
-# (name=undercloud, pre_provisioned=true, openstack.role=undercloud) so they cannot be
-# set wrong, and creates NO virtualbmc for it (it is the director and is not
-# power-managed by the lab, so no `pm` block is used).
-#
-#   type       Technology: libvirt (a VM this lab creates) | physical (a
-#              pre-existing, admin-prepared host).
-#   openstack:  (optional)
-#     local_interface  Optional (default eth0). Name of the NIC the undercloud uses
-#                      for the control plane (written to undercloud.conf). Override
-#                      for a physical undercloud whose NIC is e.g. eno1/enp3s0.
-#     management_interface  Libvirt undercloud only, optional (default eth1). Name of
-#                      the NIC reconfigured for Ansible/management access at first
-#                      boot. Unused for a physical undercloud (networking untouched).
-#   libvirt:   VM sizing and wiring for a libvirt undercloud (see the libvirt block
-#              schema below). Define only the control-plane NIC(s); the role injects the
-#              management/Ansible-access NIC (`mgmt`) with a fixed MAC pinned to a static
-#              DHCP lease (192.168.250.10) on the management network, so it must not be
-#              listed here. No `pm` block is needed; the domain boot mode defaults to bios
-#              (add `pm: {mode: uefi}` only if you need a uefi undercloud).
-#
-# NOTE (physical undercloud): a `type: physical` undercloud is assumed to be
-# admin-prepared: RHEL already installed, the `stack` user present with the
-# hypervisor's SSH public key authorized, and its NICs already up (the control-plane
-# NIC on the ctlplane L2, plus a management/access IP matching its inventory
-# `ansible_host`). The lab does NOT create it, wait on cloud-init, or reconfigure its
-# interfaces; it only runs subscription/repos/packages, writes undercloud.conf and
-# deploys. Set `openstack.local_interface` to the real control-plane device name.
-#
-#
-# ============================================================================
-# machines - the overcloud nodes
-# ============================================================================
-#
-# Common (top level, all types):
-#   name       Unique machine name.
-#   type       Machine technology: libvirt | physical.
-#   pre_provisioned  Optional (default false). Whether the node already has an OS
-#                loaded (pre-provisioned / "deployed server") or will be provisioned
-#                later by ironic (unprovisioned). Works for both VMs and baremetal.
-#                For a pre-provisioned libvirt VM the root disk is backed by the RHEL
-#                base image and a cloud-init cdrom is generated to seed users/network
-#                (heat-admin on 16.2 / tripleo-admin on 17.1). An unprovisioned VM
-#                gets an empty root disk and no cloud-init cdrom.
-#   openstack: OpenStack/overcloud placement.
-#     role         Overcloud role/profile (must be a virtual-capable profile for VMs).
-#     leaf         Leaf/DCN site the node belongs to (physical machines).
-#     ctlplane_ip  Static control-plane IP. REQUIRED on pre_provisioned overcloud
-#                  nodes (deployed servers): cloud-init assigns it to the node's
-#                  ctlplane NIC at first boot and the deployed-server port map uses
-#                  the same value. Must sit inside the ctlplane subnet but OUTSIDE the
-#                  undercloud DHCP and inspection ranges (with the defaults: not
-#                  .1-.3/.5-.55/.100-.120/.254; e.g. .4 or .121-.199). Ignored for
-#                  unprovisioned (ironic) nodes, which get their IP from neutron.
-#
-# NOTE: pre-provisioned (deployed-server) and ironic-provisioned overcloud nodes
-# cannot be mixed. Every overcloud node here must share the same pre_provisioned value
-# (the undercloud is defined separately and is exempt); the role validates this and
-# fails early otherwise. (This is a global check for now; a future leaf refactor will
-# make it per-leaf.)
-#   pm:        Power management / BMC. Required for every overcloud node ironic must
-#              power-cycle (all libvirt VMs via virtualbmc, and physical nodes via
-#              their real BMC).
-#     type         BMC driver (ipmi for virtualbmc VMs and real IPMI baremetal).
-#     user         BMC username.
-#     password     BMC password.
-#     address      BMC host: localhost/hypervisor for VMs, IPMI address for baremetal.
-#     port         BMC port (virtualbmc port for VMs).
-#     mode         Boot mode: bios | uefi (drives introspection boot_mode too).
-#
-# libvirt block (type: libvirt) - editable VM sizing and wiring:
-#   title      Human-readable domain title.
-#   hypervisor Inventory host running the domain.
-#   cpus       Number of vCPUs.
-#   memory     RAM in KiB.
-#   disks:     Libvirt storage layout (one or more disks; exactly one root). The root
-#              disk is backed by the RHEL base image automatically when the machine is
-#              pre_provisioned; otherwise all disks start empty. No per-disk backing
-#              image is configured here.
-#     - root: true             Root volume (exactly one).
-#       size: <bytes>
-#     - size: <bytes>          Additional data disk(s).
-#   network.interfaces:  Libvirt NIC wiring. Each interface attaches to a
-#                        hypervisor bridge, decoupling machines from the
-#                        networks list (any bridge can be targeted).
-#     - name: <label>          Logical interface name (e.g. nic1). The reserved name
-#                              `mgmt` denotes the Ansible/management access NIC; for the
-#                              undercloud the role injects it automatically, so it is not
-#                              listed here.
-#       mac:  <MAC>            Explicit MAC address.
-#       bridge: <bridge>       Hypervisor bridge to attach to.
-#
-# physical block (type: physical) - fixed hardware facts + BMC wiring:
-#   cpus       Number of CPUs (for introspection/flavor matching).
-#   memory     RAM in KiB.
-#   disk       Disk size in bytes.
-#   mac        Boot NIC MAC address (used for introspection).
-#   nics:      Logical-nic -> physical device map for os-net-config.
+# Inventory of lab machines, in two separate variables:
+#   undercloud - the single director host (special: never enrolled in ironic and, when
+#                physical, never power-managed by the lab; the role injects its constants).
+#   machines   - the overcloud nodes the undercloud provisions/manages.
+# Both share a `type` discriminator (libvirt | physical) with technology-specific
+# settings in a block named after the type. See the role READMEs for the full
+# field-by-field schema (undercloud, machines and the libvirt/physical blocks).
 
 
 undercloud:
@@ -138,15 +26,11 @@ undercloud:
       - name: nic1
         mac: '0c:1f:0d:10:00:00'
         bridge: br-ctlplane
-      # The management/Ansible-access NIC (`mgmt`) is NOT listed here: the role injects
-      # it automatically (fixed MAC pinned to a static DHCP lease at 192.168.250.10).
+      # The mgmt/Ansible-access NIC is injected by the role (see README); do not list it.
 
 
-# Alternative: a PHYSICAL undercloud (replace the libvirt definition above). The box
-# must be admin-prepared (see the "physical undercloud" note in the schema) and its
-# inventory `ansible_host` must be its reachable management IP. `local_interface`
-# names the real control-plane NIC. No pm block is needed (the undercloud is not
-# power-managed by the lab); the physical block is optional/ignored.
+# Alternative: an admin-prepared PHYSICAL undercloud (see README). Replace the libvirt
+# definition above with:
 #
 # undercloud:
 #   type: physical
@@ -154,12 +38,9 @@ undercloud:
 #     local_interface: eno1        # control-plane NIC name inside the undercloud
 
 
-# Overcloud nodes. By default one virtual controller and one virtual compute. Add,
-# remove or adjust entries (and uncomment the physical example below) to grow the lab.
-# These default to unprovisioned (ironic installs them later). Set
-# `pre_provisioned: true` at the top level to instead boot from the RHEL base image
-# with a cloud-init cdrom (deployed-server style); when you do, add `ctlplane_ip`
-# under `openstack:` and make every overcloud node in the leaf pre_provisioned too.
+# Overcloud nodes (default: one virtual controller + one virtual compute). Default to
+# unprovisioned (ironic); set `pre_provisioned: true` for deployed-server nodes (then
+# add `ctlplane_ip` and make every node in the leaf pre_provisioned). See README.
 machines:
 - name: controller0
   type: libvirt

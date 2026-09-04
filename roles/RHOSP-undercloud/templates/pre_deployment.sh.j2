@@ -54,8 +54,7 @@ openstack baremetal node list
 openstack overcloud node introspect --all-manageable --provide
 openstack baremetal node list
 {% else %}
-# Pre-provisioned (deployed-server) nodes: node import/introspection are skipped;
-# the OS is already installed and reachable at its static ctlplane IP.
+# Pre-provisioned nodes: skip import/introspection (OS already up at its static ctlplane IP)
 {% endif %}
 
 
@@ -76,8 +75,7 @@ sudo openstack tripleo container image prepare \
 {% if RHOSP_version >= 17.1 %}
 # Provision nodes
 {% if deployed_server[leaf.name] %}
-# Deployed servers: managed:false in node-info.yaml, so this only authors
-# overcloud-baremetal-deployed.yaml (HostnameMap/NodePortMap) without touching nodes.
+# Deployed servers (managed:false): only authors overcloud-baremetal-deployed.yaml, no node changes
 openstack overcloud node provision -y --stack {{ leaf.name }} --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 {% else %}
 openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml

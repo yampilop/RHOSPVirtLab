@@ -1,29 +1,21 @@
 ---
 # vars file for RHOSP-undercloud
 
-# Convenience views over the overcloud machines list. `machines` holds only the
-# overcloud nodes; the undercloud is defined separately in the top-level
-# `undercloud` variable and is intentionally NOT part of these views (this role
-# authors the overcloud, so it never needs to iterate the undercloud).
+# Convenience views over `machines` (overcloud nodes only; the undercloud is separate).
 libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
-# Whether the undercloud is a pre-existing physical host (admin-prepared) rather
-# than a libvirt VM created by the virt-infra role.
+# True when the undercloud is an admin-prepared physical host rather than a libvirt VM.
 undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
-# Derived views over the `leafs` list (replaces the old DefaultLeaf0 / DCNLeafs
-# split). The default (control-plane) leaf is always named `overcloud`; the rest
-# are the DCN leafs. Derived by name - not list position - so authoring order in
-# vars/options.yml does not affect correctness.
+# Derived views over `leafs`: the control-plane leaf `overcloud` and the DCN leafs.
+# Selected by name (not list position), so authoring order does not matter.
 default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
 dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
 
-# Management (NAT) network gateway address, used as the pm_addr for localhost libvirt
-# VMs in instackenv. The full network is defined in the RHOSP-virt-infra role, but role
-# vars/main.yml are play-scoped and not visible in this (openstack) play, so only the
-# gateway address needed here is duplicated. Keep in sync with
-# roles/RHOSP-virt-infra/vars/main.yml (libvirt_management_network.ipv4.address).
+# Management (NAT) gateway, used as pm_addr for localhost libvirt VMs in instackenv.
+# Duplicated here because the virt-infra role vars are not visible in this play; keep in
+# sync with roles/RHOSP-virt-infra/vars/main.yml (libvirt_management_network.ipv4.address).
 libvirt_management_network:
   ipv4:
     address: '192.168.250.1'
@@ -97,13 +89,9 @@ overcloud_roles:
     distributed: True
     max: 3
 
-# Environment files to include in deploy command:
-#  - file: Name of the file
-#    absolute_path: True if the file name is a full path, False if it's relative to the leaf templates directory
-#    version: List of versions where the file will be included
-#    DCN: True if this will only be include in DCN deployments
-#    Leafs: All(Include in all the leafs)|Default(Include only in the default leaf)|NotDefault(Include only in the DCN leafs)
-#    DeployedServer: True to include the file only when the leaf runs in deployed-server (pre-provisioned) mode
+# Environment files added to the deploy command. Per entry: file; absolute_path (full
+# path vs relative to the leaf templates dir); version (list); DCN (DCN-only);
+# Leafs (All|Default|NotDefault); DeployedServer (include only in deployed-server mode).
 deployment_environment:
   - file: overcloud-baremetal-deployed.yaml
     absolute_path: False
