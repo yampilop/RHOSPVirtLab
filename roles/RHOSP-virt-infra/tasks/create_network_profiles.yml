@@ -22,7 +22,7 @@
     - bridges_required | bool
     - item.hypervisor == inventory_hostname
     - (item.forward == 'bridge')
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Define hypervisor interfaces
   set_fact:
@@ -41,7 +41,7 @@
   when:
     - item.hypervisor == inventory_hostname
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Define network configuration for interfaces bridged to libvirt
   set_fact:
@@ -59,7 +59,7 @@
   when:
     - item.hypervisor == inventory_hostname
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Define network configuration for vlans belonging to libvirt bridges in localhost
   set_fact:

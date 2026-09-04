@@ -7,14 +7,49 @@
 - name: SETUP - Make the hypervisor setup
   import_tasks: tasks/setup.yml
 
-# Assemble the libvirt networks this host must manage, replacing the old static
-# `networks` list. Starts from the management (NAT) network when required (a libvirt
-# undercloud or a pre-provisioned libvirt VM on localhost).
-# TODO(leafs): append the per-leaf ctlplane/external networks needed wherever libvirt
-# VMs are present, so they are created dynamically from the leaf definitions.
+# Assemble the libvirt networks/bridges this run must manage, derived from the `leafs`
+# model plus the management (NAT) network - replacing the old static `networks` list.
+# Each leaf contributes its ctlplane bridge and any additional bridges (e.g.
+# br-external): VMs attach to these bridges directly and physical nodes trunk a real NIC
+# in via `hypervisor_if` (emitted only when the bridge declares an `interface`). The
+# ctlplane bridge takes the ctlplane subnet gateway as its host address; an additional
+# bridge takes its own ipv4.address, with the netmask derived from the (untagged)
+# network carried on it. The management (NAT) network is prepended when required (a
+# libvirt undercloud, or a pre-provisioned libvirt VM on localhost). Names follow the
+# historical convention RHOSPVirtLab_<bridge-without-br-> so `forward_network` matches.
 - name: NETWORKING - Assemble the list of libvirt networks to manage
   set_fact:
-    libvirt_networks: "{{ [libvirt_management_network] if (management_network_required | bool) else [] }}"
+    libvirt_networks: "{{ management_part + (leaf_bridges | from_yaml) }}"
+  vars:
+    management_part: "{{ [libvirt_management_network] if (management_network_required | bool) else [] }}"
+    leaf_bridges: |-
+      [
+      {% for leaf in leafs %}
+      {{ ({
+           'name': 'RHOSPVirtLab_' ~ (leaf.ctlplane_bridge.name | regex_replace('^br-', '')),
+           'hypervisor': leaf.hypervisor,
+           'bridge': leaf.ctlplane_bridge.name,
+           'forward': 'bridge',
+           'ipv4': {'address': leaf.ctlplane_subnet.gateway,
+                    'netmask': leaf.ctlplane_subnet.cidr | ipaddr('netmask')}
+         } | combine({'hypervisor_if': leaf.ctlplane_bridge.interface}
+                     if leaf.ctlplane_bridge.interface else {})) | to_json }},
+      {% for ab in leaf.additional_bridges | default([]) %}
+      {% set on_bridge = leaf.networks | default([]) | selectattr('bridge', 'equalto', ab.name) | list %}
+      {% set native = on_bridge | rejectattr('subnet.vlan', 'defined') | list %}
+      {% set base = (native | first) if native else ((on_bridge | first) if on_bridge else none) %}
+      {{ ({
+           'name': 'RHOSPVirtLab_' ~ (ab.name | regex_replace('^br-', '')),
+           'hypervisor': leaf.hypervisor,
+           'bridge': ab.name,
+           'forward': 'bridge'
+         } | combine({'hypervisor_if': ab.interface} if ab.interface else {})
+           | combine({'ipv4': {'address': ab.ipv4.address,
+                               'netmask': (base.subnet.ip_subnet if base else '0.0.0.0/24') | ipaddr('netmask')}}
+                     if ab.ipv4 is defined else {})) | to_json }},
+      {% endfor %}
+      {% endfor %}
+      ]
 
 # Cleanup process
 

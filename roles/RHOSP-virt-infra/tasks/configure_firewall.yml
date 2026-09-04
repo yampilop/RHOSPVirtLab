@@ -21,7 +21,7 @@
     permanent: yes
     immediate: yes
     state: enabled
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   when:
     - bridges_required | bool
     - inventory_hostname == item.hypervisor
@@ -34,7 +34,7 @@
     permanent: yes
     immediate: yes
     state: enabled
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   when:
     - libvirt_required | bool
     - inventory_hostname == item.hypervisor
