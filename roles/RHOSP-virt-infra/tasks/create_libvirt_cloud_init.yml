@@ -42,12 +42,14 @@
   when: ci_has_mgmt | bool or ci_has_ctlplane | bool
 
 - name: STORAGE - Create the {{ machine.name }} cloud-init ISO
+  # NoCloud (cidata) requires the files be named user-data/meta-data/network-config at
+  # the ISO root; -graft-points maps the per-machine source files onto those names.
   command: >-
     genisoimage -output /home/{{ ansible_user }}/{{ machine.name }}-init.iso
-    -volid cidata -joliet -rock
-    /home/{{ ansible_user }}/{{ machine.name }}-user-data
-    /home/{{ ansible_user }}/{{ machine.name }}-meta-data
-    {% if ci_has_mgmt | bool or ci_has_ctlplane | bool %}/home/{{ ansible_user }}/{{ machine.name }}-network-config{% endif %}
+    -volid cidata -joliet -rock -graft-points
+    user-data=/home/{{ ansible_user }}/{{ machine.name }}-user-data
+    meta-data=/home/{{ ansible_user }}/{{ machine.name }}-meta-data
+    {% if ci_has_mgmt | bool or ci_has_ctlplane | bool %}network-config=/home/{{ ansible_user }}/{{ machine.name }}-network-config{% endif %}
   register: ci_iso
   when: ci_user_data.changed or ci_meta_data.changed or (ci_network_config.changed | default(false))
 
