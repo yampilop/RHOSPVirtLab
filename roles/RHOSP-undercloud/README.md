@@ -404,12 +404,11 @@ machines:
   `DeployedServerPortMap` + `HostnameMap` (`deployed-server-ports.yaml`) alongside the
   upstream `deployed-server-environment.yaml`; on 17.1 `openstack overcloud node provision`
   is run with `managed: false` (per-node ctlplane `fixed_ip`) to emit
-  `overcloud-baremetal-deployed.yaml`. The deploy runs with `--disable-validations` and
-  `--overcloud-ssh-user`/`--overcloud-ssh-key` pointing at the hypervisor deploy key
-  copied to the undercloud. Pre-provisioned and ironic-provisioned overcloud nodes cannot
-  be mixed: every overcloud node must share the same `pre_provisioned` value (validated by
-  the RHOSP-virt-infra role, which fails early otherwise). This is a global check for now;
-  a future leaf refactor will make it per-leaf.
+  `overcloud-baremetal-deployed.yaml`. The deploy runs with `--disable-validations`.
+  Pre-provisioned and ironic-provisioned overcloud nodes cannot be mixed: every overcloud
+  node must share the same `pre_provisioned` value (validated by the RHOSP-virt-infra role,
+  which fails early otherwise). This is a global check for now; a future leaf refactor will
+  make it per-leaf.
 
   A `pre_provisioned` node must **not** define a `pm` block: ironic does not power-manage
   deployed servers, so a BMC is meaningless there. The one exception is when

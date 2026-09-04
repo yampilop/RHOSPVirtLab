@@ -165,15 +165,6 @@
     mode: '0700'
   when: true in (deployed_server.values() | map('bool') | list)
 
-- name: SSH - Provide the hypervisor deploy key so the undercloud can reach deployed servers
-  copy:
-    content: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa') }}"
-    dest: /home/stack/.ssh/deploy_key
-    owner: stack
-    group: stack
-    mode: '0600'
-  when: true in (deployed_server.values() | map('bool') | list)
-
 - name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
   template:
     src: "{{ item }}.j2"

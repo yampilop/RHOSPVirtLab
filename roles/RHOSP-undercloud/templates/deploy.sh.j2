@@ -39,8 +39,6 @@ time openstack overcloud deploy \
 -r {{ templates_dir }}/roles_data.yaml \
 {% if deployed_server[leaf.name] %}
 --disable-validations \
---overcloud-ssh-user {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} \
---overcloud-ssh-key /home/stack/.ssh/deploy_key \
 {% endif %}
 {% for environment in deployment_environment %}
 {% if ((environment.DCN | bool) and (dcn_leafs | length > 0)) or not (environment.DCN | bool) %}
