@@ -74,7 +74,7 @@
   when:
     - vbmc_required | bool
     - item.pm is defined
-    - inventory_hostname == DefaultLeaf0.hypervisor
+    - inventory_hostname == default_leaf.hypervisor
 
 - name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for localhost and leafs
   firewalld:

@@ -21,45 +21,79 @@ forwarded_ports:
   - 6080
   - 5000
 
-# Default leaf configuration
-DefaultLeaf0:
-  name: overcloud
+# Leaf configuration. The first leaf, always named `overcloud`, is the default
+# (control-plane) leaf; any further entries are DCN leafs. See vars/options.yml
+# for the full, documented schema.
+leafs:
+- name: overcloud
   hypervisor: localhost
-  subnet:
+  additional_bridges:
+  - name: br-external
+    interface: null # Optional when external connection is needed
+    ipv4:
+      address: 10.0.0.254
+  ctlplane_bridge:
+    name: br-ctlplane
+    interface: null # Optional when external connection is needed
+  ctlplane_subnet:
     name: ctlplane-subnet
     cidr: 192.168.24.0/24
     dhcp_start: 192.168.24.5
-    dhcp_end: 192.168.24.55
+    dhcp_end: 192.168.24.99
     inspection_iprange: 192.168.24.100,192.168.24.120
     gateway: 192.168.24.254
     masquerade: false
   networks:
-    Tenant:
-      prefix: '172.16.0'
+  - name: Tenant
+    bridge: br-ctlplane
+    vip: false
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.0.0/24
+      allocation_pools:
+      - start: 172.16.0.5
+        end: 172.16.0.99
       vlan: 10
-      network: RHOSPVirtLab_ctlplane
-    Storage:
-      prefix: '172.16.1'
-      vlan: 20
-      network: RHOSPVirtLab_ctlplane
-    InternalApi:
-      prefix: '172.16.2'
-      vlan: 30
-      network: RHOSPVirtLab_ctlplane
-    StorageMgmt:
-      prefix: '172.16.3'
-      vlan: 40
-      network: RHOSPVirtLab_ctlplane
-    External:
-      prefix: '10.0.0'
-      network: RHOSPVirtLab_external
-    Management:
-      prefix: '10.0.1'
-      vlan: 60
-      network: RHOSPVirtLab_ctlplane
-
-# DCN leafs
-DCNLeafs: []
+  - name: Storage
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.1.0/24
+      allocation_pools:
+      - start: 172.16.1.5
+        end: 172.16.1.99
+      vlan: 11
+  - name: InternalApi
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.2.0/24
+      allocation_pools:
+      - start: 172.16.2.5
+        end: 172.16.2.99
+      vlan: 12
+  - name: StorageMgmt
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.3.0/24
+      allocation_pools:
+      - start: 172.16.3.5
+        end: 172.16.3.99
+      vlan: 13
+  - name: External
+    bridge: br-external
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 10.0.0.0/24
+      allocation_pools:
+      - start: 10.0.0.5
+        end: 10.0.0.99
+      gateway: 10.0.0.254
 
 # undercloud is the director host, defined separately from the overcloud `machines`.
 # By default it is a libvirt VM created by this role. Only the non-constant fields are

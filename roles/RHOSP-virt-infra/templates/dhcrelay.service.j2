@@ -8,14 +8,14 @@ After=network-online.target
 Type=notify
 {% if inventory_hostname == 'localhost' %}
 {% if ansible_distribution_version == '7.9' %}
-ExecStart=/usr/sbin/dhcrelay -d {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ DefaultLeaf0.subnet.dhcp_start }} -i {{ external_if }}
+ExecStart=/usr/sbin/dhcrelay -d {{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ default_leaf.ctlplane_subnet.dhcp_start }} -i {{ external_if }}
 {% elif ansible_distribution_major_version | int >= 10 %}
 {# ISC dhcp/dhcrelay were removed in RHEL 10; use dnsmasq in relay mode
    (--port=0 disables its DNS service). NOTE: validate the relay/server
    addresses and dnsmasq flags on a real RHEL 10 host. #}
-ExecStart=/usr/sbin/dnsmasq -d --port=0 --dhcp-relay={{ hostvars['localhost']['ansible_'~external_if].ipv4.address }},{{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }}
+ExecStart=/usr/sbin/dnsmasq -d --port=0 --dhcp-relay={{ hostvars['localhost']['ansible_'~external_if].ipv4.address }},{{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') | ipaddr('address') }}
 {% else %}
-ExecStart=/usr/sbin/dhcrelay -d {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ DefaultLeaf0.subnet.dhcp_start }} -iu br-ctlplane -id {{ external_if }}
+ExecStart=/usr/sbin/dhcrelay -d {{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ default_leaf.ctlplane_subnet.dhcp_start }} -iu br-ctlplane -id {{ external_if }}
 {% endif %}
 {% else %}
 {% if ansible_distribution_version == '7.9' %}

@@ -22,7 +22,7 @@
   import_tasks: clean_dhcrelay.yml
   when:
     - cleanup | bool
-    - DCNLeafs | length > 0
+    - dcn_leafs | length > 0
 
 - name: FIREWALL - Clean firewall
   import_tasks: clean_firewall.yml
@@ -96,4 +96,4 @@
   import_tasks: configure_dhcrelay.yml
   when:
     - create | bool
-    - DCNLeafs | length > 0
+    - dcn_leafs | length > 0

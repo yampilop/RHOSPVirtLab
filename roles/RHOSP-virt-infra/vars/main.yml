@@ -69,6 +69,13 @@ management_network_required: >-
                    | selectattr('pre_provisioned', 'defined')
                    | selectattr('pre_provisioned') | list | length) > 0) }}
 
+# Derived views over the `leafs` list (replaces the old DefaultLeaf0 / DCNLeafs
+# split). The default (control-plane) leaf is always named `overcloud`; the rest
+# are the DCN leafs. Derived by name - not list position - so authoring order in
+# vars/options.yml does not affect correctness.
+default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 
 # VirtualBMC install location. On RHEL 9/10 the system interpreter is

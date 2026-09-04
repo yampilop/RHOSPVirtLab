@@ -66,47 +66,48 @@
     network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
-      name: "{{ ( networks | selectattr('name', 'equalto', DefaultLeaf0.networks[item].network) | list | first ).bridge }}.{{ DefaultLeaf0.networks[item].vlan }}"
+      name: "{{ item.bridge }}.{{ item.subnet.vlan }}"
       type: vlan
-      vlan_id: "{{ DefaultLeaf0.networks[item].vlan }}"
-      parent: "{{ ( networks | selectattr('name', 'equalto', DefaultLeaf0.networks[item].network) | list | first ).bridge }}"
+      vlan_id: "{{ item.subnet.vlan }}"
+      parent: "{{ item.bridge }}"
       autoconnect: yes
-      mtu: 1500
+      mtu: "{{ item.mtu | default(1500) }}"
       state: up
       ip:
         dhcp4: no
         auto6: no
-        address:
-          - "{{ DefaultLeaf0.networks[item].prefix ~ '.1/24' }}"
+        # Only isolated networks that declare a gateway get an address on the
+        # hypervisor VLAN interface (that address IS the gateway); otherwise the
+        # VLAN is a pure L2 trunk endpoint.
+        address: "{{ [item.subnet.gateway ~ '/' ~ (item.subnet.ip_subnet | ipaddr('prefix'))] if item.subnet.gateway is defined else [] }}"
   when:
     - bridges_required | bool
     - inventory_hostname == 'localhost'
-    - DefaultLeaf0.networks[item].vlan is defined
-  loop: "{{ DefaultLeaf0.networks.keys() | list }}"
+    - item.subnet.vlan is defined
+  loop: "{{ default_leaf.networks }}"
 
 - name: NETWORKING - Define network configuration for vlans belonging to libvirt bridges in the leafs
   set_fact:
     network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
-      name: "{{ ( networks | selectattr('name', 'equalto', item.0.networks[item.1].network) | list | first ).bridge }}.{{ item.0.networks[item.1].vlan }}"
+      name: "{{ item.1.bridge }}.{{ item.1.subnet.vlan }}"
       type: vlan
-      vlan_id: "{{ item.0.networks[item.1].vlan }}"
-      parent: "{{ ( networks | selectattr('name', 'equalto', item.0.networks[item.1].network) | list | first ).bridge }}"
+      vlan_id: "{{ item.1.subnet.vlan }}"
+      parent: "{{ item.1.bridge }}"
       autoconnect: yes
-      mtu: 1500
+      mtu: "{{ item.1.mtu | default(1500) }}"
       state: up
       ip:
         dhcp4: no
         auto6: no
-        address:
-          - "{{ item.0.networks[item.1].prefix ~ '.1/24' }}"
+        address: "{{ [item.1.subnet.gateway ~ '/' ~ (item.1.subnet.ip_subnet | ipaddr('prefix'))] if item.1.subnet.gateway is defined else [] }}"
   when:
     - item.0.hypervisor == inventory_hostname
-    - item.0.networks[item.1].vlan is defined
-  with_nested:
-    - "{{ DCNLeafs }}"
-    - "{{ DefaultLeaf0.networks.keys() | list }}"
+    - item.1.subnet.vlan is defined
+  with_subelements:
+    - "{{ dcn_leafs }}"
+    - networks
 
 # These routes are consumed only by the DCN-hypervisor connection below (the task
 # gated `inventory_hostname != 'localhost'`), so skip the whole thing - and its
@@ -118,33 +119,33 @@
     hypervisor_routes: |-
       [
         {
-          "network": "{{ DefaultLeaf0.subnet.cidr.split('/')[0] }}",
-          "prefix": "{{ DefaultLeaf0.subnet.cidr.split('/')[1] }}",
+          "network": "{{ default_leaf.ctlplane_subnet.cidr | ipaddr('network') }}",
+          "prefix": "{{ default_leaf.ctlplane_subnet.cidr | ipaddr('prefix') }}",
           "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
         },
-      {% for network in (DefaultLeaf0.networks.keys() | list) %}
+      {% for net in default_leaf.networks %}
         {
-          "network": "{{ DefaultLeaf0.networks[network].prefix ~ '.0' }}",
-          "prefix": "24",
+          "network": "{{ net.subnet.ip_subnet | ipaddr('network') }}",
+          "prefix": "{{ net.subnet.ip_subnet | ipaddr('prefix') }}",
           "gateway": "{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}"
         },
       {% endfor %}
-      {% for leaf in DCNLeafs if (inventory_hostname != leaf.hypervisor) %}
+      {% for leaf in dcn_leafs if (inventory_hostname != leaf.hypervisor) %}
         {
-          "network": "{{ leaf.subnet.cidr.split('/')[0] }}",
-          "prefix": "{{ leaf.subnet.cidr.split('/')[1] }}",
+          "network": "{{ leaf.ctlplane_subnet.cidr | ipaddr('network') }}",
+          "prefix": "{{ leaf.ctlplane_subnet.cidr | ipaddr('prefix') }}",
           "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
         },
-      {% for network in (leaf.networks.keys() | list) %}
+      {% for net in leaf.networks %}
         {
-          "network": "{{ leaf.networks[network].prefix ~ '.0' }}",
-          "prefix": "24",
+          "network": "{{ net.subnet.ip_subnet | ipaddr('network') }}",
+          "prefix": "{{ net.subnet.ip_subnet | ipaddr('prefix') }}",
           "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
         },
       {% endfor %}
       {% endfor %}
       ]
-  when: DCNLeafs | length > 0
+  when: dcn_leafs | length > 0
 
 - name: NETWORKING - Define network configuration for the public interface of the DCN hypervisors and add static route
   set_fact:
@@ -161,23 +162,23 @@
         dhcp4: yes
         route: "{{ hypervisor_routes }}"
   when:
-    - DCNLeafs | length > 0
+    - dcn_leafs | length > 0
     - inventory_hostname != 'localhost'
 
 - name: Register localhost routes
   set_fact:
     localhost_routes: |-
       [
-      {% for leaf in DCNLeafs %}
+      {% for leaf in dcn_leafs %}
         {
-          "network": "{{ leaf.subnet.cidr.split('/')[0] }}",
-          "prefix": "{{ leaf.subnet.cidr.split('/')[1] }}",
+          "network": "{{ leaf.ctlplane_subnet.cidr | ipaddr('network') }}",
+          "prefix": "{{ leaf.ctlplane_subnet.cidr | ipaddr('prefix') }}",
           "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
         },
-      {% for network in (leaf.networks.keys() | list) %}
+      {% for net in leaf.networks %}
         {
-          "network": "{{ leaf.networks[network].prefix ~ '.0' }}",
-          "prefix": "24",
+          "network": "{{ net.subnet.ip_subnet | ipaddr('network') }}",
+          "prefix": "{{ net.subnet.ip_subnet | ipaddr('prefix') }}",
           "gateway": "{{ hostvars[leaf.hypervisor]['ansible_'~(hostvars[leaf.hypervisor].hypervisor_external_if)].ipv4.address }}"
         },
       {% endfor %}

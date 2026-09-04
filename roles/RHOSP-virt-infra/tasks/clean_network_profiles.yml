@@ -1,4 +1,4 @@
-# Cleanup is deliberately NOT gated on bridges_required/DCNLeafs: it must remove
+# Cleanup is deliberately NOT gated on bridges_required/dcn_leafs: it must remove
 # whatever a previous run may have created even if the vars changed since. Marking an
 # already-absent connection `persistent_state: absent` is an idempotent no-op.
 
@@ -10,30 +10,30 @@
     network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
-      name: "{{ ( networks | selectattr('name', 'equalto', DefaultLeaf0.networks[item].network) | list | first ).bridge }}.{{ DefaultLeaf0.networks[item].vlan }}"
+      name: "{{ item.bridge }}.{{ item.subnet.vlan }}"
       type: vlan
       state: down
       persistent_state: absent
   when:
     - inventory_hostname == 'localhost'
-    - DefaultLeaf0.networks[item].vlan is defined
-  loop: "{{ DefaultLeaf0.networks.keys() | list }}"
+    - item.subnet.vlan is defined
+  loop: "{{ default_leaf.networks }}"
 
 - name: NETWORKING - Delete vlans belonging to libvirt bridges in the leafs
   set_fact:
     network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
-      name: "{{ ( networks | selectattr('name', 'equalto', item.0.networks[item.1].network) | list | first ).bridge }}.{{ item.0.networks[item.1].vlan }}"
+      name: "{{ item.1.bridge }}.{{ item.1.subnet.vlan }}"
       type: vlan
       state: down
       persistent_state: absent
   when:
     - item.0.hypervisor == inventory_hostname
-    - item.0.networks[item.1].vlan is defined
-  with_nested:
-    - "{{ DCNLeafs }}"
-    - "{{ DefaultLeaf0.networks.keys() | list }}"
+    - item.1.subnet.vlan is defined
+  with_subelements:
+    - "{{ dcn_leafs }}"
+    - networks
 
 - name: NETWORKING - Delete bridges for networks linked with the hypervisor
   set_fact:
