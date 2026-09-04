@@ -1,8 +1,9 @@
 {% if not default_leaf.networks %} {# IF 1 #}
+# No networks defined
 []
 {% else %} {# IF 1 #}
-{% for network in default_leaf.networks %} {# FOR 1 #}
-{% if RHOSP_version < 17.1 %} {# IF 2 #}
+{% for network in default_leaf.networks %} {# FOR 1.1 #}
+{% if RHOSP_version < 17.1 %} {# IF 1.2 #}
 {# RHOSP 16.2 version #}
 - name: {{ network.name }}
   vip: {{ 'true' if network.vip | default(false) else 'false' }}
@@ -10,28 +11,29 @@
   name_lower: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
   ip_subnet: '{{ network.subnet.ip_subnet }}'
   allocation_pools: [{% for p in network.subnet.allocation_pools %}{'start': '{{ p.start }}', 'end': '{{ p.end }}'}{{ ', ' if not loop.last else '' }}{% endfor %}]
-{% if network.subnet.gateway is defined %}
+{% if network.subnet.gateway is defined %} {# IF 1.2.1 #}
   gateway_ip: '{{ network.subnet.gateway }}'
-{% endif %}
+{% endif %} {# IF 1.2.1 #}
   mtu: {{ network.mtu | default(1500) }}
-{% if dcn_leafs | length > 0 %}
+{% if dcn_leafs | length > 0 %} {# IF 1.2.2 #}
   subnets:
-{% for leaf in dcn_leafs %}
+{% for leaf in dcn_leafs %} {# FOR 1.2.1.1 #}
 {% set lnet = leaf.networks | selectattr('name', 'equalto', network.name) | list | first %}
     storage_subnet_{{ leaf.name }}:
       ip_subnet: {{ lnet.subnet.ip_subnet }}
       allocation_pools:
-{% for p in lnet.subnet.allocation_pools %}
+{% for p in lnet.subnet.allocation_pools %} {# FOR 1.2.1.1.1 #}
         - start: {{ p.start }}
           end: {{ p.end }}
-{% endfor %}
-{% if lnet.subnet.gateway is defined %}
+{% endfor %} {# FOR 1.2.1.1.1 #}
+{% if lnet.subnet.gateway is defined %} {# IF 1.2.1.1.2 #}
       gateway_ip: {{ lnet.subnet.gateway }}
-{% endif %}
+{% endif %} {# IF 1.2.1.1.2 #}
       vlan: {{ lnet.subnet.vlan | default(1) }}
-{% endfor %}
+{% endfor %} {# FOR 1.2.1.1 #}
+{% endif %} {# IF 1.2.2 #}
 {# End of RHOSP 16.2 version #}
-{% else %} {# IF 2 #}
+{% else %} {# IF 1.2 #}
 {# RHOSP 17.1 version #}
 - name: {{ network.name }}
   name_lower: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
@@ -41,30 +43,29 @@
     {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet:
       ip_subnet: {{ network.subnet.ip_subnet }}
       allocation_pools:
-{% for p in network.subnet.allocation_pools %}
+{% for p in network.subnet.allocation_pools %} {# FOR 1.2.1 #}
         - start: {{ p.start }}
           end: {{ p.end }}
-{% endfor %}
-{% if network.subnet.gateway is defined %}
+{% endfor %} {# FOR 1.2.1 #}
+{% if network.subnet.gateway is defined %} {# IF 1.2.2 #}
       gateway_ip: {{ network.subnet.gateway }}
-{% endif %}
+{% endif %} {# IF 1.2.2 #}
       vlan: {{ network.subnet.vlan | default(1) }}
-{% for leaf in dcn_leafs %}
+{% for leaf in dcn_leafs %} {# FOR 1.2.3 #}
 {% set lnet = leaf.networks | selectattr('name', 'equalto', network.name) | list | first %}
     {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet_{{ leaf.name }}:
       ip_subnet: {{ lnet.subnet.ip_subnet }}
       allocation_pools:
-{% for p in lnet.subnet.allocation_pools %}
+{% for p in lnet.subnet.allocation_pools %} {# FOR 1.2.3.1 #}
         - start: {{ p.start }}
           end: {{ p.end }}
-{% endfor %}
-{% if lnet.subnet.gateway is defined %}
+{% endfor %} {# FOR 1.2.3.1 #}
+{% if lnet.subnet.gateway is defined %} {# IF 1.2.3.2 #}
       gateway_ip: {{ lnet.subnet.gateway }}
-{% endif %}
+{% endif %} {# IF 1.2.3.2 #}
       vlan: {{ lnet.subnet.vlan | default(1) }}
-{% endfor %}
+{% endfor %} {# FOR 1.2.3 #}
 {# End of RHOSP 17.1 version #}
-{% endif %} {# IF 2 #}
-
-{% endfor %} {# FOR 1 #}
+{% endif %} {# IF 1.2 #}
+{% endfor %} {# FOR 1.1 #}
 {% endif %} {# IF 1 #}
