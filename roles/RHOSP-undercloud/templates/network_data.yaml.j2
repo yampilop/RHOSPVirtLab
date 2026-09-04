@@ -1,6 +1,9 @@
-{% if RHOSP_version < 17.1 %}
-# RHOSP 16.2 version
-{% for network in default_leaf.networks %}
+{% if not default_leaf.networks %} {# IF 1 #}
+[]
+{% else %} {# IF 1 #}
+{% for network in default_leaf.networks %} {# FOR 1 #}
+{% if RHOSP_version < 17.1 %} {# IF 2 #}
+{# RHOSP 16.2 version #}
 - name: {{ network.name }}
   vip: {{ 'true' if network.vip | default(false) else 'false' }}
   vlan: {{ network.subnet.vlan | default(1) }}
@@ -26,13 +29,9 @@
       gateway_ip: {{ lnet.subnet.gateway }}
 {% endif %}
       vlan: {{ lnet.subnet.vlan | default(1) }}
-{% endfor %}
-{% endif %}
-{% endfor %}
-# End of RHOSP 16.2 version
-{% else %}
-# RHOSP 17.1 version
-{% for network in default_leaf.networks %}
+{# End of RHOSP 16.2 version #}
+{% else %} {# IF 2 #}
+{# RHOSP 17.1 version #}
 - name: {{ network.name }}
   name_lower: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
   vip: {{ 'true' if network.vip | default(false) else 'false' }}
@@ -63,6 +62,8 @@
 {% endif %}
       vlan: {{ lnet.subnet.vlan | default(1) }}
 {% endfor %}
-{% endfor %}
-# End of RHOSP 17.1 version
-{% endif %}
+{# End of RHOSP 17.1 version #}
+{% endif %} {# IF 2 #}
+
+{% endfor %} {# FOR 1 #}
+{% endif %} {# IF 1 #}
