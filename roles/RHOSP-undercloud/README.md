@@ -33,6 +33,15 @@ dns_servers: ['8.8.8.8','8.8.4.4']
 ntp_servers: ['0.pool.ntp.org','1.pool.ntp.org','2.pool.ntp.org','3.pool.ntp.org']
   List of servers to use for NTP syncronization.
 
+forwarded_ports: **[80, 6080, 5000]**
+  TCP ports the undercloud forwards (DNAT) to the overcloud public IP. Only applied
+  when the control-plane leaf's `ctlplane_subnet.masquerade` is `true`: `post_deployment.sh`
+  installs a small systemd oneshot (`rhospvirtlab-portforward.service`) that adds
+  `iptables` DNAT rules for each port to the overcloud public IP, so the overcloud is
+  reachable through the undercloud. The undercloud's ctlplane masquerade (SNAT) provides
+  the return path, which is why the rules are only created when masquerade is enabled.
+  This mirrors the hypervisor-side forwarding in the RHOSP-virt-infra role.
+
 leafs:
   Ordered list of the deployment's leafs (L2 segments / routed subnets). The first entry
   is always the default control-plane leaf and must be named `overcloud`; any further
@@ -48,7 +57,8 @@ leafs:
     nodes); leave it `null` for a VM-only bridge.
   - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
     `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
-    `masquerade`.
+    `masquerade`. When `masquerade` is `true` on the control-plane leaf, the undercloud
+    also forwards the `forwarded_ports` to the overcloud public IP (see `forwarded_ports`).
   - `additional_bridges` - extra bridges (e.g. `br-external`), each `{name, interface,
     ipv4.address}`.
   - `networks` - the isolated networks carried on this leaf (Tenant, Storage,

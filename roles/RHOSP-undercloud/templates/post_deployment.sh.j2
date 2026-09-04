@@ -72,3 +72,44 @@ ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logro
 ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' {{ leaf.name }}
 {% endfor %}
 {% endif %}
+
+{% if (default_leaf.ctlplane_subnet.masquerade | bool) and (forwarded_ports | length > 0) %}
+################################################################################
+### Port forwarding to the overcloud ###########################################
+################################################################################
+# With the control-plane ctlplane_subnet.masquerade enabled, the undercloud already
+# SNATs the overcloud subnet outbound. Add DNAT rules so inbound traffic on the
+# forwarded_ports reaches the overcloud public IP ({{ overcloud_ip }}); the masquerade
+# provides the return path. Installed as a systemd oneshot (iptables/iptables-nft) so
+# the rules survive reboots and coexist with the TripleO-managed firewall.
+sudo tee /usr/local/sbin/rhospvirtlab-portforward.sh >/dev/null <<'EOF'
+#!/bin/bash
+# Managed by RHOSPVirtLab (RHOSP-undercloud): forward service ports to the overcloud.
+set -e
+sysctl -w net.ipv4.ip_forward=1
+{% for port in forwarded_ports %}
+iptables -t nat -C PREROUTING -p tcp --dport {{ port }} -j DNAT --to-destination {{ overcloud_ip }}:{{ port }} 2>/dev/null || \
+  iptables -t nat -A PREROUTING -p tcp --dport {{ port }} -j DNAT --to-destination {{ overcloud_ip }}:{{ port }}
+iptables -C FORWARD -p tcp -d {{ overcloud_ip }} --dport {{ port }} -j ACCEPT 2>/dev/null || \
+  iptables -I FORWARD 1 -p tcp -d {{ overcloud_ip }} --dport {{ port }} -j ACCEPT
+{% endfor %}
+EOF
+sudo chmod 0755 /usr/local/sbin/rhospvirtlab-portforward.sh
+
+sudo tee /etc/systemd/system/rhospvirtlab-portforward.service >/dev/null <<'EOF'
+[Unit]
+Description=RHOSPVirtLab undercloud port forwarding to the overcloud
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/rhospvirtlab-portforward.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now rhospvirtlab-portforward.service
+{% endif %}

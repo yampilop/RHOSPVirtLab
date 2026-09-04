@@ -15,6 +15,15 @@ create: True
 # overcloud parameters
 vncproxy: ''
 
+# Service ports the undercloud forwards (DNAT) to the overcloud public IP when the
+# control-plane leaf's ctlplane_subnet.masquerade is true. Defaults: Horizon (80),
+# noVNC (6080), Keystone (5000). See the RHOSP-virt-infra role for the hypervisor-side
+# equivalent that forwards the same ports from the physical host.
+forwarded_ports:
+  - 80
+  - 6080
+  - 5000
+
 # dns and ntp servers
 dns_servers:
   - '8.8.8.8'
