@@ -168,60 +168,131 @@ leafs:
 #         end: 10.1.0.99
 #       gateway: 10.1.0.254
 
-interfaces:
-  Controller:
-    ControlPlane: nic1
-    External: nic2
-  Compute:
-    ControlPlane: nic1
-    External: nic2
-  ComputeOvsDpdk:
-    ControlPlane: nic1
-    External: nic2
-    DpdkBonds: []
-  ComputeOvsDpdkSriov:
-    ControlPlane: nic1
-    External: nic2v0
-    Sriov:
-      - device: nic2
-        numvfs: 8
-    DpdkBonds: []
-  ComputeSriov:
-    ControlPlane: nic1
-    External: nic2v0
-    Sriov:
-      - device: nic2
-        numvfs: 8
-  ComputeOvsHwOffload:
-    ControlPlane: nic1
-    External: nic2v0
-    Sriov:
-      - device: nic2
-        numvfs: 8
-  CephStorage:
-    ControlPlane: nic1
-    External: nic2
-  ComputeHCI:
-    ControlPlane: nic1
-    External: nic2
-  ComputeInstanceHA:
-    ControlPlane: nic1
-    External: nic2
-  DistributedCompute:
-    ControlPlane: nic1
-    External: nic2
-  DistributedComputeScaleOut:
-    ControlPlane: nic1
-    External: nic2
-  DistributedComputeHCI:
-    ControlPlane: nic1
-    External: nic2
-  DistributedComputeHCIScaleOut:
-    ControlPlane: nic1
-    External: nic2
-  CephAll:
-    ControlPlane: nic1
-    External: nic2
+RoleBridgeMappings:
+  Default:
+  - type: ovs_bridge
+    name: br-vlans
+    members:
+    - nic1
+    native: CtlPlane
+    vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
+  - type: ovs_bridge
+    name: br-ex
+    members:
+    - nic2
+    native: External
+    vlans: []
+# If a role is not explicitly listed here, its bridges come from Default.
+# Each bridge entry:
+#   type    - ovs_bridge | linux_bridge | ovs_user_bridge | sriov_pf
+#   name    - the bridge (or PF) name
+#   members - devices on the bridge, in order (the first plain interface becomes
+#             the bridge's primary MAC). A bare "nicN" is a plain interface;
+#             "nicNvM" is SR-IOV VF M of nicN; a dict is a nested device
+#             (ovs_dpdk_bond / ovs_dpdk_port).
+#   native  - the untagged network whose IP sits on the bridge itself. "CtlPlane"
+#             gets the control-plane IP + DNS + default route; a network name gets
+#             that network's IP (External also gets the default route); omit for an
+#             address-less bridge (e.g. a DPDK user bridge).
+#   vlans   - tagged networks carried as VLAN sub-interfaces. Listed vlans are
+#             filtered down to the networks the role actually carries, so the same
+#             list is safe to reuse across roles.
+#
+# Examples (uncomment and adapt per role):
+#
+# # Controller with only the control-plane network on br-ex
+# Controller:
+# - type: ovs_bridge
+#   name: br-ex
+#   members: [nic1]
+#   native: CtlPlane
+#   vlans: []
+#
+# # Compute as single-nic-vlans (External also tagged on the same bridge)
+# Compute:
+# - type: ovs_bridge
+#   name: br-ex
+#   members: [nic1]
+#   native: CtlPlane
+#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt', 'External']
+#
+# # ComputeSriov - dedicated SR-IOV PF, with VF 0 backing the External bridge
+# ComputeSriov:
+# - type: ovs_bridge
+#   name: br-vlans
+#   members: [nic1]
+#   native: CtlPlane
+#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
+# - type: ovs_bridge
+#   name: br-ex
+#   members: [nic2v0]          # VF 0 of nic2
+#   native: External
+#   vlans: []
+# - type: sriov_pf
+#   name: nic2
+#   numvfs: 8
+#
+# # ComputeOvsHwOffload - as SR-IOV, but the PF in switchdev mode for HW offload
+# ComputeOvsHwOffload:
+# - type: ovs_bridge
+#   name: br-vlans
+#   members: [nic1]
+#   native: CtlPlane
+#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
+# - type: ovs_bridge
+#   name: br-ex
+#   members: [nic2v0]
+#   native: External
+#   vlans: []
+# - type: sriov_pf
+#   name: nic2
+#   numvfs: 8
+#   link_mode: switchdev
+#
+# # ComputeOvsDpdk - control/External on linux bridges, DPDK bond on a user bridge
+# ComputeOvsDpdk:
+# - type: linux_bridge
+#   name: br-vlans
+#   members: [nic1]
+#   native: CtlPlane
+#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
+# - type: linux_bridge
+#   name: br-ex
+#   members: [nic2]
+#   native: External
+#   vlans: []
+# - type: ovs_user_bridge
+#   name: br-dpdk
+#   members:
+#   - type: ovs_dpdk_bond
+#     name: dpdkbond0
+#     members:
+#     - {type: ovs_dpdk_port, name: dpdk0, driver: vfio-pci, members: [nic3]}
+#     - {type: ovs_dpdk_port, name: dpdk1, driver: vfio-pci, members: [nic4]}
+#
+# # ComputeOvsDpdkSriov - a DPDK bond built on SR-IOV VFs of the same PF (nic2)
+# ComputeOvsDpdkSriov:
+# - type: linux_bridge
+#   name: br-vlans
+#   members: [nic1]
+#   native: CtlPlane
+#   vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
+# - type: linux_bridge
+#   name: br-ex
+#   members: [nic2v0]
+#   native: External
+#   vlans: []
+# - type: sriov_pf
+#   name: nic2
+#   numvfs: 8
+# - type: ovs_user_bridge
+#   name: br-dpdk
+#   members:
+#   - type: ovs_dpdk_bond
+#     name: dpdkbond0
+#     members:
+#     - {type: ovs_dpdk_port, name: dpdk0, driver: vfio-pci, members: [nic2v1]}
+#     - {type: ovs_dpdk_port, name: dpdk1, driver: vfio-pci, members: [nic2v2]}
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
