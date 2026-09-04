@@ -37,11 +37,31 @@ forward_network: RHOSPVirtLab_external
 forwarded_ports: [80,6080,5000]
   List of ports to be forwarded to the overcloud IP (enabling access to Horizon using the hypervisor IP address)
 
-DefaultLeaf0:
-  Default parameters to configure the default leaf 0.
+leafs:
+  Ordered list of the deployment's leafs (L2 segments / routed subnets). The first entry
+  is always the default control-plane leaf and must be named `overcloud`; any further
+  entries are DCN (edge) leafs. The role derives two views in its `vars/main.yml`:
+  `default_leaf` (the `overcloud` leaf) and `dcn_leafs` (the rest). A single-site lab has
+  just the one `overcloud` leaf; add entries for a DCN/spine-leaf deployment. Each leaf
+  has:
 
-DCNLeafs:
-  Variable used to define leafs when making a DCN deployment.
+  - `name` - leaf identifier (`overcloud` for the control-plane leaf).
+  - `hypervisor` - the host whose bridges carry this leaf's L2.
+  - `ctlplane_bridge` - `{name, interface}` for the control-plane bridge on the
+    hypervisor. Set `interface` to trunk a real NIC into the bridge (needed for physical
+    nodes); leave it `null` for a VM-only bridge.
+  - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
+    `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
+    `masquerade`.
+  - `additional_bridges` - extra bridges (e.g. `br-external`), each `{name, interface,
+    ipv4.address}`.
+  - `networks` - the isolated networks carried on this leaf (Tenant, Storage,
+    InternalApi, StorageMgmt, External, ...). Each network has `name`, `bridge`, `vip`
+    (boolean: whether the network gets a VIP), `mtu` and a `subnet` block (`ip_subnet`,
+    `allocation_pools`, `vlan`, `gateway`, `vip`).
+
+  From this model the role assembles the libvirt networks/bridges it must manage into a
+  derived `libvirt_networks` list (see the **Networks** section below).
 
 undercloud:
   The director host, defined separately from the overcloud `machines` list. It is a
@@ -244,7 +264,7 @@ machines:
     ethernet/port tasks remain self-gated on `hypervisor_if is defined`, and the host's
     own external interface (`external_if`), the public-zone masquerade, and the
     port-forwarding-to-`overcloud_ip` rules always run (they serve any overcloud). The
-    DCN-only route tasks are additionally gated on `DCNLeafs | length > 0`, so a
+    DCN-only route tasks are additionally gated on `dcn_leafs | length > 0`, so a
     single-host lab never dereferences a leaf hypervisor's or `external_if`'s facts.
 
   Because `external_if` is always configured as the host's uplink, it must name a real
@@ -255,13 +275,23 @@ machines:
   config) is installed independently of all these flags, since it is needed even for a
   fully physical lab.
 
-networks:
-  List of the virtual networks created. The default values are:
-    - RHOSPVirtLab_ctlplane
-    - RHOSPVirtLab_external
-    - RHOSPVirtLab_management
+Networks:
+  There is no longer a standalone `networks` variable. The role assembles the libvirt
+  networks/bridges it must manage into a derived `libvirt_networks` list (in
+  `tasks/main.yml`) from the `leafs` model plus the management (NAT) network. Each leaf
+  contributes its `ctlplane_bridge` and any `additional_bridges` as `forward: bridge`
+  entries; names follow the convention `RHOSPVirtLab_<bridge-without-br->` (e.g.
+  `br-ctlplane` -> `RHOSPVirtLab_ctlplane`, `br-external` -> `RHOSPVirtLab_external`).
+  The management NAT network (`RHOSPVirtLab_management`) is prepended when required (a
+  libvirt undercloud, or a pre-provisioned libvirt VM on localhost). The ctlplane bridge
+  takes the ctlplane subnet gateway as its host address; an additional bridge takes its
+  own `ipv4.address`.
 
-  If you will add physical nodes, you need to define `hypervisor_if: {{ifname}}` parameter on `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` networks, setting the interfaces that will be attached to the bridges. Make sure those interfaces are configured as trunks with a native vlan in the switch.
+  To add physical nodes, trunk a real hypervisor NIC into a bridge by setting
+  `interface: <ifname>` on that leaf's `ctlplane_bridge` (and/or an `additional_bridges`
+  entry) instead of leaving it `null`; the role then emits the corresponding
+  `hypervisor_if` and wires the uplink. Make sure those interfaces are configured as
+  trunks with a native VLAN on the switch.
 
 Example Playbook
 ----------------
@@ -272,7 +302,6 @@ Example Playbook
   vars_files:
     - vars/options.yml
     - vars/machines.yml
-    - vars/networks.yml
   pre_tasks:
     - name: Set ansible_user to the current user
       set_fact:

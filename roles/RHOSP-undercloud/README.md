@@ -33,11 +33,51 @@ dns_servers: ['8.8.8.8','8.8.4.4']
 ntp_servers: ['0.pool.ntp.org','1.pool.ntp.org','2.pool.ntp.org','3.pool.ntp.org']
   List of servers to use for NTP syncronization.
 
-DefaultLeaf0:
-  Default parameters to configure the default leaf 0.
+leafs:
+  Ordered list of the deployment's leafs (L2 segments / routed subnets). The first entry
+  is always the default control-plane leaf and must be named `overcloud`; any further
+  entries are DCN (edge) leafs. Each role derives two views in its `vars/main.yml`:
+  `default_leaf` (the `overcloud` leaf) and `dcn_leafs` (the rest). A single-site lab has
+  just the one `overcloud` leaf; add entries for a DCN/spine-leaf deployment. Each leaf
+  has:
 
-interfaces:
-  Interfaces to use in each nic-configs template.
+  - `name` - leaf identifier (`overcloud` for the control-plane leaf).
+  - `hypervisor` - the host whose bridges carry this leaf's L2.
+  - `ctlplane_bridge` - `{name, interface}` for the control-plane bridge on the
+    hypervisor. Set `interface` to trunk a real NIC into the bridge (needed for physical
+    nodes); leave it `null` for a VM-only bridge.
+  - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
+    `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
+    `masquerade`.
+  - `additional_bridges` - extra bridges (e.g. `br-external`), each `{name, interface,
+    ipv4.address}`.
+  - `networks` - the isolated networks carried on this leaf (Tenant, Storage,
+    InternalApi, StorageMgmt, External, ...). Each network has `name`, `bridge`, `vip`
+    (boolean: whether the network gets a VIP), `mtu` and a `subnet` block (`ip_subnet`,
+    `allocation_pools`, `vlan`, `gateway`, `vip`). `subnet.vip` is the concrete VIP
+    address pinned in `vip_data.yaml`; the External network VIP - or the control-plane
+    VIP when External is not defined - is also used as the overcloud's public IP.
+
+RoleBridgeMappings:
+  Per-role bridge/NIC layout rendered into each node's nic-config template (replaces the
+  old flat `interfaces` list). A dict keyed by overcloud role name; a role not listed
+  falls back to the `Default` entry. Each value is an ordered list of bridge definitions:
+
+  - `type` - `ovs_bridge` | `linux_bridge` | `ovs_user_bridge` | `sriov_pf`.
+  - `name` - the bridge (or PF) name.
+  - `members` - devices on the bridge, in order (the first plain interface supplies the
+    bridge MAC). A bare `nicN` is a plain interface; `nicNvM` is VF M of `nicN`; a dict
+    is a nested device (`ovs_dpdk_bond` / `ovs_dpdk_port`).
+  - `native` - the untagged network whose IP sits on the bridge itself. `CtlPlane` gets
+    the control-plane IP + DNS + default route; a network name gets that network's IP
+    (External also gets the default route); omit for an address-less bridge (e.g. a DPDK
+    user bridge).
+  - `vlans` - tagged networks carried as VLAN sub-interfaces, auto-filtered to the
+    networks the role actually carries (so the same list is safe to reuse across roles).
+
+  A `sriov_pf` entry also takes `numvfs` and an optional `link_mode: switchdev` (for
+  hardware offload). See `vars/options.yml` for worked archetypes (SR-IOV, DPDK,
+  HW-offload).
 
 ComputeSriovProperties, ComputeOvsHwOffloadProperties, ComputeOvsDpdkProperties, ComputeOvsDpdkSriovProperties:
   Default properties for NFV roles
@@ -65,9 +105,6 @@ DisableTelemetry: **True** | False
 
 Telemetry: **False** | { MetricsConnectorHost: default-interconnect-5671-service-telemetry.apps.ocp-sno-for-stf.redhat.local, MetricsConnectorIPAddress: 10.8.223.249, Cloud: cloud1 }
   Variable used to define telemetry parameters.
-
-DCNLeafs:
-  Variable used to define leafs when making a DCN deployment.
 
 undercloud:
   The director host, defined separately from the overcloud `machines` list and shared
@@ -207,13 +244,19 @@ machines:
   the RHOSP-virt-infra role, which fails early otherwise). This is a global check for now;
   a future leaf refactor will make it per-leaf.
 
-networks:
-  List of the virtual networks created. The role considers the defaults for RHOSP-virt-infra role:
-    - RHOSPVirtLab_ctlplane
-    - RHOSPVirtLab_external
-    - RHOSPVirtLab_management
+Networks:
+  There is no longer a standalone `networks` variable. The isolated networks (Tenant,
+  Storage, InternalApi, StorageMgmt, External, ...) are defined per leaf under
+  `leafs[].networks`, and the underlying libvirt networks/bridges are assembled by the
+  RHOSP-virt-infra role from the `leafs` model (plus the management NAT network) into a
+  derived `libvirt_networks` list. Each leaf's `ctlplane_bridge` and `additional_bridges`
+  become the lab's L2 bridges, named `RHOSPVirtLab_<bridge-without-br->` (e.g.
+  `br-ctlplane` -> `RHOSPVirtLab_ctlplane`).
 
-  If you will add physical nodes, you need to define `hypervisor_if: {{ifname}}` parameter on `RHOSPVirtLab_ctlplane` and `RHOSPVirtLab_external` networks, setting the interfaces that will be attached to the bridges. Make sure those interfaces are configured as trunks with a native vlan in the switch.
+  To add physical nodes, trunk a real hypervisor NIC into a bridge by setting
+  `interface: <ifname>` on that leaf's `ctlplane_bridge` (and/or an `additional_bridges`
+  entry) instead of leaving it `null`. Make sure those interfaces are configured as
+  trunks with a native VLAN on the switch.
 
 Dependencies
 ------------
@@ -230,7 +273,6 @@ Example Playbook
   vars_files:
     - vault_credentials.yaml
     - vars/options.yml
-    - vars/networks.yml
     - vars/machines.yml
   gather_facts: no
 
