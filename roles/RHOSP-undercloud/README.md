@@ -27,9 +27,6 @@ CustomCirrOSImage: **"{{ CirrOSDownloadLink }}"**|*"<url>"*|*"file://<full_path>
 create: **True**|False
   This variable sets if the resources will be created or not. Useful in combination with cleanup:True to wipe the lab environment.
 
-overcloud_ip: 10.0.0.254
-  This variable sets the overcloud virtual IP (used for example to access Horizon)
-
 dns_servers: ['8.8.8.8','8.8.4.4']
   List of servers to use as DNS.
 

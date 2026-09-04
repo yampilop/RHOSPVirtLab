@@ -3,22 +3,13 @@
 {% else %}
 {% set name = '' %}
 {% endif %}
-
-- network: storage_mgmt
-  dns_name: {{ leaf.name }}
-  subnet: storage_mgmt_subnet{{ name }}
-- network: internal_api
-  dns_name: {{ leaf.name }}
-  subnet: internal_api_subnet{{ name }}
-- network: storage
-  dns_name: {{ leaf.name }}
-  subnet: storage_subnet{{ name }}
-- network: external
-  dns_name: {{ leaf.name }}
-  subnet: external_subnet{{ name }}
-{% if leaf.name == default_leaf.name %}
-  ip_address: {{ overcloud_ip }}
-{% endif %}
 - network: ctlplane
   dns_name: {{ leaf.name }}
   subnet: {{ leaf.ctlplane_subnet.name }}
+  ip_address: {{ leaf.ctlplane_subnet.vip }}
+{% for network in default_leaf.networks if network.vip %}
+- network: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+  dns_name: {{ leaf.name }}
+  subnet: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet{{ name }}
+  ip_address: {{ network.subnet.vip }}
+{% endfor %}

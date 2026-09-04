@@ -10,7 +10,6 @@ CustomCirrOSImage: "{{ CirrOSDownloadLink }}"
 
 # overcloud parameters
 external_if: eno1
-overcloud_ip: 10.0.0.254
 forwarded_ports:
   - 80
   - 6080
@@ -46,6 +45,7 @@ leafs:
     dhcp_end: 192.168.24.99
     inspection_iprange: 192.168.24.100,192.168.24.120
     gateway: 192.168.24.254
+    vip: 192.168.24.253
     masquerade: false
   networks:
   - name: Tenant
@@ -68,6 +68,7 @@ leafs:
       - start: 172.16.1.5
         end: 172.16.1.99
       vlan: 11
+      vip: 172.16.1.253
   - name: InternalApi
     bridge: br-ctlplane
     vip: true
@@ -78,6 +79,7 @@ leafs:
       - start: 172.16.2.5
         end: 172.16.2.99
       vlan: 12
+      vip: 172.16.2.253
   - name: StorageMgmt
     bridge: br-ctlplane
     vip: true
@@ -88,6 +90,7 @@ leafs:
       - start: 172.16.3.5
         end: 172.16.3.99
       vlan: 13
+      vip: 172.16.3.253
   - name: External
     bridge: br-external
     vip: true
@@ -98,6 +101,7 @@ leafs:
       - start: 10.0.0.5
         end: 10.0.0.99
       gateway: 10.0.0.254
+      vip: 10.0.0.253
 # - name: leaf1
 #   hypervisor: <hypervisor_name>
 #   additional_bridges:

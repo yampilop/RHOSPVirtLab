@@ -6,6 +6,16 @@
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
+# The public IP the overcloud is reachable on (used for PublicVirtualFixedIPs).
+# Derived from the default leaf: the External network VIP when External is defined,
+# otherwise the ctlplane VIP. Replaces the old hardcoded `overcloud_ip` parameter.
+- name: NETWORKING - Derive the overcloud public IP
+  set_fact:
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+
 - name: Wait until cloud-init finishes to grant the sudo access with no password
   raw: test -f /var/lib/cloud/instance/boot-finished
   retries: 30

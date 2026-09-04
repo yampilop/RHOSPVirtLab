@@ -51,6 +51,17 @@
       {% endfor %}
       ]
 
+# The public IP used to reach the overcloud (firewall port-forwards, the
+# `overcloud` /etc/hosts alias and the network-hook DNAT target). Derived from the
+# default leaf: the External network VIP when External is defined, otherwise the
+# ctlplane VIP. Replaces the old hardcoded `overcloud_ip` parameter.
+- name: NETWORKING - Derive the overcloud public IP
+  set_fact:
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+
 # Cleanup process
 
 - name: DHCRELAY - Clean DHCP relay

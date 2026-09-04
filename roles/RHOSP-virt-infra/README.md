@@ -31,9 +31,6 @@ create: **True**|False
 external_if: eno1
   This variable sets the interface that connects the hypervisor with the Internet.
 
-overcloud_ip: 10.0.0.254
-  This variable sets the overcloud virtual IP (used for example to access Horizon)
-
 forward_network: RHOSPVirtLab_external
   This variable sets the network the forwarded ports will be attached to.
 
