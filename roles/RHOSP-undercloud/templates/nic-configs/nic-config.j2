@@ -6,146 +6,134 @@
 {% set min_viable_mtu = mtu_list | max %}
 {% endraw %}
 network_config:
-{% if not default_leaf.networks %}{# IF 1 #}
-{% if 'Dpdk' in item.name %}
-- type: linux_bridge
-{% else %}
-- type: ovs_bridge
-{% endif %}
-{% raw %}  name: br-ex
-  use_dhcp: false
-  dns_servers: {{ ctlplane_dns_nameservers }}
-  domain: {{ dns_search_domains }}
-  addresses:
-  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-  routes: {{ ctlplane_host_routes }}
-  members:
-  - type: interface
-{% endraw %}
-    name: {{ interfaces[item.name].ControlPlane }}
-    primary: true
-{% else %}{# IF 1 #}
-{% if 'Dpdk' in item.name %}
-- type: linux_bridge
-{% else %}
-- type: ovs_bridge
-{% endif %}
-{% if (leaf.networks | selectattr('name', 'equalto', 'External') | first).bridge != leaf.ctlplane_bridge.name %}
-  name: br-vlans
-{% else %}
-  name: br-ex
-{% endif %}
-{% raw %}  mtu: {{ min_viable_mtu }}
-  use_dhcp: false
-  dns_servers: {{ ctlplane_dns_nameservers }}
-  domain: {{ dns_search_domains }}
-  addresses:
-  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-  routes: {{ ctlplane_host_routes }}
-  members:
-  - type: interface
-{% endraw %}
-    name: {{ interfaces[item.name].ControlPlane }}
-{% raw %}    mtu: {{ min_viable_mtu }}
-    # force the MAC address of the bridge to this interface
-    primary: true
-{% endraw %}
-{% if 'Dpdk' not in item.name %}
-{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ((leaf.networks | selectattr('name', 'equalto', network) | first).bridge == leaf.ctlplane_bridge.name) and ((leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
-{% raw %}
-  - type: vlan
-    mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
-    vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
-    addresses:
-    - ip_netmask:
-        {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
-    routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
-{% endfor %}
-{% endraw %}
-{% else %}
-{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ((leaf.networks | selectattr('name', 'equalto', network) | first).bridge == leaf.ctlplane_bridge.name) and ((leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
-{% raw %}
-- type: vlan
-  device: br-vlans
-  mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
-  vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}
-  addresses:
-  - ip_netmask:
-      {{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}
-  routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') }}
-{% endfor %}
-{% endraw %}
-{% endif %}
-{% if ('External' in roles_networks[item.name]) and ((leaf.networks | selectattr('name', 'equalto', 'External') | first).bridge != leaf.ctlplane_bridge.name) %}
-{% if 'Dpdk' in item.name %}
-- type: linux_bridge
-{% else %}
-- type: ovs_bridge
-{% endif %}
-{% raw %}  name: br-ex
-  mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
-  use_dhcp: false
-  addresses:
-  - ip_netmask: {{ lookup('vars', networks_lower['External'] ~ '_ip') }}/{{ lookup('vars', networks_lower['External'] ~ '_cidr') }}
-  routes: {{ lookup('vars', networks_lower['External'] ~ '_host_routes') }}
-  members:
-{% endraw %}
-{% if ('Dpdk' not in item.name) and ('v' in interfaces[item.name].External) %}
-  - type: sriov_vf
-    device: {{ interfaces[item.name].External.split('v')[0] }}
-    vfid: {{ interfaces[item.name].External.split('v')[1] }}
-{% else %}
-  - type: interface
-    name: {{ interfaces[item.name].External }}
-{% raw %}    mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
-    # force the MAC address of the bridge to this interface
-    primary: true
-{% endraw %}
-{% endif %}
-{% endif %}
-{% endif %}{# IF 1 #}
-{% if interfaces[item.name].Sriov is defined %}
-{% for sriovif in interfaces[item.name].Sriov %}
+{#- The bridges for this role come from RoleBridgeMappings[<role>], falling back  #}
+{#- to RoleBridgeMappings.Default. `native` is the untagged network whose IP sits #}
+{#- on the bridge (CtlPlane => ctlplane address + DNS); `vlans` are the tagged    #}
+{#- sub-interfaces. Per-network values (IP/MTU/VLAN id) are resolved on the       #}
+{#- overcloud node by os-net-config, so they are emitted as literal Jinja that a  #}
+{#- second render pass expands - the VLAN loops iterate role_networks there.      #}
+{%- set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
+{%- for bridge in role_bridges %}
+{%- if bridge.type == 'sriov_pf' %}
 - type: sriov_pf
-  name: {{ sriovif.device }}
-  numvfs: {{ sriovif.numvfs }}
+  name: {{ bridge.name }}
+  numvfs: {{ bridge.numvfs }}
   promisc: true
   use_dhcp: false
   nm_controlled: true
-{% raw %}  mtu: {{ lookup('vars', networks_lower['External'] ~ '_mtu') }}
-{% endraw %}
+  mtu: {{ "{{ lookup('vars', networks_lower['External'] ~ '_mtu') }}" }}
   defroute: false
-{% endfor %}
-{% endif %}
-{% if (interfaces[item.name].DpdkBonds is defined) and (interfaces[item.name].DpdkBonds|length > 0) %}
-- type: ovs_user_bridge
-  name: br-dpdk
+{%- if bridge.link_mode is defined %}
+  link_mode: {{ bridge.link_mode }}
+{%- endif %}
+{%- else %}
+{%- if bridge.native is defined and bridge.native == 'CtlPlane' %}
+{%- set mem_mtu = "{{ min_viable_mtu }}" %}
+{%- elif bridge.native is defined and bridge.native in roles_networks[item.name] %}
+{%- set mem_mtu = "{{ lookup('vars', networks_lower['" ~ bridge.native ~ "'] ~ '_mtu') }}" %}
+{%- else %}
+{%- set mem_mtu = '' %}
+{%- endif %}
+- type: {{ bridge.type }}
+  name: {{ bridge.name }}
+{%- if bridge.native is defined and bridge.native == 'CtlPlane' %}
+  mtu: {{ "{{ min_viable_mtu }}" }}
   use_dhcp: false
+  dns_servers: {{ "{{ ctlplane_dns_nameservers }}" }}
+  domain: {{ "{{ dns_search_domains }}" }}
+  addresses:
+  - ip_netmask: {{ "{{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}" }}
+  routes: {{ "{{ ctlplane_host_routes }}" }}
+{%- elif bridge.native is defined and bridge.native in roles_networks[item.name] %}
+  mtu: {{ "{{ lookup('vars', networks_lower['" ~ bridge.native ~ "'] ~ '_mtu') }}" }}
+  use_dhcp: false
+  addresses:
+  - ip_netmask: {{ "{{ lookup('vars', networks_lower['" ~ bridge.native ~ "'] ~ '_ip') }}/{{ lookup('vars', networks_lower['" ~ bridge.native ~ "'] ~ '_cidr') }}" }}
+  routes: {{ "{{ lookup('vars', networks_lower['" ~ bridge.native ~ "'] ~ '_host_routes') }}" }}
+{%- else %}
+  use_dhcp: false
+{%- endif %}
+{%- if bridge.members is defined %}
   members:
-{% for dpdkbond in interfaces[item.name].DpdkBonds %}
-  - type: ovs_dpdk_bond
-    name: {{ dpdkbond.name }}
-    mtu: 9000
-    rx_queue: 1
+{%- for member in bridge.members %}
+{%- if member is string %}
+{%- if 'v' in member %}
+  - type: sriov_vf
+    device: {{ member.split('v')[0] }}
+    vfid: {{ member.split('v')[1] }}
+{%- else %}
+  - type: interface
+    name: {{ member }}
+{%- if mem_mtu %}
+    mtu: {{ mem_mtu }}
+{%- endif %}
+{%- if loop.first %}
+    # force the MAC address of the bridge to this interface
+    primary: true
+{%- endif %}
+{%- endif %}
+{%- else %}
+  - type: {{ member.type }}
+{%- if member.name is defined %}
+    name: {{ member.name }}
+{%- endif %}
+{%- if member.type == 'ovs_dpdk_bond' %}
+    mtu: {{ member.mtu | default(9000) }}
+    rx_queue: {{ member.rx_queue | default(1) }}
     ovs_extra:
-{% for port in dpdkbond.ports %}
-      - set Interface {{ port.name }} options:n_rxq_desc=4096
-      - set Interface {{ port.name }} options:n_txq_desc=4096
-{% endfor %}
+{%- for p in member.members %}
+      - set Interface {{ p.name }} options:n_rxq_desc=4096
+      - set Interface {{ p.name }} options:n_txq_desc=4096
+{%- endfor %}
+{%- endif %}
+{%- if member.members is defined %}
     members:
-{% for port in dpdkbond.ports %}
-    - type: ovs_dpdk_port
-      name: {{ port.name }}
-      driver: {{ port.driver }}
+{%- for p in member.members %}
+    - type: {{ p.type }}
+      name: {{ p.name }}
+{%- if p.driver is defined %}
+      driver: {{ p.driver }}
+{%- endif %}
+{%- if p.members is defined %}
       members:
-{% if 'v' in port.interface %}
+{%- for sub in p.members %}
+{%- if 'v' in sub %}
       - type: sriov_vf
-        device: {{ port.interface.split('v')[0] }}
-        vfid: {{ port.interface.split('v')[1] }}
-{% else %}
+        device: {{ sub.split('v')[0] }}
+        vfid: {{ sub.split('v')[1] }}
+{%- else %}
       - type: interface
-        name: {{ port.interface }}
-{% endif %}
-{% endfor %}
-{% endfor %}
-{% endif %}
+        name: {{ sub }}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- set vl = roles_networks[item.name] | select('in', bridge.vlans | default([])) | list %}
+{%- if vl %}
+{{ "{% for network in role_networks if network in '" ~ (vl | join(',')) ~ "' %}" }}
+{%- if bridge.type == 'linux_bridge' %}
+- type: vlan
+  device: {{ bridge.name }}
+  mtu: {{ "{{ lookup('vars', networks_lower[network] ~ '_mtu') }}" }}
+  vlan_id: {{ "{{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}" }}
+  addresses:
+  - ip_netmask:
+      {{ "{{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}" }}
+  routes: {{ "{{ lookup('vars', networks_lower[network] ~ '_host_routes') }}" }}
+{%- else %}
+  - type: vlan
+    mtu: {{ "{{ lookup('vars', networks_lower[network] ~ '_mtu') }}" }}
+    vlan_id: {{ "{{ lookup('vars', networks_lower[network] ~ '_vlan_id') }}" }}
+    addresses:
+    - ip_netmask:
+        {{ "{{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') }}" }}
+    routes: {{ "{{ lookup('vars', networks_lower[network] ~ '_host_routes') }}" }}
+{%- endif %}
+{{ "{% endfor %}" }}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
