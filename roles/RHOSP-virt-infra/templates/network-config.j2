@@ -1,10 +1,12 @@
 version: 2
 ethernets:
-{# Management interface (Ansible-access NIC). The undercloud takes DHCP on the management
-   NAT network: its lease is pinned, so it gets a deterministic IP plus the default route
-   and DNS it needs to reach Red Hat / the internet for subscription, repos and image
-   downloads. Overcloud nodes have no pinned lease, so they get a static IP from inventory
-   and their default route on the ctlplane NIC below instead. #}
+{# Management interface (Ansible-access NIC), on the management NAT network - a real
+   libvirt masquerade, so this is the reliable path to Red Hat / the internet. It carries
+   the *preferred* default route (lowest metric): the undercloud gets it by DHCP (its lease
+   is pinned), overcloud nodes by a static IP from inventory plus DNS. The overcloud's
+   ctlplane default route below is kept only as a higher-metric fallback, because the
+   ctlplane libvirt network is forward:bridge (no NAT) - it only routes out if the
+   undercloud is configured to masquerade it, so mgmt must win by metric. #}
 {% for iface in machine.libvirt.network.interfaces if iface.name == management_interface_name %}
   {{ iface.name }}:
     match:
@@ -15,9 +17,17 @@ ethernets:
 {% else %}
     addresses:
       - {{ hostvars[machine.name].ansible_host }}/24
+    routes:
+      - to: default
+        via: {{ libvirt_management_network.ipv4.address }}
+        metric: 100
+    nameservers:
+      addresses: [{{ libvirt_management_network.ipv4.address }}]
 {% endif %}
 {% endfor %}
-{# Pre-provisioned overcloud nodes: static ctlplane IP + default route for undercloud SSH. #}
+{# Pre-provisioned overcloud nodes: static ctlplane IP + a fallback default route. Its
+   metric (200) is higher than the mgmt route (100), so mgmt prevails whenever it is up and
+   ctlplane is only used if the management path fails. #}
 {% if (machine.pre_provisioned | default(false)) and (machine.openstack.role != 'undercloud') and (machine.openstack.ctlplane_ip is defined) %}
 {% set ctlplane_net = libvirt_networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first %}
 {% for iface in machine.libvirt.network.interfaces if iface.bridge == ctlplane_net.bridge %}
@@ -30,5 +40,6 @@ ethernets:
     routes:
       - to: default
         via: {{ ctlplane_net.ipv4.address }}
+        metric: 200
 {% endfor %}
 {% endif %}
