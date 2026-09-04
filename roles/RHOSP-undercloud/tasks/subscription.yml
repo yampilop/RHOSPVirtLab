@@ -26,8 +26,12 @@
   when: (status is not search('Current')) and (status is not search('Content Access Mode')) and ( (rh_orgid is not defined) or (rh_activationkey is not defined) )
   failed_when: false
 
-- name: SUBSCRIPTION - Check subscription-manager status again
-  shell: "subscription-manager status"
+- name: SUBSCRIPTION - Verify the undercloud is registered
+  # Under Simple Content Access (SCA, now the default for all Red Hat orgs) there are no
+  # attached entitlements, so `subscription-manager status` reports "Overall Status:
+  # Unknown"/"Disabled" and rc 1 (never "Current"). Confirm the outcome via `identity`
+  # instead, which returns rc 0 when the host is registered regardless of SCA state.
+  shell: "subscription-manager identity"
   register: status_new
   changed_when: false
-  failed_when: (status_new is not search('Current')) and (status_new is not search('Content Access Mode'))
+  failed_when: status_new.rc != 0
