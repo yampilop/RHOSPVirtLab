@@ -94,10 +94,7 @@ undercloud:
       - name: nic1
         mac: 'XX:XX:XX:XX:XX:XX'
         bridge: br-ctlplane
-      - name: nic2
-        mac: 'XX:XX:XX:XX:XX:XX'
-        bridge: br-management
-        management: true
+      # The mgmt/Ansible-access NIC is injected by the role; do not list it here.
 ```
 
   See `vars/machines.yml` for the full undercloud schema, and the **Physical undercloud**
@@ -139,10 +136,9 @@ machines:
         - name: nic1
           mac: 'XX:XX:XX:XX:XX:XX'
           bridge: BRIDGE_NAME
-        - name: nic2
+        - name: mgmt           # optional: the Ansible access NIC - name must be `mgmt`
           mac: 'XX:XX:XX:XX:XX:XX'
-          bridge: BRIDGE_NAME
-          management: true     # optional: marks the Ansible access NIC (IP from inventory)
+          bridge: br-management  # its IP comes from the inventory `ansible_host`
 ```
 
   A physical baremetal node (`type: physical`):
@@ -189,8 +185,8 @@ machines:
   VMs may only use virtual-capable profiles (those with `virtual: True` in the
   `overcloud_roles` variable from `roles/RHOSP-undercloud/vars/main.yml`).
 
-  The `management: true` interface flag marks the NIC that Ansible uses to reach the
-  machine. Its IP is **not** stored in `machines.yml`; it is taken from the machine's
+  An interface **named `mgmt`** (the `management_interface_name`) marks the NIC that
+  Ansible uses to reach the machine. Its IP is **not** stored in `machines.yml`; it is taken from the machine's
   `ansible_host` entry in the `inventory` file. For a libvirt undercloud, cloud-init
   applies that address statically at first boot and os-net-config later reuses it; for
   a physical undercloud the address is simply reachable via the inventory.
@@ -217,7 +213,7 @@ machines:
 
   The cloud-init login user is `stack` for the undercloud role and the overcloud SSH
   user otherwise (`heat-admin` on 16.2, `tripleo-admin` on 17.1). When the machine has a
-  `management: true` interface, its inventory `ansible_host` is seeded via network-config.
+  `mgmt` interface, its inventory `ansible_host` is seeded via network-config.
   For a **pre_provisioned overcloud** node cloud-init also seeds the node's ctlplane NIC
   with the static `openstack.ctlplane_ip` (defaulting the route to the ctlplane network
   address) so the undercloud can reach it over SSH; the injected public key is the

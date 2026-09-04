@@ -267,10 +267,8 @@ undercloud:
         - name: nic1
           mac: 'XX:XX:XX:XX:XX:XX'
           bridge: br-ctlplane
-        - name: nic2
-          mac: 'XX:XX:XX:XX:XX:XX'
-          bridge: br-management
-          management: true         # Ansible access NIC (IP from inventory ansible_host)
+        # The mgmt/Ansible-access NIC (named `mgmt`, IP from inventory ansible_host) is
+        # injected by the RHOSP-virt-infra role; do not list it here.
 ```
 
   The undercloud may instead be `type: physical`. A physical undercloud is treated as
