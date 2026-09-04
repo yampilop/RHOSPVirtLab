@@ -411,6 +411,12 @@ machines:
   the RHOSP-virt-infra role, which fails early otherwise). This is a global check for now;
   a future leaf refactor will make it per-leaf.
 
+  A `pre_provisioned` node must **not** define a `pm` block: ironic does not power-manage
+  deployed servers, so a BMC is meaningless there. The one exception is when
+  `ControllersFencing` is enabled - controllers then keep a `pm`/BMC for STONITH fencing -
+  in which case the `pm` block is allowed. The role validates this and fails early if a
+  pre_provisioned node carries a `pm` block while `ControllersFencing` is off.
+
 Networks:
   There is no longer a standalone `networks` variable. The isolated networks (Tenant,
   Storage, InternalApi, StorageMgmt, External, ...) are defined per leaf under

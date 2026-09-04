@@ -72,6 +72,22 @@
     msg: "ERROR: duplicate openstack.ctlplane_ip found among pre-provisioned overcloud nodes ({{ ctlplane_ips }})."
   when: (ctlplane_ips | length) != (ctlplane_ips | unique | list | length)
 
+# A deployed-server (pre_provisioned) node is not power-managed by ironic, so it must not
+# carry a pm block - except when ControllersFencing is on, where controllers keep a pm/BMC
+# for STONITH fencing.
+- name: PROFILES - Ensure pre-provisioned nodes define no pm block unless fencing is enabled
+  fail:
+    msg: >-
+      ERROR in {{ item.name }}: a pre-provisioned (deployed-server) node must not define a
+      pm block - ironic does not power-manage deployed servers. The only exception is when
+      ControllersFencing is enabled (controllers keep a pm/BMC for STONITH fencing). Either
+      remove the pm block or set ControllersFencing: True.
+  when:
+    - item.pre_provisioned | default(false) | bool
+    - item.pm is defined
+    - not (ControllersFencing | default(false) | bool)
+  loop: "{{ libvirt_machines + physical_machines }}"
+
 - name: PROFILES - Check all libvirt machine profiles are virtual
   fail:
     msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for libvirt machines."
