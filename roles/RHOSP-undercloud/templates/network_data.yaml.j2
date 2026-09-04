@@ -29,6 +29,7 @@
       gateway_ip: {{ lnet.subnet.gateway }}
 {% endif %}
       vlan: {{ lnet.subnet.vlan | default(1) }}
+{% endfor %}
 {# End of RHOSP 16.2 version #}
 {% else %} {# IF 2 #}
 {# RHOSP 17.1 version #}
