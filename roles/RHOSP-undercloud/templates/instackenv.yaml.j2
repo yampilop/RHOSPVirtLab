@@ -1,5 +1,5 @@
 nodes:
-{% set ctlplane_bridge = (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).bridge %}
+{% set ctlplane_bridge = leaf.ctlplane_bridge.name %}
 {% for vm in libvirt_machines if (vm.libvirt.hypervisor == leaf.hypervisor) and (not vm.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}'

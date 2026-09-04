@@ -12,7 +12,7 @@ ethernets:
 {# Control-plane interface for pre-provisioned overcloud nodes (deployed servers): #}
 {# static ctlplane IP + default route so the undercloud can reach them over SSH.    #}
 {% if (machine.pre_provisioned | default(false)) and (machine.openstack.role != 'undercloud') and (machine.openstack.ctlplane_ip is defined) %}
-{% set ctlplane_net = networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first %}
+{% set ctlplane_net = libvirt_networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first %}
 {% for iface in machine.libvirt.network.interfaces if iface.bridge == ctlplane_net.bridge %}
   {{ iface.name }}:
     match:
