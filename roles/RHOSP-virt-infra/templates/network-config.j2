@@ -1,6 +1,9 @@
 version: 2
 ethernets:
-{# Management interface: static Ansible-access IP from inventory. #}
+{# Management interface: static Ansible-access IP from inventory. The undercloud also
+   takes its default route + DNS here (via the management NAT gateway) so it can reach
+   Red Hat / the internet for subscription, repos and image downloads; overcloud nodes
+   instead get their default route on the ctlplane NIC below. #}
 {% for iface in machine.libvirt.network.interfaces if iface.name == management_interface_name %}
   {{ iface.name }}:
     match:
@@ -8,6 +11,13 @@ ethernets:
     set-name: {{ iface.name }}
     addresses:
       - {{ hostvars[machine.name].ansible_host }}/24
+{% if machine.openstack.role == 'undercloud' %}
+    routes:
+      - to: default
+        via: {{ libvirt_management_network.ipv4.address }}
+    nameservers:
+      addresses: [{{ libvirt_management_network.ipv4.address }}]
+{% endif %}
 {% endfor %}
 {# Pre-provisioned overcloud nodes: static ctlplane IP + default route for undercloud SSH. #}
 {% if (machine.pre_provisioned | default(false)) and (machine.openstack.role != 'undercloud') and (machine.openstack.ctlplane_ip is defined) %}
