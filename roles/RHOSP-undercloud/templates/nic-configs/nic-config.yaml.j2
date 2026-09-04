@@ -38,7 +38,7 @@ parameters:
     description: IP address/subnet on the {{ network }} network
     type: string
   {{ network }}NetworkVlanID:
-    default: {{ leaf.networks[network].vlan | default(1) }}
+    default: {{ (leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan | default(1) }}
     description: Vlan ID for the {{ network }} network traffic.
     type: number
   {{ network }}Mtu:
@@ -109,7 +109,7 @@ resources:
 {% else %}
               - type: ovs_bridge
 {% endif %}
-{% if not DefaultLeaf0.networks %}{# IF 1 #}
+{% if not default_leaf.networks %}{# IF 1 #}
                 name: br-ex
                 mtu:
                   get_attr: [MinViableMtu, value]
@@ -138,7 +138,7 @@ resources:
                   # force the MAC address of the bridge to this interface
                   primary: true
 {% else %}{# IF 1 #}
-{% if 'RHOSPVirtLab_ctlplane' not in leaf.networks.External.network %}
+{% if (leaf.networks | selectattr('name', 'equalto', 'External') | first).bridge != leaf.ctlplane_bridge.name %}
                 name: br-vlans
 {% else %}
                 name: br-ex
@@ -169,7 +169,7 @@ resources:
                     get_attr: [MinViableMtu, value]
                   # force the MAC address of the bridge to this interface
                   primary: true
-{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}
+{% for network in roles_networks[item.name] if ((leaf.networks | selectattr('name', 'equalto', network) | first).bridge == leaf.ctlplane_bridge.name) and ((leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan is defined) %}
                 - type: vlan
                   mtu:
                     get_param: {{ network }}Mtu
@@ -182,7 +182,7 @@ resources:
                     list_concat_unique:
                       - get_param: {{ network }}InterfaceRoutes
 {% endfor %}
-{% if ('External' in roles_networks[item.name]) and ('RHOSPVirtLab_external' in leaf.networks.External.network) %}
+{% if ('External' in roles_networks[item.name]) and ((leaf.networks | selectattr('name', 'equalto', 'External') | first).bridge != leaf.ctlplane_bridge.name) %}
 {% if 'Dpdk' in item.name %}
               - type: linux_bridge
 {% else %}
@@ -218,7 +218,7 @@ resources:
                   # force the MAC address of the bridge to this interface
                   primary: true
 {% endif %}
-{% for network in roles_networks[item.name] if ('RHOSPVirtLab_external' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}
+{% for network in roles_networks[item.name] if ((leaf.networks | selectattr('name', 'equalto', network) | first).bridge != leaf.ctlplane_bridge.name) and ((leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan is defined) %}
                 - type: vlan
                   mtu:
                     get_param: {{ network }}Mtu

@@ -6,7 +6,7 @@
 {% set min_viable_mtu = mtu_list | max %}
 {% endraw %}
 network_config:
-{% if not DefaultLeaf0.networks %}{# IF 1 #}
+{% if not default_leaf.networks %}{# IF 1 #}
 {% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}
@@ -30,7 +30,7 @@ network_config:
 {% else %}
 - type: ovs_bridge
 {% endif %}
-{% if 'RHOSPVirtLab_ctlplane' not in leaf.networks.External.network %}
+{% if (leaf.networks | selectattr('name', 'equalto', 'External') | first).bridge != leaf.ctlplane_bridge.name %}
   name: br-vlans
 {% else %}
   name: br-ex
@@ -51,7 +51,7 @@ network_config:
     primary: true
 {% endraw %}
 {% if 'Dpdk' not in item.name %}
-{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
+{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ((leaf.networks | selectattr('name', 'equalto', network) | first).bridge == leaf.ctlplane_bridge.name) and ((leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
 {% raw %}
   - type: vlan
     mtu: {{ lookup('vars', networks_lower[network] ~ '_mtu') }}
@@ -63,7 +63,7 @@ network_config:
 {% endfor %}
 {% endraw %}
 {% else %}
-{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
+{% raw %}{% for network in role_networks if network in '{% endraw %}{% for network in roles_networks[item.name] if ((leaf.networks | selectattr('name', 'equalto', network) | first).bridge == leaf.ctlplane_bridge.name) and ((leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan is defined) %}{{ network ~ ',' if not loop.last else network }}{% endfor %}{% raw %}' %}{% endraw %}
 {% raw %}
 - type: vlan
   device: br-vlans
@@ -76,7 +76,7 @@ network_config:
 {% endfor %}
 {% endraw %}
 {% endif %}
-{% if ('External' in roles_networks[item.name]) and ('RHOSPVirtLab_external' in leaf.networks.External.network) %}
+{% if ('External' in roles_networks[item.name]) and ((leaf.networks | selectattr('name', 'equalto', 'External') | first).bridge != leaf.ctlplane_bridge.name) %}
 {% if 'Dpdk' in item.name %}
 - type: linux_bridge
 {% else %}
