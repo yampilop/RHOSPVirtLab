@@ -151,6 +151,13 @@
   debug:
     msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
 
+- name: NETWORKING - Derive the overcloud public IP
+  set_fact:
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+
 - name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
 
