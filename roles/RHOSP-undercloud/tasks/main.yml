@@ -134,6 +134,14 @@
   debug:
     msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
 
+- name: SETUP - Register computed variables as facts for template access
+  set_fact:
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+
 - name: NETWORKING - Derive the overcloud public IP
   set_fact:
     overcloud_ip: >-
