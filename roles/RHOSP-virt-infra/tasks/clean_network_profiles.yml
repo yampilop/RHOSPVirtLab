@@ -2,7 +2,8 @@
 # Marking an already-absent connection absent is an idempotent no-op.
 
 # First pass: remove VLAN sub-interfaces. Must be separate from bridge removal because
-# rhel-system-roles.network can't remove a VLAN when its parent bridge is also marked absent.
+# rhel-system-roles.network validates parent references. Include parent bridges as
+# persistent_state: present (no change) so they're defined for validation.
 - name: NETWORKING - Delete vlans belonging to libvirt bridges in localhost
   set_fact:
     vlan_connections_to_remove: "{{ (vlan_connections_to_remove | default([])) + [connection] }}"
@@ -36,6 +37,22 @@
   with_subelements:
     - "{{ dcn_leafs }}"
     - networks
+
+- name: NETWORKING - Include parent bridges in VLAN removal pass (for validation)
+  set_fact:
+    vlan_connections_to_remove: "{{ (vlan_connections_to_remove | default([])) + [connection] }}"
+  vars:
+    connection:
+      name: "{{ item.bridge }}"
+      interface_name: "{{ item.bridge }}"
+      type: bridge
+      persistent_state: present
+  when:
+    - inventory_hostname in item.hypervisor.split(',')
+    - item.forward == 'bridge'
+    - (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | selectattr('subnet.vlan', 'defined') | list | length > 0) or
+      (dcn_leafs | map(attribute='networks') | list | flatten | selectattr('bridge', 'equalto', item.bridge) | selectattr('subnet.vlan', 'defined') | list | length > 0)
+  loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Remove VLAN connections with system role (first pass)
   import_role:
