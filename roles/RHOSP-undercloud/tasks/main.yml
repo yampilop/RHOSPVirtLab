@@ -7,7 +7,6 @@
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
 # Register computed vars as facts so they're available in template contexts
-# (Jinja2 templates only have access to explicitly passed vars or registered facts).
 - name: Register computed variables as facts for template access
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
@@ -15,11 +14,6 @@
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
-
-# The overcloud public IP (used for PublicVirtualFixedIPs): the default leaf's External
-# VIP, else its ctlplane VIP.
-- name: NETWORKING - Derive the overcloud public IP
-  set_fact:
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
@@ -134,16 +128,13 @@
   debug:
     msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
 
-- name: SETUP - Register computed variables as facts for template access
+- name: Register computed variables again for template access
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
-
-- name: NETWORKING - Derive the overcloud public IP
-  set_fact:
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
