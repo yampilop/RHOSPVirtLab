@@ -64,12 +64,6 @@
   import_tasks: clean_firewall.yml
   when: cleanup | bool
 
-- name: NETWORKING - Clean network profiles
-  import_tasks: clean_network_profiles.yml
-  when:
-    - cleanup | bool
-    - not create | bool
-
 - name: VIRTUALBMC - Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
   when:
@@ -99,6 +93,12 @@
   when:
     - cleanup | bool
     - libvirt_required | bool
+
+- name: NETWORKING - Clean network profiles
+  import_tasks: clean_network_profiles.yml
+  when:
+    - cleanup | bool
+    - not create | bool
 
 # Create process
 
