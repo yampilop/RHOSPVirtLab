@@ -103,8 +103,7 @@
       ip:
         dhcp4: no
         address:
-          - ip: "{{ ctlplane_gw }}"
-            prefix: "{{ ctlplane_cidr | ipaddr('prefix') }}"
+          - "{{ ctlplane_gw }}/{{ ctlplane_cidr | ipaddr('prefix') }}"
         gateway4: "{{ ctlplane_gw }}"
       routes:
         - destination: 0.0.0.0/0
