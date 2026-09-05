@@ -6,13 +6,6 @@
 {% set min_viable_mtu = mtu_list | max %}
 {% endraw %}
 network_config:
-{# Bridges come from RoleBridgeMappings[<role>] (else .Default). `native` is the untagged  #}
-{# network (IP on the bridge), `vlans` the tagged sub-interfaces. Both are intersected with #}
-{# leaf.networks (the networks actually deployed in this leaf): a native/vlan network that  #}
-{# is not deployed is dropped, and a bridge left with nothing to configure (no CtlPlane     #}
-{# native, no deployed native, no deployed vlans) is skipped so its member NIC is left       #}
-{# untouched. Per-network values are emitted as literal Jinja for a second render pass by    #}
-{# os-net-config on the overcloud node.                                                      #}
 {% set deployed_names = leaf.networks | default([]) | map(attribute='name') | list %}
 {% set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
 {% for bridge in role_bridges %}

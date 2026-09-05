@@ -1,5 +1,3 @@
-{#- Widest free gap in an External subnet (excluding allocation_pools and gateway),
-    returned as "start end" for use as the neutron provider floating-IP pool. -#}
 {%- macro external_floating_pool(ext) -%}
 {%- set lo = (ext.subnet.ip_subnet | ipaddr('network') | ipaddr('int') | int) + 1 -%}
 {%- set hi = (ext.subnet.ip_subnet | ipaddr('broadcast') | ipaddr('int') | int) - 1 -%}

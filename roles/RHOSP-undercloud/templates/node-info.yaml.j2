@@ -22,10 +22,6 @@ parameter_defaults:
 {% if ctlplane_ip %}
       fixed_ip: {{ ctlplane_ip }}
 {% endif %}
-{#- vif:true delegates ctlplane port creation to metalsmith, which is short-circuited #}
-{#- for managed:false (deployed-server) nodes. Omitting vif lets the provision       #}
-{#- workflow create the neutron port and populate DeployedServerPortMap; otherwise    #}
-{#- the map is empty and node provision fails with KeyError 'ctlplane'.               #}
 {% if not deployed_server[leaf.name] %}
       vif: true
 {% endif %}
