@@ -106,14 +106,10 @@
           - ip: "{{ ctlplane_gw }}"
             prefix: "{{ ctlplane_cidr | ipaddr('prefix') }}"
         gateway4: "{{ ctlplane_gw }}"
-        routing_rules:
-          - action: to
-            table: main
-            priority: 200
-        routes:
-          - destination: 0.0.0.0/0
-            gateway: "{{ ctlplane_gw }}"
-            metric: 200
+      routes:
+        - destination: 0.0.0.0/0
+          gateway: "{{ ctlplane_gw }}"
+          metric: 200
   when: not undercloud_is_physical | bool
 
 - name: NETWORKING - Configure network using system role
