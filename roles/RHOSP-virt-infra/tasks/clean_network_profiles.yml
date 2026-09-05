@@ -1,11 +1,11 @@
 # Cleanup is intentionally ungated: it must remove whatever a previous run created.
 # Marking an already-absent connection absent is an idempotent no-op.
 
-# Remove VLAN sub-interfaces first, mirroring the create-side "<bridge>.<vlan>" naming
-# so they aren't orphaned in NetworkManager when the parent bridge is removed.
+# First pass: remove VLAN sub-interfaces. Must be separate from bridge removal because
+# rhel-system-roles.network can't remove a VLAN when its parent bridge is also marked absent.
 - name: NETWORKING - Delete vlans belonging to libvirt bridges in localhost
   set_fact:
-    network_connections: "{{ (network_connections | default([])) + [connection] }}"
+    vlan_connections_to_remove: "{{ (vlan_connections_to_remove | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ item.bridge }}.{{ item.subnet.vlan }}"
@@ -21,7 +21,7 @@
 
 - name: NETWORKING - Delete vlans belonging to libvirt bridges in the leafs
   set_fact:
-    network_connections: "{{ (network_connections | default([])) + [connection] }}"
+    vlan_connections_to_remove: "{{ (vlan_connections_to_remove | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ item.1.bridge }}.{{ item.1.subnet.vlan }}"
@@ -37,6 +37,15 @@
     - "{{ dcn_leafs }}"
     - networks
 
+- name: NETWORKING - Remove VLAN connections with system role (first pass)
+  import_role:
+    name: rhel-system-roles.network
+  vars:
+    network_connections: "{{ vlan_connections_to_remove | default([]) }}"
+    network_allow_restart: no
+  when: vlan_connections_to_remove | default([]) | length > 0
+
+# Second pass: remove bridges and interfaces (parent bridge can now be removed safely).
 - name: NETWORKING - Delete bridges for networks linked with the hypervisor
   set_fact:
     network_connections: "{{ (network_connections | default([])) + [connection] }}"
@@ -95,7 +104,7 @@
         dhcp4: yes
   when: inventory_hostname == 'localhost'
 
-- name: NETWORKING - Configure network using system role
+- name: NETWORKING - Configure network using system role (second pass)
   import_role:
     name: rhel-system-roles.network
   vars:
