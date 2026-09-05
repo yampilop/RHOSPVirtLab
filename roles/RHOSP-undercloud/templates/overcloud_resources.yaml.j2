@@ -1,14 +1,14 @@
 {#- Widest free gap in an External subnet (excluding allocation_pools and gateway),
     returned as "start end" for use as the neutron provider floating-IP pool. -#}
 {%- macro external_floating_pool(ext) -%}
-{%- set lo = (ext.subnet.ip_subnet | ansible.utils.ipaddr('network') | ansible.utils.ipaddr('int') | int) + 1 -%}
-{%- set hi = (ext.subnet.ip_subnet | ansible.utils.ipaddr('broadcast') | ansible.utils.ipaddr('int') | int) - 1 -%}
+{%- set lo = (ext.subnet.ip_subnet | ipaddr('network') | ipaddr('int') | int) + 1 -%}
+{%- set hi = (ext.subnet.ip_subnet | ipaddr('broadcast') | ipaddr('int') | int) - 1 -%}
 {%- set used = [] -%}
 {%- for p in ext.subnet.allocation_pools -%}
-{%- set _ = used.append([p.start | ansible.utils.ipaddr('int') | int, p.end | ansible.utils.ipaddr('int') | int]) -%}
+{%- set _ = used.append([p.start | ipaddr('int') | int, p.end | ipaddr('int') | int]) -%}
 {%- endfor -%}
 {%- if ext.subnet.gateway is defined -%}
-{%- set g = ext.subnet.gateway | ansible.utils.ipaddr('int') | int -%}
+{%- set g = ext.subnet.gateway | ipaddr('int') | int -%}
 {%- set _ = used.append([g, g]) -%}
 {%- endif -%}
 {%- set ns = namespace(cursor=lo, bstart=0, bend=-1, blen=0) -%}
@@ -21,7 +21,7 @@
 {%- if hi >= ns.cursor and (hi - ns.cursor + 1) > ns.blen -%}
 {%- set ns.bstart = ns.cursor -%}{%- set ns.bend = hi -%}
 {%- endif -%}
-{{ (ns.bstart | ansible.utils.ipaddr) ~ ' ' ~ (ns.bend | ansible.utils.ipaddr) }}
+{{ (ns.bstart | ipaddr) ~ ' ' ~ (ns.bend | ipaddr) }}
 {%- endmacro -%}
 {% set dpdk_count = (roles_count[default_leaf.name]["ComputeOvsDpdk"] + roles_count[default_leaf.name]["ComputeOvsDpdkSriov"]) %}
 {% set sriov_count = (roles_count[default_leaf.name]["ComputeSriov"] + roles_count[default_leaf.name]["ComputeOvsHwOffload"] + roles_count[default_leaf.name]["ComputeOvsDpdkSriov"]) %}
