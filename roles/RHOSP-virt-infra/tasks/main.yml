@@ -17,21 +17,11 @@
     leaf_bridges: |-
       [
       {% for leaf in leafs %}
-      {# A VM lab where the undercloud is NOT masquerading the ctlplane (and no physical NIC
-         is trunked into the bridge) has nothing owning the ctlplane gateway. Make libvirt
-         own it: forward:nat gives the gateway a real masquerade (like the mgmt network), so
-         the ctlplane fallback route actually reaches the internet. Otherwise keep
-         forward:bridge (physical trunk, or the undercloud does the masquerade itself). #}
-      {% set ctlplane_forward = 'nat'
-           if ((not (undercloud_is_physical | bool))
-               and (not (leaf.ctlplane_subnet.masquerade | default(false) | bool))
-               and (not (leaf.ctlplane_bridge.interface | default(none))))
-           else 'bridge' %}
       {{ ({
            'name': 'RHOSPVirtLab_' ~ (leaf.ctlplane_bridge.name | regex_replace('^br-', '')),
            'hypervisor': leaf.hypervisor,
            'bridge': leaf.ctlplane_bridge.name,
-           'forward': ctlplane_forward,
+           'forward': 'bridge',
            'ipv4': {'address': leaf.ctlplane_subnet.gateway,
                     'netmask': leaf.ctlplane_subnet.cidr | ipaddr('netmask')}
          } | combine({'hypervisor_if': leaf.ctlplane_bridge.interface}
@@ -40,20 +30,11 @@
       {% set on_bridge = leaf.networks | default([]) | selectattr('bridge', 'equalto', ab.name) | list %}
       {% set native = on_bridge | rejectattr('subnet.vlan', 'defined') | list %}
       {% set base = (native | first) if native else ((on_bridge | first) if on_bridge else none) %}
-      {# Same rule as the ctlplane bridge: an additional bridge with its own IP (a gateway,
-         e.g. br-external) has nobody masquerading it in a VM lab, so let libvirt own it with
-         forward:nat. An address-less bridge, a trunked physical NIC, or a physical undercloud
-         stays forward:bridge. #}
-      {% set ab_forward = 'nat'
-           if ((ab.ipv4 is defined)
-               and (not (undercloud_is_physical | bool))
-               and (not (ab.interface | default(none))))
-           else 'bridge' %}
       {{ ({
            'name': 'RHOSPVirtLab_' ~ (ab.name | regex_replace('^br-', '')),
            'hypervisor': leaf.hypervisor,
            'bridge': ab.name,
-           'forward': ab_forward
+           'forward': 'bridge'
          } | combine({'hypervisor_if': ab.interface} if ab.interface else {})
            | combine({'ipv4': {'address': ab.ipv4.address,
                                'netmask': (base.subnet.ip_subnet if base else '0.0.0.0/24') | ipaddr('netmask')}}

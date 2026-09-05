@@ -7,7 +7,7 @@
     group: root
   when: inventory_hostname == 'localhost'
 
-- name: NETWORKS - Add hook for libvirt networks (hack) in order to allow port-forwarding when the network is forwarding route
+- name: NETWORKS - Add hook for libvirt networks (hack) to re-apply the host FORWARD rules libvirt wipes on restart
   template:
     src: "network-hook.j2"
     dest: "/etc/libvirt/hooks/network"
@@ -18,11 +18,10 @@
   notify: HANDLER - restart libvirtd service
   when:
     - inventory_hostname == 'localhost'
-    # This hook is only needed for a NAT external network. In the leaf model every
-    # bridge is forward:bridge, so it stays disabled (port forwarding is handled by the
-    # firewalld rich rules in configure_firewall.yml); it fires if a NAT external network
-    # is ever added.
-    - (libvirt_networks | selectattr('name', 'search', 'external') | selectattr('forward', 'equalto', 'nat') | list | length) > 0
+    # The forward:bridge gateway bridges rely on a host FORWARD ACCEPT rule that libvirt
+    # shadows with a FORWARD REJECT on every (re)start. Install the hook whenever such a
+    # bridge exists on localhost so the rule is re-applied on each network event.
+    - (libvirt_networks | selectattr('forward', 'equalto', 'bridge') | selectattr('ipv4', 'defined') | selectattr('hypervisor', 'search', 'localhost') | list | length) > 0
 
 - name: NETWORKS - Gather facts about libvirt networks
   community.libvirt.virt_net:
