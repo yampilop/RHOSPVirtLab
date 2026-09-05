@@ -11,6 +11,7 @@
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    default_leaf_networks: "{{ (leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
@@ -132,6 +133,7 @@
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    default_leaf_networks: "{{ (leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"

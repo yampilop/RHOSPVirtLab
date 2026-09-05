@@ -13,6 +13,12 @@ undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical'
 default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
 dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
 
+# Flat view of the default leaf's networks. The deployment_environment `Variable`
+# gate is resolved with `lookup('vars', ...)`, which takes a plain variable name and
+# does not traverse dotted paths, so a `default_leaf.networks` reference cannot be used
+# there directly (16.2 network-isolation / network-environment env files).
+default_leaf_networks: "{{ default_leaf.networks | default([]) }}"
+
 # Management (NAT) gateway, used as pm_addr for localhost libvirt VMs in instackenv.
 # Duplicated here because the virt-infra role vars are not visible in this play; keep in
 # sync with roles/RHOSP-virt-infra/vars/main.yml (libvirt_management_network.ipv4.address).
@@ -160,13 +166,13 @@ deployment_environment:
     version: [ 16.2 ]
     DCN: False
     Leafs: All
-    Variable: default_leaf.networks
+    Variable: default_leaf_networks
   - file: /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml
     absolute_path: True
     version: [ 16.2 ]
     DCN: False
     Leafs: All
-    Variable: default_leaf.networks
+    Variable: default_leaf_networks
   - file: "/usr/share/openstack-tripleo-heat-templates/environments/services/neutron-{{ NeutronDriver }}-dpdk.yaml"
     absolute_path: True
     version: [ 17.1, 16.2 ]
