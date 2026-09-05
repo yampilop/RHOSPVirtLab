@@ -7,6 +7,30 @@
 - name: SETUP - Make the hypervisor setup
   import_tasks: tasks/setup.yml
 
+- name: SETUP - Register computed variables as facts for template access
+  set_fact:
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    undercloud_effective: >-
+      {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
+            ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
+         }}}, recursive=true))
+         if not (undercloud_is_physical | bool) else undercloud_base }}
+    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    libvirt_required: "{{ libvirt_machines | length > 0 }}"
+    vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
+    bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default([]) | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
+    management_network_required: >-
+      {{ (not (undercloud_is_physical | bool))
+         or ((machines | selectattr('type', 'equalto', 'libvirt')
+                       | selectattr('libvirt.hypervisor', 'equalto', 'localhost')
+                       | selectattr('pre_provisioned', 'defined')
+                       | selectattr('pre_provisioned') | list | length) > 0) }}
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+  vars:
+    undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
+
 # Assemble the libvirt networks/bridges to manage from the `leafs` model plus the
 # management (NAT) network (prepended when required). See README (Networks) for details.
 - name: NETWORKING - Assemble the list of libvirt networks to manage
