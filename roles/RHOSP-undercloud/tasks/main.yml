@@ -83,6 +83,39 @@
         dhcp4: yes
   when: not undercloud_is_physical | bool
 
+# Also configure the ctlplane NIC (eth0) with static IP and metric 200 default route, so it's
+# a fallback to mgmt. The static IP matches the libvirt gateway (the ctlplane subnet gateway
+# address), which is where the undercloud DHCP provisioning server expects to be.
+- name: NETWORKING - Define ctlplane network connection
+  set_fact:
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
+  vars:
+    ctlplane_iface: "eth0"
+    ctlplane_gw: "{{ default_leaf.ctlplane_subnet.gateway }}"
+    ctlplane_cidr: "{{ default_leaf.ctlplane_subnet.cidr }}"
+    connection:
+      name: "{{ ctlplane_iface }}"
+      interface_name: "{{ ctlplane_iface }}"
+      type: ethernet
+      autoconnect: yes
+      mtu: 1500
+      state: up
+      ip:
+        dhcp4: no
+        address:
+          - ip: "{{ ctlplane_gw }}"
+            prefix: "{{ ctlplane_cidr | ipaddr('prefix') }}"
+        gateway4: "{{ ctlplane_gw }}"
+        routing_rules:
+          - action: to
+            table: main
+            priority: 200
+        routes:
+          - destination: 0.0.0.0/0
+            gateway: "{{ ctlplane_gw }}"
+            metric: 200
+  when: not undercloud_is_physical | bool
+
 - name: NETWORKING - Configure network using system role
   import_role:
     name: rhel-system-roles.network
