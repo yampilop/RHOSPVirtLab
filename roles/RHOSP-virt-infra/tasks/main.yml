@@ -82,6 +82,12 @@
     - cleanup | bool
     - libvirt_required | bool
 
+- name: STORAGE - Clean cloud-init files and ISOs
+  import_tasks: clean_libvirt_cloud_init.yml
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
+
 - name: LIBVIRT - Clean libvirt storage pools and images
   import_tasks: clean_libvirt_storage.yml
   when:

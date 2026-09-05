@@ -1,0 +1,27 @@
+# Delete cloud-init files (user-data, meta-data, network-config) and ISOs for all machines.
+# These are rendered per-machine and accumulate on the hypervisor if not cleaned up.
+
+- name: STORAGE - Find cloud-init source files
+  find:
+    paths: "/home/{{ ansible_user }}"
+    patterns:
+      - "*-user-data"
+      - "*-meta-data"
+      - "*-network-config"
+      - "*-init.iso"
+    file_type: file
+  register: ci_files
+
+- name: STORAGE - Delete cloud-init source files from home directory
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ ci_files.files }}"
+  when: ci_files.files | length > 0
+
+- name: STORAGE - Delete cloud-init ISOs from the pool
+  file:
+    path: "{{ pool_location }}/{{ item }}-init.iso"
+    state: absent
+  become: yes
+  loop: "{{ libvirt_machines | map(attribute='name') | list }}"
