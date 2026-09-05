@@ -3,7 +3,7 @@
 {% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
 {% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
 
-{% if leaf.name == default_leaf.name %}
+{% if leaf.name == 'overcloud' %}
 {% set templates_dir='/home/stack/templates' %}
 {% else %}
 {% set templates_dir="/home/stack/templates/" ~ leaf.name %}
@@ -21,7 +21,7 @@ openstack overcloud ceph deploy -y \
 --container-image-prepare /home/stack/containers-prepare-parameter.yaml
 {% endif %}
 
-{% if (dcn_leafs | length > 0) and (leaf.name == default_leaf.name) and (ceph_count + hci_count > 0) %}
+{% if (dcn_leafs | length > 0) and (leaf.name == 'overcloud') and (ceph_count + hci_count > 0) %}
 sudo rm /home/stack/templates/dcn_ceph_external.yaml
 sudo -E openstack overcloud export ceph \
 --stack {% for dcn_leaf in dcn_leafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} \
@@ -42,7 +42,7 @@ time openstack overcloud deploy \
 {% endif %}
 {% for environment in deployment_environment %}
 {% if ((environment.DCN | bool) and (dcn_leafs | length > 0)) or not (environment.DCN | bool) %}
-{% if ((environment.Leafs == 'Default') and (leaf.name == default_leaf.name)) or ((environment.Leafs == 'NotDefault') and (leaf.name != default_leaf.name)) or (environment.Leafs == 'All') %}
+{% if ((environment.Leafs == 'Default') and (leaf.name == 'overcloud')) or ((environment.Leafs == 'NotDefault') and (leaf.name != 'overcloud')) or (environment.Leafs == 'All') %}
 {% if RHOSP_version in environment.version %}
 {% if ((environment.Roles is defined) and ((roles_count[leaf.name].items() | selectattr(0, "in", environment.Roles) | sum(1)) > 0)) or (environment.Roles is not defined) %}
 {% if ((environment.Variable is defined) and (lookup('vars', environment.Variable) | bool)) or ((environment.Variable is defined) and (lookup('vars', environment.Variable) is mapping)) or (environment.Variable is not defined) %}
@@ -62,7 +62,7 @@ time openstack overcloud deploy \
 ;
 date
 
-{% if (leaf.name != default_leaf.name) %}
+{% if (leaf.name != 'overcloud') %}
 ANSIBLE_HOST_KEY_CHECKING=false TRIPLEO_PLAN_NAME=overcloud \
 {% if (RHOSP_version < 17.1) %}
 ansible -i /usr/bin/tripleo-ansible-inventory \
@@ -80,7 +80,7 @@ nova-manage cell_v2 discover_hosts --by-service --verbose"
 sed -i 's/ApplyCephConfigOverridesOnUpdate: true/ApplyCephConfigOverridesOnUpdate: false/' {{ templates_dir }}/deployed-ceph.yaml
 {% endif %}
 
-{% if (dcn_leafs | length > 0) and (leaf.name == default_leaf.name) and (RHOSP_version < 17.1) %}
+{% if (dcn_leafs | length > 0) and (leaf.name == 'overcloud') and (RHOSP_version < 17.1) %}
 rm /home/stack/templates/overcloud-export.yaml
 sudo chmod -R +rx /var/lib/mistral/overcloud/
 openstack overcloud export \
