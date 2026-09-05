@@ -1,36 +1,20 @@
 # Cleanup is intentionally ungated: it must remove whatever a previous run created.
 # Marking an already-absent connection absent is an idempotent no-op.
 
-# First pass: remove VLAN sub-interfaces. Must be separate from bridge removal because
-# rhel-system-roles.network validates parent references. Include parent bridges as
-# persistent_state: present (no change) so they're defined for validation.
-- name: NETWORKING - Delete vlans belonging to libvirt bridges in localhost
+# Remove VLAN and bridge connections using nmcli to avoid parent reference validation
+# conflicts in rhel-system-roles.network. Delete in order: VLANs first, then bridges.
+
+- name: NETWORKING - Collect VLAN connections to delete from localhost
   set_fact:
-    vlan_connections_to_remove: "{{ (vlan_connections_to_remove | default([])) + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.bridge }}.{{ item.subnet.vlan }}"
-      type: vlan
-      vlan_id: "{{ item.subnet.vlan }}"
-      parent: "{{ item.bridge }}"
-      state: down
-      persistent_state: absent
+    vlans_to_delete: "{{ (vlans_to_delete | default([])) + [item.bridge ~ '.' ~ item.subnet.vlan] }}"
   when:
     - inventory_hostname == 'localhost'
     - item.subnet.vlan is defined
   loop: "{{ default_leaf.networks }}"
 
-- name: NETWORKING - Delete vlans belonging to libvirt bridges in the leafs
+- name: NETWORKING - Collect VLAN connections to delete from leafs
   set_fact:
-    vlan_connections_to_remove: "{{ (vlan_connections_to_remove | default([])) + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.1.bridge }}.{{ item.1.subnet.vlan }}"
-      type: vlan
-      vlan_id: "{{ item.1.subnet.vlan }}"
-      parent: "{{ item.1.bridge }}"
-      state: down
-      persistent_state: absent
+    vlans_to_delete: "{{ (vlans_to_delete | default([])) + [item.1.bridge ~ '.' ~ item.1.subnet.vlan] }}"
   when:
     - inventory_hostname == item.0.hypervisor.split(',')[0]
     - item.1.subnet.vlan is defined
@@ -38,45 +22,27 @@
     - "{{ dcn_leafs }}"
     - networks
 
-- name: NETWORKING - Include parent bridges in VLAN removal pass (for validation)
-  set_fact:
-    vlan_connections_to_remove: "{{ (vlan_connections_to_remove | default([])) + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.bridge }}"
-      interface_name: "{{ item.bridge }}"
-      type: bridge
-      persistent_state: present
-  when:
-    - inventory_hostname in item.hypervisor.split(',')
-    - item.forward == 'bridge'
-    - (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | selectattr('subnet.vlan', 'defined') | list | length > 0) or
-      (dcn_leafs | map(attribute='networks') | list | flatten | selectattr('bridge', 'equalto', item.bridge) | selectattr('subnet.vlan', 'defined') | list | length > 0)
-  loop: "{{ libvirt_networks }}"
+- name: NETWORKING - Delete VLAN connections via nmcli
+  command: "nmcli connection delete {{ item }}"
+  loop: "{{ vlans_to_delete | default([]) | unique }}"
+  register: vlan_delete
+  failed_when: vlan_delete.rc not in [0, 1]
+  changed_when: vlan_delete.rc == 0
 
-- name: NETWORKING - Remove VLAN connections with system role (first pass)
-  import_role:
-    name: rhel-system-roles.network
-  vars:
-    network_connections: "{{ vlan_connections_to_remove | default([]) }}"
-    network_allow_restart: no
-  when: vlan_connections_to_remove | default([]) | length > 0
-
-# Second pass: remove bridges and interfaces (parent bridge can now be removed safely).
-- name: NETWORKING - Delete bridges for networks linked with the hypervisor
+- name: NETWORKING - Collect bridge connections to delete
   set_fact:
-    network_connections: "{{ (network_connections | default([])) + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.bridge }}"
-      interface_name: "{{ item.bridge }}"
-      type: bridge
-      state: down
-      persistent_state: absent
+    bridges_to_delete: "{{ (bridges_to_delete | default([])) + [item.bridge] }}"
   when:
     - inventory_hostname in item.hypervisor.split(',')
     - item.forward == 'bridge'
   loop: "{{ libvirt_networks }}"
+
+- name: NETWORKING - Delete bridge connections via nmcli
+  command: "nmcli connection delete {{ item }}"
+  loop: "{{ bridges_to_delete | default([]) | unique }}"
+  register: bridge_delete
+  failed_when: bridge_delete.rc not in [0, 1]
+  changed_when: bridge_delete.rc == 0
 
 - name: NETWORKING - Delete hypervisor interfaces
   set_fact:
@@ -121,7 +87,7 @@
         dhcp4: yes
   when: inventory_hostname == 'localhost'
 
-- name: NETWORKING - Configure network using system role (second pass)
+- name: NETWORKING - Configure network using system role
   import_role:
     name: rhel-system-roles.network
   vars:
