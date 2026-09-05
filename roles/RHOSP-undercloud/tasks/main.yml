@@ -6,11 +6,15 @@
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
-# Register as facts so they're available in template contexts (vars are not).
-- name: Set derived leaf facts for template access
+# Register computed vars as facts so they're available in template contexts
+# (Jinja2 templates only have access to explicitly passed vars or registered facts).
+- name: Register computed variables as facts for template access
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
 # The overcloud public IP (used for PublicVirtualFixedIPs): the default leaf's External
 # VIP, else its ctlplane VIP.
