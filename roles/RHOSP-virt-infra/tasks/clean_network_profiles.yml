@@ -10,6 +10,8 @@
     connection:
       name: "{{ item.bridge }}.{{ item.subnet.vlan }}"
       type: vlan
+      vlan_id: "{{ item.subnet.vlan }}"
+      parent: "{{ item.bridge }}"
       state: down
       persistent_state: absent
   when:
@@ -24,6 +26,8 @@
     connection:
       name: "{{ item.1.bridge }}.{{ item.1.subnet.vlan }}"
       type: vlan
+      vlan_id: "{{ item.1.subnet.vlan }}"
+      parent: "{{ item.1.bridge }}"
       state: down
       persistent_state: absent
   when:
