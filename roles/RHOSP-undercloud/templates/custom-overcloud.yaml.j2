@@ -2,6 +2,11 @@
 {% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
 {% set default_leaf_ceph_count = (roles_count[default_leaf.name]["CephStorage"] + roles_count[default_leaf.name]["CephAll"]) %}
 {% set default_leaf_hci_count = (roles_count[default_leaf.name]["ComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCIScaleOut"]) %}
+{# vncproxy may be '<host>' or '<host>:<port>'; split off a trailing numeric port only. #}
+{% set _vnc_parts = (vncproxy | string).rsplit(':', 1) %}
+{% set vncproxy_has_port = (_vnc_parts | length == 2) and _vnc_parts[1].isdigit() %}
+{% set vncproxy_host = _vnc_parts[0] if vncproxy_has_port else vncproxy %}
+{% set vncproxy_port = _vnc_parts[1] if vncproxy_has_port else '' %}
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 1 #}
 # For Telemetry
@@ -100,7 +105,10 @@ parameter_defaults:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
 {% if 'Compute' in ocrole.name %}{# IF 3 FOR 1 IF 1.1 #}
   {{ ocrole.name }}ExtraConfig:
-    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy_host }}
+{% if vncproxy_has_port %}
+    nova::vncproxy::common::vncproxy_port: {{ vncproxy_port }}
+{% endif %}
 {% endif %}{# IF 3 FOR 1 IF 1.1 #}
 {% endif %}{# IF 3 FOR 1 IF 1 #}
 {% endfor %}{# IF 3 FOR 1 #}
@@ -108,7 +116,10 @@ parameter_defaults:
 {% else %}{# IF 3 #}
 {% for ocrole in overcloud_roles if ('Compute' in ocrole.name) and (roles_count[leaf.name][ocrole.name] > 0) %}{# IF 3 FOR 1 #}
   {{ ocrole.name }}ExtraConfig:
-    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy_host }}
+{% if vncproxy_has_port %}
+    nova::vncproxy::common::vncproxy_port: {{ vncproxy_port }}
+{% endif %}
 {% endfor %}{# IF 3 FOR 1#}
 {% endif %}{# IF 3 #}
 

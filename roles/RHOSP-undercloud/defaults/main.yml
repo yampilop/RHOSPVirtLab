@@ -13,6 +13,8 @@ CustomCirrOSImage: "{{ CirrOSDownloadLink }}"
 create: True
 
 # overcloud parameters
+# Public noVNC proxy address. '<host>' sets only vncproxy_host; '<host>:<port>' also
+# sets vncproxy_port with the trailing numeric port. host may be an IP or a domain.
 vncproxy: ''
 
 # Service ports the undercloud forwards (DNAT) to the overcloud public IP when the
