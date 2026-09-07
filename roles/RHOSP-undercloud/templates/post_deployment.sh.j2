@@ -77,11 +77,7 @@ ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logro
 ################################################################################
 ### Port forwarding to the overcloud ###########################################
 ################################################################################
-# With the control-plane ctlplane_subnet.masquerade enabled, the undercloud already
-# SNATs the overcloud subnet outbound. Add DNAT rules so inbound traffic on the
-# forwarded_ports reaches the overcloud public IP ({{ overcloud_ip }}); the masquerade
-# provides the return path. Installed as a systemd oneshot (iptables/iptables-nft) so
-# the rules survive reboots and coexist with the TripleO-managed firewall.
+# DNAT the forwarded_ports to the overcloud public IP ({{ overcloud_ip }}), SNAT them too (full-NAT) so replies return via the undercloud regardless of the external network, installed as a systemd oneshot so the rules survive reboots.
 sudo tee /usr/local/sbin/rhospvirtlab-portforward.sh >/dev/null <<'EOF'
 #!/bin/bash
 # Managed by RHOSPVirtLab (RHOSP-undercloud): forward service ports to the overcloud.
@@ -90,6 +86,8 @@ sysctl -w net.ipv4.ip_forward=1
 {% for port in forwarded_ports %}
 iptables -t nat -C PREROUTING -p tcp --dport {{ port }} -j DNAT --to-destination {{ overcloud_ip }}:{{ port }} 2>/dev/null || \
   iptables -t nat -A PREROUTING -p tcp --dport {{ port }} -j DNAT --to-destination {{ overcloud_ip }}:{{ port }}
+iptables -t nat -C POSTROUTING -p tcp -d {{ overcloud_ip }} --dport {{ port }} -j MASQUERADE 2>/dev/null || \
+  iptables -t nat -A POSTROUTING -p tcp -d {{ overcloud_ip }} --dport {{ port }} -j MASQUERADE
 iptables -C FORWARD -p tcp -d {{ overcloud_ip }} --dport {{ port }} -j ACCEPT 2>/dev/null || \
   iptables -I FORWARD 1 -p tcp -d {{ overcloud_ip }} --dport {{ port }} -j ACCEPT
 {% endfor %}
