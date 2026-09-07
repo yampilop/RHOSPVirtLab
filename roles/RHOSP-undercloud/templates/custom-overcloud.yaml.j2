@@ -165,11 +165,6 @@ parameter_defaults:
   # Snmp definitions
   SnmpdReadonlyUserPassword: {{ SnmpdReadonlyUserPassword }}
 
-  # Allow public service endpoints to be contacted from any network (80, 6080 and 5000)
-  HorizonBindHost: '0.0.0.0'
-  NovaVncProxyBindHost: '0.0.0.0'
-  KeystoneBindHost: '0.0.0.0'
-
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 7 #}
 # Telemetry definitions
 {% if leaf.name == default_leaf.name %}{# IF 7.1 #}
