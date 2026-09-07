@@ -120,3 +120,33 @@
   with_nested:
     - "{{ leafs }}"
     - "{{ overcloud_roles }}"
+
+# Routed spine-leaf (DCN) needs a gateway on every subnet: it is the cross-leaf next-hop
+# and the default of TripleO's auto-generated <Net>InterfaceDefaultRoute_<subnet>, which is
+# a required parameter with no default when the subnet omits it (UserParameterMissing).
+- name: PROFILES - Ensure DCN leaf networks define a subnet gateway (routed spine-leaf)
+  fail:
+    msg: >-
+      ERROR in leaf {{ item.0.name }}, network {{ item.1.name }}: a routed
+      (DCN/spine-leaf) deployment requires subnet.gateway on every leaf network so
+      TripleO can populate {{ item.1.name }}InterfaceDefaultRoute_{{ item.1.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet_{{ item.0.name }}. Define subnet.gateway for this network.
+  when:
+    - dcn_leafs | length > 0
+    - item.1.subnet.gateway is not defined
+  loop: "{{ dcn_leafs | subelements('networks', skip_missing=true) }}"
+  loop_control:
+    label: "{{ item.0.name }}/{{ item.1.name }}"
+
+- name: PROFILES - Ensure base subnets of routed networks define a subnet gateway
+  fail:
+    msg: >-
+      ERROR network {{ item.name }}: it spans DCN leafs, so its base subnet in the
+      overcloud leaf must also define subnet.gateway for routed spine-leaf (populates
+      {{ item.name }}InterfaceDefaultRoute_{{ item.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet).
+  when:
+    - dcn_leafs | length > 0
+    - item.subnet.gateway is not defined
+    - (dcn_leafs | selectattr('networks', 'defined') | map(attribute='networks') | flatten | selectattr('name', 'equalto', item.name) | list | length) > 0
+  loop: "{{ default_leaf.networks | default([]) }}"
+  loop_control:
+    label: "{{ item.name }}"
