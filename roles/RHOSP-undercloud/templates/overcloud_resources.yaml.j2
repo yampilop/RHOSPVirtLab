@@ -280,6 +280,7 @@ resources:
       cidr: 192.168.1.0/24
       enable_dhcp: True
       gateway_ip: 192.168.1.1
+{% if ext_list | length > 0 %}
   test_subnet_gateway:
     type: OS::Neutron::Port
     depends_on: test_subnet
@@ -297,7 +298,9 @@ resources:
     properties:
       port: { get_resource: test_subnet_gateway }
       router: { get_resource: default_router }
+{% endif %}
 {% for leaf in dcn_leafs %}
+{% set lext_list = leaf.networks | selectattr('name', 'equalto', 'External') | list %}
   test_network_{{ leaf.name }}:
     type: OS::Neutron::Net
     properties:
@@ -312,6 +315,7 @@ resources:
       cidr: 192.168.1.0/24
       enable_dhcp: True
       gateway_ip: 192.168.1.1
+{% if lext_list | length > 0 %}
   test_subnet_gateway_{{ leaf.name }}:
     type: OS::Neutron::Port
     depends_on: test_subnet_{{ leaf.name }}
@@ -329,6 +333,7 @@ resources:
     properties:
       port: { get_resource: test_subnet_gateway_{{ leaf.name }} }
       router: { get_resource: default_router_{{ leaf.name }} }
+{% endif %}
 {% endfor %}
 
   # Security group resources
