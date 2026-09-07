@@ -18,7 +18,8 @@
   subnets:
 {% for leaf in dcn_leafs %}
 {% set lnet = leaf.networks | selectattr('name', 'equalto', network.name) | list | first %}
-    storage_subnet_{{ leaf.name }}:
+{% if lnet %}
+    {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet_{{ leaf.name }}:
       ip_subnet: {{ lnet.subnet.ip_subnet }}
       allocation_pools:
 {% for p in lnet.subnet.allocation_pools %}
@@ -29,6 +30,7 @@
       gateway_ip: {{ lnet.subnet.gateway }}
 {% endif %}
       vlan: {{ lnet.subnet.vlan | default(1) }}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% else %}
@@ -50,6 +52,7 @@
       vlan: {{ network.subnet.vlan | default(1) }}
 {% for leaf in dcn_leafs %}
 {% set lnet = leaf.networks | selectattr('name', 'equalto', network.name) | list | first %}
+{% if lnet %}
     {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet_{{ leaf.name }}:
       ip_subnet: {{ lnet.subnet.ip_subnet }}
       allocation_pools:
@@ -61,6 +64,7 @@
       gateway_ip: {{ lnet.subnet.gateway }}
 {% endif %}
       vlan: {{ lnet.subnet.vlan | default(1) }}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endfor %}
