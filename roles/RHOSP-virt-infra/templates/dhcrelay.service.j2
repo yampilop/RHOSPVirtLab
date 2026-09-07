@@ -3,9 +3,14 @@ Description=DHCP Relay Agent Daemon
 Documentation=man:dhcrelay(8)
 Wants=network-online.target
 After=network-online.target
+# Keep retrying forever; the bridge only gains carrier once node taps attach.
+StartLimitIntervalSec=0
 
 [Service]
 Type=notify
+# Force the ctlplane bridge up: a portless bridge has no carrier at start time, so
+# without this dhcrelay dies with "receive_packet failed ... Network is down".
+ExecStartPre=-/usr/sbin/ip link set dev br-ctlplane up
 {% if inventory_hostname == 'localhost' %}
 {% if ansible_distribution_version == '7.9' %}
 ExecStart=/usr/sbin/dhcrelay -d {{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ default_leaf.ctlplane_subnet.dhcp_start }} -i {{ external_if }}
@@ -23,7 +28,10 @@ ExecStart=/usr/sbin/dnsmasq -d --port=0 --dhcp-relay={{ hostvars[inventory_hostn
 ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -id br-ctlplane -iu {{ hypervisor_external_if }}
 {% endif %}
 {% endif %}
-StandardError=null
+# Self-heal instead of dying silently until the bridge has carrier.
+Restart=on-failure
+RestartSec=5
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
