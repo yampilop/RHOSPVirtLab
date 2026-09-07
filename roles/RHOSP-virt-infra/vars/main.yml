@@ -92,7 +92,10 @@ RHEL_version_supported:
       - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      - "@python36"
+      # python3 itself is already the platform interpreter; install pip by name
+      # rather than the @python36 module, whose module-install path is refused on
+      # hosts whose AppStream repo lacks modular metadata ("Fail-Safe repository").
+      - python3-pip
       - python3-lxml
       - python3-libvirt
       - edk2-ovmf
