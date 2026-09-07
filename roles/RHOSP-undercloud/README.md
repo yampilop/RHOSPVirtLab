@@ -269,7 +269,7 @@ UndercloudExtraFirewallRules: **[]** | *dict of rules*
   Extra firewalld rules to open on the undercloud, keyed by rule name (see the commented example in `vars/options.yml`).
 
 vncproxy: **''**
-  Nova VNC proxy address set on the overcloud; leave empty for the default, or set the public/VIP address to enable noVNC console access. Accepts `<host>` (sets `vncproxy_host` only) or `<host>:<port>` (also sets `vncproxy_port` with the trailing numeric port); `host` may be an IP or a domain.
+  Nova VNC proxy address set on the overcloud; leave empty for the default, or set the public/VIP address to enable noVNC console access. Accepts `[<scheme>://]<host>[:<port>]`: `host` (IP or domain) sets `vncproxy_host`, a trailing numeric port sets `vncproxy_port`, and a leading scheme (e.g. `https://`) sets `vncproxy_protocol`.
 
 Credentials (lab-only weak defaults; override in `vault_credentials.yaml`):
 

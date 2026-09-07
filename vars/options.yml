@@ -14,8 +14,9 @@ forwarded_ports:
   - 80
   - 6080
   - 5000
-# Public noVNC proxy address: '<host>' sets vncproxy_host only; '<host>:<port>' also
-# sets vncproxy_port. host may be an IP or a domain.
+# Public noVNC proxy address, '[<scheme>://]<host>[:<port>]': host (IP or domain) sets
+# vncproxy_host, a trailing numeric port sets vncproxy_port, and a leading scheme
+# (e.g. https://) sets vncproxy_protocol.
 vncproxy: ''
 
 # dns and ntp servers

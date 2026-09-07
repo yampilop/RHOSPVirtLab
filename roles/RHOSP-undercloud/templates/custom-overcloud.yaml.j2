@@ -2,10 +2,14 @@
 {% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
 {% set default_leaf_ceph_count = (roles_count[default_leaf.name]["CephStorage"] + roles_count[default_leaf.name]["CephAll"]) %}
 {% set default_leaf_hci_count = (roles_count[default_leaf.name]["ComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCIScaleOut"]) %}
-{# vncproxy may be '<host>' or '<host>:<port>'; split off a trailing numeric port only. #}
-{% set _vnc_parts = (vncproxy | string).rsplit(':', 1) %}
+{# vncproxy may be '[<scheme>://]<host>[:<port>]'; peel a leading scheme, then split a trailing numeric port only. #}
+{% set _vnc_scheme_split = (vncproxy | string).split('://', 1) %}
+{% set vncproxy_has_protocol = _vnc_scheme_split | length == 2 %}
+{% set vncproxy_protocol = _vnc_scheme_split[0] if vncproxy_has_protocol else '' %}
+{% set _vnc_authority = _vnc_scheme_split[1] if vncproxy_has_protocol else (vncproxy | string) %}
+{% set _vnc_parts = _vnc_authority.rsplit(':', 1) %}
 {% set vncproxy_has_port = (_vnc_parts | length == 2) and _vnc_parts[1].isdigit() %}
-{% set vncproxy_host = _vnc_parts[0] if vncproxy_has_port else vncproxy %}
+{% set vncproxy_host = _vnc_parts[0] if vncproxy_has_port else _vnc_authority %}
 {% set vncproxy_port = _vnc_parts[1] if vncproxy_has_port else '' %}
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 1 #}
@@ -109,6 +113,9 @@ parameter_defaults:
 {% if vncproxy_has_port %}
     nova::vncproxy::common::vncproxy_port: {{ vncproxy_port }}
 {% endif %}
+{% if vncproxy_has_protocol %}
+    nova::vncproxy::common::vncproxy_protocol: {{ vncproxy_protocol }}
+{% endif %}
 {% endif %}{# IF 3 FOR 1 IF 1.1 #}
 {% endif %}{# IF 3 FOR 1 IF 1 #}
 {% endfor %}{# IF 3 FOR 1 #}
@@ -119,6 +126,9 @@ parameter_defaults:
     nova::vncproxy::common::vncproxy_host: {{ vncproxy_host }}
 {% if vncproxy_has_port %}
     nova::vncproxy::common::vncproxy_port: {{ vncproxy_port }}
+{% endif %}
+{% if vncproxy_has_protocol %}
+    nova::vncproxy::common::vncproxy_protocol: {{ vncproxy_protocol }}
 {% endif %}
 {% endfor %}{# IF 3 FOR 1#}
 {% endif %}{# IF 3 #}
