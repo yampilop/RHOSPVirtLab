@@ -65,10 +65,10 @@ date
 {% if (leaf.name != default_leaf.name) %}
 ANSIBLE_HOST_KEY_CHECKING=false TRIPLEO_PLAN_NAME=overcloud \
 {% if (RHOSP_version < 17.1) -%}
-ansible -i /usr/bin/tripleo-ansible-inventory \
+ansible -i /usr/bin/tripleo-ansible-inventory\
 {%- else -%}
 ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml \
-{%- endif %} {% raw %}
+{%- endif %}{% raw %}
 nova_api[0] -b -a \
 "{{ container_cli }} exec -it nova_api \
 nova-manage cell_v2 discover_hosts --by-service --verbose"
