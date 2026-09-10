@@ -1,7 +1,16 @@
 {% set ceph_count = (roles_count[leaf.name]["CephStorage"] + roles_count[leaf.name]["CephAll"]) %}
 {% set hci_count = (roles_count[leaf.name]["ComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCI"] + roles_count[leaf.name]["DistributedComputeHCIScaleOut"]) %}
-{% set DefaultLeaf0_ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
-{% set DefaultLeaf0_hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
+{% set default_leaf_ceph_count = (roles_count[default_leaf.name]["CephStorage"] + roles_count[default_leaf.name]["CephAll"]) %}
+{% set default_leaf_hci_count = (roles_count[default_leaf.name]["ComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCIScaleOut"]) %}
+{# vncproxy may be '[<scheme>://]<host>[:<port>]'; peel a leading scheme, then split a trailing numeric port only. #}
+{% set _vnc_scheme_split = (vncproxy | string).split('://', 1) %}
+{% set vncproxy_has_protocol = _vnc_scheme_split | length == 2 %}
+{% set vncproxy_protocol = _vnc_scheme_split[0] if vncproxy_has_protocol else '' %}
+{% set _vnc_authority = _vnc_scheme_split[1] if vncproxy_has_protocol else (vncproxy | string) %}
+{% set _vnc_parts = _vnc_authority.rsplit(':', 1) %}
+{% set vncproxy_has_port = (_vnc_parts | length == 2) and _vnc_parts[1].isdigit() %}
+{% set vncproxy_host = _vnc_parts[0] if vncproxy_has_port else _vnc_authority %}
+{% set vncproxy_port = _vnc_parts[1] if vncproxy_has_port else '' %}
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 1 #}
 # For Telemetry
@@ -10,8 +19,8 @@ resource_registry:
 {% endif %}{# IF 1 #}
 
 parameter_defaults:
-{% if leaf.name == DefaultLeaf0.name %}{# IF 2 #}
-{% if DCNLeafs | length > 0 %}{# IF 2.1 #}
+{% if leaf.name == default_leaf.name %}{# IF 2 #}
+{% if dcn_leafs | length > 0 %}{# IF 2.1 #}
 {% if (ceph_count + hci_count) > 0 %}{# IF 2.1.1 #}
   GlanceEnabledImportMethods: web-download,copy-image
   GlanceBackend: rbd
@@ -22,7 +31,7 @@ parameter_defaults:
   CinderStorageAvailabilityZone: {{ leaf.name }}
 # Uncomment the following after deploying the leafs
 #  GlanceMultistoreConfig:
-{% for dcn_leaf in DCNLeafs %}{# IF 2.1.1 FOR 1 #}
+{% for dcn_leaf in dcn_leafs %}{# IF 2.1.1 FOR 1 #}
 {% if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{# IF 1.1.1 FOR 1 IF 1 #}
 #    {{ dcn_leaf.name }}:
 #      GlanceBackend: rbd
@@ -71,12 +80,12 @@ parameter_defaults:
   GlanceBackend: cinder
 {% endif %}{# IF 2.3.1 #}
 {% endif %}{# IF 2.3 #}
-{% if (DefaultLeaf0_ceph_count + DefaultLeaf0_hci_count) > 0 %}{# IF 2.4 #}
+{% if (default_leaf_ceph_count + default_leaf_hci_count) > 0 %}{# IF 2.4 #}
   GlanceMultistoreConfig:
-    {{ DefaultLeaf0.name }}:
+    {{ default_leaf.name }}:
       GlanceBackend: rbd
-      GlanceStoreDescription: '{{ DefaultLeaf0.name }} rbd glance store'
-      CephClusterName: {{ DefaultLeaf0.name }}
+      GlanceStoreDescription: '{{ default_leaf.name }} rbd glance store'
+      CephClusterName: {{ default_leaf.name }}
       GlanceRbdPoolName: images
       CephClientUserName: openstack
 {% endif %}{# IF 2.4 #}
@@ -88,7 +97,7 @@ parameter_defaults:
   NovaComputeAvailabilityZone: {{ leaf.name }}
 {% if RHOSP_version < 17.1 %}{# IF 2.6 #}
   ManageNetworks: false
-  RootStackName: {{ DefaultLeaf0.name }}
+  RootStackName: {{ default_leaf.name }}
 {% endif %}{# IF 2.6 #}
 {% endif %}{# IF 2 #}
 {% if RHOSP_version < 17.1 %}{# IF 3 #}
@@ -100,7 +109,13 @@ parameter_defaults:
     'capabilities:node': '{{ leaf.name }}-{{ ocrole.profile }}%index%'
 {% if 'Compute' in ocrole.name %}{# IF 3 FOR 1 IF 1.1 #}
   {{ ocrole.name }}ExtraConfig:
-    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy_host }}
+{% if vncproxy_has_port %}
+    nova::vncproxy::common::vncproxy_port: {{ vncproxy_port }}
+{% endif %}
+{% if vncproxy_has_protocol %}
+    nova::vncproxy::common::vncproxy_protocol: {{ vncproxy_protocol }}
+{% endif %}
 {% endif %}{# IF 3 FOR 1 IF 1.1 #}
 {% endif %}{# IF 3 FOR 1 IF 1 #}
 {% endfor %}{# IF 3 FOR 1 #}
@@ -108,7 +123,13 @@ parameter_defaults:
 {% else %}{# IF 3 #}
 {% for ocrole in overcloud_roles if ('Compute' in ocrole.name) and (roles_count[leaf.name][ocrole.name] > 0) %}{# IF 3 FOR 1 #}
   {{ ocrole.name }}ExtraConfig:
-    nova::vncproxy::common::vncproxy_host: {{ vncproxy }}
+    nova::vncproxy::common::vncproxy_host: {{ vncproxy_host }}
+{% if vncproxy_has_port %}
+    nova::vncproxy::common::vncproxy_port: {{ vncproxy_port }}
+{% endif %}
+{% if vncproxy_has_protocol %}
+    nova::vncproxy::common::vncproxy_protocol: {{ vncproxy_protocol }}
+{% endif %}
 {% endfor %}{# IF 3 FOR 1#}
 {% endif %}{# IF 3 #}
 
@@ -131,42 +152,43 @@ parameter_defaults:
     rhsm_release: {{ RHOSP_version_supported[RHOSP_version].rhel_release }}
 {% endif %}{# IF 4 #}
 
-{% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == DefaultLeaf0.name)) %}{# IF 6 #}
+{% if (roles_count[leaf.name]["ComputeInstanceHA"] > 0) or ((ControllersFencing | bool) and (leaf.name == default_leaf.name)) %}{# IF 6 #}
   # Fencing parameters
   EnableFencing: true
   FencingConfig:
     devices:
-{% for vm in vms if ((vm.profile == 'computeinstanceha') or (vm.profile == 'controller')) and (vm.hypervisor in leaf.hypervisor) %}{# IF 6 FOR 1 #}
+{% set ctlplane_bridge = leaf.ctlplane_bridge.name %}
+{% for vm in libvirt_machines if ((vm.openstack.role == 'computeinstanceha') or (vm.openstack.role == 'controller')) and (vm.libvirt.hypervisor in leaf.hypervisor.split(',')) %}{# IF 6 FOR 1 #}
     # {{ vm.name }}
     - agent: fence_ipmilan
-      host_mac: {{ vm.mac }}:{{ (networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first).mac_suffix }}
+      host_mac: {{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}
       params:
-        login: admin
-        passwd: admin
-        ipaddr: {% if vm.hypervisor in 'localhost' %}{{ DefaultLeaf0.subnet.gateway }}{% else %}{{ hostvars[vm.hypervisor].ansible_host }}{% endif %}
+        login: {{ vm.pm.user }}
+        passwd: {{ vm.pm.password }}
+        ipaddr: {% if vm.libvirt.hypervisor == 'localhost' %}{{ default_leaf.ctlplane_subnet.gateway }}{% else %}{{ hostvars[vm.libvirt.hypervisor].ansible_host }}{% endif %}
 
-        ipport: {{ vm.bmcport }}
+        ipport: {{ vm.pm.port }}
         lanplus: true
 {% endfor %}{# IF 6 FOR 1 #}
-{% for node in physical if ((node.profile == 'computeinstanceha') or (node.profile == 'controller')) and (node.leaf == leaf.name) %}{# IF 6 FOR 2 #}
+{% for node in physical_machines if ((node.openstack.role == 'computeinstanceha') or (node.openstack.role == 'controller')) and (node.openstack.leaf == leaf.name) %}{# IF 6 FOR 2 #}
     # {{ node.name }}
     - agent: fence_ipmilan
-      host_mac: {{ node.mac }}
+      host_mac: {{ node.physical.mac }}
       params:
-        login: {{ node.pm_user }}
-        passwd: {{ node.pm_password }}
-        ipaddr: {{ node.pm_addr }}
-        ipport: {{ node.pm_port }}
+        login: {{ node.pm.user }}
+        passwd: {{ node.pm.password }}
+        ipaddr: {{ node.pm.address }}
+        ipport: {{ node.pm.port }}
         lanplus: true
 {% endfor %}{# IF 6 FOR 2 #}
 {% endif %}{# IF 6 #}
 
-# Snmp definitions
+  # Snmp definitions
   SnmpdReadonlyUserPassword: {{ SnmpdReadonlyUserPassword }}
 
 {% if (not DisableTelemetry) and (Telemetry is mapping) %}{# IF 7 #}
 # Telemetry definitions
-{% if leaf.name == DefaultLeaf0.name %}{# IF 7.1 #}
+{% if leaf.name == default_leaf.name %}{# IF 7.1 #}
   ExtraHostFileEntries:
     - "{{ Telemetry.MetricsConnectorIPAddress }} {{ Telemetry.MetricsConnectorHost }}"
 {% endif %}{# IF 7.1 #}
@@ -190,8 +212,7 @@ parameter_defaults:
   # enable collection of containerized service metrics
   CollectdEnableLibpodstats: true
 
-  # set collectd overrides for higher telemetry resolution and extra plugins
-  # to load
+  # collectd overrides for higher resolution and extra plugins
   CollectdConnectionType: amqp1
   CollectdAmqpInterval: 5
   CollectdDefaultPollingInterval: 5
@@ -224,22 +245,19 @@ parameter_defaults:
       - storage.*
       - volume.*
 
-    # to avoid filling the memory buffers if disconnected from the message bus
-    # note: this may need an adjustment if there are many metrics to be sent.
+    # cap send queue so memory buffers don't fill when disconnected; raise if many metrics
     collectd::plugin::amqp1::send_queue_limit: 5000
 
     # receive extra information about virtual memory
     collectd::plugin::vmem::verbose: true
 
-    # provide name and uuid in addition to hostname for better correlation
-    # to ceilometer data
+    # name and uuid besides hostname for better ceilometer correlation
     collectd::plugin::virt::hostname_format: "name uuid hostname"
 
     # provide the human-friendly name of the virtual instance
     collectd::plugin::virt::plugin_instance_format: metadata
 
-    # set memcached collectd plugin to report its metrics by hostname
-    # rather than host IP, ensuring metrics in the dashboard remain uniform
+    # report memcached metrics by hostname (not host IP) for uniform dashboards
     collectd::plugin::memcached::instances:
       local:
         host: "%{hiera('fqdn_canonical')}"

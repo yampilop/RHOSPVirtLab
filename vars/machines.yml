@@ -1,0 +1,123 @@
+---
+# Inventory of lab machines, in two separate variables:
+#   undercloud - the single director host (special: never enrolled in ironic and, when
+#                physical, never power-managed by the lab; the role injects its constants).
+#   machines   - the overcloud nodes the undercloud provisions/manages.
+# Both share a `type` discriminator (libvirt | physical) with technology-specific
+# settings in a block named after the type. See the role READMEs for the full
+# field-by-field schema (undercloud, machines and the libvirt/physical blocks).
+
+
+undercloud:
+  type: libvirt
+  # openstack:                     # optional - control-plane / management NIC names
+  #   local_interface: eth0
+  #   management_interface: eth1
+  libvirt:
+    title: 'RHOSPVirtLab Undercloud'
+    hypervisor: localhost
+    cpus: 4
+    memory: 16777216
+    disks:
+    - root: true
+      size: 107374182400
+    network:
+      interfaces:
+      - name: nic1
+        mac: '0c:1f:0d:10:00:00'
+        bridge: br-ctlplane
+      # The mgmt/Ansible-access NIC is injected by the role (see README); do not list it.
+
+
+# Alternative: an admin-prepared PHYSICAL undercloud (see README). Replace the libvirt
+# definition above with:
+#
+# undercloud:
+#   type: physical
+#   openstack:
+#     local_interface: eno1        # control-plane NIC name inside the undercloud
+
+
+# Overcloud nodes (default: one virtual controller + one virtual compute). Default to
+# unprovisioned (ironic); set `pre_provisioned: true` for deployed-server nodes (then
+# add `ctlplane_ip` and make every node in the leaf pre_provisioned). See README.
+machines:
+- name: controller0
+  type: libvirt
+  openstack:
+    role: controller
+    leaf: overcloud
+    # ctlplane_ip: 192.168.24.121   # required when pre_provisioned: true
+  pm:
+    type: ipmi
+    user: "{{ BmcUsername }}"
+    password: "{{ BmcPassword }}"
+    address: localhost
+    port: 6231
+    mode: bios
+  libvirt:
+    title: 'RHOSPVirtLab Virtual Controller 0'
+    hypervisor: localhost
+    cpus: 2
+    memory: 8388608
+    disks:
+    - root: true
+      size: 53687091200
+    network:
+      interfaces:
+      - name: nic1
+        mac: '0c:1f:0d:11:00:00'
+        bridge: br-ctlplane
+- name: compute0
+  type: libvirt
+  openstack:
+    role: compute
+    leaf: overcloud
+    # ctlplane_ip: 192.168.24.122   # required when pre_provisioned: true
+  pm:
+    type: ipmi
+    user: "{{ BmcUsername }}"
+    password: "{{ BmcPassword }}"
+    address: localhost
+    port: 6234
+    mode: bios
+  libvirt:
+    title: 'RHOSPVirtLab Virtual Compute 0'
+    hypervisor: localhost
+    cpus: 4
+    memory: 6291456
+    disks:
+    - root: true
+      size: 53687091200
+    network:
+      interfaces:
+      - name: nic1
+        mac: '0c:1f:0d:12:00:00'
+        bridge: br-ctlplane
+
+
+# Example physical (baremetal) machines:
+# Also default to unprovisioned; set `pre_provisioned: true` for deployed servers.
+#
+# - name: computeovsdpdk0
+#   type: physical
+#   pre_provisioned: false
+#   openstack:
+#     role: computeovsdpdk
+#     leaf: overcloud
+#     # ctlplane_ip: 192.168.24.131   # required when pre_provisioned: true
+#   pm:
+#     type: ipmi
+#     user: admin
+#     password: admin
+#     address: 192.168.122.1
+#     port: 623
+#     mode: bios
+#   physical:
+#     cpus: 4
+#     memory: 4194304
+#     disk: 53687091200
+#     mac: '52:54:00:24:61:07'
+#     nics:
+#       nic1: 'ens1f0'
+#       nic2: 'ens1f1'

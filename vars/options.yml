@@ -4,19 +4,19 @@
 RHOSP_version: 17.1
 RHOSP_release: latest
 
-# Custom RHEL image: set URL to use a custom image. If it's a local file, use "file://<full_path>"
+# Custom images: set URL to use a custom image. If it's a local file, use "file://<full_path>"
 CustomRhelImage: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
-
-# Cleaning and creating parameters
-cleanup: False
+CustomCirrOSImage: "{{ CirrOSDownloadLink }}"
 
 # overcloud parameters
 external_if: eno1
-overcloud_ip: 10.0.0.254
 forwarded_ports:
   - 80
   - 6080
   - 5000
+# Public noVNC proxy address, '[<scheme>://]<host>[:<port>]': host (IP or domain) sets
+# vncproxy_host, a trailing numeric port sets vncproxy_port, and a leading scheme
+# (e.g. https://) sets vncproxy_protocol.
 vncproxy: ''
 
 # dns and ntp servers
@@ -30,97 +30,100 @@ ntp_servers:
   - '3.pool.ntp.org'
 
 # Default leaf configuration
-DefaultLeaf0:
-  name: overcloud
+leafs:
+- name: overcloud
   hypervisor: localhost
-  subnet:
+  additional_bridges:
+  - name: br-external
+    interface: null # Optional when external connection is needed
+    ipv4:
+      address: 10.0.0.254
+  ctlplane_bridge:
+    name: br-ctlplane
+    interface: null # Optional when external connection is needed
+  ctlplane_subnet:
     name: ctlplane-subnet
     cidr: 192.168.24.0/24
     dhcp_start: 192.168.24.5
-    dhcp_end: 192.168.24.55
+    dhcp_end: 192.168.24.99
     inspection_iprange: 192.168.24.100,192.168.24.120
     gateway: 192.168.24.254
+    vip: 192.168.24.253
     masquerade: false
   networks:
-    Tenant:
-      prefix: '172.16.0'
+  - name: Tenant
+    bridge: br-ctlplane
+    vip: false
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.0.0/24
+      allocation_pools:
+      - start: 172.16.0.5
+        end: 172.16.0.99
       vlan: 10
-      network: RHOSPVirtLab_ctlplane
-    Storage:
-      prefix: '172.16.1'
-      vlan: 20
-      network: RHOSPVirtLab_ctlplane
-    InternalApi:
-      prefix: '172.16.2'
-      vlan: 30
-      network: RHOSPVirtLab_ctlplane
-    StorageMgmt:
-      prefix: '172.16.3'
-      vlan: 40
-      network: RHOSPVirtLab_ctlplane
-    External:
-      prefix: '10.0.0'
-      network: RHOSPVirtLab_external
-    Management:
-      prefix: '10.0.1'
-      vlan: 60
-      network: RHOSPVirtLab_ctlplane
+  - name: Storage
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.1.0/24
+      allocation_pools:
+      - start: 172.16.1.5
+        end: 172.16.1.99
+      vlan: 11
+      vip: 172.16.1.253
+  - name: InternalApi
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.2.0/24
+      allocation_pools:
+      - start: 172.16.2.5
+        end: 172.16.2.99
+      vlan: 12
+      vip: 172.16.2.253
+  - name: StorageMgmt
+    bridge: br-ctlplane
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.3.0/24
+      allocation_pools:
+      - start: 172.16.3.5
+        end: 172.16.3.99
+      vlan: 13
+      vip: 172.16.3.253
+  - name: External
+    bridge: br-external
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 10.0.0.0/24
+      allocation_pools:
+      - start: 10.0.0.5
+        end: 10.0.0.99
+      gateway: 10.0.0.254
+      vip: 10.0.0.253
+# Add further entries for DCN (edge) leafs; see the role README (leafs) for a
+# full DCN leaf example.
 
-# interfaces to use in each nic-config
-interfaces:
-  Controller:
-    ControlPlane: nic1
-    External: nic2
-  Compute:
-    ControlPlane: nic1
-    External: nic2
-  ComputeOvsDpdk:
-    ControlPlane: nic1
-    External: nic2
-    DpdkBonds: []
-  ComputeOvsDpdkSriov:
-    ControlPlane: nic1
-    External: nic2v0
-    Sriov:
-      - device: nic2
-        numvfs: 8
-    DpdkBonds: []
-  ComputeSriov:
-    ControlPlane: nic1
-    External: nic2v0
-    Sriov:
-      - device: nic2
-        numvfs: 8
-  ComputeOvsHwOffload:
-    ControlPlane: nic1
-    External: nic2v0
-    Sriov:
-      - device: nic2
-        numvfs: 8
-  CephStorage:
-    ControlPlane: nic1
-    External: nic2
-  ComputeHCI:
-    ControlPlane: nic1
-    External: nic2
-  ComputeInstanceHA:
-    ControlPlane: nic1
-    External: nic2
-  DistributedCompute:
-    ControlPlane: nic1
-    External: nic2
-  DistributedComputeScaleOut:
-    ControlPlane: nic1
-    External: nic2
-  DistributedComputeHCI:
-    ControlPlane: nic1
-    External: nic2
-  DistributedComputeHCIScaleOut:
-    ControlPlane: nic1
-    External: nic2
-  CephAll:
-    ControlPlane: nic1
-    External: nic2
+RoleBridgeMappings:
+  Default:
+  - type: ovs_bridge
+    name: br-vlans
+    members:
+    - nic1
+    native: CtlPlane
+    vlans: ['Tenant', 'Storage', 'InternalApi', 'StorageMgmt']
+  - type: ovs_bridge
+    name: br-ex
+    members:
+    - nic2
+    native: External
+    vlans: []
+# A role not listed here uses `Default`. See the RHOSP-undercloud role README
+# (RoleBridgeMappings) for the entry schema and archetypes (SR-IOV/DPDK/HW-offload).
 
 # All computes default properties
 BridgeMappings: 'datacentre:br-ex'
@@ -193,6 +196,10 @@ ComputeOvsDpdkSriovProperties:
 CephStorageProperties:
   devices: ['/dev/sdb']
 
+# Run a full `yum update` of the undercloud host on every run (reboots if
+# needed). Set to False to skip the upgrade for faster, more predictable runs.
+UndercloudFullUpdate: True
+
 # Octavia parameters
 DeployOctavia: False
 
@@ -216,6 +223,19 @@ NeutronDriver: ovn
 
 # Snmpd configuration
 SnmpdReadonlyUserPassword: RHOSPVirtLab
+
+# Credentials (lab-only weak defaults; override in vault_credentials.yaml — see README).
+# BMC / IPMI credentials for the virtualbmc VMs and physical nodes.
+BmcUsername: admin
+BmcPassword: admin
+# Overcloud admin account created by the undercloud.
+OvercloudAdminPassword: redhat
+OvercloudAdminEmail: admin@example.com
+# Password for the test admin user created in overcloud_resources.yaml.
+TestUserPassword: redhat
+# Passwords baked into each VM's cloud-init (root and the ci_user account).
+VmRootPassword: redhat
+VmStackPassword: redhat
 
 # Disable telemetry
 DisableTelemetry: True
@@ -252,40 +272,3 @@ UndercloudExtraFirewallRules: []
 #      port: 8000
 #      proto: tcp
 #      action: accept
-
-# DCN leafs
-DCNLeafs: []
-  # - name: leaf1
-  #   hypervisor: <hypervisor_name>
-  #   subnet:
-  #     name: leaf1-subnet
-  #     cidr: 192.168.25.0/24
-  #     dhcp_start: 192.168.25.5
-  #     dhcp_end: 192.168.25.55
-  #     inspection_iprange: 192.168.25.100,192.168.25.120
-  #     gateway: 192.168.25.1
-  #     masquerade: true
-  #   networks:
-  #     Tenant:
-  #       prefix: '172.17.0'
-  #       vlan: 10
-  #       network: RHOSPVirtLab_ctlplane
-  #     Storage:
-  #       prefix: '172.17.1'
-  #       vlan: 20
-  #       network: RHOSPVirtLab_ctlplane
-  #     InternalApi:
-  #       prefix: '172.17.2'
-  #       vlan: 30
-  #       network: RHOSPVirtLab_ctlplane
-  #     StorageMgmt:
-  #       prefix: '172.17.3'
-  #       vlan: 40
-  #       network: RHOSPVirtLab_ctlplane
-  #     External:
-  #       prefix: '10.1.0'
-  #       network: RHOSPVirtLab_external
-  #     Management:
-  #       prefix: '10.1.1'
-  #       vlan: 60
-  #       network: RHOSPVirtLab_ctlplane

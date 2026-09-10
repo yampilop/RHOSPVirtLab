@@ -1,6 +1,6 @@
 parameter_defaults:
-  AdminPassword: "redhat"
-  AdminEmail: "admin@example.com"
+  AdminPassword: "{{ OvercloudAdminPassword }}"
+  AdminEmail: "{{ OvercloudAdminEmail }}"
 
   # Snmp definitions
   SnmpdReadonlyUserPassword: {{ SnmpdReadonlyUserPassword }}

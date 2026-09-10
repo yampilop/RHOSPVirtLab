@@ -1,8 +1,8 @@
-#/bin/bash
+#!/bin/bash
 
 source /home/stack/stackrc
 
-{% if leaf.name == DefaultLeaf0.name %}
+{% if leaf.name == default_leaf.name %}
 {% set templates_dir='/home/stack/templates' %}
 
 # Auto source and completion
@@ -32,7 +32,7 @@ openstack image list --fit-width
 {% endif %}
 
 {% if RHOSP_version >= 17.1 %}
-{% if leaf.name == DefaultLeaf0.name %}
+{% if leaf.name == default_leaf.name %}
 # Provision networks and vips
 openstack overcloud network provision -y --output {{ templates_dir }}/overcloud-networks-deployed.yaml {{ templates_dir }}/network_data.yaml
 openstack overcloud network vip provision -y --stack {{ leaf.name }} --output {{ templates_dir }}/overcloud-vip-deployed.yaml {{ templates_dir }}/vip_data.yaml
@@ -43,6 +43,7 @@ cp /home/stack/templates/overcloud-vip-deployed.yaml {{ templates_dir }}/overclo
 {% endif %}
 {% endif %}
 
+{% if not deployed_server[leaf.name] %}
 # Prepare baremetal nodes
 openstack overcloud node import {{ templates_dir }}/instackenv.yaml
 openstack baremetal node list
@@ -52,6 +53,9 @@ openstack baremetal node list
 # Introspect baremetal nodes
 openstack overcloud node introspect --all-manageable --provide
 openstack baremetal node list
+{% else %}
+# Pre-provisioned nodes: skip import/introspection (OS already up at its static ctlplane IP)
+{% endif %}
 
 
 # Prepare images
@@ -61,7 +65,7 @@ sudo openstack tripleo container image prepare \
 --output-env-file {{ templates_dir }}/overcloud-images.yaml
 {% else %}
 sudo openstack tripleo container image prepare \
-{% if leaf.name != DefaultLeaf0.name %}
+{% if leaf.name != default_leaf.name %}
 -e /home/stack/templates/overcloud-export.yaml \
 {% endif %}
 -e /home/stack/containers-prepare-parameter.yaml \
@@ -70,8 +74,13 @@ sudo openstack tripleo container image prepare \
 
 {% if RHOSP_version >= 17.1 %}
 # Provision nodes
+{% if deployed_server[leaf.name] %}
+# Deployed servers (managed:false): only authors overcloud-baremetal-deployed.yaml, no node changes
+openstack overcloud node provision -y --stack {{ leaf.name }} --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
+{% else %}
 openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 metalsmith list
+{% endif %}
 {% endif %}
 
 # Generate roles
@@ -83,9 +92,9 @@ sed -i -E '/HostnameFormatDefault: .+$/d' {{ templates_dir }}/roles_data.yaml
 
 # Add External network where it's needed
 {% for role, nets in roles_networks.items() if ('External' in nets) and (roles_count[leaf.name][role] > 0) %}
-sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- name: {{ role }}\n\1  networks:\n    External:\n      subnet: external_subnet{{ '_' ~ leaf.name if leaf.name != DefaultLeaf0.name else '' }}\n    \3:/' {{ templates_dir }}/roles_data.yaml
+sed -i -Ez 's/- name: {{ role }}\n(([^-][^\n]*\n)+)  networks:\n    ([^E].+):/- name: {{ role }}\n\1  networks:\n    External:\n      subnet: external_subnet{{ '_' ~ leaf.name if leaf.name != default_leaf.name else '' }}\n    \3:/' {{ templates_dir }}/roles_data.yaml
 {% endfor %}
-{% if leaf.name != DefaultLeaf0.name %}
+{% if leaf.name != default_leaf.name %}
 # Change the subnets for the leaf ones
 sed -i -E 's/subnet: (.+_subnet)$/subnet: \1{{ '_' ~ leaf.name }}/g' {{ templates_dir }}/roles_data.yaml
 {% endif %}

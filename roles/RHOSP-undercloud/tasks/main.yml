@@ -6,12 +6,27 @@
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
+# Register computed vars as facts so they're available in template contexts
+- name: Register computed variables as facts for template access
+  set_fact:
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
+    libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+
 - name: Wait until cloud-init finishes to grant the sudo access with no password
   raw: test -f /var/lib/cloud/instance/boot-finished
   retries: 30
   register: cmd_res
   changed_when: false
   until: cmd_res is success
+  when: not undercloud_is_physical | bool
 
 - name: Configure swap file on the undercloud
   include_role:
@@ -52,27 +67,11 @@
   yum:
     name: '*'
     state: latest
+  when: UndercloudFullUpdate | default(true) | bool
   notify: HANDLER - Reboot the machine
 
-- name: NETWORKING - Define management network connection
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "eth1"
-      interface_name: "eth1"
-      type: ethernet
-      autoconnect: yes
-      mtu: 1500
-      state: up
-      ip:
-        dhcp4: yes
-
-- name: NETWORKING - Configure network using system role
-  import_role:
-    name: rhel-system-roles.network
-  vars:
-    network_allow_restart: yes
+# Cloud-init configures both mgmt and eth0 (ctlplane) via network-config.j2, so no need
+# for rhel-system-roles.network. A physical undercloud is admin-prepared and left untouched.
 
 - name: CONFIGFILES - Create images directory
   file:
@@ -97,19 +96,30 @@
     remote_src: yes
   loop: "{{ RHOSP_version_supported[RHOSP_version].images_directories }}"
 
-- name: IMAGES - Download images for testing
-  ignore_errors: true
-  get_url:
-    url: "{{ item.url }}"
-    dest: "images/{{ item.name }}"
-    owner: stack
-    group: stack
-    timeout: 30
+- name: IMAGES - Check which test images already exist
+  stat:
+    path: "images/{{ item.name }}"
   loop:
     - url: "{{ CustomRhelImage }}"
       name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
-    - url: "{{ CirrOSDownloadLink }}"
+    - url: "{{ CustomCirrOSImage }}"
       name: "cirros.qcow2"
+  loop_control:
+    label: "{{ item.name }}"
+  register: test_images_stat
+
+# Skip any image already present (large files); loops over the stat results.
+- name: IMAGES - Download images for testing
+  get_url:
+    url: "{{ item.item.url }}"
+    dest: "images/{{ item.item.name }}"
+    owner: stack
+    group: stack
+    timeout: 30
+  loop: "{{ test_images_stat.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: not item.stat.exists
   retries: 3
   delay: 10
   register: result
@@ -119,8 +129,30 @@
   debug:
     msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
 
-- name: CHECKS - Verify vms and physical profiles
+- name: Register computed variables again for template access
+  set_fact:
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
+    libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+
+- name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
+
+- name: SSH - Ensure the stack ssh directory exists
+  file:
+    path: /home/stack/.ssh
+    state: directory
+    owner: stack
+    group: stack
+    mode: '0700'
+  when: true in (deployed_server.values() | map('bool') | list)
 
 - name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
   template:
@@ -142,12 +174,12 @@
 - name: STACK - Import tasks for the main stack
   include_tasks: tasks/overcloud.yml
   loop:
-    - "{{ DefaultLeaf0 }}"
+    - "{{ default_leaf }}"
   loop_control:
     loop_var: leaf
 
 - name: DCN - Import tasks for each DCN Leaf
   include_tasks: tasks/leafs.yml
-  loop: "{{ DCNLeafs }}"
+  loop: "{{ dcn_leafs }}"
   loop_control:
     loop_var: leaf

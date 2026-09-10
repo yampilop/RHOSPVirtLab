@@ -3,23 +3,36 @@ Description=DHCP Relay Agent Daemon
 Documentation=man:dhcrelay(8)
 Wants=network-online.target
 After=network-online.target
+# Keep retrying forever; the bridge only gains carrier once node taps attach.
+StartLimitIntervalSec=0
 
 [Service]
-Type=notify
+# ISC dhcrelay sends sd_notify; dnsmasq (RHEL 10 branches) does not, so use simple there.
+Type={{ 'simple' if ansible_distribution_major_version | int >= 10 else 'notify' }}
+# Force the ctlplane bridge up: a portless bridge has no carrier at start time, so
+# without this dhcrelay dies with "receive_packet failed ... Network is down".
+ExecStartPre=-/usr/sbin/ip link set dev br-ctlplane up
 {% if inventory_hostname == 'localhost' %}
 {% if ansible_distribution_version == '7.9' %}
-ExecStart=/usr/sbin/dhcrelay -d {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ DefaultLeaf0.subnet.dhcp_start }} -i {{ external_if }}
+ExecStart=/usr/sbin/dhcrelay -d {{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ default_leaf.ctlplane_subnet.dhcp_start }} -i {{ external_if }}
+{% elif ansible_distribution_major_version | int >= 10 %}
+ExecStart=/usr/sbin/dnsmasq -d --port=0 --dhcp-relay={{ hostvars['localhost']['ansible_'~external_if].ipv4.address }},{{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') | ipaddr('address') }}
 {% else %}
-ExecStart=/usr/sbin/dhcrelay -d {{ DefaultLeaf0.subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ DefaultLeaf0.subnet.dhcp_start }} -iu br-ctlplane -id {{ external_if }}
+ExecStart=/usr/sbin/dhcrelay -d {{ default_leaf.ctlplane_subnet.cidr | ipaddr('1') | ipaddr('address') }} {{ default_leaf.ctlplane_subnet.dhcp_start }} -iu br-ctlplane -id {{ external_if }}
 {% endif %}
 {% else %}
 {% if ansible_distribution_version == '7.9' %}
 ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -i br-ctlplane
+{% elif ansible_distribution_major_version | int >= 10 %}
+ExecStart=/usr/sbin/dnsmasq -d --port=0 --dhcp-relay={{ hostvars[inventory_hostname]['ansible_br_ctlplane'].ipv4.address | default(hostvars['localhost']['ansible_'~external_if].ipv4.address) }},{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}
 {% else %}
 ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -id br-ctlplane -iu {{ hypervisor_external_if }}
 {% endif %}
 {% endif %}
-StandardError=null
+# Self-heal instead of dying silently until the bridge has carrier.
+Restart=on-failure
+RestartSec=5
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

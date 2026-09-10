@@ -24,6 +24,6 @@ parameter_defaults:
   CephAnsibleExtraConfig:
     is_hci: true
 {% endif %}
-{% if DCNLeafs | length > 0 %}
+{% if dcn_leafs | length > 0 %}
   CephClusterName: {{ leaf.name }}
 {% endif %}

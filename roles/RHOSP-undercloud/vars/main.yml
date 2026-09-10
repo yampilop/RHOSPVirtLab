@@ -1,6 +1,32 @@
 ---
 # vars file for RHOSP-undercloud
 
+# Convenience views over `machines` (overcloud nodes only; the undercloud is separate).
+libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+
+# True when the undercloud is an admin-prepared physical host rather than a libvirt VM.
+undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+
+# Derived views over `leafs`: the control-plane leaf `overcloud` and the DCN leafs.
+# Selected by name (not list position), so authoring order does not matter.
+default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+
+# Boolean gate for the 16.2 network-isolation / network-environment env files:
+# true when the default leaf defines any networks. It must be a flat variable
+# (the deployment_environment `Variable` gate uses `lookup('vars', ...)`, which takes
+# a plain name and cannot traverse `default_leaf.networks`) and a boolean (the gate
+# resolves it with the `bool` filter, which is False for a non-empty list).
+default_leaf_has_networks: "{{ (default_leaf.networks | default([]) | length) > 0 }}"
+
+# Management (NAT) gateway, used as pm_addr for localhost libvirt VMs in instackenv.
+# Duplicated here because the virt-infra role vars are not visible in this play; keep in
+# sync with roles/RHOSP-virt-infra/vars/main.yml (libvirt_management_network.ipv4.address).
+libvirt_management_network:
+  ipv4:
+    address: '192.168.250.1'
+
 RHEL_version_supported:
   '7.9':
   '8.4':
@@ -70,12 +96,9 @@ overcloud_roles:
     distributed: True
     max: 3
 
-# Environment files to include in deploy command:
-#  - file: Name of the file
-#    absolute_path: True if the file name is a full path, False if it's relative to the leaf templates directory
-#    version: List of versions where the file will be included
-#    DCN: True if this will only be include in DCN deployments
-#    Leafs: All(Include in all the leafs)|Default(Include only in the default leaf)|NotDefault(Include only in the DCN leafs)
+# Environment files added to the deploy command. Per entry: file; absolute_path (full
+# path vs relative to the leaf templates dir); version (list); DCN (DCN-only);
+# Leafs (All|Default|NotDefault); DeployedServer (include only in deployed-server mode).
 deployment_environment:
   - file: overcloud-baremetal-deployed.yaml
     absolute_path: False
@@ -97,6 +120,18 @@ deployment_environment:
     version: [ 16.2 ]
     DCN: False
     Leafs: All
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml
+    absolute_path: True
+    version: [ 16.2 ]
+    DCN: False
+    Leafs: All
+    DeployedServer: True
+  - file: deployed-server-ports.yaml
+    absolute_path: False
+    version: [ 16.2 ]
+    DCN: False
+    Leafs: All
+    DeployedServer: True
   - file: /home/stack/containers-prepare-parameter.yaml
     absolute_path: True
     version: [ 17.1, 16.2 ]
@@ -117,7 +152,7 @@ deployment_environment:
     version: [ 16.2 ]
     DCN: True
     Leafs: NotDefault
-  - file: /home/stack/overcloud-deploy/{{ DefaultLeaf0.name }}/overcloud-export.yaml
+  - file: /home/stack/overcloud-deploy/{{ default_leaf.name }}/overcloud-export.yaml
     absolute_path: True
     version: [ 17.1 ]
     DCN: True
@@ -132,13 +167,13 @@ deployment_environment:
     version: [ 16.2 ]
     DCN: False
     Leafs: All
-    Variable: DefaultLeaf0.networks
+    Variable: default_leaf_has_networks
   - file: /usr/share/openstack-tripleo-heat-templates/environments/network-environment.yaml
     absolute_path: True
     version: [ 16.2 ]
     DCN: False
     Leafs: All
-    Variable: DefaultLeaf0.networks
+    Variable: default_leaf_has_networks
   - file: "/usr/share/openstack-tripleo-heat-templates/environments/services/neutron-{{ NeutronDriver }}-dpdk.yaml"
     absolute_path: True
     version: [ 17.1, 16.2 ]
@@ -378,6 +413,7 @@ RHOSP_version_supported:
       name: 'rhel-9.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda4'
     rhel_release: '9.2'
+    overcloud_ssh_user: tripleo-admin
     undercloud_repos:
       - rhel-9-for-x86_64-baseos-eus-rpms
       - rhel-9-for-x86_64-appstream-eus-rpms
@@ -416,6 +452,7 @@ RHOSP_version_supported:
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
+    overcloud_ssh_user: heat-admin
     undercloud_repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms

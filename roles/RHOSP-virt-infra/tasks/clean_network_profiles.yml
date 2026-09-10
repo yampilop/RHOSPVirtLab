@@ -1,21 +1,52 @@
-- name: NETWORKING - Delete bridges for networks linked with the hypervisor
+# Cleanup is intentionally ungated: it must remove whatever a previous run created.
+# Marking an already-absent connection absent is an idempotent no-op.
+
+# Remove VLAN and bridge connections using nmcli to avoid parent reference validation
+# conflicts in rhel-system-roles.network. Delete in order: VLANs first, then bridges.
+
+- name: NETWORKING - Collect VLAN connections to delete from localhost
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "{{ item.bridge }}"
-      interface_name: "{{ item.bridge }}"
-      type: bridge
-      state: down
-      persistent_state: absent
+    vlans_to_delete: "{{ (vlans_to_delete | default([])) + [item.bridge ~ '.' ~ item.subnet.vlan] }}"
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname == 'localhost'
+    - item.subnet.vlan is defined
+  loop: "{{ default_leaf.networks }}"
+
+- name: NETWORKING - Collect VLAN connections to delete from leafs
+  set_fact:
+    vlans_to_delete: "{{ (vlans_to_delete | default([])) + [item.1.bridge ~ '.' ~ item.1.subnet.vlan] }}"
+  when:
+    - inventory_hostname == item.0.hypervisor.split(',')[0]
+    - item.1.subnet.vlan is defined
+  with_subelements:
+    - "{{ dcn_leafs }}"
+    - networks
+
+- name: NETWORKING - Delete VLAN connections via nmcli
+  command: "nmcli connection delete {{ item }}"
+  loop: "{{ vlans_to_delete | default([]) | unique }}"
+  register: vlan_delete
+  failed_when: vlan_delete.rc not in [0, 10]
+  changed_when: vlan_delete.rc == 0
+
+- name: NETWORKING - Collect bridge connections to delete
+  set_fact:
+    bridges_to_delete: "{{ (bridges_to_delete | default([])) + [item.bridge] }}"
+  when:
+    - inventory_hostname in item.hypervisor.split(',')
     - item.forward == 'bridge'
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
+
+- name: NETWORKING - Delete bridge connections via nmcli
+  command: "nmcli connection delete {{ item }}"
+  loop: "{{ bridges_to_delete | default([]) | unique }}"
+  register: bridge_delete
+  failed_when: bridge_delete.rc not in [0, 10]
+  changed_when: bridge_delete.rc == 0
 
 - name: NETWORKING - Delete hypervisor interfaces
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ item.hypervisor_if }}"
@@ -24,13 +55,13 @@
       state: down
       persistent_state: absent
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Define only the network configuration for the public interface of the DCN hypervisors without static routes
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ hypervisor_external_if }}"
@@ -44,7 +75,7 @@
 
 - name: NETWORKING - Define only the network configuration for the public interface of the localhost hypervisor without static routes
   set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
+    network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
     connection:
       name: "{{ external_if }}"

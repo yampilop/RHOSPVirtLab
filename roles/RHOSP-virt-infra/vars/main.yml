@@ -1,9 +1,70 @@
 ---
 # vars file for RHOSP-virt-infra
 
+# True when the undercloud is an admin-prepared physical host rather than a libvirt VM.
+undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+
+# Inject the undercloud's constant fields so they cannot be set wrong (always named
+# `undercloud`, pre_provisioned, role=undercloud; no `pm`, so it gets no vbmc).
+undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
+
+# Append the fixed management NIC to a libvirt undercloud (its MAC must match the static
+# DHCP lease pinned by the management network); a physical undercloud gets nothing.
+undercloud_effective: >-
+  {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
+        ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
+     }}}, recursive=true))
+     if not (undercloud_is_physical | bool) else undercloud_base }}
+
+# Convenience views over `machines` (overcloud nodes only). A libvirt undercloud is
+# built by this role so it joins libvirt_machines; a physical undercloud never appears.
+libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
+physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+
+# Need-based gating flags (see README "When libvirt / VirtualBMC work is skipped").
+# libvirt_required: any VM to build (libvirt undercloud and/or libvirt overcloud nodes).
+libvirt_required: "{{ libvirt_machines | length > 0 }}"
+
+# vbmc_required: any libvirt overcloud node (the undercloud has no `pm`, so it is excluded).
+vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
+
+# bridges_required: any VM to attach OR any network trunking a physical uplink
+# (`hypervisor_if`); gates the L2 bridges, VLAN gateways and their firewall zoning.
+bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default([]) | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
+
+# management_network_required: the NAT/access network is needed on localhost only when
+# something there has a mgmt NIC - a libvirt undercloud, or a pre-provisioned localhost VM.
+management_network_required: >-
+  {{ (not (undercloud_is_physical | bool))
+     or ((machines | selectattr('type', 'equalto', 'libvirt')
+                   | selectattr('libvirt.hypervisor', 'equalto', 'localhost')
+                   | selectattr('pre_provisioned', 'defined')
+                   | selectattr('pre_provisioned') | list | length) > 0) }}
+
+# Derived views over `leafs`: the control-plane leaf `overcloud` and the DCN leafs.
+# Selected by name (not list position), so authoring order does not matter.
+default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
-vbmc_path: "/usr/local/bin/vbmc"
-vbmcd_path: "/usr/local/bin/vbmcd"
+
+# VirtualBMC install location. On RHEL 9/10 the system interpreter is
+# externally managed (PEP 668), so VirtualBMC is installed into a dedicated
+# venv and the binaries live there; on 7.9/8.4 it goes to /usr/local/bin.
+vbmc_venv: "/opt/vbmc"
+vbmc_bindir: "{{ (vbmc_venv ~ '/bin') if (ansible_distribution_major_version | int >= 9) else '/usr/local/bin' }}"
+vbmc_path: "{{ vbmc_bindir }}/vbmc"
+vbmcd_path: "{{ vbmc_bindir }}/vbmcd"
+
+# libvirt service/socket units to enable, by host major version:
+#   7  -> monolithic libvirtd.service
+#   8/9 -> libvirtd.socket (socket activation, monolithic daemon)
+#   10 -> monolithic libvirtd removed; modular daemon sockets
+libvirt_units: >-
+  {{ ['libvirtd.service'] if (ansible_distribution_major_version | int <= 7)
+     else (['virtqemud.socket', 'virtnetworkd.socket', 'virtstoraged.socket', 'virtnodedevd.socket']
+           if (ansible_distribution_major_version | int >= 10)
+           else ['libvirtd.socket']) }}
 
 RHEL_version_supported:
   "7.9":
@@ -23,7 +84,6 @@ RHEL_version_supported:
       - dhcp
     pip:
       - virtualbmc
-      - netaddr
       - argcomplete
     ovmf_path: '/usr/share/OVMF/'
   "8.4":
@@ -32,19 +92,21 @@ RHEL_version_supported:
       - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      - "@python36"
+      # python3 itself is already the platform interpreter; install pip by name
+      # rather than the @python36 module, whose module-install path is refused on
+      # hosts whose AppStream repo lacks modular metadata ("Fail-Safe repository").
+      - python3-pip
       - python3-lxml
       - python3-libvirt
       - edk2-ovmf
       - dhcp-relay
     pip:
       - virtualbmc
-      - netaddr
     ovmf_path: '/usr/share/edk2/ovmf/'
   "9.6":
     packages:
       - libvirt
-      - libguestfs-tools
+      - guestfs-tools
       - ipmitool
       - python3-lxml
       - python3-libvirt
@@ -52,20 +114,20 @@ RHEL_version_supported:
       - dhcp-relay
     pip:
       - virtualbmc
-      - netaddr
     ovmf_path: '/usr/share/edk2/ovmf/'
   "10.2":
     packages:
       - libvirt
-      - libguestfs-tools
+      - guestfs-tools
       - ipmitool
       - python3-lxml
       - python3-libvirt
       - edk2-ovmf
-      - dhcp-relay
+      # ISC dhcp/dhcrelay were removed in RHEL 10; dnsmasq provides the
+      # DHCP relay (see dhcrelay.service.j2).
+      - dnsmasq
     pip:
       - virtualbmc
-      - netaddr
     ovmf_path: '/usr/share/edk2/ovmf/'
 
 RHOSP_version_supported:
@@ -75,9 +137,39 @@ RHOSP_version_supported:
       name: 'rhel-9.2-x86_64-kvm.qcow2'
       main_partition: '/dev/sda4'
     rhel_release: '9.2'
+    overcloud_ssh_user: tripleo-admin
   16.2:
     rhel_image:
       url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
       name: 'rhel-8.4-x86_64-kvm.qcow2'
       main_partition: '/dev/sda3'
     rhel_release: '8.4'
+    overcloud_ssh_user: heat-admin
+
+# Logical name of the management/Ansible-access NIC (a machine exposes one by including
+# an interface with this name).
+management_interface_name: mgmt
+
+# Fixed management wiring for a libvirt undercloud: a role constant (its MAC must match
+# the static DHCP lease below) injected into undercloud_effective, not user-editable.
+undercloud_management_mac: '0c:1f:0d:10:00:02'
+undercloud_management_ip: '192.168.250.10'
+undercloud_management_interface:
+  name: "{{ management_interface_name }}"
+  mac: "{{ undercloud_management_mac }}"
+  bridge: "{{ libvirt_management_network.bridge }}"
+
+# The management (NAT) libvirt network: outside the per-leaf model, created on localhost
+# only (gated by management_network_required). Pins a static DHCP lease for a VM undercloud.
+libvirt_management_network:
+  name: RHOSPVirtLab_management
+  hypervisor: localhost
+  bridge: br-management
+  forward: nat
+  ipv4:
+    address: '192.168.250.1'
+    netmask: '255.255.255.0'
+    dhcp:
+      start: '192.168.250.100'
+      end: '192.168.250.254'
+      hosts: "{{ [{'mac': undercloud_management_mac, 'ip': undercloud_management_ip, 'name': 'undercloud'}] if not (undercloud_is_physical | bool) else [] }}"

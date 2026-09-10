@@ -2,11 +2,11 @@
   set_fact:
     roles_count: |-
       {
-      {%- for leaf in ([ DefaultLeaf0 ] + DCNLeafs) %}
+      {%- for leaf in leafs %}
         {{ leaf.name }}:
         {
         {%- for role in overcloud_roles %}
-          {{ role.name }}: {{ (physical | selectattr("profile", "equalto", role.profile) | selectattr("leaf", "equalto", leaf.name) | list | count) + (vms | selectattr("profile", "equalto", role.profile) | selectattr("hypervisor", "in", leaf.hypervisor) | list | count) }},
+          {{ role.name }}: {{ (physical_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) + (libvirt_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(',')) | list | count) }},
         {%- endfor %}
         },
       {%- endfor %}
@@ -16,29 +16,100 @@
   set_fact:
     roles_count: "{{ roles_count | from_yaml }}"
 
-- name: PROFILES - Check all vms profiles are virtual
-  fail:
-    msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for vms."
-  when:
-    - item.name != 'undercloud'
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).virtual | bool)
-  loop: "{{ vms }}"
+- name: PROFILES - Determine deployed-server (pre-provisioned) mode per leaf
+  set_fact:
+    deployed_server: |-
+      {
+      {%- for leaf in leafs %}
+        {{ leaf.name }}: {{
+          ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', leaf.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)
+           + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)) > 0
+        }},
+      {%- endfor %}
+      }
 
-- name: PROFILES - Check only the right profiles are used in vms for leafs
+- name: PROFILES - Parse deployed-server fact
+  set_fact:
+    deployed_server: "{{ deployed_server | from_yaml }}"
+
+- name: PROFILES - Ensure deployed-server mode is all-or-nothing per leaf
+  fail:
+    msg: >-
+      ERROR in leaf {{ item.name }}: pre-provisioned (deployed-server) and
+      ironic-provisioned overcloud nodes cannot be mixed in the same stack. Set
+      pre_provisioned consistently for all overcloud nodes in this leaf.
+  when:
+    - deployed_server[item.name] | bool
+    - ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | rejectattr('pre_provisioned', 'defined') | list | count)
+       + (libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
+       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | rejectattr('pre_provisioned', 'defined') | list | count)
+       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
+  loop: "{{ leafs }}"
+
+- name: PROFILES - Ensure pre-provisioned overcloud nodes define a valid ctlplane_ip
+  fail:
+    msg: >-
+      ERROR in {{ item.name }}: pre-provisioned overcloud nodes require
+      openstack.ctlplane_ip inside {{ default_leaf.ctlplane_subnet.cidr }} and outside the
+      DHCP ({{ default_leaf.ctlplane_subnet.dhcp_start }}-{{ default_leaf.ctlplane_subnet.dhcp_end }}),
+      inspection ({{ default_leaf.ctlplane_subnet.inspection_iprange }}) and reserved
+      (.1-.3, .254) ranges.
+  vars:
+    ctlplane_prefix: "{{ default_leaf.ctlplane_subnet.cidr.split('/')[0].rsplit('.', 1)[0] }}"
+  when:
+    - item.pre_provisioned | default(false)
+    - (item.openstack.ctlplane_ip is not defined)
+      or (item.openstack.ctlplane_ip.rsplit('.', 1)[0] != ctlplane_prefix)
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) in [0, 1, 2, 3, 254, 255])
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.dhcp_start.rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.dhcp_end.rsplit('.', 1)[1] | int))
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[0].rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[1].rsplit('.', 1)[1] | int))
+  loop: "{{ libvirt_machines + physical_machines }}"
+
+- name: PROFILES - Ensure ctlplane_ip is unique across deployed servers
+  vars:
+    ctlplane_ips: "{{ (libvirt_machines + physical_machines) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | map(attribute='openstack.ctlplane_ip') | list }}"
+  fail:
+    msg: "ERROR: duplicate openstack.ctlplane_ip found among pre-provisioned overcloud nodes ({{ ctlplane_ips }})."
+  when: (ctlplane_ips | length) != (ctlplane_ips | unique | list | length)
+
+# A deployed-server (pre_provisioned) node is not power-managed by ironic, so it must not
+# carry a pm block - except when ControllersFencing is on, where controllers keep a pm/BMC
+# for STONITH fencing.
+- name: PROFILES - Ensure pre-provisioned nodes define no pm block unless fencing is enabled
+  fail:
+    msg: >-
+      ERROR in {{ item.name }}: a pre-provisioned (deployed-server) node must not define a
+      pm block - ironic does not power-manage deployed servers. The only exception is when
+      ControllersFencing is enabled (controllers keep a pm/BMC for STONITH fencing). Either
+      remove the pm block or set ControllersFencing: True.
+  when:
+    - item.pre_provisioned | default(false) | bool
+    - item.pm is defined
+    - not (ControllersFencing | default(false) | bool)
+  loop: "{{ libvirt_machines + physical_machines }}"
+
+- name: PROFILES - Check all libvirt machine profiles are virtual
+  fail:
+    msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for libvirt machines."
+  when:
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).virtual | bool)
+  loop: "{{ libvirt_machines }}"
+
+- name: PROFILES - Check only the right profiles are used in libvirt machines for leafs
   fail:
     msg: "ERROR in vm {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.hypervisor not in DefaultLeaf0.hypervisor
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
-  loop: "{{ vms }}"
+    - item.libvirt.hypervisor not in default_leaf.hypervisor.split(',')
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).distributed | bool)
+  loop: "{{ libvirt_machines }}"
 
-- name: PROFILES - Check only the right profiles are used in physical for leafs
+- name: PROFILES - Check only the right profiles are used in physical machines for leafs
   fail:
     msg: "ERROR in physical {{ item.name }}: Only distributed capable profiles can be used in leafs."
   when:
-    - item.leaf != DefaultLeaf0.name
-    - not ((overcloud_roles | selectattr("profile", "equalto", item.profile) | list | first).distributed | bool)
-  loop: "{{ physical }}"
+    - item.openstack.leaf != default_leaf.name
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).distributed | bool)
+  loop: "{{ physical_machines }}"
 
 - name: PROFILES - Check no more than the max amount of nodes for a profile is used in each leaf
   fail:
@@ -47,5 +118,35 @@
     - item.1.max is defined
     - roles_count[item.0.name][item.1.name] > item.1.max
   with_nested:
-    - "{{ [ DefaultLeaf0 ] + DCNLeafs }}"
+    - "{{ leafs }}"
     - "{{ overcloud_roles }}"
+
+# Routed spine-leaf (DCN) needs a gateway on every subnet: it is the cross-leaf next-hop
+# and the default of TripleO's auto-generated <Net>InterfaceDefaultRoute_<subnet>, which is
+# a required parameter with no default when the subnet omits it (UserParameterMissing).
+- name: PROFILES - Ensure DCN leaf networks define a subnet gateway (routed spine-leaf)
+  fail:
+    msg: >-
+      ERROR in leaf {{ item.0.name }}, network {{ item.1.name }}: a routed
+      (DCN/spine-leaf) deployment requires subnet.gateway on every leaf network so
+      TripleO can populate {{ item.1.name }}InterfaceDefaultRoute_{{ item.1.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet_{{ item.0.name }}. Define subnet.gateway for this network.
+  when:
+    - dcn_leafs | length > 0
+    - item.1.subnet.gateway is not defined
+  loop: "{{ dcn_leafs | subelements('networks', skip_missing=true) }}"
+  loop_control:
+    label: "{{ item.0.name }}/{{ item.1.name }}"
+
+- name: PROFILES - Ensure base subnets of routed networks define a subnet gateway
+  fail:
+    msg: >-
+      ERROR network {{ item.name }}: it spans DCN leafs, so its base subnet in the
+      overcloud leaf must also define subnet.gateway for routed spine-leaf (populates
+      {{ item.name }}InterfaceDefaultRoute_{{ item.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet).
+  when:
+    - dcn_leafs | length > 0
+    - item.subnet.gateway is not defined
+    - (dcn_leafs | selectattr('networks', 'defined') | map(attribute='networks') | flatten | selectattr('name', 'equalto', item.name) | list | length) > 0
+  loop: "{{ default_leaf.networks | default([]) }}"
+  loop_control:
+    label: "{{ item.name }}"

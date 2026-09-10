@@ -7,7 +7,7 @@
     group: root
   when: inventory_hostname == 'localhost'
 
-- name: NETWORKS - Add hook for libvirt networks (hack) in order to allow port-forwarding when the network is forwarding route
+- name: NETWORKS - Add hook for libvirt networks (hack) to re-apply the host FORWARD rules libvirt wipes on restart
   template:
     src: "network-hook.j2"
     dest: "/etc/libvirt/hooks/network"
@@ -18,7 +18,10 @@
   notify: HANDLER - restart libvirtd service
   when:
     - inventory_hostname == 'localhost'
-    - (networks | selectattr('name', 'search', DefaultLeaf0.networks.External.network) | list | first).forward == 'nat'
+    # The forward:bridge gateway bridges rely on a host FORWARD ACCEPT rule that libvirt
+    # shadows with a FORWARD REJECT on every (re)start. Install the hook whenever such a
+    # bridge exists on localhost so the rule is re-applied on each network event.
+    - (libvirt_networks | selectattr('forward', 'equalto', 'bridge') | selectattr('ipv4', 'defined') | selectattr('hypervisor', 'search', 'localhost') | list | length) > 0
 
 - name: NETWORKS - Gather facts about libvirt networks
   community.libvirt.virt_net:
@@ -29,10 +32,10 @@
     command: define
     name: "{{ item.name }}"
     xml: "{{ lookup('template', 'network.xml.j2') }}"
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - ansible_libvirt_networks[item.name] is not defined
 
 - name: NETWORKS - Gather facts about libvirt networks again
@@ -43,18 +46,18 @@
   community.libvirt.virt_net:
     state: active
     name: "{{ item.name }}"
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - ansible_libvirt_networks[item.name]['state'] != 'active'
 
 - name: NETWORKS - Enable autostart for the network
   community.libvirt.virt_net:
     autostart: yes
     name: "{{ item.name }}"
-  loop: "{{ networks }}"
+  loop: "{{ libvirt_networks }}"
   become: yes
   when:
-    - inventory_hostname in item.hypervisor
+    - inventory_hostname in item.hypervisor.split(',')
     - ansible_libvirt_networks[item.name]['autostart'] != 'yes'

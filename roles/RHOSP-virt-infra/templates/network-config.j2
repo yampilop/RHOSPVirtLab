@@ -1,0 +1,35 @@
+version: 2
+ethernets:
+{% for iface in machine.libvirt.network.interfaces if iface.name == management_interface_name %}
+  {{ iface.name }}:
+    match:
+      macaddress: '{{ iface.mac }}'
+    set-name: {{ iface.name }}
+{% if machine.openstack.role == 'undercloud' %}
+    dhcp4: true
+{% else %}
+    addresses:
+      - {{ hostvars[machine.name].ansible_host }}/24
+    routes:
+      - to: default
+        via: {{ libvirt_management_network.ipv4.address }}
+        metric: 100
+    nameservers:
+      addresses: [{{ libvirt_management_network.ipv4.address }}]
+{% endif %}
+{% endfor %}
+{% if (machine.pre_provisioned | default(false)) and (machine.openstack.role != 'undercloud') and (machine.openstack.ctlplane_ip is defined) %}
+{% set ctlplane_net = libvirt_networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first %}
+{% for iface in machine.libvirt.network.interfaces if iface.bridge == ctlplane_net.bridge %}
+  {{ iface.name }}:
+    match:
+      macaddress: '{{ iface.mac }}'
+    set-name: {{ iface.name }}
+    addresses:
+      - {{ machine.openstack.ctlplane_ip }}/24
+    routes:
+      - to: default
+        via: {{ ctlplane_net.ipv4.address }}
+        metric: 200
+{% endfor %}
+{% endif %}

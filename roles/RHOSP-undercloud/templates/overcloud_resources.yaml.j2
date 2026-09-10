@@ -1,7 +1,30 @@
-{% set dpdk_count = (roles_count[DefaultLeaf0.name]["ComputeOvsDpdk"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
-{% set sriov_count = (roles_count[DefaultLeaf0.name]["ComputeSriov"] + roles_count[DefaultLeaf0.name]["ComputeOvsHwOffload"] + roles_count[DefaultLeaf0.name]["ComputeOvsDpdkSriov"]) %}
-{% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
-{% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
+{%- macro external_floating_pool(ext) -%}
+{%- set lo = (ext.subnet.ip_subnet | ipaddr('network') | ipaddr('int') | int) + 1 -%}
+{%- set hi = (ext.subnet.ip_subnet | ipaddr('broadcast') | ipaddr('int') | int) - 1 -%}
+{%- set used = [] -%}
+{%- for p in ext.subnet.allocation_pools -%}
+{%- set _ = used.append([p.start | ipaddr('int') | int, p.end | ipaddr('int') | int]) -%}
+{%- endfor -%}
+{%- if ext.subnet.gateway is defined -%}
+{%- set g = ext.subnet.gateway | ipaddr('int') | int -%}
+{%- set _ = used.append([g, g]) -%}
+{%- endif -%}
+{%- set ns = namespace(cursor=lo, bstart=0, bend=-1, blen=0) -%}
+{%- for iv in used | sort -%}
+{%- if iv[0] > ns.cursor and (iv[0] - ns.cursor) > ns.blen -%}
+{%- set ns.blen = iv[0] - ns.cursor -%}{%- set ns.bstart = ns.cursor -%}{%- set ns.bend = iv[0] - 1 -%}
+{%- endif -%}
+{%- if iv[1] + 1 > ns.cursor -%}{%- set ns.cursor = iv[1] + 1 -%}{%- endif -%}
+{%- endfor -%}
+{%- if hi >= ns.cursor and (hi - ns.cursor + 1) > ns.blen -%}
+{%- set ns.bstart = ns.cursor -%}{%- set ns.bend = hi -%}
+{%- endif -%}
+{{ (ns.bstart | ipaddr) ~ ' ' ~ (ns.bend | ipaddr) }}
+{%- endmacro -%}
+{% set dpdk_count = (roles_count[default_leaf.name]["ComputeOvsDpdk"] + roles_count[default_leaf.name]["ComputeOvsDpdkSriov"]) %}
+{% set sriov_count = (roles_count[default_leaf.name]["ComputeSriov"] + roles_count[default_leaf.name]["ComputeOvsHwOffload"] + roles_count[default_leaf.name]["ComputeOvsDpdkSriov"]) %}
+{% set ceph_count = (roles_count[default_leaf.name]["CephStorage"] + roles_count[default_leaf.name]["CephAll"]) %}
+{% set hci_count = (roles_count[default_leaf.name]["ComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCIScaleOut"]) %}
 
 heat_template_version: {{ RHOSP_version_supported[RHOSP_version].heat_template_version }}
 
@@ -16,7 +39,7 @@ parameters:
   user_password:
     type: string
     description: User name
-    default: redhat
+    default: {{ TestUserPassword }}
   image_rhel_external_id:
     type: string
     description: External ID to reference RHEL image
@@ -31,16 +54,19 @@ parameters:
     default: ''
 
 resources:
-{% if (DefaultLeaf0.networks.External is defined) %}
+{% set ext_list = default_leaf.networks | selectattr('name', 'equalto', 'External') | list %}
+{% if ext_list | length > 0 %}
+{% set ext = ext_list[0] %}
+{% set fb = (external_floating_pool(ext) | trim).split() %}
   # Provider network resources
   default_provider_network:
     type: OS::Neutron::ProviderNet
     properties:
       name: default-provider
-      network_type: {{ 'vlan' if (DefaultLeaf0.networks.External.vlan is defined) else 'flat' }}
+      network_type: {{ 'vlan' if (ext.subnet.vlan is defined) else 'flat' }}
       physical_network: datacentre
-{% if (DefaultLeaf0.networks.External.vlan is defined) %}
-      segmentation_id: {{ DefaultLeaf0.networks.External.vlan | default('') }}
+{% if (ext.subnet.vlan is defined) %}
+      segmentation_id: {{ ext.subnet.vlan | default('') }}
 {% endif %}
       router_external: True
       port_security_enabled: True
@@ -53,11 +79,11 @@ resources:
       network: { get_resource: default_provider_network }
       ip_version: 4
       allocation_pools:
-        - start: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(99) }}
-          end: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(249) }}
-      cidr: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
+        - start: {{ fb[0] }}
+          end: {{ fb[1] }}
+      cidr: {{ ext.subnet.ip_subnet }}
       enable_dhcp: True
-      gateway_ip: {{ (DefaultLeaf0.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
+      gateway_ip: {{ ext.subnet.gateway }}
   default_router:
     type: OS::Neutron::Router
     depends_on: default_provider_network
@@ -66,17 +92,22 @@ resources:
       external_gateway_info:
         network: { get_resource: default_provider_network }
         enable_snat: True
+{% endif %}
 
-{% for leaf in DCNLeafs %}
+{% for leaf in dcn_leafs %}
+{% set lext_list = leaf.networks | selectattr('name', 'equalto', 'External') | list %}
+{% if lext_list | length > 0 %}
+{% set lext = lext_list[0] %}
+{% set lfb = (external_floating_pool(lext) | trim).split() %}
   # Provider network resources for DCN {{ leaf.name }}
   default_provider_network_{{ leaf.name }}:
     type: OS::Neutron::ProviderNet
     properties:
       name: default-provider-{{ leaf.name }}
-      network_type: {{ 'vlan' if (leaf.networks.External.vlan is defined) else 'flat' }}
+      network_type: {{ 'vlan' if (lext.subnet.vlan is defined) else 'flat' }}
       physical_network: datacentre-{{ leaf.name }}
-{% if leaf.networks.External.vlan is defined %}
-      segmentation_id: {{ leaf.networks.External.vlan | default('') }}
+{% if lext.subnet.vlan is defined %}
+      segmentation_id: {{ lext.subnet.vlan | default('') }}
 {% endif %}
       router_external: True
       port_security_enabled: True
@@ -89,11 +120,11 @@ resources:
       network: { get_resource: default_provider_network_{{ leaf.name }} }
       ip_version: 4
       allocation_pools:
-        - start: {{ (leaf.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(99) }}
-          end: {{ (leaf.networks.External.prefix ~ '.1/24') | ansible.utils.ipmath(249) }}
-      cidr: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('network/prefix') }}
+        - start: {{ lfb[0] }}
+          end: {{ lfb[1] }}
+      cidr: {{ lext.subnet.ip_subnet }}
       enable_dhcp: True
-      gateway_ip: {{ (leaf.networks.External.prefix ~ '.1/24') | ipaddr('address') }}
+      gateway_ip: {{ lext.subnet.gateway }}
   default_router_{{ leaf.name }}:
     type: OS::Neutron::Router
     depends_on: default_provider_network_{{ leaf.name }}
@@ -102,8 +133,8 @@ resources:
       external_gateway_info:
         network: { get_resource: default_provider_network_{{ leaf.name }} }
         enable_snat: True
-{% endfor %}
 {% endif %}
+{% endfor %}
   # Flavor resources
 {% for size in DefaultFlavorsSize %}
   flavor_m1_{{ size.name }}:
@@ -176,7 +207,7 @@ resources:
     type: OS::Nova::HostAggregate
     properties:
       name: dpdk_hosts
-      hosts: [{% for node in (physical | selectattr("profile", "contains", "Dpdk")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+      hosts: [{% for node in (physical_machines | selectattr("openstack.role", "contains", "Dpdk")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
       metadata: { "dpdk": true }
 {% endif %}
 {% if sriov_count > 0 %}
@@ -184,7 +215,7 @@ resources:
     type: OS::Nova::HostAggregate
     properties:
       name: sriov_hosts
-      hosts: [{% for node in (physical | selectattr("profile", "match", "Sriov|HwOffload")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
+      hosts: [{% for node in (physical_machines | selectattr("openstack.role", "match", "Sriov|HwOffload")) %}{{ node.name }}.localdomain{{ "," if not loop.last else "" }}{% endfor %}]
       metadata: { "sriov": true }
 {% endif %}
 
@@ -249,6 +280,7 @@ resources:
       cidr: 192.168.1.0/24
       enable_dhcp: True
       gateway_ip: 192.168.1.1
+{% if ext_list | length > 0 %}
   test_subnet_gateway:
     type: OS::Neutron::Port
     depends_on: test_subnet
@@ -266,7 +298,9 @@ resources:
     properties:
       port: { get_resource: test_subnet_gateway }
       router: { get_resource: default_router }
-{% for leaf in DCNLeafs %}
+{% endif %}
+{% for leaf in dcn_leafs %}
+{% set lext_list = leaf.networks | selectattr('name', 'equalto', 'External') | list %}
   test_network_{{ leaf.name }}:
     type: OS::Neutron::Net
     properties:
@@ -281,6 +315,7 @@ resources:
       cidr: 192.168.1.0/24
       enable_dhcp: True
       gateway_ip: 192.168.1.1
+{% if lext_list | length > 0 %}
   test_subnet_gateway_{{ leaf.name }}:
     type: OS::Neutron::Port
     depends_on: test_subnet_{{ leaf.name }}
@@ -298,6 +333,7 @@ resources:
     properties:
       port: { get_resource: test_subnet_gateway_{{ leaf.name }} }
       router: { get_resource: default_router_{{ leaf.name }} }
+{% endif %}
 {% endfor %}
 
   # Security group resources
