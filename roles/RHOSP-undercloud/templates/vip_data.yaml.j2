@@ -6,10 +6,14 @@
 - network: ctlplane
   dns_name: {{ leaf.name }}
   subnet: {{ leaf.ctlplane_subnet.name }}
+{% if leaf.ctlplane_subnet.vip is defined %}
   ip_address: {{ leaf.ctlplane_subnet.vip }}
+{% endif %}
 {% for network in default_leaf.networks if network.vip %}
 - network: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
   dns_name: {{ leaf.name }}
   subnet: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet{{ name }}
+{% if network.subnet.vip is defined %}
   ip_address: {{ network.subnet.vip }}
+{% endif %}
 {% endfor %}

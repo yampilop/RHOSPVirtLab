@@ -83,7 +83,9 @@ resources:
           end: {{ fb[1] }}
       cidr: {{ ext.subnet.ip_subnet }}
       enable_dhcp: True
+{% if ext.subnet.gateway is defined %}
       gateway_ip: {{ ext.subnet.gateway }}
+{% endif %}
   default_router:
     type: OS::Neutron::Router
     depends_on: default_provider_network
@@ -124,7 +126,9 @@ resources:
           end: {{ lfb[1] }}
       cidr: {{ lext.subnet.ip_subnet }}
       enable_dhcp: True
+{% if lext.subnet.gateway is defined %}
       gateway_ip: {{ lext.subnet.gateway }}
+{% endif %}
   default_router_{{ leaf.name }}:
     type: OS::Neutron::Router
     depends_on: default_provider_network_{{ leaf.name }}
