@@ -1,5 +1,10 @@
 # Create Kubernetes resources from Jinja2 templates and prepare them for deployment
 
+- name: KUBERNETES - Calculate DataVolume name
+  set_fact:
+    datavolume_name: "rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}"
+  run_once: true
+
 - name: KUBERNETES - Create output directory for manifests
   file:
     path: "{{ playbook_dir }}/{{ KubeVirtNamespace }}"
@@ -80,7 +85,7 @@
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/05-secret-provisioning-ssh-public-key.yaml
 
       Wait for the DataVolume import to complete before creating VMs:
-        oc wait --for=jsonpath='{.status.phase}'=Succeeded datavolume/rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }} -n {{ KubeVirtNamespace }} --timeout=600s
+        oc wait --for=jsonpath='{.status.phase}'=Succeeded datavolume/{{ datavolume_name }} -n {{ KubeVirtNamespace }} --timeout=600s
 
       Then create the VMs:
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/06-machines.yaml
