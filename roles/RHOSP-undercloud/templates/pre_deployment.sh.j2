@@ -98,8 +98,6 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager release --set={{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(' --enable=') }}"
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "echo '{% for server in ntp_servers %}server {{ server }} iburst{% if not loop.last %}
-{% endif %}{% endfor %}' | sudo tee -a /etc/chrony.conf && sudo systemctl enable --now chronyd"
 {% endif %}
 {% endif %}
 
