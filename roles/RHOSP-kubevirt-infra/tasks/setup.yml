@@ -4,11 +4,17 @@
     state: directory
     mode: '0755'
 
+- name: SETUP - Check if oc binary already exists
+  stat:
+    path: "/home/{{ ansible_user }}/bin/oc"
+  register: oc_binary
+
 - name: SETUP - Download openshift-client
   get_url:
     url: "{{ CustomOcClientUrl | default('https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz') }}"
     dest: "/tmp/openshift-client-linux.tar.gz"
     mode: '0644'
+  when: not oc_binary.stat.exists
   register: oc_download
 
 - name: SETUP - Extract openshift-client to ~/bin
@@ -19,7 +25,7 @@
     chmod 0755 "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
     chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
     rm -f /tmp/openshift-client-linux.tar.gz
-  when: oc_download.changed
+  when: not oc_binary.stat.exists
 
 - name: SETUP - Ensure ~/bin is in PATH
   lineinfile:
