@@ -3,26 +3,10 @@
 
 # Kubernetes client packages by RHEL version
 RHEL_version_supported:
-  "7.9":
-    packages:
-      - python3-pip
-      - python3-devel
-      - gcc
-    pip:
-      - openshift
-  "8.4":
-    packages:
-      - python3-pip
-    pip:
-      - openshift
-  "9.6":
-    packages:
-      - openshift-clients
-  "10.2":
-    packages: []
-  "9.6":
-    packages:
-      - openshift-clients
+  "7.9": {}
+  "8.4": {}
+  "9.6": {}
+  "10.2": {}
 
 # Port forwarding configuration (not customizable)
 forwarded_ports:

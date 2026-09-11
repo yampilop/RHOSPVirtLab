@@ -1,31 +1,14 @@
-- name: SETUP - Ensure kubernetes client packages are installed
-  yum:
-    name: "{{ RHEL_version_supported[ansible_distribution_version].packages }}"
-    state: present
-  become: yes
-  when: RHEL_version_supported[ansible_distribution_version].packages | default([]) | length > 0
-
-- name: SETUP - Install kubernetes client via pip (legacy interpreters)
-  pip:
-    name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
-    executable: "pip3"
-  when:
-    - RHEL_version_supported[ansible_distribution_version].pip is defined
-    - ansible_distribution_major_version | int < 9
-
 - name: SETUP - Ensure ~/bin directory exists for oc tool
   file:
     path: "/home/{{ ansible_user }}/bin"
     state: directory
     mode: '0755'
 
-- name: SETUP - Download openshift-client for RHEL 10.2
+- name: SETUP - Download openshift-client
   get_url:
     url: "{{ CustomOcClientUrl | default('https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz') }}"
     dest: "/tmp/openshift-client-linux.tar.gz"
     mode: '0644'
-  when:
-    - ansible_distribution_major_version | int >= 9
 
 - name: SETUP - Extract openshift-client to ~/bin
   shell: |
@@ -35,8 +18,6 @@
     chmod 0755 "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
     chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
     rm -f /tmp/openshift-client-linux.tar.gz
-  when:
-    - ansible_distribution_major_version | int >= 9
 
 - name: SETUP - Ensure ~/bin is in PATH
   lineinfile:
