@@ -71,6 +71,10 @@
   raw: sudo subscription-manager repos --disable='*' && sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].undercloud_repos | join(' --enable=') }}
   when: repo_result is failed
 
+- name: REPOSITORIES - Refresh dnf/yum cache
+  command: sudo dnf makecache
+  changed_when: false
+
 - name: MODULES - Enable and configure modules
   copy:
     dest: "/etc/dnf/modules.d/{{ item.name }}.module"
