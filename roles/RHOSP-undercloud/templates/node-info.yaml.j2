@@ -82,31 +82,31 @@ parameter_defaults:
     swap_size_mb: 8192
 {% endif %}
   instances:
-{% if leaf.hypervisor is defined %}
-{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(','))) %}
-{% if deployed_server[leaf.name] %}
+{% if leaf.hypervisor is defined %}{# IF 1 #}
+{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(','))) %}{# IF 1 FOR 1 #}
+{% if deployed_server[leaf.name] %}{# IF 1 FOR 1 IF 1 #}
   - name: {{ vm.name }}
     hostname: {{ vm.name }}
 {{ net_list(ocrole, name, vm.openstack.ctlplane_ip) }}
-{% else %}
+{% else %}{# IF 1 FOR 1 IF 1 #}
   - name: {{ leaf.name }}-{{ vm.name }}
-{% if vm.pm.mode != 'uefi' %}
+{% if vm.pm.mode != 'uefi' %}{# IF 1 FOR 1 IF 2 #}
     image:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
     root_size_gb: {{ ((vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first).size / 1073741824) | int - 9 }}
-{% endif %}
-{% endif %}
-{% endfor %}
-{% for pm in (physical_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("openstack.leaf", "equalto", leaf.name)) %}
-{% if deployed_server[leaf.name] %}
+{% endif %}{# IF 1 FOR 1 IF 2 #}
+{% endif %}{# IF 1 FOR 1 IF 1 #}
+{% endfor %}{# IF 1 FOR 1 #}
+{% for pm in (physical_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("openstack.leaf", "equalto", leaf.name)) %}{# IF 1 FOR 2 #}
+{% if deployed_server[leaf.name] %}{# IF 1 FOR 2 IF 1 #}
   - name: {{ pm.name }}
     hostname: {{ pm.name }}
 {{ net_list(ocrole, name, pm.openstack.ctlplane_ip) }}
-{% else %}
+{% else %}{# IF 1 FOR 2 IF 1 #}
   - name: {{ leaf.name }}-{{ pm.name }}
-{% if pm.pm.mode != 'uefi' %}
+{% if pm.pm.mode != 'uefi' %}{# IF 1 FOR 2 IF 2 #}
     image:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
@@ -115,16 +115,17 @@ parameter_defaults:
     network_config:
       net_config_data_lookup:
         {{ leaf.name }}-{{ pm.name }}:
-{% for nic, interface in pm.physical.nics.items() %}
+{% for nic, interface in pm.physical.nics.items() %}{# IF 1 FOR 2 IF 2 FOR 1 #}
           {{ nic }}: '{{ pm.physical.mac if nic == 'nic1' else interface }}'
-{% endfor %}
-{% endif %}
-{% endfor %}
-{% else %}
-{% for vm in (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile)) %}
+{% endfor %}{# IF 1 FOR 2 IF 2 FOR 1 #}
+{% endif %}{# IF 1 FOR 2 IF 2 #}
+{% endif %}{# IF 1 FOR 2 IF 1 #}
+{% endfor %}{# IF 1 FOR 2 #}
+{% else %}{# IF 1 #}
+{% for vm in (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile)) %}{# IF 1 FOR 3 #}
   - name: {{ vm.name }}
     hostname: {{ vm.name }}
 {{ net_list(ocrole, name, vm.openstack.ctlplane_ip) }}
-{% endfor %}
-{% endif %}
-{% endfor %}
+{% endfor %}{# IF 1 FOR 3 #}
+{% endif %}{# IF 1 #}
+{% endfor %}{# FOR ocrole #}
