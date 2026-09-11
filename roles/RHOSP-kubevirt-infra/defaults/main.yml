@@ -8,6 +8,9 @@ RHOSP_release: latest
 # Custom RHEL image: set URL to use a custom image. If it's a local file, use "file://<full_path>"
 CustomRhelImage: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
 
+# Custom RHEL image storage size for KubeVirt DataVolume PVC
+CustomRhelImageSize: "20Gi"
+
 # Cleaning and creating parameters
 cleanup: False
 create: True

@@ -11,6 +11,9 @@ CustomCirrOSImage: "{{ CirrOSDownloadLink }}"
 # Custom OpenShift client (oc/kubectl) archive URL. Useful for air-gapped environments.
 CustomOcClientUrl: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz"
 
+# Custom RHEL image storage size for KubeVirt DataVolume PVC
+CustomRhelImageSize: "20Gi"
+
 # overcloud parameters
 external_if: eno1
 # Public noVNC proxy address, '[<scheme>://]<host>[:<port>]': host (IP or domain) sets

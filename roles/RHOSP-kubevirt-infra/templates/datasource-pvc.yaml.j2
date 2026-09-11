@@ -14,6 +14,6 @@ spec:
     - {{ KubeVirtAccessMode }}
     resources:
       requests:
-        storage: 15Gi
+        storage: {{ CustomRhelImageSize | default('20Gi') }}
     storageClassName: {{ KubeVirtStorageClass }}
     volumeMode: {{ KubeVirtVolumeMode }}
