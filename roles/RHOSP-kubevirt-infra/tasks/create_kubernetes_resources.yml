@@ -69,16 +69,18 @@
     msg: |
       Kubernetes manifests have been generated in: {{ playbook_dir }}/{{ KubeVirtNamespace }}/
 
-      To deploy the resources to your Kubernetes/OpenShift cluster, run:
-        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/
-
-      Or deploy individual resources in order:
+      Deploy individual resources in order:
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource-pvc.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/01-datasource.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/02-udns.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/03-services.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/04-routes.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/05-secret-provisioning-ssh-public-key.yaml
+
+      Wait for the DataVolume import to complete before creating VMs:
+        oc wait --for=jsonpath='{.status.phase}'=Succeeded datavolume/rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }} -n {{ KubeVirtNamespace }} --timeout=600s
+
+      Then create the VMs:
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/06-machines.yaml
   delegate_to: localhost
   run_once: true
