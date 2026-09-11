@@ -119,10 +119,10 @@ spec:
             chpasswd:
               list: |
                 root:{{ VmRootPassword }}
-                {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}:{{ VmStackPassword }}
+                {{ 'stack' if machine.name == 'undercloud' else RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}:{{ VmStackPassword }}
               expire: false
             password: {{ VmStackPassword }}
-            user: {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}
+            user: {{ 'stack' if machine.name == 'undercloud' else RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}
             ssh_pwauth: True
             runcmd: []
 {% if machine.openstack.ctlplane_ip is defined %}
