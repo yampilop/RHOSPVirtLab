@@ -17,7 +17,7 @@ spec:
     weight: 100
   port:
     targetPort: {{ item.name }}
-{% if item.secure | bool }}
+{% if item.secure | bool %}
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
