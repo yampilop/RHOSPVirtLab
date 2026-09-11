@@ -85,19 +85,21 @@ metalsmith list
 {% if deployed_server[leaf.name] and (rh_activationkey is defined and rh_activationkey or rh_username is defined and rh_username) %}
 # Prepare pre-provisioned nodes with subscription, repos, and updates
 {% if rh_activationkey is defined and rh_activationkey %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --org={{ rh_orgid }} --activationkey={{ rh_activationkey }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --org={{ rh_orgid }} --activationkey={{ rh_activationkey }}"
 {% if rh_pool is defined and rh_pool %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}"
 {% endif %}
 {% elif rh_username is defined and rh_username %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --username {{ rh_username }} --password {{ rh_password }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --username {{ rh_username }} --password {{ rh_password }}"
 {% if rh_pool is defined and rh_pool %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}"
 {% endif %}
 {% endif %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager release --set={{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
-ansible -i /home/stack/pre_deployment_inventory.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(' --enable=') }}"
-ansible -i /home/stack/pre_deployment_inventory.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager release --set={{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(' --enable=') }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "echo '{% for server in ntp_servers %}server {{ server }} iburst{% if not loop.last %}
+{% endif %}{% endfor %}' | sudo tee -a /etc/chrony.conf && sudo systemctl enable --now chronyd"
 {% endif %}
 {% endif %}
 
