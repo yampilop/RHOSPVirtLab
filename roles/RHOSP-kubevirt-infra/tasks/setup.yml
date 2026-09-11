@@ -18,8 +18,6 @@
     path: "/home/{{ ansible_user }}/bin"
     state: directory
     mode: '0755'
-  when:
-    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
 
 - name: SETUP - Download oc tool for RHEL 10.2
   get_url:
