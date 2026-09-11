@@ -139,13 +139,21 @@
   when: vbmc_required | bool
 
 # Nested virtualization only matters when this host runs VMs.
+# Skip all nested virt tasks if no libvirt machines are configured
+- name: SETUP - Skip nested virtualization checks if no libvirt machines
+  set_fact:
+    skip_nested_checks: "{{ libvirt_machines | length == 0 }}"
+  when: libvirt_required | bool
+
 - name: SETUP - Determine the KVM module for the host CPU vendor
   set_fact:
     kvm_module: >-
       {{ 'kvm_intel' if ('GenuineIntel' in (ansible_processor | join(' ')))
          else ('kvm_amd' if ('AuthenticAMD' in (ansible_processor | join(' ')))
          else '') }}
-  when: libvirt_required | bool
+  when:
+    - libvirt_required | bool
+    - not (skip_nested_checks | default(false))
 
 - name: SETUP - Read the nested virtualization parameter
   slurp:
@@ -154,6 +162,7 @@
   become: yes
   when:
     - libvirt_required | bool
+    - not (skip_nested_checks | default(false))
     - kvm_module | length > 0
   failed_when: false
 
@@ -163,7 +172,9 @@
       {{ (kvm_module | length > 0)
          and (nested_slurp.content is defined)
          and ((nested_slurp.content | b64decode | trim) in ['1', 'Y']) }}
-  when: libvirt_required | bool
+  when:
+    - libvirt_required | bool
+    - not (skip_nested_checks | default(false))
 
 - name: SETUP - Set nested_enabled to true when not needed
   set_fact:
@@ -179,6 +190,7 @@
     create: yes
   when:
     - libvirt_required | bool
+    - not (skip_nested_checks | default(false))
     - kvm_module | length > 0
     - not nested_enabled | bool
   become: yes
@@ -188,5 +200,6 @@
     msg: "Please restart the machine '{{ inventory_hostname }}' to enable nested virtualization and then run the playbook again."
   when:
     - libvirt_required | bool
+    - not (skip_nested_checks | default(false))
     - kvm_module | length > 0
     - not nested_enabled | bool
