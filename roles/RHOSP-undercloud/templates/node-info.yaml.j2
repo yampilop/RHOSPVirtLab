@@ -126,7 +126,7 @@ parameter_defaults:
 {% for vm in (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile)) %}{# IF 1 FOR 3 #}
   - name: {{ vm.name }}
     hostname: {{ vm.name }}
-{{ net_list(ocrole, name, vm.openstack.ctlplane_ip) }}
+{{ net_list(ocrole, name, vm.openstack.ctlplane_ip if vm.openstack.ctlplane_ip is defined else '') }}
 {% endfor %}{# IF 1 FOR 3 #}
 {% endif %}{# IF 1 #}
 {% endfor %}{# FOR ocrole #}
