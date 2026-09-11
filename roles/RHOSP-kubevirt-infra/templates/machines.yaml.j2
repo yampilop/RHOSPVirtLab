@@ -130,6 +130,7 @@ spec:
             ethernets:
               eth1:
                 addresses:
-                - '{{ machine.openstack.ctlplane_ip }}'
+                - '{{ machine.openstack.ctlplane_ip }}/{{ default_leaf.ctlplane_subnet.cidr.split('/')[1] }}'
+                gateway4: {{ default_leaf.ctlplane_subnet.gateway }}
 {% endif %}
 {% endfor %}
