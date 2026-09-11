@@ -1,6 +1,6 @@
 galaxy_info:
   role_name: RHOSP-virt-infra
-  description: Virtual Lab infrastructure for Red Hat Openstack Platform
+  description: Virtual Lab infrastructure for Red Hat Openstack Platform deployed in libvirt
   author: Juan Pablo Marti
   company: Red Hat, Inc.
   license: license (GPL-2.0-or-later, MIT, etc)
@@ -9,7 +9,10 @@ galaxy_info:
   platforms:
     - name: Red Hat Enterprise Linux
       versions:
+      - 7.9
       - 8.4
+      - 9.6
+      - 10.2
 
   galaxy_tags:
     - rhel

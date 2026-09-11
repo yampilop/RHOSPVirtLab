@@ -1,6 +1,15 @@
 ---
 # vars file for RHOSP-virt-infra
 
+# Port forwarding configuration (not customizable)
+forwarded_ports:
+  - name: http
+    port: 80
+  - name: vnc
+    port: 6080
+  - name: keystone
+    port: 5000
+
 # True when the undercloud is an admin-prepared physical host rather than a libvirt VM.
 undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
@@ -50,7 +59,7 @@ pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 
 # VirtualBMC install location. On RHEL 9/10 the system interpreter is
 # externally managed (PEP 668), so VirtualBMC is installed into a dedicated
-# venv and the binaries live there; on 7.9/8.4 it goes to /usr/local/bin.
+# venv and the binaries live there; on 7.9-8.4 it goes to /usr/local/bin.
 vbmc_venv: "/opt/vbmc"
 vbmc_bindir: "{{ (vbmc_venv ~ '/bin') if (ansible_distribution_major_version | int >= 9) else '/usr/local/bin' }}"
 vbmc_path: "{{ vbmc_bindir }}/vbmc"
