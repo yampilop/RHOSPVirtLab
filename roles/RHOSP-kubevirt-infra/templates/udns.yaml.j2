@@ -2,7 +2,7 @@
 apiVersion: k8s.ovn.org/v1
 kind: UserDefinedNetwork
 metadata:
-  name: {{ ctlplane_bridge.name }}
+  name: {{ default_leaf.ctlplane_bridge.name }}
   namespace: {{ KubeVirtNamespace }}
 spec:
   topology: Layer2
@@ -10,7 +10,7 @@ spec:
     role: Secondary
     ipam:
       mode: Disabled
-{% for bridge in default_leaf.additional_bridges %}
+{% for bridge in default_leaf.additional_bridges | default([]) %}
 ---
 apiVersion: k8s.ovn.org/v1
 kind: UserDefinedNetwork
