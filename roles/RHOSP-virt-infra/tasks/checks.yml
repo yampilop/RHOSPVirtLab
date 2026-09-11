@@ -30,7 +30,8 @@
 # Capacity checks only apply when this host builds VMs.
 - name: CHECKS - Get total hypervisor memory planned
   vars:
-    memory_values: "{{ libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.memory') | list }}"
+    machines_on_hypervisor: "{{ libvirt_machines | map(attribute='libvirt') | selectattr('hypervisor', 'equalto', inventory_hostname) | list }}"
+    memory_values: "{{ machines_on_hypervisor | map(attribute='memory') | list }}"
     size_multipliers:
       Gi: 1024
       Mi: 1
@@ -48,7 +49,7 @@
 
 - name: CHECKS - Get total hypervisor cpus planned
   set_fact:
-    total_hypervisor_cpus: "{{ ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.cpus') | list) | sum) }}"
+    total_hypervisor_cpus: "{{ ((libvirt_machines | map(attribute='libvirt') | selectattr('hypervisor', 'equalto', inventory_hostname) | map(attribute='cpus') | list) | sum) }}"
   when: libvirt_required | bool
 
 - name: CHECKS - Check CPU usage wont be larger than the hypervisor capacity
