@@ -95,7 +95,13 @@ spec:
 {% endfor %}
         machine:
           type: pc-q35-rhel9.6.0
-        resources: {}
+        resources:
+          requests:
+            memory: {{ machine.kubevirt.memory }}
+            cpu: {{ machine.kubevirt.cpus }}
+          limits:
+            memory: {{ machine.kubevirt.memory }}
+            cpu: {{ machine.kubevirt.cpus }}
       networks:
       - name: default
         pod:
