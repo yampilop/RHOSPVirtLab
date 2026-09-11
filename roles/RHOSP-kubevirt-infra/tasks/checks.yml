@@ -33,6 +33,8 @@
     valid_size_pattern: '^[0-9]+(Gi|Mi|Ki)?$'
     memory_values: "{{ all_machines | map(attribute='kubevirt.memory') | list }}"
     disk_sizes: "{{ all_machines | map(attribute='kubevirt.disks') | flatten | map(attribute='size') | list }}"
+    all_sizes: "{{ memory_values + disk_sizes }}"
+    invalid_sizes: "{% set invalid = [] %}{% for item in all_sizes %}{% if item is string and not (item | regex_search(valid_size_pattern)) %}{% set _ = invalid.append(item) %}{% endif %}{% endfor %}{{ invalid }}"
   fail:
     msg: |
       Invalid size format in vars/machines.yml or role defaults. All memory and disk sizes
@@ -45,19 +47,7 @@
       Invalid examples: 16GiB (extra B), 16G (missing i), 16 Gi (space), 6.5Gi (decimal)
 
       Found invalid values:
-      {% set invalid = [] %}
-      {%- for mem in memory_values %}
-      {%- if not (mem | regex_search(valid_size_pattern)) %}
-      {%- set _ = invalid.append('memory: ' ~ mem) %}
-      {%- endif %}
-      {%- endfor %}
-      {%- for disk in disk_sizes %}
-      {%- if not (disk | regex_search(valid_size_pattern)) %}
-      {%- set _ = invalid.append('disk size: ' ~ disk) %}
-      {%- endif %}
-      {%- endfor %}
-      {% if invalid %}{{ invalid | join('\n') }}{% else %}(none detected at validation time){% endif %}
+      {{ invalid_sizes | join('\n') if invalid_sizes else '(none detected at validation time)' }}
   when:
     - inventory_hostname == 'localhost'
-    - (memory_values + disk_sizes) | select('string') | list | length > 0
-    - (memory_values + disk_sizes) | select('string') | list | rejectattr('match', 'search', valid_size_pattern) | list | length > 0
+    - invalid_sizes | length > 0
