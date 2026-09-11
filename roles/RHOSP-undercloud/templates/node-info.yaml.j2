@@ -82,6 +82,7 @@ parameter_defaults:
     swap_size_mb: 8192
 {% endif %}{# IF 0 FOR 2 IF 1 IF 3 #}
 {% endif %}{# IF 0 FOR 2 IF 1 #}
+{% if leaf.hypervisor is defined or (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | list | length > 0) %}{# IF INSTANCES #}
   instances:
 {% if leaf.hypervisor is defined %}{# IF 1 #}
 {% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(','))) %}{# IF 1 FOR 1 #}
@@ -129,5 +130,6 @@ parameter_defaults:
 {{ net_list(ocrole, name, vm.openstack.ctlplane_ip if vm.openstack.ctlplane_ip is defined else '') }}
 {% endfor %}{# IF 1 FOR 3 #}
 {% endif %}{# IF 1 #}
+{% endif %}{# IF INSTANCES #}
 {% endfor %}{# FOR ocrole #}
 {% endif %}{# IF RHOSP_version < 17.1 #}
