@@ -29,6 +29,13 @@ undercloud:
       # The mgmt/Ansible-access NIC is injected by the role (see README); do not list it.
 
 
+# Alternative: a KUBEVIRT undercloud (see README). Replace the libvirt definition above with:
+#
+# undercloud:
+#   type: kubevirt
+#   openstack:
+#     local_interface: eth1        # control-plane NIC (eth0 is pod network in kubevirt)
+#
 # Alternative: an admin-prepared PHYSICAL undercloud (see README). Replace the libvirt
 # definition above with:
 #
