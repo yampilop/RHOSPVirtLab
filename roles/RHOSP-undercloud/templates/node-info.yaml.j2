@@ -1,42 +1,42 @@
-{% if RHOSP_version < 17.1 %}
+{% if RHOSP_version < 17.1 %}{# IF 0 #}
 
 parameter_defaults:
-{% for ocrole in overcloud_roles %}
-{% if roles_count[leaf.name][ocrole.name] > 0 %}
+{% for ocrole in overcloud_roles %}{# IF 0 FOR 1 #}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}{# IF 0 FOR 1 IF 1 #}
   Overcloud{{ ocrole.name }}Flavor: baremetal
   {{ ocrole.name }}Count: {{ roles_count[leaf.name][ocrole.name] }}
-{% endif %}
-{% endfor %}
+{% endif %}{# IF 0 FOR 1 IF 1 #}
+{% endfor %}{# IF 0 FOR 1 #}
 
-{% else %}
+{% else %}{# IF 0 #}
 
-{% if leaf.name != default_leaf.name %}
+{% if leaf.name != default_leaf.name %}{# IF 0.1 #}
 {% set name = "_" ~ leaf.name %}
-{% else %}
+{% else %}{# IF 0.1 #}
 {% set name = "" %}
-{% endif %}
+{% endif %}{# IF 0.1 #}
 
 {% macro net_list(ocrole, name, ctlplane_ip='') %}
     networks:
     - network: ctlplane
-{% if ctlplane_ip %}
+{% if ctlplane_ip %}{# MACRO IF 1 #}
       fixed_ip: {{ ctlplane_ip }}
-{% endif %}
-{% if not deployed_server[leaf.name] %}
+{% endif %}{# MACRO IF 1 #}
+{% if not deployed_server[leaf.name] %}{# MACRO IF 2 #}
       vif: true
-{% endif %}
-{% for network in leaf.networks if network.name in roles_networks[ocrole.name] %}
+{% endif %}{# MACRO IF 2 #}
+{% for network in leaf.networks if network.name in roles_networks[ocrole.name] %}{# MACRO FOR 1 #}
     - network: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
       subnet: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet{{ name }}
-{% endfor %}
+{% endfor %}{# MACRO FOR 1 #}
 {%- endmacro %}
 
-{% for ocrole in overcloud_roles %}
-{% if roles_count[leaf.name][ocrole.name] > 0 %}
+{% for ocrole in overcloud_roles %}{# IF 0 FOR 2 #}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}{# IF 0 FOR 2 IF 1 #}
 - name: {{ ocrole.name }}
   count: {{ roles_count[leaf.name][ocrole.name] }}
-{% if not deployed_server[leaf.name] %}
-{% if ocrole.name == 'Controller' %}
+{% if not deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 1 #}
+{% if ocrole.name == 'Controller' %}{# IF 0 FOR 2 IF 1 IF 1 IF 1 #}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
     extra_vars:
@@ -48,8 +48,8 @@ parameter_defaults:
         /home=1GB
         /srv=10GB
         /var=100%
-{% endif %}
-{% if ('Sriov' in ocrole.name) or ('OvsHwOffload' in ocrole.name) or ('OvsDpdk' in ocrole.name) %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 IF 1 #}
+{% if ('Sriov' in ocrole.name) or ('OvsHwOffload' in ocrole.name) or ('OvsDpdk' in ocrole.name) %}{# IF 0 FOR 2 IF 1 IF 1 IF 2 #}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
     extra_vars:
@@ -57,21 +57,21 @@ parameter_defaults:
       tuned_isolated_cores: '{{ vars[ocrole.name + 'Properties'].isolcpus }}'
       tuned_profile: 'cpu-partitioning'
       reboot_wait_timeout: 1800
-{% endif %}
-{% if 'OvsDpdk' in ocrole.name %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 IF 2 #}
+{% if 'OvsDpdk' in ocrole.name %}{# IF 0 FOR 2 IF 1 IF 1 IF 3 #}
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-openvswitch-dpdk.yaml
     extra_vars:
       pmd: '{{ vars[ocrole.name + 'Properties'].ovspmdcorelist }}'
       memory_channels: '{{ vars[ocrole.name + 'Properties'].memorychannels }}'
       socket_mem: '{{ vars[ocrole.name + 'Properties'].socketmemory }}'
-{% endif %}
-{% endif %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 IF 3 #}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 #}
   defaults:
-{% if deployed_server[leaf.name] %}
+{% if deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 2 #}
     managed: false
-{% endif %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 2 #}
 {{ net_list(ocrole, name) }}
-{% if not deployed_server[leaf.name] %}
+{% if not deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 3 #}
     network_config:
       network_config_update: true
       template: /home/stack/templates/{{ leaf.name ~ "/" if leaf.name != default_leaf.name else "" }}nic-configs/{{ ocrole.profile }}.j2
@@ -80,7 +80,8 @@ parameter_defaults:
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else 'ctlplane' }}
     swap_size_mb: 8192
-{% endif %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 3 #}
+{% endif %}{# IF 0 FOR 2 IF 1 #}
   instances:
 {% if leaf.hypervisor is defined %}{# IF 1 #}
 {% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(','))) %}{# IF 1 FOR 1 #}
