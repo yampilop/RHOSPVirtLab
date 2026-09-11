@@ -41,10 +41,12 @@
       pre_provisioned consistently for all overcloud nodes in this leaf.
   when:
     - deployed_server[item.name] | bool
-    - ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | rejectattr('pre_provisioned', 'defined') | list | count)
-       + (libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
+    - ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | rejectattr('pre_provisioned', 'defined') | list | count if item.hypervisor is defined else 0)
+       + (libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count if item.hypervisor is defined else 0)
        + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | rejectattr('pre_provisioned', 'defined') | list | count)
-       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
+       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
+       + (kubevirt_machines | rejectattr('pre_provisioned', 'defined') | list | count)
+       + (kubevirt_machines | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
   loop: "{{ leafs }}"
 
 - name: PROFILES - Ensure pre-provisioned overcloud nodes define a valid ctlplane_ip
