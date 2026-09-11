@@ -37,6 +37,7 @@ time openstack overcloud deploy \
 --stack {{ leaf.name }} \
 -n /home/stack/templates/network_data.yaml \
 -r {{ templates_dir }}/roles_data.yaml \
+--ntp-server {{ ntp_servers | join(',') }} \
 {% if deployed_server[leaf.name] %}
 --disable-validations \
 {% endif %}
