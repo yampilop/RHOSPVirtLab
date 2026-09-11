@@ -19,21 +19,24 @@
     state: directory
     mode: '0755'
 
-- name: SETUP - Copy oc binary to ~/bin
-  copy:
-    src: "oc"
-    dest: "/home/{{ ansible_user }}/bin/oc"
-    mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+- name: SETUP - Download openshift-client for RHEL 10.2
+  get_url:
+    url: "{{ CustomOcClientUrl | default('https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz') }}"
+    dest: "/tmp/openshift-client-linux.tar.gz"
+    mode: '0644'
+  when:
+    - ansible_distribution_major_version | int >= 9
 
-- name: SETUP - Copy kubectl binary to ~/bin
-  copy:
-    src: "kubectl"
-    dest: "/home/{{ ansible_user }}/bin/kubectl"
-    mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+- name: SETUP - Extract openshift-client to ~/bin
+  shell: |
+    cd /tmp
+    tar -xzf openshift-client-linux.tar.gz oc kubectl
+    mv oc kubectl "/home/{{ ansible_user }}/bin/"
+    chmod 0755 "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
+    chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
+    rm -f /tmp/openshift-client-linux.tar.gz
+  when:
+    - ansible_distribution_major_version | int >= 9
 
 - name: SETUP - Ensure ~/bin is in PATH
   lineinfile:

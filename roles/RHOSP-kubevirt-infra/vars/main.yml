@@ -20,6 +20,9 @@ RHEL_version_supported:
       - openshift-clients
   "10.2":
     packages: []
+  "9.6":
+    packages:
+      - openshift-clients
 
 # Port forwarding configuration (not customizable)
 forwarded_ports:

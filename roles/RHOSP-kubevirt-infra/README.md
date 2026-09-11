@@ -27,6 +27,9 @@ RHOSP_release: **latest**|*valid_number*
 CustomRhelImage: **"{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"**|*"<url>"*|*"file://<full_path>"*
   Customize the RHEL cloud image used as the base for KubeVirt VMs. Specify a URL ("http://...") or local file path ("file://<full_path>"). Use the full path with triple slash for local files, e.g., "file:///home/admin/rhel.qcow2"
 
+CustomOcClientUrl: **"https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz"**|*"<url>"*
+  Customize the OpenShift client (oc/kubectl) archive URL. Useful for air-gapped environments or to use a specific version. Specify a URL to a tar.gz archive containing oc and kubectl binaries.
+
 cleanup: **False**|True
   Clean up KubeVirt resources (VirtualMachines, UserDefinedNetworks, Secrets) before creation.
 
