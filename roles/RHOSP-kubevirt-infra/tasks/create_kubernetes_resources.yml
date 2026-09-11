@@ -8,6 +8,14 @@
   delegate_to: localhost
   run_once: true
 
+- name: KUBERNETES - Render DataSource manifest
+  template:
+    src: datasource.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource.yaml"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
 - name: KUBERNETES - Render UDNs manifest
   template:
     src: udns.yaml.j2
@@ -57,6 +65,7 @@
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/
 
       Or deploy individual resources in order:
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/01-udns.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/02-services.yaml
         oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/03-routes.yaml

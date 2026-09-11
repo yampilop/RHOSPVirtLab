@@ -59,6 +59,7 @@
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/03-routes.yaml
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/02-services.yaml
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/01-udns.yaml
+        oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource.yaml
   delegate_to: localhost
   run_once: true
   when: cleanup | bool

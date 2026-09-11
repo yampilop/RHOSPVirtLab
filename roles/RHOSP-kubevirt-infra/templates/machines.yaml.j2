@@ -21,8 +21,10 @@ spec:
     spec:
       source:
 {% if (disk.root | bool) and (machine.pre_provisioned | bool) %}
-        http:
-          url: {{ CustomRhelImage }}
+        dataSource:
+          apiGroup: cdi.kubevirt.io
+          kind: DataSource
+          name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') }}
 {% else %}
         blank: {}
 {% endif %}
