@@ -66,7 +66,7 @@
       or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) in [0, 1, 2, 3, 254, 255])
       or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.dhcp_start.rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.dhcp_end.rsplit('.', 1)[1] | int))
       or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[0].rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[1].rsplit('.', 1)[1] | int))
-  loop: "{{ libvirt_machines + physical_machines }}"
+  loop: "{{ libvirt_machines + physical_machines + kubevirt_machines }}"
 
 - name: PROFILES - Ensure ctlplane_ip is unique across deployed servers
   vars:
@@ -89,7 +89,7 @@
     - item.pre_provisioned | default(false) | bool
     - item.pm is defined
     - not (ControllersFencing | default(false) | bool)
-  loop: "{{ libvirt_machines + physical_machines }}"
+  loop: "{{ libvirt_machines + physical_machines + kubevirt_machines }}"
 
 - name: PROFILES - Ensure fencing is not enabled with kubevirt controllers
   fail:
