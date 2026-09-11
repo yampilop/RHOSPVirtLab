@@ -1,0 +1,19 @@
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}
+  namespace: {{ KubeVirtNamespace }}
+spec:
+  contentType: kubevirt
+  source:
+    http:
+      url: {{ CustomRhelImage }}
+  pvc:
+    accessModes:
+    - {{ KubeVirtAccessMode }}
+    resources:
+      requests:
+        storage: 15Gi
+    storageClassName: {{ KubeVirtStorageClass }}
+    volumeMode: {{ KubeVirtVolumeMode }}

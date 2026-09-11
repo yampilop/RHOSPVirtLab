@@ -5,7 +5,7 @@ metadata:
   name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}
   namespace: {{ KubeVirtNamespace }}
 spec:
-  contentType: kubevirt
   source:
-    http:
-      url: {{ CustomRhelImage }}
+    pvc:
+      name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}
+      namespace: {{ KubeVirtNamespace }}
