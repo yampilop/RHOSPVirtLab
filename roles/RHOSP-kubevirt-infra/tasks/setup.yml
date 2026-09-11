@@ -19,23 +19,22 @@
     state: directory
     mode: '0755'
 
-- name: SETUP - Download oc binary directly for RHEL 10.2
+- name: SETUP - Download openshift-client for RHEL 10.2
   get_url:
-    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/oc"
-    dest: "/home/{{ ansible_user }}/bin/oc"
-    mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz"
+    dest: "/tmp/openshift-client-linux.tar.gz"
+    mode: '0644'
   when:
     - RHEL_version_supported[ansible_distribution_version].download_oc | default(false)
 
-- name: SETUP - Download kubectl binary for RHEL 10.2
-  get_url:
-    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/kubectl"
-    dest: "/home/{{ ansible_user }}/bin/kubectl"
-    mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+- name: SETUP - Extract openshift-client to ~/bin
+  shell: |
+    cd /tmp
+    tar -xzf openshift-client-linux.tar.gz oc kubectl
+    mv oc kubectl "/home/{{ ansible_user }}/bin/"
+    chmod 0755 "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
+    chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
+    rm -f /tmp/openshift-client-linux.tar.gz
   when:
     - RHEL_version_supported[ansible_distribution_version].download_oc | default(false)
 
