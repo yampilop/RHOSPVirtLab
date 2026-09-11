@@ -66,7 +66,7 @@
 - name: SETUP - Create stack alias to connect to undercloud
   lineinfile:
     path: "/home/{{ ansible_user }}/.bashrc"
-    line: "alias stack='ssh stack@undercloud'"
+    line: "alias stack='ssh -o StrictHostKeyChecking=no stack@{{ hostvars['undercloud'].ansible_host }}'"
     insertafter: EOF
     state: present
   when: inventory_hostname == 'localhost'
