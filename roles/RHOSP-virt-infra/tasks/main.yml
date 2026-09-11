@@ -10,18 +10,19 @@
 - name: SETUP - Register computed variables as facts for template access
   set_fact:
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    undercloud_is_kubevirt: "{{ (undercloud.type | default('libvirt')) == 'kubevirt' }}"
     undercloud_effective: >-
       {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
             ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
          }}}, recursive=true))
-         if not (undercloud_is_physical | bool) else undercloud_base }}
-    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
+         if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else undercloud_base }}
+    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else []) }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     libvirt_required: "{{ libvirt_machines | length > 0 }}"
     vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
     bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default([]) | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
     management_network_required: >-
-      {{ (not (undercloud_is_physical | bool))
+      {{ (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool))
          or ((machines | selectattr('type', 'equalto', 'libvirt')
                        | selectattr('libvirt.hypervisor', 'equalto', 'localhost')
                        | selectattr('pre_provisioned', 'defined')
@@ -90,7 +91,9 @@
 
 - name: FIREWALL - Clean firewall
   import_tasks: clean_firewall.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - bridges_required | bool
 
 - name: VIRTUALBMC - Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
@@ -127,12 +130,15 @@
   when:
     - cleanup | bool
     - not create | bool
+    - bridges_required | bool
 
 # Create process
 
 - name: NETWORKING - Create network profiles
   import_tasks: create_network_profiles.yml
-  when: create | bool
+  when:
+    - create | bool
+    - bridges_required | bool
 
 - name: LIBVIRT - Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
@@ -160,7 +166,9 @@
 
 - name: FIREWALL - Configure firewall
   import_tasks: configure_firewall.yml
-  when: create | bool
+  when:
+    - create | bool
+    - bridges_required | bool
 
 - name: DHCRELAY - Configure DHCP relay
   import_tasks: configure_dhcrelay.yml
