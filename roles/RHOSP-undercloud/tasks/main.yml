@@ -64,6 +64,12 @@
   rhsm_repository:
     name: "{{ RHOSP_version_supported[RHOSP_version].undercloud_repos }}"
     purge: yes
+  register: repo_result
+  failed_when: false
+
+- name: REPOSITORIES - Enable the needed repositories only (raw fallback)
+  raw: sudo subscription-manager repos --disable='*' && sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].undercloud_repos | join(' --enable=') }}
+  when: repo_result is failed
 
 - name: MODULES - Enable and configure modules
   copy:
