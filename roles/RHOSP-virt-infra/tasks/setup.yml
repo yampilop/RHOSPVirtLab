@@ -59,7 +59,7 @@
   loop: "{{ (libvirt_units if (libvirt_required | bool) else []) + ['NetworkManager.service', 'firewalld.service'] }}"
 
 # netaddr powers the ipaddr filters and is needed even for a fully physical lab:
-# the python3-netaddr RPM on RHEL 9/10, or pip on the legacy interpreter (7.9/8.4).
+# the python3-netaddr RPM on RHEL 9/10, or pip on the legacy interpreter (7.9-8.4).
 - name: SETUP - Ensure netaddr RPM for ipaddr filters (RHEL 9/10)
   yum:
     name: python3-netaddr
@@ -74,7 +74,7 @@
   when: ansible_distribution_major_version | int < 9
 
 # VirtualBMC is only installed when there are libvirt overcloud VMs (vbmc_required).
-# On RHEL 7.9/8.4 the system interpreter is not externally managed, so pip installs into it.
+# On RHEL 7.9-8.4 the system interpreter is not externally managed, so pip installs into it.
 - name: SETUP - Update pip (legacy system interpreter)
   pip:
     name: pip

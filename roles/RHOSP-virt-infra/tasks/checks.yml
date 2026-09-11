@@ -29,8 +29,14 @@
 
 # Capacity checks only apply when this host builds VMs.
 - name: CHECKS - Get total hypervisor memory planned
+  vars:
+    memory_values: "{{ libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.memory') | list }}"
+    size_multipliers:
+      Gi: 1024
+      Mi: 1
+      Ki: 0.0009765625
   set_fact:
-    total_hypervisor_memory_mb: "{{ ((libvirt_machines | selectattr('libvirt.hypervisor', 'equalto', inventory_hostname) | map(attribute='libvirt.memory') | list) | sum) / 1024 }}"
+    total_hypervisor_memory_mb: "{% set total = 0 %}{% for mem in memory_values %}{% set val = mem | regex_replace('[A-Za-z]', '') | float %}{% set unit = mem | regex_replace('^[0-9]+', '') %}{% set multiplier = size_multipliers.get(unit, 0) %}{% set total = total + (val * multiplier) %}{% endfor %}{{ total | int }}"
   when: libvirt_required | bool
 
 - name: CHECKS - Check RAM usage wont be larger than the hypervisor capacity
@@ -51,3 +57,39 @@
   when:
     - libvirt_required | bool
     - total_hypervisor_cpus | int + 2 > ansible_processor_vcpus | int
+
+- name: CHECKS - Validate memory and disk size format (NUMBER)(UNIT)
+  vars:
+    all_machines: "{{ ([undercloud] if undercloud.type | default('libvirt') == 'libvirt' else []) + (machines | selectattr('type', 'equalto', 'libvirt') | list) }}"
+    valid_size_pattern: '^[0-9]+(Gi|Mi|Ki)?$'
+    memory_values: "{{ all_machines | map(attribute='libvirt.memory') | list }}"
+    disk_sizes: "{{ all_machines | map(attribute='libvirt.disks') | flatten | map(attribute='size') | list }}"
+  fail:
+    msg: |
+      Invalid size format in vars/machines.yml or role defaults. All memory and disk sizes
+      must follow the format: <NUMBER><UNIT>, where:
+        <NUMBER> is a positive integer (e.g., 16, 100)
+        <UNIT> is one of: Gi (Gibibyte), Mi (Mebibyte), Ki (Kibibyte), or empty
+
+      Valid examples: 16Gi, 8Mi, 256Ki, 1024 (bytes)
+
+      Invalid examples: 16GiB (extra B), 16G (missing i), 16 Gi (space), 6.5Gi (decimal)
+
+      Found invalid values:
+      {% set invalid = [] %}
+      {%- for mem in memory_values %}
+      {%- if not (mem | regex_search(valid_size_pattern)) %}
+      {%- set _ = invalid.append('memory: ' ~ mem) %}
+      {%- endif %}
+      {%- endfor %}
+      {%- for disk in disk_sizes %}
+      {%- if not (disk | regex_search(valid_size_pattern)) %}
+      {%- set _ = invalid.append('disk size: ' ~ disk) %}
+      {%- endif %}
+      {%- endfor %}
+      {% if invalid %}{{ invalid | join('\n') }}{% else %}(none detected at validation time){% endif %}
+  when:
+    - inventory_hostname == 'localhost'
+    - libvirt_required | bool
+    - (memory_values + disk_sizes) | select('string') | list | length > 0
+    - (memory_values + disk_sizes) | select('string') | list | rejectattr('match', 'search', valid_size_pattern) | list | length > 0

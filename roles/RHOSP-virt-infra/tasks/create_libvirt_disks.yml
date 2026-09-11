@@ -16,7 +16,7 @@
   register: machine_disk_stat
 
 - name: STORAGE - Create disk files for {{ machine.name }}
-  command: "virsh vol-create-as RHOSPVirtLab_storage {{ machine.name }}_{{ 'root' if item.disk.root | default(false) else 'data' ~ item.disk_index }}.qcow2 --capacity {{ item.disk.size }} --allocation {{ item.disk.size }} --prealloc-metadata --format qcow2"
+  command: "virsh vol-create-as RHOSPVirtLab_storage {{ machine.name }}_{{ 'root' if item.disk.root | default(false) else 'data' ~ item.disk_index }}.qcow2 --capacity {{ item.disk.size }}B --allocation {{ item.disk.size }}B --prealloc-metadata --format qcow2"
   loop: "{{ machine_disk_stat.results }}"
   become: yes
   notify: HANDLER - Clean known_hosts file
