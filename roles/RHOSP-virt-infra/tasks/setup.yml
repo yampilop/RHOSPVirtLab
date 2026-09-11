@@ -165,6 +165,11 @@
          and ((nested_slurp.content | b64decode | trim) in ['1', 'Y']) }}
   when: libvirt_required | bool
 
+- name: SETUP - Set nested_enabled to true when not needed
+  set_fact:
+    nested_enabled: true
+  when: not (libvirt_required | bool)
+
 - name: SETUP - Enable nested virtualization if needed
   lineinfile:
     path: /etc/modprobe.d/kvm.conf
