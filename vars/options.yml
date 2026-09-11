@@ -8,6 +8,9 @@ RHOSP_release: latest
 CustomRhelImage: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
 CustomCirrOSImage: "{{ CirrOSDownloadLink }}"
 
+# Custom OpenShift client (oc/kubectl) archive URL. Useful for air-gapped environments.
+CustomOcClientUrl: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz"
+
 # overcloud parameters
 external_if: eno1
 # Public noVNC proxy address, '[<scheme>://]<host>[:<port>]': host (IP or domain) sets
