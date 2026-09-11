@@ -27,7 +27,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   when:
-    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
+    - RHEL_version_supported[ansible_distribution_version].download_oc | default(false)
 
 - name: SETUP - Download kubectl binary for RHEL 10.2
   get_url:
@@ -37,7 +37,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   when:
-    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
+    - RHEL_version_supported[ansible_distribution_version].download_oc | default(false)
 
 - name: SETUP - Ensure ~/bin is in PATH
   lineinfile:
