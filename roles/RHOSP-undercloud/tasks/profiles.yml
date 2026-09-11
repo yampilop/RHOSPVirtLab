@@ -88,6 +88,17 @@
     - not (ControllersFencing | default(false) | bool)
   loop: "{{ libvirt_machines + physical_machines }}"
 
+- name: PROFILES - Ensure fencing is not enabled with kubevirt controllers
+  fail:
+    msg: >-
+      ERROR: ControllersFencing cannot be enabled with kubevirt-type controllers. Fencing
+      requires power management (IPMI/Redfish), which is not yet supported for kubevirt
+      machines (pending KubeVirtBMC integration: https://github.com/kubevirtbmc/kubevirtbmc).
+      Either disable ControllersFencing (set to False) or use libvirt/physical controllers only.
+  when:
+    - ControllersFencing | default(false) | bool
+    - ((machines | selectattr('type', 'equalto', 'kubevirt') | selectattr('openstack.role', 'equalto', 'controller') | list | length) > 0)
+
 - name: PROFILES - Check all libvirt machine profiles are virtual
   fail:
     msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for libvirt machines."
