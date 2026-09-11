@@ -35,7 +35,7 @@
       Mi: 1
       Ki: 0.0009765625
   set_fact:
-    total_hypervisor_memory_mb: "{% set total = 0 %}{% for machine in libvirt_machines %}{% if (machine.libvirt | default({})).hypervisor | default('localhost') == inventory_hostname %}{% set mem = (machine.libvirt | default({})).memory %}{% if mem %}{% set val = mem | regex_replace('[A-Za-z]', '') | float %}{% set unit = mem | regex_replace('^[0-9]+', '') %}{% set multiplier = size_multipliers.get(unit, 0) %}{% set total = total + (val * multiplier) %}{% endif %}{% endif %}{% endfor %}{{ total | int }}"
+    total_hypervisor_memory_mb: "{% set total = 0 %}{% for machine in libvirt_machines %}{% set libvirt_block = machine.libvirt | default({}) %}{% if libvirt_block.hypervisor | default('localhost') == inventory_hostname %}{% if 'memory' in libvirt_block %}{% set mem = libvirt_block.memory %}{% set val = mem | regex_replace('[A-Za-z]', '') | float %}{% set unit = mem | regex_replace('^[0-9]+', '') %}{% set multiplier = size_multipliers.get(unit, 0) %}{% set total = total + (val * multiplier) %}{% endif %}{% endif %}{% endfor %}{{ total | int }}"
   when: libvirt_required | bool
 
 - name: CHECKS - Check RAM usage wont be larger than the hypervisor capacity
