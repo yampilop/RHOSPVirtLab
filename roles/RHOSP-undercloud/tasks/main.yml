@@ -14,6 +14,7 @@
     default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    kubevirt_machines: "{{ machines | selectattr('type', 'equalto', 'kubevirt') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
@@ -136,6 +137,7 @@
     default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    kubevirt_machines: "{{ machines | selectattr('type', 'equalto', 'kubevirt') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
