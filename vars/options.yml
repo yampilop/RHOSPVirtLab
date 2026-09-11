@@ -10,10 +10,6 @@ CustomCirrOSImage: "{{ CirrOSDownloadLink }}"
 
 # overcloud parameters
 external_if: eno1
-forwarded_ports:
-  - 80
-  - 6080
-  - 5000
 # Public noVNC proxy address, '[<scheme>://]<host>[:<port>]': host (IP or domain) sets
 # vncproxy_host, a trailing numeric port sets vncproxy_port, and a leading scheme
 # (e.g. https://) sets vncproxy_protocol.
@@ -228,14 +224,37 @@ SnmpdReadonlyUserPassword: RHOSPVirtLab
 # BMC / IPMI credentials for the virtualbmc VMs and physical nodes.
 BmcUsername: admin
 BmcPassword: admin
+
 # Overcloud admin account created by the undercloud.
 OvercloudAdminPassword: redhat
 OvercloudAdminEmail: admin@example.com
+
 # Password for the test admin user created in overcloud_resources.yaml.
 TestUserPassword: redhat
+
 # Passwords baked into each VM's cloud-init (root and the ci_user account).
 VmRootPassword: redhat
 VmStackPassword: redhat
+
+# Namespace in Kubevirt where the resources will be created
+KubeVirtNamespace: default
+
+# StorageClass, VolumeMode and AccessMode to be used for the creation of all persistent storage resources
+KubeVirtStorageClass: lvms-vg1
+KubeVirtVolumeMode: Filesystem
+KubeVirtAccessMode: ReadWriteMany
+
+# Kubevirt additional labels to add to specific resources
+# - key: KEY
+#   value: VALUE
+KubevirtLabels:
+  VirtualMachines: []
+  VirtualMachineInstances: []
+  Services: []
+  Routes: []
+
+# Domain to use for routes in Kubevirt
+KubeVirtRoutesDomain: cluster.redhat.lab
 
 # Disable telemetry
 DisableTelemetry: True
