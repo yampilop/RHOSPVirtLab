@@ -33,7 +33,7 @@
   block:
     - name: Copy private key
       copy:
-        src: "{{ ansible_user_dir }}/.ssh/id_rsa"
+        src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
         dest: /home/stack/.ssh/id_rsa
         mode: '0600'
         owner: stack
@@ -42,7 +42,7 @@
 
     - name: Copy public key
       copy:
-        src: "{{ ansible_user_dir }}/.ssh/id_rsa.pub"
+        src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
         dest: /home/stack/.ssh/id_rsa.pub
         mode: '0644'
         owner: stack
