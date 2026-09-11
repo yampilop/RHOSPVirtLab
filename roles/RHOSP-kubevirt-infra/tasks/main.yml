@@ -29,6 +29,7 @@
   vars:
     ctlplane_prefix: "{{ default_leaf.ctlplane_subnet.cidr.split('/')[0].rsplit('.', 1)[0] }}"
   when:
+    - item.name != 'undercloud'
     - item.pre_provisioned | default(false)
     - (item.openstack.ctlplane_ip is not defined)
       or (item.openstack.ctlplane_ip.rsplit('.', 1)[0] != ctlplane_prefix)
