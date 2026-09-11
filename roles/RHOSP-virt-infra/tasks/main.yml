@@ -33,6 +33,7 @@
 
 # Assemble the libvirt networks/bridges to manage from the `leafs` model plus the
 # management (NAT) network (prepended when required). See README (Networks) for details.
+# Skip when there are no libvirt machines (kubevirt-only deployments).
 - name: NETWORKING - Assemble the list of libvirt networks to manage
   set_fact:
     libvirt_networks: "{{ management_part + (leaf_bridges | from_yaml) }}"
@@ -66,15 +67,18 @@
       {% endfor %}
       {% endfor %}
       ]
+  when: libvirt_required | bool
 
 # The overcloud public IP (firewall port-forwards, `overcloud` /etc/hosts alias,
 # network-hook DNAT): the default leaf's External VIP, else its ctlplane VIP.
+# Skip when there are no libvirt machines (kubevirt-only deployments).
 - name: NETWORKING - Derive the overcloud public IP
   set_fact:
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
+  when: libvirt_required | bool
 
 # Cleanup process
 
