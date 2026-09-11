@@ -30,7 +30,10 @@ parameter_defaults:
 {% endfor %}
 {% endif %}
   DnsServers: {{ dns_servers | join(',') }}
-  NtpServer: {{ ntp_servers | join(',') }}
+  NtpServer:
+{% for server in ntp_servers %}
+    - {{ server }}
+{% endfor %}
   ControlPlaneDefaultRoute: {{ leaf.ctlplane_subnet.gateway }}
   ControlPlaneSubnet: {{ leaf.ctlplane_subnet.name }}
   
