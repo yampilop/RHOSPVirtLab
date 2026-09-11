@@ -13,6 +13,9 @@ forwarded_ports:
 # True when the undercloud is an admin-prepared physical host rather than a libvirt VM.
 undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
 
+# True when the undercloud is a kubevirt VM (managed by RHOSP-kubevirt-infra role).
+undercloud_is_kubevirt: "{{ (undercloud.type | default('libvirt')) == 'kubevirt' }}"
+
 # Inject the undercloud's constant fields so they cannot be set wrong (always named
 # `undercloud`, pre_provisioned, role=undercloud; no `pm`, so it gets no vbmc).
 undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
@@ -26,8 +29,8 @@ undercloud_effective: >-
      if not (undercloud_is_physical | bool) else undercloud_base }}
 
 # Convenience views over `machines` (overcloud nodes only). A libvirt undercloud is
-# built by this role so it joins libvirt_machines; a physical undercloud never appears.
-libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
+# built by this role so it joins libvirt_machines; physical and kubevirt undercloud never appear here.
+libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else []) }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
 # Need-based gating flags (see README "When libvirt / VirtualBMC work is skipped").
