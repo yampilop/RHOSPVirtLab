@@ -3,6 +3,7 @@
     name: "{{ RHEL_version_supported[ansible_distribution_version].packages }}"
     state: present
   become: yes
+  when: RHEL_version_supported[ansible_distribution_version].packages | length > 0
 
 - name: SETUP - Install kubernetes client via pip (legacy interpreters)
   pip:
@@ -11,6 +12,42 @@
   when:
     - RHEL_version_supported[ansible_distribution_version].pip is defined
     - ansible_distribution_major_version | int < 9
+
+- name: SETUP - Ensure ~/bin directory exists for oc tool
+  file:
+    path: "/home/{{ ansible_user }}/bin"
+    state: directory
+    mode: '0755'
+  when:
+    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
+
+- name: SETUP - Download oc tool for RHEL 10.2
+  get_url:
+    url: "{{ RHEL_version_supported[ansible_distribution_version].oc_url }}"
+    dest: "/tmp/oc-mirror.tar.gz"
+    mode: '0644'
+  when:
+    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
+
+- name: SETUP - Extract oc tool to ~/bin
+  unarchive:
+    src: "/tmp/oc-mirror.tar.gz"
+    dest: "/home/{{ ansible_user }}/bin"
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  when:
+    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
+
+- name: SETUP - Ensure ~/bin is in PATH
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "export PATH=\"$HOME/bin:$PATH\""
+    insertafter: EOF
+    state: present
+    regexp: "^export PATH=.*HOME/bin"
+  when:
+    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
 
 - name: SETUP - Ensure the ssh directory exists
   file:
