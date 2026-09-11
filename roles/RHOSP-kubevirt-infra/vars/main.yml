@@ -20,7 +20,7 @@ RHEL_version_supported:
       - openshift-clients
   "10.2":
     packages: []
-    oc_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/oc-mirror.tar.gz"
+    download_oc: true
 
 # Port forwarding configuration (not customizable)
 forwarded_ports:

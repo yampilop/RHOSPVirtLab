@@ -19,31 +19,23 @@
     state: directory
     mode: '0755'
 
-- name: SETUP - Download oc tool for RHEL 10.2
+- name: SETUP - Download oc binary directly for RHEL 10.2
   get_url:
-    url: "{{ RHEL_version_supported[ansible_distribution_version].oc_url }}"
-    dest: "/tmp/oc-mirror.tar.gz"
-    mode: '0644'
+    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/oc"
+    dest: "/home/{{ ansible_user }}/bin/oc"
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   when:
     - RHEL_version_supported[ansible_distribution_version].oc_url is defined
 
-- name: SETUP - Extract oc tool to temporary location
-  unarchive:
-    src: "/tmp/oc-mirror.tar.gz"
-    dest: "/tmp"
-    remote_src: yes
-  when:
-    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
-
-- name: SETUP - Copy oc binary to ~/bin
-  shell: |
-    for binary in oc kubectl; do
-      if [ -f "/tmp/$binary" ]; then
-        cp -f "/tmp/$binary" "/home/{{ ansible_user }}/bin/$binary"
-        chmod 0755 "/home/{{ ansible_user }}/bin/$binary"
-        chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/$binary"
-      fi
-    done
+- name: SETUP - Download kubectl binary for RHEL 10.2
+  get_url:
+    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/kubectl"
+    dest: "/home/{{ ansible_user }}/bin/kubectl"
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   when:
     - RHEL_version_supported[ansible_distribution_version].oc_url is defined
 
@@ -55,7 +47,7 @@
     state: present
     regexp: "^export PATH=.*HOME/bin"
   when:
-    - RHEL_version_supported[ansible_distribution_version].oc_url is defined
+    - RHEL_version_supported[ansible_distribution_version].download_oc | default(false)
 
 - name: SETUP - Ensure the ssh directory exists
   file:
