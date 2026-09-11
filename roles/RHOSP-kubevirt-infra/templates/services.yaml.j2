@@ -1,0 +1,25 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: undercloud
+  namespace: {{ KubeVirtNamespace }}
+  labels:
+{% for label in KubevirtLabels.Services %}
+    {{ label.key }}: {{ label.value }}
+{% endfor %}
+spec:
+  ports:
+    - name: ssh
+      protocol: TCP
+      port: 22
+      targetPort: 22
+{% for port_entry in forwarded_ports %}
+    - name: {{ port_entry.name }}
+      protocol: TCP
+      port: {{ port_entry.port }}
+      targetPort: {{ port_entry.port }}
+{% endfor %}
+  type: ClusterIP
+  selector:
+    app: undercloud

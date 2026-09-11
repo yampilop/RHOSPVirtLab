@@ -1,0 +1,66 @@
+---
+# tasks file for RHOSP-kubevirt-infra
+
+- name: CHECKS - Perform some checks
+  import_tasks: tasks/checks.yml
+
+- name: SETUP - Make the hypervisor setup
+  import_tasks: tasks/setup.yml
+
+- name: SETUP - Register computed variables as facts for template access
+  set_fact:
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    kubevirt_undercloud: "{{ (undercloud.type | default('kubevirt')) == 'kubevirt' }}"
+    kubevirt_machines: "{{ (machines + [undercloud_base]) | selectattr('type', 'equalto', 'kubevirt') | list }}"
+  vars:
+    undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
+
+- name: CHECKS - Fail if DCN leafs are configured with kubevirt machines
+  fail:
+    msg: |
+      DCN (Distributed Cloud Node) configurations are not supported for kubevirt machines.
+      This role only manages single-site deployments with the default `overcloud` leaf
+      when kubevirt machines are present.
+
+      To use DCN deployments:
+        1. Use RHOSP-virt-infra role with libvirt or physical machines instead
+        2. Or remove the additional leaf entries from vars/options.yml leafs configuration
+           (keep only the `overcloud` leaf when using kubevirt)
+
+      Current configuration:
+        Kubevirt undercloud: {{ kubevirt_undercloud | bool }}
+        Kubevirt overcloud machines: {{ kubevirt_machines | length }}
+        Additional leafs (DCN) defined: {{ dcn_leafs | length }}
+        All leafs: {{ leafs | map(attribute='name') | list }}
+  when:
+    - dcn_leafs | length > 0
+    - (kubevirt_undercloud | bool) or (kubevirt_machines | length > 0)
+
+# Create process
+
+- name: KUBERNETES - Create manifests from templates
+  import_tasks: tasks/create_kubernetes_resources.yml
+  when: create | bool
+
+- name: KUBERNETES - Display cleanup instructions
+  debug:
+    msg: |
+      Kubernetes resources have been cleaned up.
+
+      If you need to manually delete any remaining resources from your Kubernetes/OpenShift cluster, run:
+        oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/
+
+      Or delete individual resources:
+        oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/05-machines.yaml
+        oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/04-secret-provisioning-ssh-public-key.yaml
+        oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/03-routes.yaml
+        oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/02-services.yaml
+        oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/01-udns.yaml
+  delegate_to: localhost
+  run_once: true
+  when: cleanup | bool
+
+# TODO: Replace VirtualBMC with KubeVirtBMC (https://github.com/kubevirtbmc/kubevirtbmc)

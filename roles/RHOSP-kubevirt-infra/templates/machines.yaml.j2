@@ -1,0 +1,133 @@
+{% for machine in kubevirt_machines %}
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ machine.name }}
+  namespace: {{ KubeVirtNamespace }}
+  annotations:
+    description: {{ machine.kubevirt.title }}
+  labels:
+    app: {{ machine.name }}
+{% for label in KubevirtLabels.VirtualMachines %}
+    {{ label.key }}: {{ label.value }}
+{% endfor %}
+spec:
+  dataVolumeTemplates:
+{% for disk in machine.kubevirt.disks %}
+  - metadata:
+      creationTimestamp: null
+      name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}'
+    spec:
+      source:
+{% if (disk.root | bool) and (machine.pre_provisioned | bool) %}
+        http:
+          url: {{ CustomRhelImage }}
+{% else %}
+        blank: {}
+{% endif %}
+      storage:
+        accessModes:
+        - {{ KubeVirtAccessMode }}
+        resources:
+          requests:
+            storage: {{ disk.size }}
+        storageClassName: {{ KubeVirtStorageClass }}
+        volumeMode: {{ KubeVirtVolumeMode }}
+{% endfor %}
+  runStrategy: Always
+  template:
+    metadata:
+      annotations:
+        kubevirt.io/pci-topology-version: v3
+      creationTimestamp: null
+      labels:
+        app: {{ machine.name }}
+        role: {{ machine.openstack.role }}
+        network.kubevirt.io/headlessService: headless
+{% for label in KubevirtLabels.VirtualMachineInstances %}
+        {{ label.key }}: {{ label.value }}
+{% endfor %}
+    spec:
+      accessCredentials:
+      - sshPublicKey:
+          propagationMethod:
+            noCloud: {}
+          source:
+            secret:
+              secretName: provisioning-ssh-public-key
+      domain:
+        cpu:
+          cores: {{ machine.kubevirt.cpus }}
+{% if 'compute' in machine.openstack.role %}
+          features:
+          - name: svm
+            policy: require
+          model: host-passthrough
+{% endif %}
+        memory:
+          guest: {{ machine.kubevirt.memory }}
+        devices:
+          autoattachPodInterface: false
+          disks:
+{% for disk in machine.kubevirt.disks %}
+          - name: {{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}
+            disk:
+              bus: virtio
+{% if disk.root | bool %}
+            bootOrder: 1
+{% endif %}
+{% endfor %}
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+{% for interface in machine.kubevirt.network.interfaces %}
+          - bridge: {}
+            macAddress: '{{ interface.mac }}'
+            model: virtio
+            name: {{ interface.bridge }}
+            state: up
+{% endfor %}
+        machine:
+          type: pc-q35-rhel9.6.0
+        resources: {}
+      networks:
+      - name: default
+        pod:
+          vmNetworkCIDR: 192.168.121.0/24
+{% for interface in machine.kubevirt.network.interfaces %}
+      - multus:
+          networkName: {{ interface.bridge }}
+        name: {{ interface.bridge }}
+{% endfor %}
+      subdomain: headless
+      volumes:
+{% for disk in machine.kubevirt.disks %}
+      - dataVolume:
+          name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}'
+        name: {{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}
+{% endfor %}
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            chpasswd:
+              list: |
+                root:{{ VmRootPassword }}
+                {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}:{{ VmStackPassword }}
+              expire: false
+            password: {{ VmStackPassword }}
+            user: {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}
+            ssh_pwauth: True
+            runcmd: []
+{% if machine.openstack.ctlplane_ip is defined %}
+          networkData: |
+            ethernets:
+              eth1:
+                addresses:
+                - '{{ machine.openstack.ctlplane_ip }}'
+{% endif %}
+{% endfor %}

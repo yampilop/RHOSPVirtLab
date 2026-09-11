@@ -1,0 +1,26 @@
+{% for item in forwarded_ports %}
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ item.name }}
+  namespace: {{ KubeVirtNamespace }}
+  labels:
+{% for label in KubevirtLabels.Routes %}
+    {{ label.key }}: {{ label.value }}
+{% endfor %}
+spec:
+  host: {{ item.route }}.{{ KubeVirtRoutesDomain }}
+  to:
+    kind: Service
+    name: undercloud
+    weight: 100
+  port:
+    targetPort: {{ item.name }}
+{% if item.secure | bool }}
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+{% endif %}
+{% endfor %}

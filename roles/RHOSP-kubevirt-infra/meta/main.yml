@@ -1,0 +1,23 @@
+galaxy_info:
+  role_name: RHOSP-kubevirt-infra
+  description: Virtual Lab infrastructure for Red Hat Openstack Platform deployed in Kubevirt/OCP Virtualization
+  author: Juan Pablo Marti
+  company: Red Hat, Inc.
+  license: license (GPL-2.0-or-later, MIT, etc)
+  min_ansible_version: 2.9
+
+  platforms:
+    - name: Red Hat Enterprise Linux
+      versions:
+      - 7.9
+      - 8.4
+      - 9.6
+      - 10.2
+
+  galaxy_tags:
+    - rhel
+    - openshift
+    - openstack
+    - kubevirt
+
+dependencies: []

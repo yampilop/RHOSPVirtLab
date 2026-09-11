@@ -1,0 +1,35 @@
+---
+# vars file for RHOSP-kubevirt-infra
+
+# Port forwarding configuration (not customizable)
+forwarded_ports:
+  - name: http
+    port: 80
+    secure: true
+    route: horizon-dashboard
+  - name: vnc
+    port: 6080
+    secure: false
+    route: vncproxy
+  - name: keystone
+    port: 5000
+    secure: false
+    route: keystone
+
+RHEL_version_supported:
+  "7.9": {}
+  "8.4": {}
+  "9.6": {}
+  "10.2": {}
+
+RHOSP_version_supported:
+  17.1:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-9/9.2.0/BaseOS/x86_64/images/rhel-guest-image-9.2-20230414.17.x86_64.qcow2'
+      name: 'rhel-9.2-x86_64-kvm.qcow2'
+    overcloud_ssh_user: tripleo-admin
+  16.2:
+    rhel_image:
+      url: 'http://porkchop.redhat.com/released/RHEL-8/8.4.0/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2'
+      name: 'rhel-8.4-x86_64-kvm.qcow2'
+    overcloud_ssh_user: heat-admin

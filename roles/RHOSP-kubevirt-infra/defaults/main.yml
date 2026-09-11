@@ -1,0 +1,221 @@
+---
+# defaults file for RHOSP-kubevirt-infra
+
+# RHOSP version
+RHOSP_version: 17.1
+RHOSP_release: latest
+
+# Custom RHEL image: set URL to use a custom image. If it's a local file, use "file://<full_path>"
+CustomRhelImage: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
+
+# Cleaning and creating parameters
+cleanup: False
+create: True
+
+# overcloud parameters
+# Leaf configuration: kubevirt only supports the default control-plane leaf (overcloud).
+# DCN (Distributed Cloud Node) configurations are NOT supported with kubevirt machines.
+# For DCN deployments, use libvirt or physical machine types via RHOSP-virt-infra.
+# See README.
+leafs:
+- name: overcloud
+  additional_bridges:
+  - name: br-tenant
+    interface: null
+  - name: br-storage
+    interface: null
+  - name: br-internalapi
+    interface: null
+  - name: br-storagemgmt
+    interface: null
+  - name: br-external
+    interface: null
+  ctlplane_bridge:
+    name: br-ctlplane
+    interface: null
+  ctlplane_subnet:
+    name: ctlplane-subnet
+    cidr: 192.168.24.0/24
+    dhcp_start: 192.168.24.5
+    dhcp_end: 192.168.24.99
+    inspection_iprange: 192.168.24.100,192.168.24.120
+    gateway: 192.168.24.254
+    masquerade: true
+  networks:
+  - name: Tenant
+    bridge: br-tenant
+    vip: false
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.0.0/24
+      allocation_pools:
+      - start: 172.16.0.5
+        end: 172.16.0.99
+  - name: Storage
+    bridge: br-storage
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.1.0/24
+      allocation_pools:
+      - start: 172.16.1.5
+        end: 172.16.1.99
+  - name: InternalApi
+    bridge: br-internalapi
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.2.0/24
+      allocation_pools:
+      - start: 172.16.2.5
+        end: 172.16.2.99
+  - name: StorageMgmt
+    bridge: br-storagemgmt
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 172.16.3.0/24
+      allocation_pools:
+      - start: 172.16.3.5
+        end: 172.16.3.99
+  - name: External
+    bridge: br-external
+    vip: true
+    mtu: 1500
+    subnet:
+      ip_subnet: 10.0.0.0/24
+      allocation_pools:
+      - start: 10.0.0.5
+        end: 10.0.0.99
+
+# The director host, defined separately from the overcloud `machines` (kubevirt VM by
+# default; the role injects its constants). See README.
+# Note: The undercloud is always pre_provisioned (implicit).
+undercloud:
+  type: kubevirt
+  kubevirt:
+    title: 'RHOSPVirtLab Undercloud'
+    cpus: 2
+    memory: 6Gi
+    disks:
+      - root: true
+        size: 100Gi
+    network:
+      interfaces:
+        - name: ctlplane
+          mac: '0c:1f:0d:10:00:00'
+          bridge: br-ctlplane
+
+# The overcloud nodes (virtual and physical); default: one controller + one compute.
+# See README for the full schema.
+# Note: All kubevirt machines are pre_provisioned: true until KubeVirtBMC is implemented
+# (https://github.com/kubevirtbmc/kubevirtbmc), as ironic provisioning requires power
+# management (IPMI/Redfish) which is not yet supported for kubevirt.
+machines:
+  - name: controller0
+    type: kubevirt
+    pre_provisioned: true
+    openstack:
+      role: controller
+    # pm:
+    #   type: ipmi
+    #   user: admin
+    #   password: admin
+    #   address: localhost
+    #   port: 6231
+    #   mode: bios
+    kubevirt:
+      title: 'RHOSPVirtLab Virtual Controller 0'
+      cpus: 2
+      memory: 8Gi
+      disks:
+        - root: true
+          size: 50Gi
+      network:
+        interfaces:
+          - name: ctlplane
+            mac: '0c:1f:0d:11:00:00'
+            bridge: br-ctlplane
+          - name: tenant
+            mac: '0c:1f:0d:11:00:01'
+            bridge: br-tenant
+          - name: internalapi
+            mac: '0c:1f:0d:11:00:02'
+            bridge: br-internalapi
+          - name: storage
+            mac: '0c:1f:0d:11:00:03'
+            bridge: br-storage
+          - name: storagemgmt
+            mac: '0c:1f:0d:11:00:04'
+            bridge: br-storagemgmt
+          - name: external
+            mac: '0c:1f:0d:11:00:05'
+            bridge: br-external
+  - name: compute0
+    type: kubevirt
+    pre_provisioned: true
+    openstack:
+      role: compute
+    # pm:
+    #   type: ipmi
+    #   user: admin
+    #   password: admin
+    #   address: localhost
+    #   port: 6234
+    #   mode: bios
+    kubevirt:
+      title: 'RHOSPVirtLab Virtual Compute 0'
+      cpus: 4
+      memory: 6Gi
+      disks:
+        - root: true
+          size: 50Gi
+      network:
+        interfaces:
+          - name: ctlplane
+            mac: '0c:1f:0d:12:00:00'
+            bridge: br-ctlplane
+          - name: tenant
+            mac: '0c:1f:0d:12:00:01'
+            bridge: br-tenant
+          - name: internalapi
+            mac: '0c:1f:0d:12:00:02'
+            bridge: br-internalapi
+          - name: storage
+            mac: '0c:1f:0d:12:00:03'
+            bridge: br-storage
+          - name: storagemgmt
+            mac: '0c:1f:0d:12:00:04'
+            bridge: br-storagemgmt
+          - name: external
+            mac: '0c:1f:0d:12:00:05'
+            bridge: br-external
+
+# Credentials (lab-only weak defaults; override via vault_credentials.yaml — see README).
+# TODO: Power management (pm) not supported until KubeVirtBMC is implemented (https://github.com/kubevirtbmc/kubevirtbmc)
+# BMC / IPMI credentials used to create the KubeVirtBMC endpoints.
+#BmcUsername: admin
+#BmcPassword: admin
+# Passwords baked into each VM's cloud-init (root and the ci_user account).
+VmRootPassword: redhat
+VmStackPassword: redhat
+
+# Namespace in Kubevirt where the resources will be created
+KubeVirtNamespace: default
+
+# StorageClass, VolumeMode and AccessMode to be used for the creation of all persistent storage resources
+KubeVirtStorageClass: lvms-vg1
+KubeVirtVolumeMode: Filesystem
+KubeVirtAccessMode: ReadWriteMany
+
+# Kubevirt additional labels to add to specific resources
+# - key: KEY
+#   value: VALUE
+KubevirtLabels:
+  VirtualMachines: []
+  VirtualMachineInstances: []
+  Services: []
+  Routes: []
+
+# Domain to use for routes in Kubevirt
+KubeVirtRoutesDomain: cluster.redhat.lab

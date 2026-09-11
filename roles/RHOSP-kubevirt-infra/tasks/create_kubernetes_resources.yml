@@ -1,0 +1,66 @@
+# Create Kubernetes resources from Jinja2 templates and prepare them for deployment
+
+- name: KUBERNETES - Create output directory for manifests
+  file:
+    path: "{{ playbook_dir }}/{{ KubeVirtNamespace }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+
+- name: KUBERNETES - Render UDNs manifest
+  template:
+    src: udns.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/01-udns.yaml"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: KUBERNETES - Render Services manifest
+  template:
+    src: services.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/02-services.yaml"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: KUBERNETES - Render Routes manifest
+  template:
+    src: routes.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/03-routes.yaml"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: KUBERNETES - Render Provisioning Secret manifest
+  template:
+    src: secret_provisioning-ssh-public-key.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/04-secret-provisioning-ssh-public-key.yaml"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: KUBERNETES - Render VirtualMachines manifest
+  template:
+    src: machines.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/05-machines.yaml"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: KUBERNETES - Display deployment instructions
+  debug:
+    msg: |
+      Kubernetes manifests have been generated in: {{ playbook_dir }}/{{ KubeVirtNamespace }}/
+
+      To deploy the resources to your Kubernetes/OpenShift cluster, run:
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/
+
+      Or deploy individual resources in order:
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/01-udns.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/02-services.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/03-routes.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/04-secret-provisioning-ssh-public-key.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/05-machines.yaml
+  delegate_to: localhost
+  run_once: true

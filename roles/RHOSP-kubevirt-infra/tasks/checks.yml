@@ -1,0 +1,63 @@
+- name: CHECKS - Verify the OS Version is supported
+  fail:
+    msg: "The RHEL version (RHEL {{ ansible_distribution_version }}) is not supported by this role."
+  when:
+    - RHEL_version_supported[ansible_distribution_version] is not defined
+
+- name: CHECKS - Verify the RHOSP version selected is supported
+  fail:
+    msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
+  when:
+    - inventory_hostname == 'localhost'
+    - RHOSP_version_supported[RHOSP_version] is not defined
+
+# All overcloud nodes must share one pre_provisioned value; the undercloud is exempt.
+# TODO(leafs): make this per-leaf once openstack.leaf is the single leaf identifier.
+- name: CHECKS - Fail if pre-provisioned and unprovisioned overcloud nodes are mixed
+  vars:
+    preprovisioned_count: "{{ machines | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned', 'equalto', true) | list | length }}"
+  fail:
+    msg: >-
+      vars/machines.yml mixes deployed-server (pre_provisioned: true) and
+      ironic-provisioned (pre_provisioned: false, the default) overcloud nodes. Every
+      overcloud node must share the same pre_provisioned value (the undercloud is
+      defined separately and is exempt).
+  when:
+    - inventory_hostname == 'localhost'
+    - preprovisioned_count | int > 0
+    - preprovisioned_count | int < (machines | length)
+
+- name: CHECKS - Validate memory and disk size format (NUMBER)(UNIT)
+  vars:
+    all_machines: "{{ ([undercloud] if undercloud.type | default('kubevirt') == 'kubevirt' else []) + (machines | selectattr('type', 'equalto', 'kubevirt') | list) }}"
+    valid_size_pattern: '^[0-9]+(Gi|Mi|Ki)?$'
+    memory_values: "{{ all_machines | map(attribute='kubevirt.memory') | list }}"
+    disk_sizes: "{{ all_machines | map(attribute='kubevirt.disks') | flatten | map(attribute='size') | list }}"
+  fail:
+    msg: |
+      Invalid size format in vars/machines.yml or role defaults. All memory and disk sizes
+      must follow the format: <NUMBER><UNIT>, where:
+        <NUMBER> is a positive integer (e.g., 16, 100)
+        <UNIT> is one of: Gi (Gibibyte), Mi (Mebibyte), Ki (Kibibyte), or empty
+
+      Valid examples: 16Gi, 8Mi, 256Ki, 1024 (bytes)
+
+      Invalid examples: 16GiB (extra B), 16G (missing i), 16 Gi (space), 6.5Gi (decimal)
+
+      Found invalid values:
+      {% set invalid = [] %}
+      {%- for mem in memory_values %}
+      {%- if not (mem | regex_search(valid_size_pattern)) %}
+      {%- set _ = invalid.append('memory: ' ~ mem) %}
+      {%- endif %}
+      {%- endfor %}
+      {%- for disk in disk_sizes %}
+      {%- if not (disk | regex_search(valid_size_pattern)) %}
+      {%- set _ = invalid.append('disk size: ' ~ disk) %}
+      {%- endif %}
+      {%- endfor %}
+      {% if invalid %}{{ invalid | join('\n') }}{% else %}(none detected at validation time){% endif %}
+  when:
+    - inventory_hostname == 'localhost'
+    - (memory_values + disk_sizes) | select('string') | list | length > 0
+    - (memory_values + disk_sizes) | select('string') | list | rejectattr('match', 'search', valid_size_pattern) | list | length > 0

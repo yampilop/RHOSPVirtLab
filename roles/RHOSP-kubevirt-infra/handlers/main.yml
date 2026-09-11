@@ -1,0 +1,8 @@
+---
+# handlers file for RHOSP-kubevirt-infra
+
+- name: HANDLER - Clean known_hosts file
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.ssh/known_hosts"
+    regexp: "^undercloud|^{{ hostvars['undercloud'].ansible_host | default('undercloud') }}"
+    state: absent
