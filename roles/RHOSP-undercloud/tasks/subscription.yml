@@ -22,13 +22,23 @@
     - rh_orgid is defined
     - rh_activationkey is defined
 
+- name: SUBSCRIPTION - Check if registration with module succeeded
+  command: "subscription-manager identity"
+  register: sub_identity_ak
+  changed_when: false
+  failed_when: false
+  when:
+    - sub_identity.rc != 0
+    - rh_orgid is defined
+    - rh_activationkey is defined
+
 - name: SUBSCRIPTION - Register the undercloud with raw (with OrgID and Activation Key, fallback)
   raw: sudo subscription-manager register --org="{{ rh_orgid }}" --activationkey="{{ rh_activationkey }}" --force && sudo subscription-manager release --set="{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"{% if rh_pool is defined and rh_pool %} && sudo subscription-manager attach --pool="{{ rh_pool }}"{% endif %}
   when:
     - sub_identity.rc != 0
     - rh_orgid is defined
     - rh_activationkey is defined
-    - reg_result_ak is failed
+    - sub_identity_ak.rc != 0
 
 - name: SUBSCRIPTION - Register the undercloud (with username and password)
   redhat_subscription:
@@ -44,12 +54,21 @@
     - sub_identity.rc != 0
     - (rh_orgid is not defined) or (rh_activationkey is not defined)
 
+- name: SUBSCRIPTION - Check if registration with module succeeded (username/password)
+  command: "subscription-manager identity"
+  register: sub_identity_up
+  changed_when: false
+  failed_when: false
+  when:
+    - sub_identity.rc != 0
+    - (rh_orgid is not defined) or (rh_activationkey is not defined)
+
 - name: SUBSCRIPTION - Register the undercloud with raw (with username and password, fallback)
   raw: sudo subscription-manager register --username="{{ rh_username }}" --password="{{ rh_password }}" --force && sudo subscription-manager release --set="{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"{% if rh_pool is defined and rh_pool %} && sudo subscription-manager attach --pool="{{ rh_pool }}"{% endif %}
   when:
     - sub_identity.rc != 0
     - (rh_orgid is not defined) or (rh_activationkey is not defined)
-    - reg_result_up is failed
+    - sub_identity_up.rc != 0
 
 - name: SUBSCRIPTION - Verify the undercloud is registered
   # Registration-based check, immune to SCA (where `subscription-manager status` reports
