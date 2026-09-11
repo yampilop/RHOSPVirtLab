@@ -40,7 +40,7 @@
     content: |
       all:
         hosts:
-      {% set pre_prov_machines = ((libvirt_machines if leaf.hypervisor is defined else []) | selectattr('openstack.leaf', 'equalto', leaf.name if leaf.name != default_leaf.name else omit) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) %}
+      {% set pre_prov_machines = ((libvirt_machines if leaf.hypervisor is defined else []) | selectattr('openstack.leaf', 'equalto', leaf.name if leaf.name != default_leaf.name else omit) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) + (kubevirt_machines | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) %}
       {% for machine in pre_prov_machines %}
           {{ machine.name }}:
             ansible_host: {{ machine.openstack.ctlplane_ip }}
