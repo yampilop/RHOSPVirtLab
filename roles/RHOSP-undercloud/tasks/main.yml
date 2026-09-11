@@ -29,6 +29,26 @@
   until: cmd_res is success
   when: not undercloud_is_physical | bool
 
+- name: Copy hypervisor SSH keys to undercloud
+  block:
+    - name: Copy private key
+      copy:
+        src: "{{ ansible_user_dir }}/.ssh/id_rsa"
+        dest: /home/stack/.ssh/id_rsa
+        mode: '0600'
+        owner: stack
+        group: stack
+      when: not undercloud_is_physical | bool
+
+    - name: Copy public key
+      copy:
+        src: "{{ ansible_user_dir }}/.ssh/id_rsa.pub"
+        dest: /home/stack/.ssh/id_rsa.pub
+        mode: '0644'
+        owner: stack
+        group: stack
+      when: not undercloud_is_physical | bool
+
 - name: Configure swap file on the undercloud
   include_role:
     name: geerlingguy.swap
