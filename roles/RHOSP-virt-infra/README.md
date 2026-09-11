@@ -1,12 +1,12 @@
 RHOSP-virt-infra
 =========
 
-The role creates a virtual infrastructure for Red Hat OpenStack Platform.
+The role creates a libvirt-based virtual infrastructure for Red Hat OpenStack Platform.
 
 Requirements
 ------------
 
-It's tested to work on a Red Hat Enterprise Linux version 8.4 or 7.9 system.
+It's tested to work on Red Hat Enterprise Linux versions 7.9, 8.4, 9.6, or 10.2.
 
 Requires rhel-system-roles package installed.
 
@@ -30,12 +30,6 @@ create: **True**|False
 
 external_if: eno1
   This variable sets the interface that connects the hypervisor with the Internet.
-
-forward_network: RHOSPVirtLab_external
-  This variable sets the network the forwarded ports will be attached to.
-
-forwarded_ports: [80,6080,5000]
-  List of ports to be forwarded to the overcloud IP (enabling access to Horizon using the hypervisor IP address)
 
 leafs:
   Ordered list of the deployment's leafs (L2 segments / routed subnets). The first entry
@@ -64,15 +58,14 @@ leafs:
   derived `libvirt_networks` list (see the **Networks** section below).
 
 undercloud:
-  The director host, defined separately from the overcloud `machines` list. It is a
-  single node tagged with a `type` discriminator: `libvirt` (a VM this role creates) or
-  `physical` (a pre-existing, admin-prepared host this role does not create). The dict is
-  intentionally minimal - only the fields that actually vary are set. The role injects the
-  constants that never change for the undercloud (name=undercloud, pre_provisioned=true,
-  openstack.role=undercloud) so they cannot be set wrong, and creates **no** virtualbmc for
-  it (it is the director and is not power-managed by the lab, so no `pm` block is used;
-  the domain boot mode defaults to bios - add `pm: {mode: uefi}` only for a uefi
-  undercloud). When it is a libvirt VM it is otherwise built like the overcloud VMs below
+  The director host, defined separately from the overcloud `machines` list. This role only
+  supports `type: libvirt` (a VM this role creates) or `type: physical` (a pre-existing,
+  admin-prepared host this role does not create). For kubevirt machines, use the
+  RHOSP-kubevirt-infra role. The dict is intentionally minimal - only the fields that
+  actually vary are set. The role injects the constants that never change for the
+  undercloud (name=undercloud, pre_provisioned=true, openstack.role=undercloud) so they
+  cannot be set wrong. No `pm` block is used (it is the director and is not power-managed
+  by the lab). When it is a libvirt VM it is otherwise built like the overcloud VMs below
   (this role appends it to its internal `libvirt_machines` view). Minimal example:
 
 ```yaml
@@ -88,7 +81,7 @@ undercloud:
     memory: RAM_IN_KIB
     disks:
     - root: true
-      size: DISK_SIZE_IN_BYTES
+      size: DISK_SIZE_IN_GI
     network:
       interfaces:
       - name: nic1
@@ -101,10 +94,11 @@ undercloud:
   note below for the `type: physical` case.
 
 machines:
-  List of the overcloud nodes (both libvirt VMs and physical baremetal nodes). By default
-  one virtual controller and one virtual compute. Every entry shares common top-level
-  parameters and is tagged with a `type` discriminator; technology-specific parameters
-  live in a block named after the type.
+  List of the overcloud nodes. This role only manages `type: libvirt` (VMs created by
+  this role) and `type: physical` (baremetal nodes); for kubevirt VMs use the
+  RHOSP-kubevirt-infra role. By default one virtual controller and one virtual compute.
+  Every entry shares common top-level parameters and is tagged with a `type` discriminator;
+  technology-specific parameters live in a block named after the type.
 
   A libvirt VM (`type: libvirt`):
 
@@ -126,11 +120,11 @@ machines:
       title: 'VM_TITLE'
       hypervisor: HYPERVISOR_NAME
       cpus: AMOUNT_OF_CPUS
-      memory: RAM_IN_KIB
+      memory: RAM_IN_GI
       disks:                   # one or more; exactly one root; all attached as virtio
       - root: true
-        size: DISK_SIZE_IN_BYTES
-      - size: DATA_DISK_SIZE_IN_BYTES  # optional extra data disk(s)
+        size: DISK_SIZE_IN_GI
+      - size: DATA_DISK_SIZE_IN_GI  # optional extra data disk(s)
       network:
         interfaces:            # each NIC attaches to a hypervisor bridge (type=bridge)
         - name: nic1
@@ -160,7 +154,7 @@ machines:
       mode: bios               # bios | uefi
     physical:
       cpus: AMOUNT_OF_CPUS
-      memory: RAM_IN_KIB
+      memory: RAM_IN_GI
       disk: DISK_SIZE_IN_BYTES
       mac: 'XX:XX:XX:XX:XX:XX'  # boot NIC MAC (for introspection)
       nics:
