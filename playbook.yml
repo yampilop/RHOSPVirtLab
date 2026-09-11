@@ -1,10 +1,9 @@
 ---
-- name: Infrastructure configuration
+- name: Libvirt infrastructure configuration
   hosts: infrastructure
   vars_files:
     - vars/options.yml
     - vars/machines.yml
-    # Loaded last so vaulted overrides win over the lab defaults above.
     - vault_credentials.yaml
 
   pre_tasks:
@@ -15,12 +14,26 @@
   roles:
     - role: RHOSP-virt-infra
 
+- name: Kubevirt infrastructure configuration
+  hosts: infrastructure
+  vars_files:
+    - vars/options.yml
+    - vars/machines.yml
+    - vault_credentials.yaml
+
+  pre_tasks:
+    - name: Set ansible_user to the admin current user
+      set_fact:
+        ansible_user: admin
+
+  roles:
+    - role: RHOSP-kubevirt-infra
+
 - name: Openstack configuration
   hosts: openstack
   vars_files:
     - vars/options.yml
     - vars/machines.yml
-    # Loaded last so vaulted overrides win over the lab defaults above.
     - vault_credentials.yaml
   gather_facts: no
   
