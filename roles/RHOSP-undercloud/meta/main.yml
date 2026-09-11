@@ -9,7 +9,10 @@ galaxy_info:
   platforms:
     - name: Red Hat Enterprise Linux
       versions:
+      - 7.9
       - 8.4
+      - 9.6
+      - 10.2
 
   galaxy_tags:
     - openstack

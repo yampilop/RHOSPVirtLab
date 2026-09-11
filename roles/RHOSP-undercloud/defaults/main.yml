@@ -18,14 +18,6 @@ create: True
 # https://) sets vncproxy_protocol. Bare '<host>' preserves the original behavior.
 vncproxy: ''
 
-# Service ports the undercloud forwards (DNAT) to the overcloud public IP when the
-# control-plane leaf's ctlplane_subnet.masquerade is true. Defaults: Horizon (80),
-# noVNC (6080), Keystone (5000). See the RHOSP-virt-infra role for the hypervisor-side
-# equivalent that forwards the same ports from the physical host.
-forwarded_ports:
-  - 80
-  - 6080
-  - 5000
 
 # dns and ntp servers
 dns_servers:
@@ -324,10 +316,10 @@ undercloud:
     title: 'RHOSPVirtLab Undercloud'
     hypervisor: localhost
     cpus: 2
-    memory: 6291456
+    memory: 6Gi
     disks:
       - root: true
-        size: 107374182400
+        size: 100Gi
     network:
       interfaces:
         # Only the control-plane NIC; the role injects the mgmt NIC (see README).
@@ -353,10 +345,10 @@ machines:
       title: 'RHOSPVirtLab Virtual Controller 0'
       hypervisor: localhost
       cpus: 2
-      memory: 8388608
+      memory: 8Gi
       disks:
         - root: true
-          size: 53687091200
+          size: 50Gi
       network:
         interfaces:
           - name: nic1
@@ -377,10 +369,10 @@ machines:
       title: 'RHOSPVirtLab Virtual Compute 0'
       hypervisor: localhost
       cpus: 4
-      memory: 6291456
+      memory: 6Gi
       disks:
         - root: true
-          size: 53687091200
+          size: 50Gi
       network:
         interfaces:
           - name: nic1

@@ -1,6 +1,15 @@
 ---
 # vars file for RHOSP-undercloud
 
+# Port forwarding configuration (not customizable)
+forwarded_ports:
+  - name: http
+    port: 80
+  - name: vnc
+    port: 6080
+  - name: keystone
+    port: 5000
+
 # Convenience views over `machines` (overcloud nodes only; the undercloud is separate).
 libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
