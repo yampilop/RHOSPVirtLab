@@ -97,6 +97,8 @@ leafs:
 # Note: The undercloud is always pre_provisioned (implicit).
 undercloud:
   type: kubevirt
+  openstack:
+    local_interface: eth1  # eth0 is pod network in kubevirt VMs
   kubevirt:
     title: 'RHOSPVirtLab Undercloud'
     cpus: 2
