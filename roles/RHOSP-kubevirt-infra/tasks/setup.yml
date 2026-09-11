@@ -9,6 +9,7 @@
     url: "{{ CustomOcClientUrl | default('https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz') }}"
     dest: "/tmp/openshift-client-linux.tar.gz"
     mode: '0644'
+  register: oc_download
 
 - name: SETUP - Extract openshift-client to ~/bin
   shell: |
@@ -18,6 +19,7 @@
     chmod 0755 "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
     chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
     rm -f /tmp/openshift-client-linux.tar.gz
+  when: oc_download.changed
 
 - name: SETUP - Ensure ~/bin is in PATH
   lineinfile:
