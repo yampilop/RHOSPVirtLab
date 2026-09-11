@@ -42,7 +42,7 @@ leafs:
     dhcp_start: 192.168.24.5
     dhcp_end: 192.168.24.99
     inspection_iprange: 192.168.24.100,192.168.24.120
-    gateway: 192.168.24.254
+    gateway: 192.168.24.1
     masquerade: true
   networks:
   - name: Tenant
