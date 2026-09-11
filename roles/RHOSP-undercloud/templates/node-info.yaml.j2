@@ -119,6 +119,7 @@ parameter_defaults:
           {{ nic }}: '{{ pm.physical.mac if nic == 'nic1' else interface }}'
 {% endfor %}
 {% endif %}
+{% endif %}
 {% endfor %}
 {% else %}
 {% for vm in (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile)) %}
@@ -127,5 +128,5 @@ parameter_defaults:
 {{ net_list(ocrole, name, vm.openstack.ctlplane_ip) }}
 {% endfor %}
 {% endif %}
-{% endif %}
 {% endfor %}
+{% endif %}
