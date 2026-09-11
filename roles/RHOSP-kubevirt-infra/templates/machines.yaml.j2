@@ -22,9 +22,8 @@ spec:
       source:
 {% if (disk.root | bool) and (machine.pre_provisioned | bool) %}
         dataSource:
-          apiGroup: cdi.kubevirt.io
-          kind: DataSource
           name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}
+          namespace: {{ KubeVirtNamespace }}
 {% else %}
         blank: {}
 {% endif %}
