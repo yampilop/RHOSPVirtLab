@@ -62,7 +62,7 @@ ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_
 ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}"
 {% endif %}
 ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager release --set={{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
-ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].overcloud_repos | join(' --enable=') }}"
+ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(' --enable=') }}"
 ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
 {% elif rh_username is defined and rh_username %}
 # Prepare pre-provisioned nodes with subscription, repos, and updates
@@ -71,7 +71,7 @@ ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_
 ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}"
 {% endif %}
 ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager release --set={{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
-ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].overcloud_repos | join(' --enable=') }}"
+ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(' --enable=') }}"
 ansible -i /home/stack/deployed-server-ports.yaml -u heat-admin all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
 {% else %}
 # Pre-provisioned nodes subscription not configured; skipping registration, repos, and updates
