@@ -24,7 +24,7 @@ spec:
         dataSource:
           apiGroup: cdi.kubevirt.io
           kind: DataSource
-          name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') }}
+          name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}
 {% else %}
         blank: {}
 {% endif %}
