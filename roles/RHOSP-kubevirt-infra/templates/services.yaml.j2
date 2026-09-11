@@ -23,3 +23,30 @@ spec:
   type: ClusterIP
   selector:
     app: undercloud
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: headless
+  namespace: {{ KubeVirtNamespace }}
+  labels:
+{% for label in KubevirtLabels.Services %}
+    {{ label.key }}: {{ label.value }}
+{% endfor %}
+spec:
+  clusterIP: None
+  ipFamilies:
+    - IPv4
+  ports:
+    - name: headless
+      protocol: TCP
+      port: 5434
+      targetPort: 5434
+  internalTrafficPolicy: Cluster
+  clusterIPs:
+    - None
+  type: ClusterIP
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    network.kubevirt.io/headlessService: headless
