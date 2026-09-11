@@ -35,6 +35,23 @@
     - RHOSP_version < 17.1
     - deployed_server[leaf.name]
 
+- name: TEMPLATES - Create ansible inventory for pre-provisioned nodes
+  copy:
+    content: |
+      all:
+        hosts:
+      {% set pre_prov_machines = ((libvirt_machines if leaf.hypervisor is defined else []) | selectattr('openstack.leaf', 'equalto', leaf.name if leaf.name != default_leaf.name else omit) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) %}
+      {% for machine in pre_prov_machines %}
+          {{ machine.name }}:
+            ansible_host: {{ machine.openstack.ctlplane_ip }}
+            ansible_user: {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}
+      {% endfor %}
+    dest: "/home/stack/pre_deployment_inventory.yaml"
+    owner: stack
+    group: stack
+  when:
+    - deployed_server[leaf.name]
+
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
     src: "nic-configs/nic-config.yaml.j2"
