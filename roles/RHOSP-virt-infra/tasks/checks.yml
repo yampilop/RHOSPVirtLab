@@ -40,10 +40,11 @@
 
 - name: CHECKS - Check RAM usage wont be larger than the hypervisor capacity
   fail:
-    msg: Please check your machines.yml file and make sure the memory usage ({{ total_hypervisor_memory_mb | int }} MB) is not larger than the hypervisor capacity ({{ ansible_memory_mb.real.total | int }} MB) considering 8192 MB for the host.
+    msg: Please check your machines.yml file and make sure the memory usage ({{ total_hypervisor_memory_mb | int }} MB) is not larger than the hypervisor capacity ({{ ansible_memory_mb.real.total | int }} MB) considering 8192 MB reserved for the host.
   when:
     - libvirt_required | bool
-    - total_hypervisor_memory_mb | int + 8192 > ansible_memory_mb.real.total | int
+    - total_hypervisor_memory_mb | int > 0
+    - total_hypervisor_memory_mb | int > (ansible_memory_mb.real.total | int - 8192)
 
 - name: CHECKS - Get total hypervisor cpus planned
   set_fact:
@@ -52,10 +53,11 @@
 
 - name: CHECKS - Check CPU usage wont be larger than the hypervisor capacity
   fail:
-    msg: Please check your machines.yml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 2 CPUs for the host.
+    msg: Please check your machines.yml file and make sure the vcpus usage ({{ total_hypervisor_cpus | int }}) is not larger than the hypervisor capacity ({{ ansible_processor_vcpus | int }}) considering 2 CPUs reserved for the host.
   when:
     - libvirt_required | bool
-    - total_hypervisor_cpus | int + 2 > ansible_processor_vcpus | int
+    - total_hypervisor_cpus | int > 0
+    - total_hypervisor_cpus | int > (ansible_processor_vcpus | int - 2)
 
 - name: CHECKS - Validate memory and disk size format (NUMBER)(UNIT)
   vars:
