@@ -17,9 +17,9 @@ spec:
 {% for disk in machine.kubevirt.disks %}
   - metadata:
       creationTimestamp: null
-      name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}'
+      name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}'
     spec:
-{% if (disk.root | bool) and (machine.pre_provisioned | bool) %}
+{% if (disk.root | default(false) | bool) and (machine.pre_provisioned | bool) %}
       sourceRef:
         kind: DataSource
         name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}
@@ -73,10 +73,10 @@ spec:
           autoattachPodInterface: false
           disks:
 {% for disk in machine.kubevirt.disks %}
-          - name: {{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}
+          - name: {{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}
             disk:
               bus: virtio
-{% if disk.root | bool %}
+{% if disk.root | default(false) | bool %}
             bootOrder: 1
 {% endif %}
 {% endfor %}
@@ -109,8 +109,8 @@ spec:
       volumes:
 {% for disk in machine.kubevirt.disks %}
       - dataVolume:
-          name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}'
-        name: {{ 'rootdisk' if (disk.root | bool) else 'data-' ~ loop.index0 }}
+          name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}'
+        name: {{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}
 {% endfor %}
       - name: cloudinitdisk
         cloudInitNoCloud:
