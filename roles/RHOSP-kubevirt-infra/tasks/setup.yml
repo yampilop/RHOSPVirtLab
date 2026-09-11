@@ -27,21 +27,23 @@
   when:
     - RHEL_version_supported[ansible_distribution_version].oc_url is defined
 
-- name: SETUP - Extract oc tool to ~/bin
+- name: SETUP - Extract oc tool to temporary location
   unarchive:
     src: "/tmp/oc-mirror.tar.gz"
-    dest: "/home/{{ ansible_user }}/bin"
+    dest: "/tmp"
     remote_src: yes
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: u+x,g+x,o+x
   when:
     - RHEL_version_supported[ansible_distribution_version].oc_url is defined
 
-- name: SETUP - Make oc tool executable
-  file:
-    path: "/home/{{ ansible_user }}/bin/oc"
-    mode: '0755'
+- name: SETUP - Copy oc binary to ~/bin
+  shell: |
+    for binary in oc kubectl; do
+      if [ -f "/tmp/$binary" ]; then
+        cp -f "/tmp/$binary" "/home/{{ ansible_user }}/bin/$binary"
+        chmod 0755 "/home/{{ ansible_user }}/bin/$binary"
+        chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/$binary"
+      fi
+    done
   when:
     - RHEL_version_supported[ansible_distribution_version].oc_url is defined
 
