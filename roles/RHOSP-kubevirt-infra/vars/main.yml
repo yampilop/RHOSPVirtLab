@@ -1,6 +1,27 @@
 ---
 # vars file for RHOSP-kubevirt-infra
 
+# Kubernetes client packages by RHEL version
+RHEL_version_supported:
+  "7.9":
+    packages:
+      - python3-pip
+      - python3-devel
+      - gcc
+    pip:
+      - openshift
+  "8.4":
+    packages:
+      - python3-pip
+    pip:
+      - openshift
+  "9.6":
+    packages:
+      - openshift-clients
+  "10.2":
+    packages:
+      - openshift-clients
+
 # Port forwarding configuration (not customizable)
 forwarded_ports:
   - name: http

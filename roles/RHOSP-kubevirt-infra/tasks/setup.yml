@@ -1,3 +1,17 @@
+- name: SETUP - Ensure kubernetes client packages are installed
+  yum:
+    name: "{{ RHEL_version_supported[ansible_distribution_version].packages }}"
+    state: present
+  become: yes
+
+- name: SETUP - Install kubernetes client via pip (legacy interpreters)
+  pip:
+    name: "{{ RHEL_version_supported[ansible_distribution_version].pip }}"
+    executable: "pip3"
+  when:
+    - RHEL_version_supported[ansible_distribution_version].pip is defined
+    - ansible_distribution_major_version | int < 9
+
 - name: SETUP - Ensure the ssh directory exists
   file:
     path: "/home/{{ ansible_user }}/.ssh"

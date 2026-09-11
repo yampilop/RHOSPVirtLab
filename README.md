@@ -36,7 +36,8 @@ sudo subscription-manager attach --pool=<POOL_ID>
 sudo subscription-manager release --set=10.2
 sudo subscription-manager repos --disable=*
 sudo subscription-manager repos --enable=rhel-10-for-x86_64-baseos-rpms \
---enable=rhel-10-for-x86_64-appstream-rpms
+--enable=rhel-10-for-x86_64-appstream-rpms \
+--enable=rhocp-4.14-for-rhel-10-x86_64-rpms
 sudo dnf update -y
 sudo reboot
 ```
@@ -51,7 +52,8 @@ sudo subscription-manager attach --pool=<POOL_ID>
 sudo subscription-manager release --set=9.6
 sudo subscription-manager repos --disable=*
 sudo subscription-manager repos --enable=rhel-9-for-x86_64-baseos-rpms \
---enable=rhel-9-for-x86_64-appstream-rpms
+--enable=rhel-9-for-x86_64-appstream-rpms \
+--enable=rhocp-4.14-for-rhel-9-x86_64-rpms
 sudo dnf update -y
 sudo reboot
 ```
