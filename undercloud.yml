@@ -8,10 +8,6 @@
   gather_facts: no
 
   pre_tasks:
-    - name: Set ansible_user to the current user
-      set_fact:
-        ansible_user: "{{ lookup('env','USER') }}"
-
     - name: Wait for the undercloud to come up
       wait_for_connection:
         timeout: 120
