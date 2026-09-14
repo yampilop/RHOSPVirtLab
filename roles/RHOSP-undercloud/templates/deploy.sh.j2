@@ -19,10 +19,7 @@ openstack overcloud ceph deploy -y \
 {% endif %}
 --roles-data {{ templates_dir }}/roles_data.yaml \
 --container-image-prepare /home/stack/containers-prepare-parameter.yaml \
-{% if deployed_server[leaf.name] %}
---force \
---cephadm-extra-args '--skip-firewalld --skip-prepare-host' \
-{% endif %}
+--ntp-server "{{ ntp_servers | join(' ') }}" \
 ;
 {% endif %}
 
