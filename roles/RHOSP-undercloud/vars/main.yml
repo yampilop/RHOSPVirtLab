@@ -435,6 +435,7 @@ RHOSP_version_supported:
       - rhel-9-for-x86_64-highavailability-eus-rpms
       - openstack-17.1-for-rhel-9-x86_64-rpms
       - fast-datapath-for-rhel-9-x86_64-rpms
+      - rhceph-6-tools-for-rhel-9-x86_64-rpms
     modules: []
     packages:
       - python3-argcomplete
