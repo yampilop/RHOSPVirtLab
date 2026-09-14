@@ -129,6 +129,8 @@ parameter_defaults:
     hostname: {{ vm.name }}
 {{ net_list(ocrole, name, vm.openstack.ctlplane_ip if vm.openstack.ctlplane_ip is defined else '') }}
     network_config:
+      network_config_update: true
+      template: /home/stack/templates/{{ leaf.name ~ "/" if leaf.name != default_leaf.name else "" }}nic-configs/{{ ocrole.profile }}.j2
       net_config_data_lookup:
 {% for interface in vm.kubevirt.network.interfaces %}
         {{ interface.name }}: '{{ interface.mac }}'
