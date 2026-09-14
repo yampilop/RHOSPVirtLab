@@ -18,8 +18,7 @@ openstack overcloud ceph deploy -y \
 --config {{ templates_dir }}/initial-ceph.conf \
 {% endif %}
 --roles-data {{ templates_dir }}/roles_data.yaml \
---container-image-prepare /home/stack/containers-prepare-parameter.yaml \
---ntp-server {{ ntp_servers | join(',') }}
+--container-image-prepare /home/stack/containers-prepare-parameter.yaml
 {% endif %}
 
 {% if (dcn_leafs | length > 0) and (leaf.name == default_leaf.name) and (ceph_count + hci_count > 0) %}
