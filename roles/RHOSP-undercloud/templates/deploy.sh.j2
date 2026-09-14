@@ -20,8 +20,7 @@ openstack overcloud ceph deploy -y \
 --roles-data {{ templates_dir }}/roles_data.yaml \
 --container-image-prepare /home/stack/containers-prepare-parameter.yaml \
 --ntp-server "{{ ntp_servers | join(',') }}" \
---ssh-private-key /home/stack/.ssh/id_rsa \
---ssh-public-key /home/stack/.ssh/id_rsa.pub
+--cephadm-extra-args '--ssh-private-key-file /home/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}/.ssh/id_rsa --ssh-public-key-file /home/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}/.ssh/id_rsa.pub'
 {% endif %}
 
 {% if (dcn_leafs | length > 0) and (leaf.name == default_leaf.name) and (ceph_count + hci_count > 0) %}
