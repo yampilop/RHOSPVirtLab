@@ -103,11 +103,6 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
 {% endif %}
 
-{% if RHOSP_version >= 17.1 and (ceph_count | default(0) + hci_count | default(0) > 0) %}
-# Configure passwordless sudo for cephadm SSH access on ceph nodes
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "echo '{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}"
-{% endif %}
-
 # Generate roles
 openstack overcloud roles generate -o {{ templates_dir }}/roles_data.yaml {% for ocrole in overcloud_roles if roles_count[leaf.name][ocrole.name] > 0 %}{{ ocrole.name if (ocrole.copy_from is not defined) else (ocrole.copy_from ~ ':' ~ ocrole.name) }} {% endfor %}
 
