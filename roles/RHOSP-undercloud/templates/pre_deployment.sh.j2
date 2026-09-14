@@ -4,6 +4,8 @@ source /home/stack/stackrc
 
 {% if leaf.name == default_leaf.name %}
 {% set templates_dir='/home/stack/templates' %}
+{% set ceph_count = (libvirt_machines + physical_machines + kubevirt_machines) | selectattr('openstack.role', 'in', ['cephstorage', 'cephall']) | list | length %}
+{% set hci_count = (libvirt_machines + physical_machines + kubevirt_machines) | selectattr('openstack.role', 'in', ['computehci', 'distributedcomputehci', 'distributedcomputehciscaleout']) | list | length %}
 
 # Auto source and completion
 if [ ! -f /usr/share/bash-completion/completions/openstack ]; then
