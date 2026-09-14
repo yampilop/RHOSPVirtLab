@@ -128,6 +128,11 @@ parameter_defaults:
   - name: {{ vm.name }}
     hostname: {{ vm.name }}
 {{ net_list(ocrole, name, vm.openstack.ctlplane_ip if vm.openstack.ctlplane_ip is defined else '') }}
+    network_config:
+      net_config_data_lookup:
+{% for interface in vm.kubevirt.network.interfaces %}
+        {{ interface.name }}: '{{ interface.mac }}'
+{% endfor %}
 {% endfor %}{# IF 1 FOR 3 #}
 {% endif %}{# IF 1 #}
 {% endif %}{# IF INSTANCES #}
