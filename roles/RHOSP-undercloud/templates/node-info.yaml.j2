@@ -71,10 +71,10 @@ parameter_defaults:
     managed: false
 {% endif %}{# IF 0 FOR 2 IF 1 IF 2 #}
 {{ net_list(ocrole, name) }}
-{% if not deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 3 #}
     network_config:
       network_config_update: true
       template: /home/stack/templates/{{ leaf.name ~ "/" if leaf.name != default_leaf.name else "" }}nic-configs/{{ ocrole.profile }}.j2
+{% if not deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 3 #}
       default_route_network:
       - {{ (leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
@@ -129,11 +129,10 @@ parameter_defaults:
     hostname: {{ vm.name }}
 {{ net_list(ocrole, name, vm.openstack.ctlplane_ip if vm.openstack.ctlplane_ip is defined else '') }}
     network_config:
-      network_config_update: true
-      template: /home/stack/templates/{{ leaf.name ~ "/" if leaf.name != default_leaf.name else "" }}nic-configs/{{ ocrole.profile }}.j2
       net_config_data_lookup:
+        {{ vm.name }}:
 {% for interface in vm.kubevirt.network.interfaces %}
-        {{ interface.name }}: '{{ interface.mac }}'
+          {{ interface.name }}: '{{ interface.mac }}'
 {% endfor %}
 {% endfor %}{# IF 1 FOR 3 #}
 {% endif %}{# IF 1 #}

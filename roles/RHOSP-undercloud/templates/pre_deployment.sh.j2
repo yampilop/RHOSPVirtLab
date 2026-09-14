@@ -77,8 +77,8 @@ sudo openstack tripleo container image prepare \
 {% if RHOSP_version >= 17.1 %}
 # Provision nodes
 {% if deployed_server[leaf.name] %}
-# Deployed servers (managed:false): only authors overcloud-baremetal-deployed.yaml, no node changes
-openstack overcloud node provision -y --stack {{ leaf.name }} --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
+# Deployed servers (managed:false): authors overcloud-baremetal-deployed.yaml with network configuration
+openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 {% else %}
 openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 metalsmith list
