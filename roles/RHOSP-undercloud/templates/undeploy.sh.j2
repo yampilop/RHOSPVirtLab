@@ -12,18 +12,11 @@ openstack overcloud delete {{ leaf.name }} -y
 {% endfor %}
 openstack overcloud delete overcloud -y
 
-# Undeploy the nodes
+{% if not deployed_server[leaf.name] %}
+# Undeploy the nodes (only for baremetal provisioning)
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node undeploy "$1)}'
 metalsmith list
 openstack baremetal node list
-{% else %}
-# Delete the overcloud
-{% for leaf in dcn_leafs %}
-openstack overcloud delete {{ leaf.name }} -y
-{% endfor %}
-openstack overcloud delete overcloud -y
-openstack baremetal node list
-{% endif %}
 
 # Clean the nodes
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node manage "$1)}'
@@ -31,13 +24,38 @@ openstack baremetal node list
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node clean --clean-steps clean-steps.txt "$1)}'
 openstack baremetal node list
 
-# Wait for the nodes to finish cleanning process or failing (timeout 10 minutes)
+# Wait for the nodes to finish cleaning process or failing (timeout 10 minutes)
 timeout 600 bash -c -- 'while (openstack baremetal node list -f value -c Name -c "Provisioning State" | grep -Ev "failed|manageable"); do echo "Waiting for cleaning..."; sleep 5; done'
 openstack baremetal node list
 
-{% if RHOSP_version >= 17.1 %}
 # Delete the ports (to avoid future duplicates)
 openstack port list -f value -c ID -c Status | grep DOWN | awk '{system("openstack port delete "$1)}'
 openstack port list
 openstack baremetal node list
+{% else %}
+# Pre-provisioned deployment: nodes are not managed by Ironic
+echo "Pre-provisioned deployment detected. Skipping Ironic node management."
+{% endif %}
+{% else %}
+# Delete the overcloud
+{% for leaf in dcn_leafs %}
+openstack overcloud delete {{ leaf.name }} -y
+{% endfor %}
+openstack overcloud delete overcloud -y
+openstack baremetal node list
+
+{% if not deployed_server[leaf.name] %}
+# Clean the nodes
+openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node manage "$1)}'
+openstack baremetal node list
+openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node clean --clean-steps clean-steps.txt "$1)}'
+openstack baremetal node list
+
+# Wait for the nodes to finish cleaning process or failing (timeout 10 minutes)
+timeout 600 bash -c -- 'while (openstack baremetal node list -f value -c Name -c "Provisioning State" | grep -Ev "failed|manageable"); do echo "Waiting for cleaning..."; sleep 5; done'
+openstack baremetal node list
+{% else %}
+# Pre-provisioned deployment: nodes are not managed by Ironic
+echo "Pre-provisioned deployment detected. Skipping Ironic node management."
+{% endif %}
 {% endif %}
