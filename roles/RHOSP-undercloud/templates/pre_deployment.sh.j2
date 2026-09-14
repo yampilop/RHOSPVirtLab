@@ -109,36 +109,6 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} Controller -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo rm -f /var/lib/config-data/puppet-generated/mysql/root/.my.cnf /var/lib/config-data/mysql/root/.my.cnf" 2>/dev/null || true
 {% endif %}
 
-{% if RHOSP_version < 17.1 and deployed_server[leaf.name] %}
-# Deploy os-net-config mapping for pre-provisioned machines (16.2)
-{% for vm in kubevirt_machines %}
-cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
-{{ vm.name }}:
-{% for interface in vm.kubevirt.network.interfaces %}
-  {{ interface.name }}: '{{ interface.mac }}'
-{% endfor %}
-EOF
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
-{% endfor %}
-{% for vm in libvirt_machines %}
-cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
-{{ vm.name }}:
-{% for interface in vm.libvirt.network.interfaces %}
-  {{ interface.name }}: '{{ interface.mac }}'
-{% endfor %}
-EOF
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
-{% endfor %}
-{% for vm in physical_machines %}
-cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
-{{ vm.name }}:
-{% for nic, interface in vm.physical.nics.items() %}
-  {{ nic }}: '{{ vm.physical.mac if nic == 'nic1' else interface }}'
-{% endfor %}
-EOF
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
-{% endfor %}
-{% endif %}
 
 {% if RHOSP_version >= 17.1 and deployed_server[leaf.name] and (ceph_count | default(0) + hci_count | default(0) > 0) %}
 # Install cephadm prerequisites on ceph nodes

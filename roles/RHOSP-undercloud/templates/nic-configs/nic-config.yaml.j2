@@ -174,7 +174,7 @@ resources:
                   vfid: {{ member.split('v')[1] }}
 {% else %}
                 - type: interface
-                  name: {{ member if deployed_server[leaf.name] else 'nic' ~ (loop.index0 + 1) }}
+                  name: nic{{ (loop.index0 + 2) if deployed_server[leaf.name] else (loop.index0 + 1) }}
 {% endif %}
 {% if bridge_mtu_line %}
                   mtu:
@@ -194,7 +194,7 @@ resources:
                   rx_queue: {{ member.rx_queue | default(1) }}
                   ovs_extra:
 {% for p in member.members %}
-{% set p_name = p.name if deployed_server[leaf.name] else 'nic' ~ (loop.index0 + 1) %}
+{% set p_name = 'nic' ~ ((loop.index0 + 2) if deployed_server[leaf.name] else (loop.index0 + 1)) %}
                     - set Interface {{ p_name }} options:n_rxq_desc=4096
                     - set Interface {{ p_name }} options:n_txq_desc=4096
 {% endfor %}
@@ -203,7 +203,7 @@ resources:
                   members:
 {% for p in member.members %}
                   - type: {{ p.type }}
-                    name: {{ p.name if deployed_server[leaf.name] else 'nic' ~ (loop.index0 + 1) }}
+                    name: nic{{ (loop.index0 + 2) if deployed_server[leaf.name] else (loop.index0 + 1) }}
 {% if p.driver is defined %}
                     driver: {{ p.driver }}
 {% endif %}
@@ -216,7 +216,7 @@ resources:
                       vfid: {{ sub.split('v')[1] }}
 {% else %}
                     - type: interface
-                      name: {{ sub if deployed_server[leaf.name] else 'nic' ~ (loop.index0 + 1) }}
+                      name: nic{{ (loop.index0 + 2) if deployed_server[leaf.name] else (loop.index0 + 1) }}
 {% endif %}
 {% endfor %}
 {% endif %}
