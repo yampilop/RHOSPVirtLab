@@ -104,6 +104,9 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 {% endif %}
 
 {% if RHOSP_version >= 17.1 and (ceph_count | default(0) + hci_count | default(0) > 0) %}
+# Install cephadm prerequisites on ceph nodes
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf install -y lvm2 podman"
+
 # Authorize SSH public key for root access on ceph nodes for cephadm bootstrap
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "mkdir -p /root/.ssh && chmod 700 /root/.ssh"
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -m copy -a "src=/home/stack/.ssh/id_rsa.pub dest=/tmp/authorized_key"
