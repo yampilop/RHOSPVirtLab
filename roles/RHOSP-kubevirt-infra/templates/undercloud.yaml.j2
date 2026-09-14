@@ -1,4 +1,4 @@
-{% for machine in kubevirt_machines if machine.name != 'undercloud' %}
+{% set machine = undercloud_base %}
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
@@ -141,4 +141,3 @@ spec:
                 - '{{ machine.openstack.ctlplane_ip }}/{{ default_leaf.ctlplane_subnet.cidr.split('/')[1] }}'
                 gateway4: {{ default_leaf.ctlplane_subnet.gateway }}
 {% endif %}
-{% endfor %}

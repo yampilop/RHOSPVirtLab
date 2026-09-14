@@ -61,10 +61,19 @@
   delegate_to: localhost
   run_once: true
 
+- name: KUBERNETES - Render the Undercloud VirtualMachine manifest
+  template:
+    src: machines.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+  when: kubevirt_undercloud
+
 - name: KUBERNETES - Render VirtualMachines manifest
   template:
     src: machines.yaml.j2
-    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/06-machines.yaml"
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/07-machines.yaml"
     mode: '0644'
   delegate_to: localhost
   run_once: true
@@ -88,6 +97,7 @@
         oc wait --for=jsonpath='{.status.phase}'=Succeeded datavolume/{{ datavolume_name }} -n {{ KubeVirtNamespace }} --timeout=600s
 
       Then create the VMs:
-        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/06-machines.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/07-machines.yaml
   delegate_to: localhost
   run_once: true
