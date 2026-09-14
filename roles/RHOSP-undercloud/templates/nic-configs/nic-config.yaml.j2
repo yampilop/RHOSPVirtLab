@@ -176,7 +176,7 @@ resources:
 {% else %}
                 - type: interface
                   name: nic{{ ns.nic_index }}
-{% set _ = ns.update({'nic_index': ns.nic_index + 1}) %}
+                  {% set ns.nic_index = ns.nic_index + 1 %}
 {% endif %}
 {% if bridge_mtu_line %}
                   mtu:
@@ -197,7 +197,7 @@ resources:
                   ovs_extra:
 {% for p in member.members %}
 {% set p_name = 'nic' ~ ns.nic_index %}
-{% set _ = ns.update({'nic_index': ns.nic_index + 1}) %}
+                    {% set ns.nic_index = ns.nic_index + 1 %}
                     - set Interface {{ p_name }} options:n_rxq_desc=4096
                     - set Interface {{ p_name }} options:n_txq_desc=4096
 {% endfor %}
@@ -207,7 +207,7 @@ resources:
 {% for p in member.members %}
                   - type: {{ p.type }}
                     name: nic{{ ns.nic_index }}
-{% set _ = ns.update({'nic_index': ns.nic_index + 1}) %}
+                    {% set ns.nic_index = ns.nic_index + 1 %}
 {% if p.driver is defined %}
                     driver: {{ p.driver }}
 {% endif %}
@@ -221,7 +221,7 @@ resources:
 {% else %}
                     - type: interface
                       name: nic{{ ns.nic_index }}
-{% set _ = ns.update({'nic_index': ns.nic_index + 1}) %}
+                      {% set ns.nic_index = ns.nic_index + 1 %}
 {% endif %}
 {% endfor %}
 {% endif %}
