@@ -103,7 +103,7 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
 {% endif %}
 
-{% if RHOSP_version >= 17.1 and (ceph_count | default(0) + hci_count | default(0) > 0) %}
+{% if RHOSP_version >= 17.1 and deployed_server[leaf.name] and (ceph_count | default(0) + hci_count | default(0) > 0) %}
 # Install cephadm prerequisites on ceph nodes
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf install -y lvm2 podman jq"
 
