@@ -39,6 +39,8 @@
   copy:
     content: |
       all:
+        vars:
+          ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
         hosts:
       {% set pre_prov_machines = ((libvirt_machines if leaf.hypervisor is defined else []) | selectattr('openstack.leaf', 'equalto', leaf.name if leaf.name != default_leaf.name else omit) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) + (kubevirt_machines | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list) %}
       {% for machine in pre_prov_machines %}
