@@ -118,7 +118,7 @@ cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
   {{ interface.name }}: '{{ interface.mac }}'
 {% endfor %}
 EOF
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
 {% endfor %}
 {% for vm in libvirt_machines %}
 cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
@@ -127,7 +127,7 @@ cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
   {{ interface.name }}: '{{ interface.mac }}'
 {% endfor %}
 EOF
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
 {% endfor %}
 {% for vm in physical_machines %}
 cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
@@ -136,7 +136,7 @@ cat > /tmp/mapping-{{ vm.name }}.yaml << 'EOF'
   {{ nic }}: '{{ vm.physical.mac if nic == 'nic1' else interface }}'
 {% endfor %}
 EOF
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b {{ vm.name }} -m copy -a "src=/tmp/mapping-{{ vm.name }}.yaml dest=/etc/os-net-config/mapping.yaml"
 {% endfor %}
 {% endif %}
 
