@@ -104,10 +104,8 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 {% endif %}
 
 {% if RHOSP_version >= 17.1 and (ceph_count | default(0) + hci_count | default(0) > 0) %}
-# Copy SSH keys to all overcloud nodes for cephadm bootstrap
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo mkdir -p /home/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}/.ssh && sudo chmod 700 /home/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}/.ssh"
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -m copy -a "src=/home/stack/.ssh/id_rsa dest=/home/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}/.ssh/id_rsa mode=0600" all
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -m copy -a "src=/home/stack/.ssh/id_rsa.pub dest=/home/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}/.ssh/id_rsa.pub mode=0644" all
+# Configure passwordless sudo for cephadm SSH access on ceph nodes
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "echo '{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/{{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}"
 {% endif %}
 
 # Generate roles
