@@ -224,11 +224,6 @@ deployment_environment:
     DCN: False
     Leafs: All
     Variable: DeployFrr
-  - file: custom-network-configuration.yaml
-    absolute_path: False
-    version: [ 17.1, 16.2 ]
-    DCN: False
-    Leafs: All
   - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml
     absolute_path: True
     version: [ 17.1 ]
@@ -342,6 +337,11 @@ deployment_environment:
     DCN: False
     Leafs: All
     Roles: [ 'ComputeInstanceHA' ]
+  - file: custom-network-configuration.yaml
+    absolute_path: False
+    version: [ 17.1, 16.2 ]
+    DCN: False
+    Leafs: All
 
 roles_networks:
   Controller:
