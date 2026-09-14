@@ -103,6 +103,31 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
 {% endif %}
 
+{% if deployed_server[leaf.name] %}
+# Clear MySQL password on pre-provisioned controller nodes (KCS 7060294)
+# https://access.redhat.com/solutions/7060294
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} Controller -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo rm -f /var/lib/config-data/puppet-generated/mysql/root/.my.cnf /var/lib/config-data/mysql/root/.my.cnf" 2>/dev/null || true
+{% endif %}
+
+{% if RHOSP_version < 17.1 and deployed_server[leaf.name] %}
+# Deploy os-net-config mapping for pre-provisioned machines (16.2)
+cat > /tmp/mapping.yaml << 'EOF'
+{% for vm in (libvirt_machines + physical_machines + kubevirt_machines) if vm.openstack.role %}
+{{ vm.name }}:
+{% if vm in libvirt_machines or vm in kubevirt_machines %}
+{% for interface in vm.kubevirt.network.interfaces if vm in kubevirt_machines else vm.libvirt.network.interfaces if vm in libvirt_machines else [] %}
+  {{ interface.name }}: '{{ interface.mac }}'
+{% endfor %}
+{% elif vm in physical_machines %}
+{% for nic, interface in vm.physical.nics.items() %}
+  {{ nic }}: '{{ vm.physical.mac if nic == 'nic1' else interface }}'
+{% endfor %}
+{% endif %}
+{% endfor %}
+EOF
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -m copy -a "src=/tmp/mapping.yaml dest=/etc/os-net-config/mapping.yaml"
+{% endif %}
+
 {% if RHOSP_version >= 17.1 and deployed_server[leaf.name] and (ceph_count | default(0) + hci_count | default(0) > 0) %}
 # Install cephadm prerequisites on ceph nodes
 ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf install -y lvm2 podman jq"
