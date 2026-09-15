@@ -26,7 +26,7 @@
         nmcli connection add type ethernet con-name "{{ conn_name }}" \
           ifname "{{ ifname }}" \
           ipv4.method manual \
-          ipv4.addresses "{{ gw_net.subnet.gateway }}/{{ gw_net.subnet.cidr.split('/')[1] }}" \
+          ipv4.addresses "{{ gw_net.subnet.gateway }}/{{ gw_net.subnet.ip_subnet.split('/')[1] }}" \
           connection.autoconnect yes 2>/dev/null || true
         nmcli connection up "{{ conn_name }}" 2>/dev/null || true
         {% endfor %}
