@@ -112,7 +112,7 @@ if openstack overcloud status >/dev/null 2>&1; then
 {% else %}
 if openstack stack show overcloud >/dev/null 2>&1; then
 {% endif %}
-  ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} Controller -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo rm -f /var/lib/config-data/puppet-generated/mysql/root/.my.cnf /var/lib/config-data/mysql/root/.my.cnf" 2>/dev/null || true
+  ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "test -d /var/lib/config-data && sudo rm -f /var/lib/config-data/puppet-generated/mysql/root/.my.cnf /var/lib/config-data/mysql/root/.my.cnf || true"
 fi
 {% endif %}
 
