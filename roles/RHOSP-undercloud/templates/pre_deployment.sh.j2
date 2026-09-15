@@ -105,8 +105,9 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 
 {% if deployed_server[leaf.name] %}
 # Clear MySQL password on pre-provisioned controller nodes (KCS 7060294)
+# Only on stack updates, not initial deployment (check if config dirs exist)
 # https://access.redhat.com/solutions/7060294
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo rm -f /var/lib/config-data/puppet-generated/mysql/root/.my.cnf /var/lib/config-data/mysql/root/.my.cnf" 2>/dev/null || true
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} Controller -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "test -d /var/lib/config-data && sudo rm -f /var/lib/config-data/puppet-generated/mysql/root/.my.cnf /var/lib/config-data/mysql/root/.my.cnf" 2>/dev/null || true
 {% endif %}
 
 
