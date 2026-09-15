@@ -10,9 +10,10 @@
     path: "{{ playbook_dir }}/{{ KubeVirtNamespace }}"
     state: directory
     mode: '0755'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Render DataVolume (import) manifest
@@ -20,9 +21,10 @@
     src: datasource-pvc.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource-pvc.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Render DataSource manifest
@@ -30,9 +32,10 @@
     src: datasource.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/01-datasource.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Render UDNs manifest
@@ -40,9 +43,10 @@
     src: udns.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/02-udns.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Render Services manifest
@@ -50,9 +54,10 @@
     src: services.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/03-services.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Render Routes manifest
@@ -60,9 +65,10 @@
     src: routes.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/04-routes.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Render Provisioning Secret manifest
@@ -70,9 +76,10 @@
     src: secret_provisioning-ssh-public-key.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/05-secret-provisioning-ssh-public-key.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Render the Undercloud VirtualMachine manifest
@@ -80,9 +87,10 @@
     src: undercloud.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
   when: kubevirt_undercloud
 
@@ -91,9 +99,10 @@
     src: machines.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/07-machines.yaml"
     mode: '0644'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: KUBERNETES - Display deployment instructions
