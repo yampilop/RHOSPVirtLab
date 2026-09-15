@@ -10,6 +10,8 @@
     path: "{{ playbook_dir }}/{{ KubeVirtNamespace }}"
     state: directory
     mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
@@ -18,6 +20,8 @@
     src: datasource-pvc.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource-pvc.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
@@ -26,6 +30,8 @@
     src: datasource.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/01-datasource.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
@@ -34,6 +40,8 @@
     src: udns.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/02-udns.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
@@ -42,6 +50,8 @@
     src: services.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/03-services.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
@@ -50,6 +60,8 @@
     src: routes.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/04-routes.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
@@ -58,6 +70,8 @@
     src: secret_provisioning-ssh-public-key.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/05-secret-provisioning-ssh-public-key.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
@@ -66,6 +80,8 @@
     src: undercloud.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
   when: kubevirt_undercloud
@@ -75,6 +91,8 @@
     src: machines.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/07-machines.yaml"
     mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   delegate_to: localhost
   run_once: true
 
