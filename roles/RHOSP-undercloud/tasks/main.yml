@@ -180,6 +180,9 @@
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
 
+- name: UNDERCLOUD NETWORK - Configure gateway network interfaces
+  include_tasks: tasks/undercloud-network.yml
+
 - name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
 
