@@ -41,7 +41,7 @@
     delegate_to: undercloud
     register: gw_result
     changed_when: "'successfully added' in gw_result.stdout.lower()"
-  when:
-    - default_leaf.ctlplane_subnet.masquerade | default(false)
-    - gw_interfaces is defined
-    - gw_interfaces | length > 0
+    when:
+      - default_leaf.ctlplane_subnet.masquerade | default(false)
+      - gw_interfaces is defined
+      - gw_interfaces | length > 0
