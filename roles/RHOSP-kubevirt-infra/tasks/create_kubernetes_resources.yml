@@ -63,7 +63,7 @@
 
 - name: KUBERNETES - Render the Undercloud VirtualMachine manifest
   template:
-    src: machines.yaml.j2
+    src: undercloud.yaml.j2
     dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml"
     mode: '0644'
   delegate_to: localhost
