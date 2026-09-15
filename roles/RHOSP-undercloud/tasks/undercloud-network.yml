@@ -1,19 +1,16 @@
 ---
-- name: UNDERCLOUD NETWORK - Get gateway networks when masquerade enabled
+- name: UNDERCLOUD NETWORK - Initialize gateway networks
   set_fact:
-    gateway_networks: "{{ default_leaf.networks | selectattr('subnet.gateway', 'defined') | list }}"
-  when: default_leaf.ctlplane_subnet.masquerade | default(false)
+    gateway_networks: "{{ default_leaf.networks | selectattr('subnet.gateway', 'defined') | list if (default_leaf.ctlplane_subnet.masquerade | default(false)) else [] }}"
 
 - name: UNDERCLOUD NETWORK - Create NetworkManager profiles for gateway networks
   command: |
-    nmcli connection add type ethernet con-name {{ net.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
+    nmcli connection add type ethernet con-name {{ item.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
       ifname eth{{ loop.index0 + 2 }} \
       ipv4.method manual \
-      ipv4.addresses "{{ net.subnet.gateway }}/{{ net.subnet.cidr.split('/')[1] }}" \
+      ipv4.addresses "{{ item.subnet.gateway }}/{{ item.subnet.cidr.split('/')[1] }}" \
       connection.autoconnect yes
   loop: "{{ gateway_networks }}"
-  loop_control:
-    loop_var: net
   become: true
   delegate_to: undercloud
   register: nmcli_result
@@ -21,19 +18,11 @@
     - nmcli_result.rc != 0
     - "'already exists' not in nmcli_result.stderr"
   changed_when: "'already exists' not in nmcli_result.stderr"
-  when:
-    - default_leaf.ctlplane_subnet.masquerade | default(false)
-    - gateway_networks is defined
-    - gateway_networks | length > 0
+  when: gateway_networks | length > 0
 
 - name: UNDERCLOUD NETWORK - Bring up gateway network connections
-  command: nmcli connection up {{ net.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+  command: nmcli connection up {{ item.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
   loop: "{{ gateway_networks }}"
-  loop_control:
-    loop_var: net
   become: true
   delegate_to: undercloud
-  when:
-    - default_leaf.ctlplane_subnet.masquerade | default(false)
-    - gateway_networks is defined
-    - gateway_networks | length > 0
+  when: gateway_networks | length > 0
