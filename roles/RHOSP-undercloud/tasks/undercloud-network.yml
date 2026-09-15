@@ -14,24 +14,34 @@
       bridge_to_gw: "{{ bridge_to_gw | default({}) | combine({item.bridge: item}) }}"
     loop: "{{ gw_networks }}"
 
-  - name: UNDERCLOUD NETWORK - Build nmcli commands for gateway networks
-    set_fact:
-      gw_commands: "{{ gw_commands | default([]) + [{'iface': item, 'cmd': 'nmcli connection add type ethernet con-name ' + (bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower) + ' ifname $(ip link show | grep -i ' + item.mac + ' | head -1 | awk '\\'''{print $2}'\'' | tr -d ':') ipv4.method manual ipv4.addresses ' + bridge_to_gw[item.bridge].subnet.gateway + '/' + (bridge_to_gw[item.bridge].subnet.cidr.split('/')[1]) + ' connection.autoconnect yes && nmcli connection up ' + (bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower)}] }}"
-    loop: "{{ gw_interfaces }}"
-
-  - name: UNDERCLOUD NETWORK - Debug gateway network commands
-    debug:
-      msg: "{{ gw_commands }}"
-
-  - name: UNDERCLOUD NETWORK - Create and bring up NetworkManager profiles
-    shell: "{{ item.cmd }}"
-    loop: "{{ gw_commands }}"
+  - name: UNDERCLOUD NETWORK - Create configuration script for gateway networks
+    copy:
+      content: |
+        #!/bin/bash
+        set -e
+        {% for iface in gw_interfaces %}
+        {% set gw_net = bridge_to_gw[iface.bridge] %}
+        {% set conn_name = gw_net.name | regex_replace('([a-z0-9])([A-Z])', '\1_\2') | lower %}
+        {% set ifname = "$(ip link show | grep -i " + iface.mac + " | head -1 | awk '{print $2}' | tr -d ':')" %}
+        nmcli connection add type ethernet con-name "{{ conn_name }}" \
+          ifname "{{ ifname }}" \
+          ipv4.method manual \
+          ipv4.addresses "{{ gw_net.subnet.gateway }}/{{ gw_net.subnet.cidr.split('/')[1] }}" \
+          connection.autoconnect yes 2>/dev/null || true
+        nmcli connection up "{{ conn_name }}" 2>/dev/null || true
+        {% endfor %}
+      dest: /tmp/configure_gw_networks.sh
+      mode: '0755'
     become: true
     delegate_to: undercloud
-    register: nmcli_result
-    failed_when:
-      - nmcli_result.rc != 0
-      - "'already exists' not in nmcli_result.stderr"
-    changed_when: "'already exists' not in nmcli_result.stderr"
+
+  - name: UNDERCLOUD NETWORK - Execute gateway network configuration
+    command: /tmp/configure_gw_networks.sh
+    become: true
+    delegate_to: undercloud
+    register: gw_result
+    changed_when: "'successfully added' in gw_result.stdout.lower()"
   when:
     - default_leaf.ctlplane_subnet.masquerade | default(false)
+    - gw_interfaces is defined
+    - gw_interfaces | length > 0
