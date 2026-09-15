@@ -9,14 +9,13 @@
 
 - name: SETUP - Register computed variables as facts for template access
   set_fact:
+    undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
     kubevirt_undercloud: "{{ (undercloud.type | default('kubevirt')) == 'kubevirt' }}"
     kubevirt_machines: "{{ (machines + [undercloud_base]) | selectattr('type', 'equalto', 'kubevirt') | list }}"
-  vars:
-    undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
 
 - name: CHECKS - Ensure pre-provisioned kubevirt machines have valid ctlplane_ip
   fail:
