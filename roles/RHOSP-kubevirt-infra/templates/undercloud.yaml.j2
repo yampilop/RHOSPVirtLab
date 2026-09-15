@@ -1,4 +1,4 @@
-{% set machine = undercloud_base %}
+{% set machine = {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) %}
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
