@@ -55,13 +55,15 @@
 - name: CHECKS - Validate undercloud has interfaces for masqueraded networks
   vars:
     masquerade_enabled: "{{ default_leaf.ctlplane_subnet.masquerade | default(false) }}"
-    gw_networks: "{{ default_leaf.networks | selectattr('subnet.gateway', 'defined') | map(attribute='name') | list }}"
+    gw_networks: "{{ default_leaf.networks | selectattr('subnet.gateway', 'defined') | list }}"
+    gw_network_bridges: "{{ gw_networks | map(attribute='bridge') | list }}"
     undercloud_bridges: "{{ undercloud.kubevirt.network.interfaces | map(attribute='bridge') | list }}"
-    missing_bridges: "{{ gw_networks | difference(undercloud_bridges) }}"
+    missing_bridges: "{{ gw_network_bridges | difference(undercloud_bridges) }}"
   fail:
     msg: |
       Undercloud VM is missing interfaces for networks with gateways when ctlplane masquerade is enabled.
-      Networks with gateways: {{ gw_networks | join(', ') }}
+      Networks with gateways: {{ gw_networks | map(attribute='name') | join(', ') }}
+      Expected bridges: {{ gw_network_bridges | join(', ') }}
       Undercloud bridges: {{ undercloud_bridges | join(', ') }}
       Missing: {{ missing_bridges | join(', ') }}
   when:
