@@ -1,18 +1,24 @@
 ---
 - name: UNDERCLOUD NETWORK - Configure gateway network interfaces with NetworkManager
   block:
-  - name: UNDERCLOUD NETWORK - Get gateway network bridges from undercloud VM
+  - name: UNDERCLOUD NETWORK - Get gateway networks
     set_fact:
-      gw_interfaces: "{{ undercloud.kubevirt.network.interfaces | selectattr('bridge', 'in', default_leaf.networks | selectattr('subnet.gateway', 'defined') | map(attribute='bridge') | list) | list }}"
+      gw_networks: "{{ default_leaf.networks | selectattr('subnet.gateway', 'defined') | list }}"
+
+  - name: UNDERCLOUD NETWORK - Get gateway interfaces from undercloud VM
+    set_fact:
+      gw_interfaces: "{{ undercloud.kubevirt.network.interfaces | selectattr('bridge', 'in', gw_networks | map(attribute='bridge') | list) | list }}"
 
   - name: UNDERCLOUD NETWORK - Create and bring up NetworkManager profiles
+    vars:
+      gw_net: "{{ gw_networks | selectattr('bridge', 'equalto', item.bridge) | first }}"
     command: |
-      nmcli connection add type ethernet con-name {{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
+      nmcli connection add type ethernet con-name {{ gw_net.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
         ifname $(ip link show | grep -i "{{ item.mac }}" | head -1 | awk '{print $2}' | tr -d ':') \
         ipv4.method manual \
-        ipv4.addresses "{{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).subnet.gateway }}/{{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).subnet.cidr.split('/')[1] }}" \
+        ipv4.addresses "{{ gw_net.subnet.gateway }}/{{ gw_net.subnet.cidr.split('/')[1] }}" \
         connection.autoconnect yes && \
-      nmcli connection up {{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+      nmcli connection up {{ gw_net.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
     loop: "{{ gw_interfaces }}"
     become: true
     delegate_to: undercloud
