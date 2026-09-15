@@ -9,16 +9,19 @@
     set_fact:
       gw_interfaces: "{{ undercloud.kubevirt.network.interfaces | selectattr('bridge', 'in', gw_networks | map(attribute='bridge') | list) | list }}"
 
+  - name: UNDERCLOUD NETWORK - Build bridge to network info mapping
+    set_fact:
+      bridge_to_gw: "{{ bridge_to_gw | default({}) | combine({item.bridge: item}) }}"
+    loop: "{{ gw_networks }}"
+
   - name: UNDERCLOUD NETWORK - Create and bring up NetworkManager profiles
-    vars:
-      gw_net: "{{ gw_networks | selectattr('bridge', 'equalto', item.bridge) | first }}"
     command: |
-      nmcli connection add type ethernet con-name {{ gw_net.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
+      nmcli connection add type ethernet con-name {{ bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
         ifname $(ip link show | grep -i "{{ item.mac }}" | head -1 | awk '{print $2}' | tr -d ':') \
         ipv4.method manual \
-        ipv4.addresses "{{ gw_net.subnet.gateway }}/{{ gw_net.subnet.cidr.split('/')[1] }}" \
+        ipv4.addresses "{{ bridge_to_gw[item.bridge].subnet.gateway }}/{{ bridge_to_gw[item.bridge].subnet.cidr.split('/')[1] }}" \
         connection.autoconnect yes && \
-      nmcli connection up {{ gw_net.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+      nmcli connection up {{ bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
     loop: "{{ gw_interfaces }}"
     become: true
     delegate_to: undercloud
