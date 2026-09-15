@@ -22,7 +22,7 @@
         {% for iface in gw_interfaces %}
         {% set gw_net = bridge_to_gw[iface.bridge] %}
         {% set conn_name = gw_net.name | regex_replace('([a-z0-9])([A-Z])', '\1_\2') | lower %}
-        {% set ifname = "$(ip link show | grep -i " + iface.mac + " | head -1 | awk '{print $2}' | tr -d ':')" %}
+        {% set ifname = "$(ip link show | grep -B1 '" + iface.mac + "' | head -1 | grep -oP '^\d+: \K[^:]*')" %}
         nmcli connection add type ethernet con-name "{{ conn_name }}" \
           ifname "{{ ifname }}" \
           ipv4.method manual \
