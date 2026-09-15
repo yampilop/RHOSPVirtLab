@@ -1,26 +1,25 @@
 ---
-- name: UNDERCLOUD NETWORK - Initialize gateway networks with indices
-  set_fact:
-    gateway_networks_with_idx: "{{ (default_leaf.networks | selectattr('subnet.gateway', 'defined') | list | zip(range(2, default_leaf.networks | selectattr('subnet.gateway', 'defined') | list | length + 2)) | map('list') | list) if (default_leaf.ctlplane_subnet.masquerade | default(false)) else [] }}"
+- name: UNDERCLOUD NETWORK - Configure gateway network interfaces with NetworkManager
+  block:
+  - name: UNDERCLOUD NETWORK - Get gateway network bridges from undercloud VM
+    set_fact:
+      gw_interfaces: "{{ undercloud.kubevirt.network.interfaces | selectattr('bridge', 'in', default_leaf.networks | selectattr('subnet.gateway', 'defined') | map(attribute='bridge') | list) | list }}"
 
-- name: UNDERCLOUD NETWORK - Create NetworkManager profiles for gateway networks
-  command: |
-    nmcli connection add type ethernet con-name {{ item[0].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
-      ifname eth{{ item[1] }} \
-      ipv4.method manual \
-      ipv4.addresses "{{ item[0].subnet.gateway }}/{{ item[0].subnet.cidr.split('/')[1] }}" \
-      connection.autoconnect yes
-  loop: "{{ gateway_networks_with_idx }}"
-  become: true
-  delegate_to: undercloud
-  register: nmcli_result
-  failed_when:
-    - nmcli_result.rc != 0
-    - "'already exists' not in nmcli_result.stderr"
-  changed_when: "'already exists' not in nmcli_result.stderr"
-
-- name: UNDERCLOUD NETWORK - Bring up gateway network connections
-  command: nmcli connection up {{ item[0].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
-  loop: "{{ gateway_networks_with_idx }}"
-  become: true
-  delegate_to: undercloud
+  - name: UNDERCLOUD NETWORK - Create and bring up NetworkManager profiles
+    command: |
+      nmcli connection add type ethernet con-name {{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
+        ifname $(ip link show | grep -i "{{ item.mac }}" | head -1 | awk '{print $2}' | tr -d ':') \
+        ipv4.method manual \
+        ipv4.addresses "{{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).subnet.gateway }}/{{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).subnet.cidr.split('/')[1] }}" \
+        connection.autoconnect yes && \
+      nmcli connection up {{ (default_leaf.networks | selectattr('bridge', 'equalto', item.bridge) | first).name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+    loop: "{{ gw_interfaces }}"
+    become: true
+    delegate_to: undercloud
+    register: nmcli_result
+    failed_when:
+      - nmcli_result.rc != 0
+      - "'already exists' not in nmcli_result.stderr"
+    changed_when: "'already exists' not in nmcli_result.stderr"
+  when:
+    - default_leaf.ctlplane_subnet.masquerade | default(false)
