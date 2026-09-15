@@ -14,15 +14,18 @@
       bridge_to_gw: "{{ bridge_to_gw | default({}) | combine({item.bridge: item}) }}"
     loop: "{{ gw_networks }}"
 
-  - name: UNDERCLOUD NETWORK - Create and bring up NetworkManager profiles
-    command: |
-      nmcli connection add type ethernet con-name {{ bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }} \
-        ifname $(ip link show | grep -i "{{ item.mac }}" | head -1 | awk '{print $2}' | tr -d ':') \
-        ipv4.method manual \
-        ipv4.addresses "{{ bridge_to_gw[item.bridge].subnet.gateway }}/{{ bridge_to_gw[item.bridge].subnet.cidr.split('/')[1] }}" \
-        connection.autoconnect yes && \
-      nmcli connection up {{ bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+  - name: UNDERCLOUD NETWORK - Build nmcli commands for gateway networks
+    set_fact:
+      gw_commands: "{{ gw_commands | default([]) + [{'iface': item, 'cmd': 'nmcli connection add type ethernet con-name ' + (bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower) + ' ifname $(ip link show | grep -i ' + item.mac + ' | head -1 | awk '\\'''{print $2}'\'' | tr -d ':') ipv4.method manual ipv4.addresses ' + bridge_to_gw[item.bridge].subnet.gateway + '/' + (bridge_to_gw[item.bridge].subnet.cidr.split('/')[1]) + ' connection.autoconnect yes && nmcli connection up ' + (bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower)}] }}"
     loop: "{{ gw_interfaces }}"
+
+  - name: UNDERCLOUD NETWORK - Debug gateway network commands
+    debug:
+      msg: "{{ gw_commands }}"
+
+  - name: UNDERCLOUD NETWORK - Create and bring up NetworkManager profiles
+    shell: "{{ item.cmd }}"
+    loop: "{{ gw_commands }}"
     become: true
     delegate_to: undercloud
     register: nmcli_result
