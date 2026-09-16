@@ -180,9 +180,6 @@
 - name: Gather facts to ensure variables are available
   setup:
 
-- name: CHECKS - Verify machine profiles
-  import_tasks: tasks/profiles.yml
-
 - name: Register computed variables again for template access
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
@@ -196,6 +193,9 @@
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
+
+- name: CHECKS - Verify machine profiles
+  import_tasks: tasks/profiles.yml
 
 - name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
   template:
