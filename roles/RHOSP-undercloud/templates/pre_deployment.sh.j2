@@ -4,6 +4,8 @@ source /home/stack/stackrc
 
 {% if leaf.name == default_leaf.name %}
 {% set templates_dir='/home/stack/templates' %}
+{% set ceph_count = (libvirt_machines + physical_machines + kubevirt_machines) | selectattr('openstack.role', 'in', ['cephstorage', 'cephall']) | list | length %}
+{% set hci_count = (libvirt_machines + physical_machines + kubevirt_machines) | selectattr('openstack.role', 'in', ['computehci', 'distributedcomputehci', 'distributedcomputehciscaleout']) | list | length %}
 
 # Auto source and completion
 if [ ! -f /usr/share/bash-completion/completions/openstack ]; then
@@ -75,12 +77,54 @@ sudo openstack tripleo container image prepare \
 {% if RHOSP_version >= 17.1 %}
 # Provision nodes
 {% if deployed_server[leaf.name] %}
-# Deployed servers (managed:false): only authors overcloud-baremetal-deployed.yaml, no node changes
-openstack overcloud node provision -y --stack {{ leaf.name }} --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
+# Deployed servers (managed:false): authors overcloud-baremetal-deployed.yaml with network configuration
+openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 {% else %}
 openstack overcloud node provision -y --stack {{ leaf.name }} --network-config --output {{ templates_dir }}/overcloud-baremetal-deployed.yaml {{ templates_dir }}/node-info.yaml
 metalsmith list
 {% endif %}
+{% endif %}
+
+{% if deployed_server[leaf.name] and (rh_activationkey is defined and rh_activationkey or rh_username is defined and rh_username) %}
+# Prepare pre-provisioned nodes with subscription, repos, and updates
+{% if rh_activationkey is defined and rh_activationkey %}
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --org={{ rh_orgid }} --activationkey={{ rh_activationkey }}" || true
+{% if rh_pool is defined and rh_pool %}
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}" || true
+{% endif %}
+{% elif rh_username is defined and rh_username %}
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --username {{ rh_username }} --password {{ rh_password }}" || true
+{% if rh_pool is defined and rh_pool %}
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}" || true
+{% endif %}
+{% endif %}
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager release --set={{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(' --enable=') }}"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
+{% endif %}
+
+{% if deployed_server[leaf.name] %}
+# Clear MySQL password on pre-provisioned controller nodes (KCS 7060294)
+# Only on stack updates, not initial deployment
+# https://access.redhat.com/solutions/7060294
+{% if RHOSP_version >= 17.1 %}
+if ! openstack overcloud status >/dev/null 2>&1; then
+{% else %}
+if ! openstack stack show overcloud >/dev/null 2>&1; then
+{% endif %}
+  ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "test -d /var/lib/config-data && sudo rm -f /var/lib/config-data/puppet-generated/mysql/root/.my.cnf /var/lib/config-data/mysql/root/.my.cnf || true"
+fi
+{% endif %}
+
+
+{% if RHOSP_version >= 17.1 and deployed_server[leaf.name] and (ceph_count | default(0) + hci_count | default(0) > 0) %}
+# Install cephadm prerequisites on ceph nodes
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf install -y lvm2 podman jq"
+
+# Authorize SSH public key for root access on ceph nodes for cephadm bootstrap
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "mkdir -p /root/.ssh && chmod 700 /root/.ssh"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -m copy -a "src=/home/stack/.ssh/id_rsa.pub dest=/tmp/authorized_key"
+ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} -b all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "cat /tmp/authorized_key >> /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys && rm /tmp/authorized_key"
 {% endif %}
 
 # Generate roles

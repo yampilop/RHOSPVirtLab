@@ -10,18 +10,19 @@
 - name: SETUP - Register computed variables as facts for template access
   set_fact:
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    undercloud_is_kubevirt: "{{ (undercloud.type | default('libvirt')) == 'kubevirt' }}"
     undercloud_effective: >-
       {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
             ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
          }}}, recursive=true))
-         if not (undercloud_is_physical | bool) else undercloud_base }}
-    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if not (undercloud_is_physical | bool) else []) }}"
+         if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else undercloud_base }}
+    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else []) }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     libvirt_required: "{{ libvirt_machines | length > 0 }}"
     vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
     bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default([]) | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
     management_network_required: >-
-      {{ (not (undercloud_is_physical | bool))
+      {{ (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool))
          or ((machines | selectattr('type', 'equalto', 'libvirt')
                        | selectattr('libvirt.hypervisor', 'equalto', 'localhost')
                        | selectattr('pre_provisioned', 'defined')
@@ -31,8 +32,29 @@
   vars:
     undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
 
+- name: CHECKS - Ensure pre-provisioned libvirt and physical machines have valid ctlplane_ip
+  fail:
+    msg: |
+      ERROR in {{ item.name }}: pre-provisioned machines require
+      openstack.ctlplane_ip inside {{ default_leaf.ctlplane_subnet.cidr }} and outside the
+      DHCP ({{ default_leaf.ctlplane_subnet.dhcp_start }}-{{ default_leaf.ctlplane_subnet.dhcp_end }}),
+      inspection ({{ default_leaf.ctlplane_subnet.inspection_iprange }}) and reserved
+      (.1-.3, .254) ranges.
+  vars:
+    ctlplane_prefix: "{{ default_leaf.ctlplane_subnet.cidr.split('/')[0].rsplit('.', 1)[0] }}"
+  when:
+    - item.name != 'undercloud'
+    - item.pre_provisioned | default(false)
+    - (item.openstack.ctlplane_ip is not defined)
+      or (item.openstack.ctlplane_ip.rsplit('.', 1)[0] != ctlplane_prefix)
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) in [0, 1, 2, 3, 254, 255])
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.dhcp_start.rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.dhcp_end.rsplit('.', 1)[1] | int))
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[0].rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[1].rsplit('.', 1)[1] | int))
+  loop: "{{ libvirt_machines + physical_machines }}"
+
 # Assemble the libvirt networks/bridges to manage from the `leafs` model plus the
 # management (NAT) network (prepended when required). See README (Networks) for details.
+# Skip when there are no libvirt machines (kubevirt-only deployments).
 - name: NETWORKING - Assemble the list of libvirt networks to manage
   set_fact:
     libvirt_networks: "{{ management_part + (leaf_bridges | from_yaml) }}"
@@ -66,15 +88,18 @@
       {% endfor %}
       {% endfor %}
       ]
+  when: libvirt_required | bool
 
 # The overcloud public IP (firewall port-forwards, `overcloud` /etc/hosts alias,
 # network-hook DNAT): the default leaf's External VIP, else its ctlplane VIP.
+# Skip when there are no libvirt machines (kubevirt-only deployments).
 - name: NETWORKING - Derive the overcloud public IP
   set_fact:
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
+  when: libvirt_required | bool
 
 # Cleanup process
 
@@ -86,7 +111,9 @@
 
 - name: FIREWALL - Clean firewall
   import_tasks: clean_firewall.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - bridges_required | bool
 
 - name: VIRTUALBMC - Clean VirtualBMC
   import_tasks: clean_virtualbmc.yml
@@ -123,12 +150,15 @@
   when:
     - cleanup | bool
     - not create | bool
+    - bridges_required | bool
 
 # Create process
 
 - name: NETWORKING - Create network profiles
   import_tasks: create_network_profiles.yml
-  when: create | bool
+  when:
+    - create | bool
+    - bridges_required | bool
 
 - name: LIBVIRT - Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
@@ -156,7 +186,9 @@
 
 - name: FIREWALL - Configure firewall
   import_tasks: configure_firewall.yml
-  when: create | bool
+  when:
+    - create | bool
+    - bridges_required | bool
 
 - name: DHCRELAY - Configure DHCP relay
   import_tasks: configure_dhcrelay.yml

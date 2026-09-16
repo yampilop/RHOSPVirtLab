@@ -6,8 +6,8 @@
       <libosinfo:os id="http://redhat.com/rhel/{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"/>
     </libosinfo:libosinfo>
   </metadata>
-  <memory>{{ item.libvirt.memory }}</memory>
-  <currentMemory>{{ item.libvirt.memory }}</currentMemory>
+  <memory unit='{{ item.libvirt.memory | regex_replace('^[0-9]+', '') }}B'>{{ item.libvirt.memory | regex_replace('[A-Za-z]', '') }}</memory>
+  <currentMemory unit='{{ item.libvirt.memory | regex_replace('^[0-9]+', '') }}B'>{{ item.libvirt.memory | regex_replace('[A-Za-z]', '') }}</currentMemory>
   <vcpu placement="static">{{ item.libvirt.cpus }}</vcpu>
   <os{% if (item.pm.mode | default('bios')) == 'uefi' and (ansible_distribution_major_version | int >= 9) %} firmware="efi"{% endif %}>
     <type arch="x86_64" machine="q35">hvm</type>

@@ -1,6 +1,6 @@
 galaxy_info:
-  role_name: RHOSP-undercloud
-  description: Red Hat Openstack Platform preparation role
+  role_name: RHOSP-kubevirt-infra
+  description: Virtual Lab infrastructure for Red Hat Openstack Platform deployed in Kubevirt/OCP Virtualization
   author: Juan Pablo Marti
   company: Red Hat, Inc.
   license: license (GPL-2.0-or-later, MIT, etc)
@@ -15,8 +15,9 @@ galaxy_info:
       - 10.2
 
   galaxy_tags:
-    - openstack
     - rhel
+    - openshift
+    - openstack
+    - kubevirt
 
 dependencies: []
-#  - geerlingguy.swap

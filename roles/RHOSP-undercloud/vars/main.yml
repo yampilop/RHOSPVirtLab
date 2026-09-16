@@ -1,6 +1,15 @@
 ---
 # vars file for RHOSP-undercloud
 
+# Port forwarding configuration (not customizable)
+forwarded_ports:
+  - name: http
+    port: 80
+  - name: vnc
+    port: 6080
+  - name: keystone
+    port: 5000
+
 # Convenience views over `machines` (overcloud nodes only; the undercloud is separate).
 libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
 physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
@@ -215,11 +224,6 @@ deployment_environment:
     DCN: False
     Leafs: All
     Variable: DeployFrr
-  - file: custom-network-configuration.yaml
-    absolute_path: False
-    version: [ 17.1, 16.2 ]
-    DCN: False
-    Leafs: All
   - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml
     absolute_path: True
     version: [ 17.1 ]
@@ -333,6 +337,11 @@ deployment_environment:
     DCN: False
     Leafs: All
     Roles: [ 'ComputeInstanceHA' ]
+  - file: custom-network-configuration.yaml
+    absolute_path: False
+    version: [ 17.1, 16.2 ]
+    DCN: False
+    Leafs: All
 
 roles_networks:
   Controller:
@@ -426,6 +435,7 @@ RHOSP_version_supported:
       - rhel-9-for-x86_64-highavailability-eus-rpms
       - openstack-17.1-for-rhel-9-x86_64-rpms
       - fast-datapath-for-rhel-9-x86_64-rpms
+      - rhceph-6-tools-for-rhel-9-x86_64-rpms
     modules: []
     packages:
       - python3-argcomplete

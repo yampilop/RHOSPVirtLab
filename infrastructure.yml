@@ -1,0 +1,30 @@
+---
+- name: Libvirt infrastructure configuration
+  hosts: infrastructure
+  vars_files:
+    - vars/options.yml
+    - vars/machines.yml
+    - vault_credentials.yaml
+
+  pre_tasks:
+    - name: Set ansible_user to the current user
+      set_fact:
+        ansible_user: "{{ lookup('env','USER') }}"
+
+  roles:
+    - role: RHOSP-virt-infra
+
+- name: Kubevirt infrastructure configuration
+  hosts: infrastructure
+  vars_files:
+    - vars/options.yml
+    - vars/machines.yml
+    - vault_credentials.yaml
+
+  pre_tasks:
+    - name: Set ansible_user to the current user
+      set_fact:
+        ansible_user: "{{ lookup('env','USER') }}"
+
+  roles:
+    - role: RHOSP-kubevirt-infra

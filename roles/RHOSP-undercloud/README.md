@@ -6,7 +6,7 @@ The role sets the environment to install an undercloud and deploy an overcloud i
 Requirements
 ------------
 
-It's tested to work on a Red Hat Enterprise Linux version 8.4 or 7.9 system. Requires a virtual infrastructure, preferably created by the role RHOSP-virt-infra.
+It's tested to work on Red Hat Enterprise Linux versions 7.9, 8.4, 9.6, or 10.2. Requires a virtual infrastructure, preferably created by the role RHOSP-virt-infra.
 
 Role Variables
 --------------
@@ -33,9 +33,8 @@ dns_servers: ['8.8.8.8','8.8.4.4']
 ntp_servers: ['0.pool.ntp.org','1.pool.ntp.org','2.pool.ntp.org','3.pool.ntp.org']
   List of servers to use for NTP syncronization.
 
-forwarded_ports: **[80, 6080, 5000]**
-  TCP ports the undercloud forwards (DNAT) to the overcloud public IP. Only applied
-  when the control-plane leaf's `ctlplane_subnet.masquerade` is `true`: `post_deployment.sh`
+TCP port forwarding (fixed at http/80, vnc/6080, keystone/5000) is automatically
+  configured when the control-plane leaf's `ctlplane_subnet.masquerade` is `true`: `post_deployment.sh`
   installs a small systemd oneshot (`rhospvirtlab-portforward.service`) that adds
   `iptables` DNAT rules for each port to the overcloud public IP, so the overcloud is
   reachable through the undercloud. The undercloud's ctlplane masquerade (SNAT) provides
@@ -58,7 +57,8 @@ leafs:
   - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
     `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
     `masquerade`. When `masquerade` is `true` on the control-plane leaf, the undercloud
-    also forwards the `forwarded_ports` to the overcloud public IP (see `forwarded_ports`).
+    automatically forwards http (80), vnc (6080), and keystone (5000) ports to the overcloud
+    public IP (fixed set, not customizable).
   - `additional_bridges` - extra bridges (e.g. `br-external`), each `{name, interface,
     ipv4.address}`.
   - `networks` - the isolated networks carried on this leaf (Tenant, Storage,
@@ -286,15 +286,14 @@ TestUserPassword: **redhat**
   Password for the test `admin` user created by `overcloud_resources.yaml`.
 
 undercloud:
-  The director host, defined separately from the overcloud `machines` list and shared
-  with the RHOSP-virt-infra role. It is a single node tagged with a `type` discriminator
-  (`libvirt` for a VM the lab creates, `physical` for a pre-existing admin-prepared
-  host). The dict is intentionally minimal - only the fields that actually vary are set.
-  The roles inject the constants that never change for the undercloud (name=undercloud,
-  pre_provisioned=true, openstack.role=undercloud) so they cannot be set wrong, and
-  create **no** virtualbmc for it (it is the director and is not power-managed by the lab,
-  so no `pm` block is used; the domain boot mode defaults to bios - add `pm: {mode: uefi}`
-  only for a uefi undercloud). By default it is a libvirt VM:
+  The director host, defined separately from the overcloud `machines` list. It is a
+  single node tagged with a `type` discriminator: `libvirt` (a VM created by the
+  RHOSP-virt-infra role), `physical` (a pre-existing admin-prepared host), or `kubevirt`
+  (a VM created by the RHOSP-kubevirt-infra role). The dict is intentionally minimal -
+  only the fields that actually vary are set. The role injects the constants that never
+  change for the undercloud (name=undercloud, pre_provisioned=true, openstack.role=undercloud)
+  so they cannot be set wrong. No `pm` block is used (the director is not power-managed
+  by the lab). By default it is a libvirt VM:
 
 ```yaml
   undercloud:
@@ -306,10 +305,10 @@ undercloud:
       title: 'Undercloud'
       hypervisor: HYPERVISOR_NAME
       cpus: AMOUNT_OF_CPUS
-      memory: RAM_IN_KIB
+      memory: RAM_IN_GI
       disks:
       - root: true
-        size: DISK_SIZE_IN_BYTES
+        size: DISK_SIZE_IN_GI
       network:
         interfaces:
         - name: nic1
@@ -327,11 +326,16 @@ undercloud:
   control-plane device name (default `eth0`); no `pm` block is needed (it is not
   power-managed by the lab). See `vars/machines.yml` for the full schema.
 
+  The undercloud may also be `type: kubevirt`, built by the RHOSP-kubevirt-infra role.
+  A kubevirt undercloud follows the same configuration pattern as libvirt (see the
+  libvirt example above, replacing the `libvirt:` block with a `kubevirt:` block).
+
 machines:
-  List of the overcloud nodes (both libvirt VMs and physical baremetal nodes), shared
-  with the RHOSP-virt-infra role. By default one virtual controller and one virtual
-  compute. Every entry shares common top-level parameters and is tagged with a `type`
-  discriminator; technology-specific parameters live in a block named after the type.
+  List of the overcloud nodes. Every entry shares common top-level parameters and is
+  tagged with a `type` discriminator: `libvirt` (VMs created by the RHOSP-virt-infra
+  role), `physical` (baremetal nodes), or `kubevirt` (VMs created by the RHOSP-kubevirt-infra
+  role). Technology-specific parameters live in a block named after the type. By default
+  one virtual controller and one virtual compute (libvirt type).
 
   A libvirt VM (`type: libvirt`):
 
@@ -353,11 +357,11 @@ machines:
       title: 'VM_TITLE'
       hypervisor: HYPERVISOR_NAME
       cpus: AMOUNT_OF_CPUS
-      memory: RAM_IN_KIB
+      memory: RAM_IN_GI
       disks:                   # one or more; exactly one root; all attached as virtio
       - root: true
-        size: DISK_SIZE_IN_BYTES
-      - size: DATA_DISK_SIZE_IN_BYTES  # optional extra data disk(s)
+        size: DISK_SIZE_IN_GI
+      - size: DATA_DISK_SIZE_IN_GI  # optional extra data disk(s)
       network:
         interfaces:
         - name: nic1
@@ -384,7 +388,7 @@ machines:
       mode: bios               # bios | uefi
     physical:
       cpus: AMOUNT_OF_CPUS
-      memory: RAM_IN_KIB
+      memory: RAM_IN_GI
       disk: DISK_SIZE_IN_BYTES
       mac: 'XX:XX:XX:XX:XX:XX'
       nics:
@@ -392,20 +396,54 @@ machines:
         nic2: 'ens1f1'
 ```
 
-  By default `machines` contains one virtual controller and one virtual compute; the
-  RHOSP-virt-infra role defaults ship a commented physical-node example.
+  A kubevirt VM (`type: kubevirt`):
+
+```yaml
+  - name: MACHINE_NAME
+    type: kubevirt
+    pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
+    openstack:
+      role: PROFILE            # virtual-capable overcloud role
+      ctlplane_ip: 192.168.24.121  # required when pre_provisioned (deployed server)
+    # TODO: Power management (pm) not supported until KubeVirtBMC is implemented (https://github.com/kubevirtbmc/kubevirtbmc)
+    #pm:
+    #  type: ipmi
+    #  user: BMC_USER
+    #  password: BMC_PASSWORD
+    #  address: localhost
+    #  port: KUBEVIRTBMC_PORT
+    #  mode: bios               # bios | uefi
+    kubevirt:
+      title: 'VM_TITLE'
+      cpus: AMOUNT_OF_CPUS
+      memory: RAM_IN_GI
+      disks:                   # one or more; exactly one root
+      - root: true
+        size: DISK_SIZE_IN_GI
+      - size: DATA_DISK_SIZE_IN_GI  # optional extra data disk(s)
+      network:
+        interfaces:
+        - name: nic1
+          mac: 'XX:XX:XX:XX:XX:XX'
+          bridge: BRIDGE_NAME
+```
+
+  By default `machines` contains one virtual controller and one virtual compute (libvirt
+  type); the RHOSP-virt-infra and RHOSP-kubevirt-infra role defaults ship commented
+  examples for additional node types.
 
   The `openstack.role` value can be one of those listed in the `overcloud_roles`
   variable; VMs may only use profiles with `virtual: True`. Convenience views
-  `libvirt_machines` and `physical_machines` (defined in the role `vars/main.yml`)
-  filter this list by `type`; the undercloud is defined separately and is not part of
-  them.
+  `libvirt_machines`, `physical_machines`, and `kubevirt_machines` (defined in the role
+  `vars/main.yml`) filter this list by `type`; the undercloud is defined separately and
+  is not part of them.
 
-  The `pre_provisioned` flag (top level, both types) marks a node whose OS is already
+  The `pre_provisioned` flag (top level, all types) marks a node whose OS is already
   loaded ("deployed server") versus one provisioned later by ironic (the default). A
-  pre_provisioned libvirt VM is booted from the RHEL base image with a cloud-init cdrom
-  (see the RHOSP-virt-infra role for details); the cloud-init user is the overcloud SSH
-  user (`heat-admin` on 16.2, `tripleo-admin` on 17.1).
+  pre_provisioned libvirt or kubevirt VM is booted from the RHEL base image with a
+  cloud-init cdrom; the cloud-init user is the overcloud SSH user (`heat-admin` on 16.2,
+  `tripleo-admin` on 17.1). For details on VM preparation, see the RHOSP-virt-infra or
+  RHOSP-kubevirt-infra role documentation.
 
   When overcloud nodes are `pre_provisioned` the role drives a TripleO **deployed-server**
   deployment for that leaf instead of the ironic flow: node import/introspection are

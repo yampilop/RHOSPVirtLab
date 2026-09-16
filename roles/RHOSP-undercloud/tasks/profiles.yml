@@ -6,7 +6,7 @@
         {{ leaf.name }}:
         {
         {%- for role in overcloud_roles %}
-          {{ role.name }}: {{ (physical_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) + (libvirt_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(',')) | list | count) }},
+          {{ role.name }}: {{ (physical_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("openstack.leaf", "equalto", leaf.name) | list | count) + ((libvirt_machines | selectattr("openstack.role", "equalto", role.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(',')) | list | count) if leaf.hypervisor is defined else 0) + (kubevirt_machines | selectattr("openstack.role", "equalto", role.profile) | list | count) }},
         {%- endfor %}
         },
       {%- endfor %}
@@ -22,8 +22,9 @@
       {
       {%- for leaf in leafs %}
         {{ leaf.name }}: {{
-          ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', leaf.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)
-           + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)) > 0
+          (((libvirt_machines | selectattr('libvirt.hypervisor', 'in', leaf.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count) if leaf.hypervisor is defined else 0)
+           + (physical_machines | selectattr('openstack.leaf', 'equalto', leaf.name) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)
+           + (kubevirt_machines | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | list | count)) > 0
         }},
       {%- endfor %}
       }
@@ -40,10 +41,12 @@
       pre_provisioned consistently for all overcloud nodes in this leaf.
   when:
     - deployed_server[item.name] | bool
-    - ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | rejectattr('pre_provisioned', 'defined') | list | count)
-       + (libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
+    - ((libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | rejectattr('pre_provisioned', 'defined') | list | count if item.hypervisor is defined else 0)
+       + (libvirt_machines | selectattr('libvirt.hypervisor', 'in', item.hypervisor.split(',')) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count if item.hypervisor is defined else 0)
        + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | rejectattr('pre_provisioned', 'defined') | list | count)
-       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
+       + (physical_machines | selectattr('openstack.leaf', 'equalto', item.name) | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)
+       + (kubevirt_machines | rejectattr('pre_provisioned', 'defined') | list | count)
+       + (kubevirt_machines | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list | count)) > 0
   loop: "{{ leafs }}"
 
 - name: PROFILES - Ensure pre-provisioned overcloud nodes define a valid ctlplane_ip
@@ -57,17 +60,18 @@
   vars:
     ctlplane_prefix: "{{ default_leaf.ctlplane_subnet.cidr.split('/')[0].rsplit('.', 1)[0] }}"
   when:
+    - item.name != 'undercloud'
     - item.pre_provisioned | default(false)
     - (item.openstack.ctlplane_ip is not defined)
       or (item.openstack.ctlplane_ip.rsplit('.', 1)[0] != ctlplane_prefix)
       or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) in [0, 1, 2, 3, 254, 255])
       or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.dhcp_start.rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.dhcp_end.rsplit('.', 1)[1] | int))
       or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[0].rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[1].rsplit('.', 1)[1] | int))
-  loop: "{{ libvirt_machines + physical_machines }}"
+  loop: "{{ libvirt_machines + physical_machines + kubevirt_machines }}"
 
 - name: PROFILES - Ensure ctlplane_ip is unique across deployed servers
   vars:
-    ctlplane_ips: "{{ (libvirt_machines + physical_machines) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | map(attribute='openstack.ctlplane_ip') | list }}"
+    ctlplane_ips: "{{ (libvirt_machines + physical_machines + kubevirt_machines) | selectattr('pre_provisioned', 'defined') | selectattr('pre_provisioned') | map(attribute='openstack.ctlplane_ip') | list }}"
   fail:
     msg: "ERROR: duplicate openstack.ctlplane_ip found among pre-provisioned overcloud nodes ({{ ctlplane_ips }})."
   when: (ctlplane_ips | length) != (ctlplane_ips | unique | list | length)
@@ -86,7 +90,18 @@
     - item.pre_provisioned | default(false) | bool
     - item.pm is defined
     - not (ControllersFencing | default(false) | bool)
-  loop: "{{ libvirt_machines + physical_machines }}"
+  loop: "{{ libvirt_machines + physical_machines + kubevirt_machines }}"
+
+- name: PROFILES - Ensure fencing is not enabled with kubevirt controllers
+  fail:
+    msg: >-
+      ERROR: ControllersFencing cannot be enabled with kubevirt-type controllers. Fencing
+      requires power management (IPMI/Redfish), which is not yet supported for kubevirt
+      machines (pending KubeVirtBMC integration: https://github.com/kubevirtbmc/kubevirtbmc).
+      Either disable ControllersFencing (set to False) or use libvirt/physical controllers only.
+  when:
+    - ControllersFencing | default(false) | bool
+    - ((machines | selectattr('type', 'equalto', 'kubevirt') | selectattr('openstack.role', 'equalto', 'controller') | list | length) > 0)
 
 - name: PROFILES - Check all libvirt machine profiles are virtual
   fail:
@@ -110,6 +125,13 @@
     - item.openstack.leaf != default_leaf.name
     - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).distributed | bool)
   loop: "{{ physical_machines }}"
+
+- name: PROFILES - Check all kubevirt machine profiles are virtual
+  fail:
+    msg: "ERROR in vm {{ item.name }}: Only virtual capable profiles can be used for kubevirt machines."
+  when:
+    - not ((overcloud_roles | selectattr("profile", "equalto", item.openstack.role) | list | first).virtual | bool)
+  loop: "{{ kubevirt_machines }}"
 
 - name: PROFILES - Check no more than the max amount of nodes for a profile is used in each leaf
   fail:

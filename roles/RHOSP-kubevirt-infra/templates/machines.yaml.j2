@@ -1,0 +1,144 @@
+{% for machine in kubevirt_machines if machine.name != 'undercloud' %}
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ machine.name }}
+  namespace: {{ KubeVirtNamespace }}
+  annotations:
+    description: {{ machine.kubevirt.title }}
+  labels:
+    app: {{ machine.name }}
+{% for label in KubevirtLabels.VirtualMachines %}
+    {{ label.key }}: {{ label.value }}
+{% endfor %}
+spec:
+  dataVolumeTemplates:
+{% for disk in machine.kubevirt.disks %}
+  - metadata:
+      creationTimestamp: null
+      name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}'
+    spec:
+{% if (disk.root | default(false) | bool) and (machine.pre_provisioned | bool) %}
+      sourceRef:
+        kind: DataSource
+        name: rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}
+        namespace: {{ KubeVirtNamespace }}
+{% else %}
+      source:
+        blank: {}
+{% endif %}
+      storage:
+        accessModes:
+        - {{ KubeVirtAccessMode }}
+        resources:
+          requests:
+            storage: {{ disk.size }}
+        storageClassName: {{ KubeVirtStorageClass }}
+        volumeMode: {{ KubeVirtVolumeMode }}
+{% endfor %}
+  runStrategy: Always
+  template:
+    metadata:
+      annotations:
+        kubevirt.io/pci-topology-version: v3
+      creationTimestamp: null
+      labels:
+        app: {{ machine.name }}
+        role: {{ machine.openstack.role }}
+        network.kubevirt.io/headlessService: headless
+{% for label in KubevirtLabels.VirtualMachineInstances %}
+        {{ label.key }}: {{ label.value }}
+{% endfor %}
+    spec:
+      accessCredentials:
+      - sshPublicKey:
+          propagationMethod:
+            noCloud: {}
+          source:
+            secret:
+              secretName: provisioning-ssh-public-key
+      domain:
+        cpu:
+          cores: {{ machine.kubevirt.cpus }}
+{% if 'compute' in machine.openstack.role %}
+          features:
+          - name: svm
+            policy: require
+          model: host-passthrough
+{% endif %}
+        memory:
+          guest: {{ machine.kubevirt.memory }}
+        devices:
+          autoattachPodInterface: false
+          disks:
+{% for disk in machine.kubevirt.disks %}
+          - name: {{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}
+            disk:
+              bus: virtio
+{% if disk.root | default(false) | bool %}
+            bootOrder: 1
+{% endif %}
+{% endfor %}
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+{% for interface in machine.kubevirt.network.interfaces %}
+          - bridge: {}
+            macAddress: '{{ interface.mac }}'
+            model: virtio
+            name: {{ interface.bridge }}
+            state: up
+{% endfor %}
+        machine:
+          type: pc-q35-rhel9.6.0
+        resources:
+          requests:
+            memory: {{ machine.kubevirt.memory }}
+            cpu: {{ machine.kubevirt.cpus }}
+          limits:
+            memory: {{ machine.kubevirt.memory }}
+            cpu: {{ machine.kubevirt.cpus }}
+      networks:
+      - name: default
+        pod:
+          vmNetworkCIDR: 192.168.121.0/24
+{% for interface in machine.kubevirt.network.interfaces %}
+      - multus:
+          networkName: {{ interface.bridge }}
+        name: {{ interface.bridge }}
+{% endfor %}
+      subdomain: headless
+      volumes:
+{% for disk in machine.kubevirt.disks %}
+      - dataVolume:
+          name: 'dv-{{ machine.name }}-{{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}'
+        name: {{ 'rootdisk' if (disk.root | default(false) | bool) else 'data-' ~ loop.index0 }}
+{% endfor %}
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            chpasswd:
+              list: |
+                root:{{ VmRootPassword }}
+                {{ 'stack' if machine.name == 'undercloud' else RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}:{{ VmStackPassword }}
+              expire: false
+            password: {{ VmStackPassword }}
+            user: {{ 'stack' if machine.name == 'undercloud' else RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}
+            ssh_pwauth: True
+            runcmd: []
+{% if machine.openstack.ctlplane_ip is defined %}
+          networkData: |
+            version: 2
+            ethernets:
+              eth1:
+                dhcp4: false
+                addresses:
+                - '{{ machine.openstack.ctlplane_ip }}/{{ default_leaf.ctlplane_subnet.cidr.split('/')[1] }}'
+                gateway4: {{ default_leaf.ctlplane_subnet.gateway }}
+{% endif %}
+{% endfor %}
