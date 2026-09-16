@@ -75,7 +75,7 @@
       parent: "{{ item.bridge }}"
       autoconnect: yes
       mtu: "{{ item.mtu | default(1500) }}"
-      state: up
+      state: "{{ 'up' if item.subnet.gateway is defined else 'present' }}"
       ip:
         dhcp4: no
         auto6: no
@@ -99,7 +99,7 @@
       parent: "{{ item.1.bridge }}"
       autoconnect: yes
       mtu: "{{ item.1.mtu | default(1500) }}"
-      state: up
+      state: "{{ 'up' if item.1.subnet.gateway is defined else 'present' }}"
       ip:
         dhcp4: no
         auto6: no
