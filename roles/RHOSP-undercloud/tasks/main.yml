@@ -180,6 +180,9 @@
   debug:
     msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
 
+- name: Gather facts to ensure variables are available
+  setup:
+
 - name: Register computed variables again for template access
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
