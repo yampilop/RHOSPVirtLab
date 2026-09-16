@@ -337,11 +337,24 @@ def main():
             while i < len(new_lines):
                 line = new_lines[i]
                 if line.strip().startswith('leafs:'):
-                    # Skip old leafs block
+                    # Find the start and end of the leafs block
+                    leafs_start = i
                     j = i + 1
+                    # Skip to end of leafs section (first non-indented, non-blank, non-comment line)
                     while j < len(new_lines):
                         next_line = new_lines[j]
-                        if next_line.strip() == '' or next_line.lstrip().startswith('#'):
+                        if next_line.strip() == '':  # Blank line - could be end or middle
+                            # Look ahead to see if there's more leafs
+                            k = j + 1
+                            while k < len(new_lines) and new_lines[k].strip() == '':
+                                k += 1
+                            if k < len(new_lines):
+                                next_indent = len(new_lines[k]) - len(new_lines[k].lstrip())
+                                if next_indent > 0:
+                                    j = k
+                                    continue
+                            break
+                        if next_line.lstrip().startswith('#'):
                             j += 1
                             continue
                         next_indent = len(next_line) - len(next_line.lstrip())
