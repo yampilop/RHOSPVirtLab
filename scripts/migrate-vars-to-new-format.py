@@ -29,6 +29,90 @@ def load_yaml(filepath: str) -> Dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
+def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: Any = None) -> None:
+    """Update vars/options.yml with migrated options, preserving comments and structure."""
+    import re
+
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+
+    # Track which options we've updated
+    updated_keys = set()
+
+    # Process each line
+    new_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # Check if this line defines a key we need to update
+        matched = False
+        for key in custom_options:
+            # Match lines like "key: value" or "key:"
+            pattern = rf'^{re.escape(key)}\s*:'
+            if re.match(pattern, line):
+                # Found the key to update
+                value = custom_options[key]
+                indent = len(line) - len(line.lstrip())
+
+                # Format the value
+                if isinstance(value, (list, dict)):
+                    # Multi-line value
+                    formatted = yaml.dump({key: value}, default_flow_style=False)
+                    new_lines.append(formatted)
+                else:
+                    # Single-line value
+                    new_lines.append(f"{' ' * indent}{key}: {value}\n")
+
+                updated_keys.add(key)
+                matched = True
+                break
+
+        if not matched:
+            new_lines.append(line)
+        i += 1
+
+    # Add any options that weren't found (new keys)
+    for key in custom_options:
+        if key not in updated_keys:
+            # Add before any trailing comments at the end
+            value = custom_options[key]
+            formatted = yaml.dump({key: value}, default_flow_style=False)
+            # Insert before the last empty line or at the end
+            if new_lines and new_lines[-1].strip() == '':
+                new_lines.insert(-1, formatted)
+            else:
+                new_lines.append(formatted)
+
+    # Add leafs if provided
+    if leafs is not None:
+        # Check if leafs already exists
+        leafs_found = False
+        for i, line in enumerate(new_lines):
+            if re.match(r'^leafs\s*:', line):
+                leafs_found = True
+                # Find the end of the existing leafs block and replace it
+                j = i + 1
+                while j < len(new_lines) and (new_lines[j].startswith('  ') or new_lines[j].strip() == ''):
+                    j += 1
+                # Replace the leafs block
+                formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
+                new_lines[i:j] = [formatted]
+                break
+
+        if not leafs_found:
+            # Append leafs at the end
+            formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
+            if new_lines and new_lines[-1].strip() == '':
+                new_lines.insert(-1, formatted)
+            else:
+                new_lines.append(formatted)
+
+    # Write back the updated file
+    with open(filepath, 'w') as f:
+        f.writelines(new_lines)
+
+
 def migrate_libvirt_vm_to_machine(vm: Dict[str, Any], networks: Dict[str, Any]) -> Dict[str, Any]:
     """Convert old libvirt VM format to new machine format."""
     machine = {
@@ -345,19 +429,23 @@ def main():
     if 'forwarded_ports' in options_data:
         deprecated_options['forwarded_ports'] = options_data['forwarded_ports']
 
-    print(f"\nMigration complete!")
-    print(f"✓ {machines_output}")
-
-    # Output migrated options for manual merging (preserves file structure)
-    if custom_options or networks_list:
-        print(f"\nMerge these into vars/options.yml (preserving file structure):")
-        print(f"---")
+    # Merge options into vars/options.yml while preserving structure
+    options_file = os.path.join(new_vars_dir, 'options.yml')
+    if os.path.exists(options_file):
+        update_options_file(options_file, custom_options, leafs if networks_list else None)
+        print(f"\nMigration complete!")
+        print(f"✓ {machines_output}")
+        print(f"✓ {options_file} (merged custom options)")
+    else:
+        print(f"\nMigration complete!")
+        print(f"✓ {machines_output}")
+        print(f"\n⚠ {options_file} not found. Output migrated options:")
         if custom_options:
-            print(f"\n# Updated/added custom options:")
+            print(f"\n# Custom options:")
             for key, value in custom_options.items():
                 yaml.dump({key: value}, sys.stdout, default_flow_style=False)
         if networks_list:
-            print(f"\n# Add this leafs configuration:")
+            print(f"\n# Leafs configuration:")
             yaml.dump({'leafs': leafs}, sys.stdout, default_flow_style=False)
 
     if deprecated_options:
@@ -370,7 +458,7 @@ def main():
 
     print(f"\nNext steps:")
     print(f"1. Review {machines_output} for accuracy")
-    print(f"2. Manually merge the options shown above into vars/options.yml")
+    print(f"2. Review vars/options.yml for any additional customizations")
     print(f"3. Test the configuration with a dry-run")
     print(f"\nNote: This script provides a best-effort migration. Some fields may need manual adjustment:")
     print(f"  - SSH key configurations (id_rsa.pub location)")
