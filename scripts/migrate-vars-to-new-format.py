@@ -45,7 +45,7 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
 
     # Write back the updated file
     with open(filepath, 'w') as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+        yaml.dump(data, f, default_flow_style=False)
 
 
 def migrate_libvirt_vm_to_machine(vm: Dict[str, Any], networks: Dict[str, Any]) -> Dict[str, Any]:
