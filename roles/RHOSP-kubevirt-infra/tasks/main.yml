@@ -15,7 +15,10 @@
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
     kubevirt_undercloud: "{{ (undercloud.type | default('kubevirt')) == 'kubevirt' }}"
     kubevirt_machines: "{{ (machines + [{'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true)]) | selectattr('type', 'equalto', 'kubevirt') | list }}"
-    kubevirt_required: "{{ kubevirt_undercloud | bool or (machines | selectattr('type', 'equalto', 'kubevirt') | list | length > 0) }}"
+
+- name: SETUP - Register kubevirt_required flag
+  set_fact:
+    kubevirt_required: "{{ kubevirt_undercloud | bool or (kubevirt_machines | length > 0) }}"
 
 - name: CHECKS - Ensure pre-provisioned kubevirt machines have valid ctlplane_ip
   fail:
