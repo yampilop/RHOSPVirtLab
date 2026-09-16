@@ -7,7 +7,7 @@
 
   - name: UNDERCLOUD NETWORK - Get gateway interfaces from undercloud VM
     set_fact:
-      gw_interfaces: "{{ undercloud.kubevirt.network.interfaces | selectattr('bridge', 'in', gw_networks | map(attribute='bridge') | list) | list }}"
+      gw_interfaces: "{{ (undercloud.libvirt.network.interfaces if (undercloud.type | default('libvirt')) == 'libvirt' else undercloud.kubevirt.network.interfaces) | selectattr('bridge', 'in', gw_networks | map(attribute='bridge') | list) | list }}"
 
   - name: UNDERCLOUD NETWORK - Build bridge to network info mapping
     set_fact:
