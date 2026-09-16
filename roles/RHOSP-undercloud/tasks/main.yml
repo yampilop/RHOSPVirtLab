@@ -29,6 +29,14 @@
   until: cmd_res is success
   when: not undercloud_is_physical | bool
 
+- name: SSH - Ensure the stack ssh directory exists
+  file:
+    path: /home/stack/.ssh
+    state: directory
+    owner: stack
+    group: stack
+    mode: '0700'
+
 - name: Copy hypervisor SSH keys to undercloud
   block:
     - name: Copy private key
@@ -185,15 +193,6 @@
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
-
-- name: SSH - Ensure the stack ssh directory exists
-  file:
-    path: /home/stack/.ssh
-    state: directory
-    owner: stack
-    group: stack
-    mode: '0700'
-  when: true in (deployed_server.values() | map('bool') | list)
 
 - name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
   template:
