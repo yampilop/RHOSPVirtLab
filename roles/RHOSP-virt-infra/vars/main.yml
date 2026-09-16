@@ -9,6 +9,8 @@ forwarded_ports:
     port: 6080
   - name: keystone
     port: 5000
+  - name: ceph-dashboard
+    port: 8444
 
 # True when the undercloud is an admin-prepared physical host rather than a libvirt VM.
 undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"

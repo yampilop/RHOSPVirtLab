@@ -46,7 +46,9 @@ leafs:
     nodes); leave it `null` for a VM-only bridge.
   - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
     `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
-    `masquerade`.
+    `masquerade`. When `masquerade` is `true`, the role automatically forwards http (80),
+    vnc (6080), keystone (5000), and ceph-dashboard (8444) ports to the overcloud public IP
+    via `iptables` DNAT rules, making overcloud services accessible through the hypervisor.
   - `additional_bridges` - extra bridges (e.g. `br-external`), each `{name, interface,
     ipv4.address}`.
   - `networks` - the isolated networks carried on this leaf (Tenant, Storage,
