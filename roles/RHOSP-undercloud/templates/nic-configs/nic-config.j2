@@ -149,7 +149,7 @@ network_config:
 {% endfor %}
 # Configure any remaining unmapped physical interfaces with DHCP
 {% for prefix in ['eth', 'eno', 'enp'] %}
-{% for idx in range(0, 2) %}
+{% for idx in range(0, 10) %}
 {% if (prefix ~ idx) not in used_interfaces %}
 - type: interface
   name: {{ prefix }}{{ idx }}
