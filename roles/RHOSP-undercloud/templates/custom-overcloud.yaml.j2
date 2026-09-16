@@ -19,6 +19,9 @@ resource_registry:
 {% endif %}{# IF 1 #}
 
 parameter_defaults:
+  # Admin user configuration for Horizon dashboard access
+  AdminPassword: {{ OvercloudAdminPassword }}
+
 {% if leaf.name == default_leaf.name %}{# IF 2 #}
 {% if dcn_leafs | length > 0 %}{# IF 2.1 #}
 {% if (ceph_count + hci_count) > 0 %}{# IF 2.1.1 #}

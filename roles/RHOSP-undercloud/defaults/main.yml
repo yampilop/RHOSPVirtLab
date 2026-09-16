@@ -222,7 +222,7 @@ SnmpdReadonlyUserPassword: RHOSPVirtLab
 BmcUsername: admin
 BmcPassword: admin
 # Overcloud admin account created by the undercloud.
-OvercloudAdminPassword: redhat
+OvercloudAdminPassword: Redhat01
 OvercloudAdminEmail: admin@example.com
 # Password for the test admin user created in overcloud_resources.yaml.
 TestUserPassword: redhat
