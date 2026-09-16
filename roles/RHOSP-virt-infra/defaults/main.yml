@@ -14,11 +14,6 @@ create: True
 
 # overcloud parameters
 external_if: eno1
-forward_network: RHOSPVirtLab_external
-forwarded_ports:
-  - 80
-  - 6080
-  - 5000
 
 # Leaf configuration (control-plane leaf `overcloud` + optional DCN leafs). See README.
 leafs:
@@ -100,10 +95,10 @@ undercloud:
     title: 'RHOSPVirtLab Undercloud'
     hypervisor: localhost
     cpus: 2
-    memory: 6291456
+    memory: 6Gi
     disks:
       - root: true
-        size: 107374182400
+        size: 100Gi
     network:
       interfaces:
         # Only the control-plane NIC; the role injects the mgmt NIC (see README).
@@ -129,10 +124,10 @@ machines:
       title: 'RHOSPVirtLab Virtual Controller 0'
       hypervisor: localhost
       cpus: 2
-      memory: 8388608
+      memory: 8Gi
       disks:
         - root: true
-          size: 53687091200
+          size: 50Gi
       network:
         interfaces:
           - name: nic1
@@ -153,10 +148,10 @@ machines:
       title: 'RHOSPVirtLab Virtual Compute 0'
       hypervisor: localhost
       cpus: 4
-      memory: 6291456
+      memory: 6Gi
       disks:
         - root: true
-          size: 53687091200
+          size: 50Gi
       network:
         interfaces:
           - name: nic1

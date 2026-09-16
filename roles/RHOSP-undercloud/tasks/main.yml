@@ -14,6 +14,7 @@
     default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    kubevirt_machines: "{{ machines | selectattr('type', 'equalto', 'kubevirt') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
@@ -28,6 +29,26 @@
   until: cmd_res is success
   when: not undercloud_is_physical | bool
 
+- name: Copy hypervisor SSH keys to undercloud
+  block:
+    - name: Copy private key
+      copy:
+        src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+        dest: /home/stack/.ssh/id_rsa
+        mode: '0600'
+        owner: stack
+        group: stack
+      when: not undercloud_is_physical | bool
+
+    - name: Copy public key
+      copy:
+        src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+        dest: /home/stack/.ssh/id_rsa.pub
+        mode: '0644'
+        owner: stack
+        group: stack
+      when: not undercloud_is_physical | bool
+
 - name: Configure swap file on the undercloud
   include_role:
     name: geerlingguy.swap
@@ -36,6 +57,12 @@
   hostname:
     name: undercloud.localdomain
 
+- name: UNDERCLOUD NETWORK - Configure gateway network interfaces
+  include_tasks: tasks/undercloud-network.yml
+
+- name: CHECKS - Verify machine profiles
+  import_tasks: tasks/profiles.yml
+
 - name: Red Hat Subscription management
   import_tasks: tasks/subscription.yml
 
@@ -43,6 +70,22 @@
   rhsm_repository:
     name: "{{ RHOSP_version_supported[RHOSP_version].undercloud_repos }}"
     purge: yes
+  register: repo_result
+  failed_when: false
+
+- name: REPOSITORIES - Verify repos were enabled
+  command: sudo subscription-manager repos --list-enabled
+  register: repos_enabled
+  changed_when: false
+  failed_when: false
+
+- name: REPOSITORIES - Enable the needed repositories only (raw fallback)
+  raw: sudo subscription-manager repos --disable='*' && sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].undercloud_repos | join(' --enable=') }}
+  when: repos_enabled.rc != 0 or (RHOSP_version_supported[RHOSP_version].undercloud_repos | last) not in repos_enabled.stdout
+
+- name: REPOSITORIES - Refresh dnf/yum cache
+  command: sudo dnf makecache
+  changed_when: false
 
 - name: MODULES - Enable and configure modules
   copy:
@@ -136,14 +179,12 @@
     default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    kubevirt_machines: "{{ machines | selectattr('type', 'equalto', 'kubevirt') | list }}"
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
     overcloud_ip: >-
       {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
-
-- name: CHECKS - Verify machine profiles
-  import_tasks: tasks/profiles.yml
 
 - name: SSH - Ensure the stack ssh directory exists
   file:

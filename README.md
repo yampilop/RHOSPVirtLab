@@ -51,7 +51,8 @@ sudo subscription-manager attach --pool=<POOL_ID>
 sudo subscription-manager release --set=9.6
 sudo subscription-manager repos --disable=*
 sudo subscription-manager repos --enable=rhel-9-for-x86_64-baseos-rpms \
---enable=rhel-9-for-x86_64-appstream-rpms
+--enable=rhel-9-for-x86_64-appstream-rpms \
+--enable=rhocp-4.22-for-rhel-9-x86_64-rpms
 sudo dnf update -y
 sudo reboot
 ```
@@ -246,13 +247,50 @@ You can also add `--extra-vars "cleanup=True"` to the ansible-playbook command.
 
 ## Execute the Ansible Playbook
 
-Execute the playbook with the following command (you will be prompted for the user password and the vault password):
+The main deployment is split into two playbooks:
+
+### For libvirt and physical machines
+
+You can run both playbooks in sequence:
 
 ```bash
-ansible-playbook --ask-vault-pass playbook.yml
+ansible-playbook --ask-vault-pass infrastructure.yml undercloud.yml
 ```
 
-The playbook sets up the following environment:
+### For KubeVirt machines (recommended workflow)
+
+When using KubeVirt VMs, run the playbooks separately with additional manual steps:
+
+**1. Create infrastructure manifests:**
+
+```bash
+ansible-playbook --ask-vault-pass infrastructure.yml
+```
+
+After this completes, the role will display instructions to apply the Kubernetes resources:
+
+```bash
+oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/
+```
+
+Wait for the KubeVirt VMs to boot and become reachable on the network.
+
+**2. Update inventory with KubeVirt undercloud address:**
+
+Before running the undercloud playbook, update the `./inventory` file with the actual IP address of the kubevirt undercloud VM (obtained from the Kubernetes cluster or your DHCP server):
+
+```ini
+[openstack]
+undercloud ansible_host=<kubevirt_undercloud_ip> ansible_user=stack ...
+```
+
+**3. Configure the undercloud:**
+
+```bash
+ansible-playbook --ask-vault-pass undercloud.yml
+```
+
+The playbooks set up the following environment:
 
 ![Overview](images/overview.png)
 

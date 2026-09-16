@@ -102,6 +102,7 @@ resources:
             $network_config:
               network_config:
 {% set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
+{% set ns = namespace(nic_index = 2 if deployed_server[leaf.name] else 1) %}
 {% for bridge in role_bridges %}
 {% if bridge.type == 'sriov_pf' %}
               - type: sriov_pf
@@ -156,7 +157,7 @@ resources:
                 routes:
                   list_concat_unique:
                     - get_param: {{ bridge.native }}InterfaceRoutes
-{% if bridge.native == 'External' %}
+{% if bridge.native == 'External' and (default_leaf.networks | selectattr('name', 'equalto', 'External') | first).subnet.gateway is defined %}
                     - - default: true
                         next_hop:
                           get_param: ExternalInterfaceDefaultRoute
@@ -174,7 +175,8 @@ resources:
                   vfid: {{ member.split('v')[1] }}
 {% else %}
                 - type: interface
-                  name: {{ member }}
+                  name: nic{{ ns.nic_index }}
+{% set ns.nic_index = ns.nic_index + 1 %}
 {% endif %}
 {% if bridge_mtu_line %}
                   mtu:
@@ -194,15 +196,18 @@ resources:
                   rx_queue: {{ member.rx_queue | default(1) }}
                   ovs_extra:
 {% for p in member.members %}
-                    - set Interface {{ p.name }} options:n_rxq_desc=4096
-                    - set Interface {{ p.name }} options:n_txq_desc=4096
+{% set p_name = 'nic' ~ ns.nic_index %}
+{% set ns.nic_index = ns.nic_index + 1 %}
+                    - set Interface {{ p_name }} options:n_rxq_desc=4096
+                    - set Interface {{ p_name }} options:n_txq_desc=4096
 {% endfor %}
 {% endif %}
 {% if member.members is defined %}
                   members:
 {% for p in member.members %}
                   - type: {{ p.type }}
-                    name: {{ p.name }}
+                    name: nic{{ ns.nic_index }}
+{% set ns.nic_index = ns.nic_index + 1 %}
 {% if p.driver is defined %}
                     driver: {{ p.driver }}
 {% endif %}
@@ -215,7 +220,8 @@ resources:
                       vfid: {{ sub.split('v')[1] }}
 {% else %}
                     - type: interface
-                      name: {{ sub }}
+                      name: nic{{ ns.nic_index }}
+{% set ns.nic_index = ns.nic_index + 1 %}
 {% endif %}
 {% endfor %}
 {% endif %}

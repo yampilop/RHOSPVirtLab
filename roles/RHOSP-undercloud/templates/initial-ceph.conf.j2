@@ -10,3 +10,6 @@ osd_memory_target_autotune = true
 osd_numa_auto_affinity = true
 [mgr]
 mgr/cephadm/autotune_memory_target_ratio = 0.2
+{% if RHOSP_version >= 17.1 %}
+mgr/orchestrator/backend = cephadm
+{% endif %}

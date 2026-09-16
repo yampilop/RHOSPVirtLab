@@ -18,7 +18,8 @@ openstack overcloud ceph deploy -y \
 --config {{ templates_dir }}/initial-ceph.conf \
 {% endif %}
 --roles-data {{ templates_dir }}/roles_data.yaml \
---container-image-prepare /home/stack/containers-prepare-parameter.yaml
+--container-image-prepare /home/stack/containers-prepare-parameter.yaml \
+--ntp-server "{{ ntp_servers | join(',') }}"
 {% endif %}
 
 {% if (dcn_leafs | length > 0) and (leaf.name == default_leaf.name) and (ceph_count + hci_count > 0) %}
@@ -37,6 +38,7 @@ time openstack overcloud deploy \
 --stack {{ leaf.name }} \
 -n /home/stack/templates/network_data.yaml \
 -r {{ templates_dir }}/roles_data.yaml \
+--ntp-server {{ ntp_servers | join(',') }} \
 {% if deployed_server[leaf.name] %}
 --disable-validations \
 {% endif %}

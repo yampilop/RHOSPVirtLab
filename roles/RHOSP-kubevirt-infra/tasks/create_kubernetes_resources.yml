@@ -1,0 +1,130 @@
+# Create Kubernetes resources from Jinja2 templates and prepare them for deployment
+
+- name: KUBERNETES - Calculate DataVolume name
+  set_fact:
+    datavolume_name: "rhel-image-{{ RHOSP_version_supported[RHOSP_version].rhel_image.name | regex_replace('\\.qcow2$', '') | regex_replace('[._]', '-') | lower }}"
+  run_once: true
+
+- name: KUBERNETES - Create output directory for manifests
+  file:
+    path: "{{ playbook_dir }}/{{ KubeVirtNamespace }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Render DataVolume (import) manifest
+  template:
+    src: datasource-pvc.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource-pvc.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Render DataSource manifest
+  template:
+    src: datasource.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/01-datasource.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Render UDNs manifest
+  template:
+    src: udns.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/02-udns.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Render Services manifest
+  template:
+    src: services.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/03-services.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Render Routes manifest
+  template:
+    src: routes.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/04-routes.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Render Provisioning Secret manifest
+  template:
+    src: secret_provisioning-ssh-public-key.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/05-secret-provisioning-ssh-public-key.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Render the Undercloud VirtualMachine manifest
+  template:
+    src: undercloud.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  when: kubevirt_undercloud
+
+- name: KUBERNETES - Render VirtualMachines manifest
+  template:
+    src: machines.yaml.j2
+    dest: "{{ playbook_dir }}/{{ KubeVirtNamespace }}/07-machines.yaml"
+    mode: '0644'
+    owner: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: KUBERNETES - Display deployment instructions
+  debug:
+    msg: "{{ deployment_instructions.split('\n') }}"
+  vars:
+    deployment_instructions: |
+      Kubernetes manifests have been generated in: {{ playbook_dir }}/{{ KubeVirtNamespace }}/
+
+      Deploy individual resources in order:
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource-pvc.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/01-datasource.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/02-udns.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/03-services.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/04-routes.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/05-secret-provisioning-ssh-public-key.yaml
+
+      Wait for the DataVolume import to complete before creating VMs:
+        oc wait --for=jsonpath='{.status.phase}'=Succeeded datavolume/{{ datavolume_name }} -n {{ KubeVirtNamespace }} --timeout=600s
+
+      Then create the VMs:
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml
+        oc apply -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/07-machines.yaml
+  delegate_to: localhost
+  run_once: true
