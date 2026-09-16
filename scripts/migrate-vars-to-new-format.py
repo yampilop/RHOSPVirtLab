@@ -328,6 +328,7 @@ def main():
     # Handle options.yml migration
     options_output = os.path.join(new_vars_dir, 'options.yml.migrated')
     custom_options = {}
+    deprecated_options = {}
 
     # Extract custom options that might differ from defaults
     # Skip empty strings and None values
@@ -339,10 +340,16 @@ def main():
         if key in options_data and options_data[key] not in ('', None):
             custom_options[key] = options_data[key]
 
+    # Track deprecated options that are no longer used
+    if 'overcloud_ip' in options_data:
+        deprecated_options['overcloud_ip'] = options_data['overcloud_ip']
+    if 'forwarded_ports' in options_data:
+        deprecated_options['forwarded_ports'] = options_data['forwarded_ports']
+
     print(f"\nMigration complete!")
     print(f"✓ {machines_output}")
 
-    if custom_options or networks_list:
+    if custom_options or networks_list or deprecated_options:
         print(f"\nOptions to merge into vars/options.yml:")
         print(f"---")
         print(f"# Add these to your vars/options.yml:")
@@ -352,6 +359,13 @@ def main():
         if networks_list:
             print(f"\n# Merge this leafs configuration (update ctlplane/networks as needed):")
             yaml.dump({'leafs': leafs}, sys.stdout, default_flow_style=False)
+        if deprecated_options:
+            print(f"\n# DEPRECATED (no longer used in new format):")
+            print(f"# - overcloud_ip: computed from leaf's External network VIP")
+            print(f"# - forwarded_ports: now hardcoded per role (see roles/RHOSP-*/vars/main.yml)")
+            print(f"# Old values for reference:")
+            for key, value in deprecated_options.items():
+                print(f"#   {key}: {value}")
 
     print(f"\nNext steps:")
     print(f"1. Review {machines_output} for accuracy")
