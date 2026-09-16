@@ -107,19 +107,24 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
         for i, line in enumerate(new_lines):
             if re.match(r'^leafs\s*:', line):
                 leafs_found = True
-                # Find the end of the existing leafs block and replace it
+                # Find the end of the existing leafs block
                 j = i + 1
-                indent = 0  # leafs is at root level
+                # Skip the first line if it's just "leafs:" with value on next line
                 while j < len(new_lines):
                     next_line = new_lines[j]
+                    # Skip blank lines and comments
                     if next_line.strip() == '' or next_line.lstrip().startswith('#'):
                         j += 1
                         continue
+                    # Check indentation - anything indented more than 'leafs' is part of it
                     next_indent = len(next_line) - len(next_line.lstrip())
-                    if next_indent > indent:
+                    # leafs is at indent 0, so anything with indent > 0 is part of leafs
+                    if next_indent > 0:
                         j += 1
                     else:
+                        # Found a line at root level, stop here
                         break
+
                 # Replace the leafs block
                 formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
                 new_lines[i:j] = [formatted]
