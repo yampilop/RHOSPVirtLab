@@ -103,6 +103,17 @@ echo "admin ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/admin
 
 Repeat that **admin** user setup in all your hypervisors when you use a DCN or multiple hypervisors configuration.
 
+### SSH key configuration
+
+All SSH operations (hypervisor access, undercloud access, overcloud node access, and KubeVirt VM access) use the SSH public key located at `~/.ssh/id_rsa.pub` in the home directory of the user running the playbook. 
+
+**If you need to use a custom SSH key:**
+1. Generate or use your existing key
+2. Copy it to `~/.ssh/id_rsa.pub` (overwriting the default location)
+3. Run the playbook with that key in place
+
+The playbook will automatically use this key for all infrastructure access, including copying to hypervisors, undercloud, overcloud nodes, and KubeVirt virtual machines.
+
 ### DCN or multiple hypervisors configuration
 
 In the main hypervisor (central) you need to create an ssh-key using the following command (use default options):

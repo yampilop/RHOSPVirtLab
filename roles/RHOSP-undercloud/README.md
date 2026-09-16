@@ -8,6 +8,9 @@ Requirements
 
 It's tested to work on Red Hat Enterprise Linux versions 7.9, 8.4, 9.6, or 10.2. Requires a virtual infrastructure, preferably created by the role RHOSP-virt-infra.
 
+**SSH Key Configuration:**
+All SSH operations (hypervisor access, undercloud access, overcloud node access, and KubeVirt VM access) use the SSH public key at `~/.ssh/id_rsa.pub` in the home directory of the user running this role. If you need to use a custom SSH key, place it at that location before running the playbook.
+
 Role Variables
 --------------
 
