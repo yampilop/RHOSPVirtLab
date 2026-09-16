@@ -83,12 +83,10 @@
     immediate: yes
     state: enabled
   loop: "{{ libvirt_machines }}"
-  when:
-    - vbmc_required | bool
-    - item.pm is defined
-    - item.pm.port is defined
   become: yes
   when:
     - vbmc_required | bool
     - item.pm is defined
+    - item.pm.port is defined
+    - not (item.pre_provisioned | default(false))
     - inventory_hostname == item.libvirt.hypervisor
