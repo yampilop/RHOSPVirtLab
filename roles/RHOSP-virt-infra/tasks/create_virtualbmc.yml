@@ -13,6 +13,8 @@
   when:
     - item.stdout is defined
     - not item.stdout
+    - item.item.pm is defined
+    - item.item.pm.user is defined
 
 - name: VIRTUALBMC - Get node states again
   shell: "{{ vbmc_path }} list 2>/dev/null | grep running | awk '/{{ item.name }}/ {print $4,$8}'"
