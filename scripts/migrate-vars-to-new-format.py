@@ -114,9 +114,9 @@ def migrate_libvirt_vm_to_machine(vm: Dict[str, Any], networks: Dict[str, Any]) 
             if len(mac_parts) == 5:
                 mac_parts.append('00')  # Pad with :00
 
-            # Modify second-to-last octet with NIC index to ensure uniqueness
+            # Modify last octet with NIC index to ensure uniqueness
             nic_index = len(machine['libvirt']['network']['interfaces'])
-            mac_parts[-2] = f'{nic_index:02x}'
+            mac_parts[-1] = f'{nic_index:02x}'
             mac = ':'.join(mac_parts)
 
             interface = {
