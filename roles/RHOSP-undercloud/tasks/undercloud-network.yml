@@ -45,3 +45,13 @@
       - default_leaf.ctlplane_subnet.masquerade | default(false)
       - gw_interfaces is defined
       - gw_interfaces | length > 0
+
+  - name: UNDERCLOUD NETWORK - Enable IP forwarding when masquerade is enabled
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: '1'
+      state: present
+      sysctl_set: yes
+    become: true
+    delegate_to: undercloud
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
