@@ -8,6 +8,16 @@
 network_config:
 {% set deployed_names = leaf.networks | default([]) | map(attribute='name') | list %}
 {% set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
+{% set used_interfaces = [] %}
+{% for bridge in role_bridges %}
+{% if bridge.members is defined %}
+{% for member in bridge.members %}
+{% if member is string and 'v' not in member %}
+{{ used_interfaces.append(member) }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
 {% for bridge in role_bridges %}
 {% if bridge.type == 'sriov_pf' %}
 - type: sriov_pf
@@ -140,8 +150,10 @@ network_config:
 # Configure any remaining unmapped physical interfaces with DHCP
 {% for prefix in ['eth', 'eno', 'enp'] %}
 {% for idx in range(0, 2) %}
+{% if (prefix ~ idx) not in used_interfaces %}
 - type: interface
   name: {{ prefix }}{{ idx }}
   use_dhcp: true
+{% endif %}
 {% endfor %}
 {% endfor %}
