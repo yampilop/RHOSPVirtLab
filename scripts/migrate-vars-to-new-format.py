@@ -108,6 +108,75 @@ def migrate_vms(vms_list: List[Dict[str, Any]]) -> tuple:
     return undercloud, machines
 
 
+def transform_old_leaf_to_new_format(old_leaf: Dict[str, Any]) -> Dict[str, Any]:
+    """Transform old DefaultLeaf0 format to new leafs format."""
+    new_leaf = {
+        'name': old_leaf.get('name', 'overcloud'),
+        'hypervisor': old_leaf.get('hypervisor', 'localhost'),
+        'ctlplane_bridge': {
+            'name': 'br-ctlplane',
+            'interface': None
+        },
+        'ctlplane_subnet': {
+            'name': old_leaf.get('subnet', {}).get('name', 'ctlplane-subnet'),
+            'cidr': old_leaf.get('subnet', {}).get('cidr', '192.168.24.0/24'),
+            'gateway': old_leaf.get('subnet', {}).get('gateway', '192.168.24.254'),
+            'vip': old_leaf.get('subnet', {}).get('vip', '192.168.24.253'),
+            'masquerade': old_leaf.get('subnet', {}).get('masquerade', False),
+            'dhcp_start': old_leaf.get('subnet', {}).get('dhcp_start'),
+            'dhcp_end': old_leaf.get('subnet', {}).get('dhcp_end'),
+            'inspection_iprange': old_leaf.get('subnet', {}).get('inspection_iprange'),
+        },
+        'additional_bridges': [],
+        'networks': []
+    }
+
+    # Map old network names to new network names
+    name_map = {
+        'External': 'External',
+        'Tenant': 'Tenant',
+        'Storage': 'Storage',
+        'StorageMgmt': 'StorageMgmt',
+        'InternalApi': 'InternalApi',
+        'Management': 'Management',
+    }
+
+    # Process old networks format
+    old_networks = old_leaf.get('networks', {})
+    for old_name, old_net_data in old_networks.items():
+        new_name = name_map.get(old_name, old_name)
+
+        # Extract prefix and build CIDR
+        prefix = old_net_data.get('prefix', '')
+        vlan = old_net_data.get('vlan')
+
+        # Map network name to bridge (VLANs go on br-ctlplane, External on br-external)
+        if old_name == 'External':
+            bridge = 'br-external'
+        else:
+            bridge = 'br-ctlplane'
+
+        network = {
+            'name': new_name,
+            'bridge': bridge,
+            'vip': True,
+            'subnet': {}
+        }
+
+        if prefix:
+            # Infer /24 CIDR from prefix
+            network['subnet']['ip_subnet'] = f'{prefix}.0/24'
+            network['subnet']['gateway'] = f'{prefix}.254'
+            network['subnet']['vip'] = f'{prefix}.253'
+
+        if vlan:
+            network['subnet']['vlan'] = vlan
+
+        new_leaf['networks'].append(network)
+
+    return new_leaf
+
+
 def format_machine(machine: Dict[str, Any], is_undercloud: bool = False) -> str:
     """Format a machine dict as YAML with proper indentation."""
     if is_undercloud:
@@ -252,15 +321,14 @@ def main():
                 new_lines.append(line)
                 i += 1
 
-        # Replace leafs with DefaultLeaf0 if present
+        # Replace leafs with transformed DefaultLeaf0 if present
         if default_leaf_from_options:
+            new_leaf = transform_old_leaf_to_new_format(default_leaf_from_options)
             new_lines_with_leafs = []
-            leafs_found = False
             i = 0
             while i < len(new_lines):
                 line = new_lines[i]
                 if line.strip().startswith('leafs:'):
-                    leafs_found = True
                     # Skip old leafs block
                     j = i + 1
                     while j < len(new_lines):
@@ -273,8 +341,8 @@ def main():
                             j += 1
                         else:
                             break
-                    # Write new leafs from DefaultLeaf0
-                    leafs_yaml = yaml.dump({'leafs': [default_leaf_from_options]}, default_flow_style=False)
+                    # Write new leafs from transformed DefaultLeaf0
+                    leafs_yaml = yaml.dump({'leafs': [new_leaf]}, default_flow_style=False)
                     formatted_lines = leafs_yaml.rstrip('\n').split('\n')
                     new_lines_with_leafs.extend([line + '\n' for line in formatted_lines])
                     i = j
