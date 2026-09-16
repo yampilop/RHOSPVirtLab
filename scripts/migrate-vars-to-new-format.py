@@ -135,6 +135,9 @@ def main():
     vms_list = vms_data.get('vms', [])
     undercloud, machines = migrate_vms(vms_list)
 
+    # Extract DefaultLeaf0 from options.yml if present
+    default_leaf_from_options = options_data.get('DefaultLeaf0', {})
+
     # Generate machines.yml from template
     machines_template = os.path.join(new_vars_dir, 'machines.yml')
 
@@ -248,6 +251,37 @@ def main():
             if not matched:
                 new_lines.append(line)
                 i += 1
+
+        # Replace leafs with DefaultLeaf0 if present
+        if default_leaf_from_options:
+            new_lines_with_leafs = []
+            leafs_found = False
+            i = 0
+            while i < len(new_lines):
+                line = new_lines[i]
+                if line.strip().startswith('leafs:'):
+                    leafs_found = True
+                    # Skip old leafs block
+                    j = i + 1
+                    while j < len(new_lines):
+                        next_line = new_lines[j]
+                        if next_line.strip() == '' or next_line.lstrip().startswith('#'):
+                            j += 1
+                            continue
+                        next_indent = len(next_line) - len(next_line.lstrip())
+                        if next_indent > 0:
+                            j += 1
+                        else:
+                            break
+                    # Write new leafs from DefaultLeaf0
+                    leafs_yaml = yaml.dump({'leafs': [default_leaf_from_options]}, default_flow_style=False)
+                    formatted_lines = leafs_yaml.rstrip('\n').split('\n')
+                    new_lines_with_leafs.extend([line + '\n' for line in formatted_lines])
+                    i = j
+                else:
+                    new_lines_with_leafs.append(line)
+                    i += 1
+            new_lines = new_lines_with_leafs
 
         with open(options_output, 'w') as f:
             f.writelines(new_lines)
