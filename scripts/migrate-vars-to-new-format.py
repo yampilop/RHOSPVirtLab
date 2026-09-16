@@ -314,7 +314,7 @@ def main():
         f.write("---\n")
         f.write("# Migrated from old vms.yml and physical.yml format\n")
         f.write("# Review and adjust as needed\n\n")
-        yaml.dump(new_config, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        yaml.dump(new_config, f, default_flow_style=False)
 
     # Migrate leafs from networks
     leafs = [migrate_networks_to_leafs(networks_list)]
