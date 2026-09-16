@@ -180,23 +180,65 @@ def main():
 
     print(f"✓ {machines_output}")
 
-    # Update options.yml with values from old options.yml
+    # Update options.yml with values from old options.yml, preserving order and structure
     options_output = os.path.join(new_vars_dir, 'options.yml')
     if os.path.exists(options_output):
         with open(options_output, 'r') as f:
-            options_content = yaml.safe_load(f) or {}
+            options_lines = f.readlines()
 
-        # Update with custom options
-        for key in ['RHOSP_version', 'RHOSP_release', 'external_if', 'dns_servers', 'ntp_servers',
-                    'vncproxy', 'BmcUsername', 'BmcPassword', 'OvercloudAdminPassword',
-                    'DeployOctavia', 'DeployDesignate', 'DeployFrr', 'RegisterNodes',
-                    'LowMemUsage', 'ControllersFencing', 'NeutronDriver', 'UndercloudFullUpdate',
-                    'DisableTelemetry']:
-            if key in options_data and options_data[key] not in ('', None):
-                options_content[key] = options_data[key]
+        # Keys to look for and update
+        update_keys = {
+            'RHOSP_version', 'RHOSP_release', 'external_if', 'dns_servers', 'ntp_servers',
+            'vncproxy', 'BmcUsername', 'BmcPassword', 'OvercloudAdminPassword',
+            'DeployOctavia', 'DeployDesignate', 'DeployFrr', 'RegisterNodes',
+            'LowMemUsage', 'ControllersFencing', 'NeutronDriver', 'UndercloudFullUpdate',
+            'DisableTelemetry'
+        }
+
+        new_lines = []
+        i = 0
+        while i < len(options_lines):
+            line = options_lines[i]
+            matched = False
+
+            # Check if this line starts a key we want to update
+            for key in update_keys:
+                if line.strip().startswith(f'{key}:'):
+                    if key in options_data and options_data[key] not in ('', None):
+                        value = options_data[key]
+                        indent = len(line) - len(line.lstrip())
+
+                        # Skip old value lines (everything indented under this key)
+                        j = i + 1
+                        while j < len(options_lines):
+                            next_line = options_lines[j]
+                            if next_line.strip() == '' or next_line.lstrip().startswith('#'):
+                                j += 1
+                                continue
+                            next_indent = len(next_line) - len(next_line.lstrip())
+                            if next_indent > indent:
+                                j += 1
+                            else:
+                                break
+
+                        # Write new value
+                        if isinstance(value, list):
+                            new_lines.append(f"{' ' * indent}{key}:\n")
+                            for item in value:
+                                new_lines.append(f"{' ' * (indent + 2)}- '{item}'\n")
+                        else:
+                            new_lines.append(f"{' ' * indent}{key}: {value}\n")
+
+                        i = j
+                        matched = True
+                    break
+
+            if not matched:
+                new_lines.append(line)
+                i += 1
 
         with open(options_output, 'w') as f:
-            yaml.dump(options_content, f, default_flow_style=False)
+            f.writelines(new_lines)
 
         print(f"✓ {options_output}")
 
