@@ -74,7 +74,9 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
                 if isinstance(value, (list, dict)):
                     # Multi-line value
                     formatted = yaml.dump({key: value}, default_flow_style=False)
-                    new_lines.append(formatted)
+                    # Split into lines and preserve list structure
+                    formatted_lines = formatted.rstrip('\n').split('\n')
+                    new_lines.extend([line + '\n' for line in formatted_lines])
                 else:
                     # Single-line value
                     new_lines.append(f"{' ' * indent}{key}: {value}\n")
@@ -94,11 +96,15 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
             # Add before any trailing comments at the end
             value = custom_options[key]
             formatted = yaml.dump({key: value}, default_flow_style=False)
+            # Split into lines and preserve list structure
+            formatted_lines = formatted.rstrip('\n').split('\n')
+            formatted_lines = [line + '\n' for line in formatted_lines]
             # Insert before the last empty line or at the end
             if new_lines and new_lines[-1].strip() == '':
-                new_lines.insert(-1, formatted)
+                new_lines.extend(formatted_lines[:-1])
+                new_lines.append(formatted_lines[-1])
             else:
-                new_lines.append(formatted)
+                new_lines.extend(formatted_lines)
 
     # Add leafs if provided
     if leafs is not None:
@@ -127,16 +133,22 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
 
                 # Replace the leafs block
                 formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
-                new_lines[i:j] = [formatted]
+                # Split into lines and preserve list structure
+                formatted_lines = formatted.rstrip('\n').split('\n')
+                formatted_lines = [line + '\n' for line in formatted_lines]
+                new_lines[i:j] = formatted_lines
                 break
 
         if not leafs_found:
             # Append leafs at the end
             formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
+            # Split into lines and preserve list structure
+            formatted_lines = formatted.rstrip('\n').split('\n')
+            formatted_lines = [line + '\n' for line in formatted_lines]
             if new_lines and new_lines[-1].strip() == '':
-                new_lines.insert(-1, formatted)
+                new_lines[-1:-1] = formatted_lines
             else:
-                new_lines.append(formatted)
+                new_lines.extend(formatted_lines)
 
     # Write back the updated file
     with open(filepath, 'w') as f:
