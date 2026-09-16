@@ -247,8 +247,7 @@ resources:
 {% endfor %}
               # Configure management interface for pre-provisioned machines
 {% if deployed_server[leaf.name] and item.name != 'undercloud' %}
-{% set item_type = item.type | default('libvirt') %}
-{% set mgmt_iface = (item.libvirt.network.interfaces | selectattr('bridge', 'equalto', 'br-management') | first) if item_type == 'libvirt' else ((item.kubevirt.network.interfaces | selectattr('bridge', 'equalto', 'br-management') | first) if item_type == 'kubevirt' else none) %}
+{% set mgmt_iface = (item.libvirt.network.interfaces | selectattr('bridge', 'equalto', 'br-management') | first) if (item.type | default('libvirt')) == 'libvirt' else none %}
 {% if mgmt_iface %}
               - type: interface
                 name: {{ mgmt_iface.name }}
