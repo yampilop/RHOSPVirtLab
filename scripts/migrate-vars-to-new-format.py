@@ -160,17 +160,21 @@ def transform_old_leaf_to_new_format(old_leaf: Dict[str, Any]) -> Dict[str, Any]
             'name': new_name,
             'bridge': bridge,
             'vip': True,
+            'mtu': 1500,
             'subnet': {}
         }
 
         if prefix:
             # Infer /24 CIDR from prefix
             network['subnet']['ip_subnet'] = f'{prefix}.0/24'
-            network['subnet']['gateway'] = f'{prefix}.254'
-            network['subnet']['vip'] = f'{prefix}.253'
-
-        if vlan:
-            network['subnet']['vlan'] = vlan
+            if vlan:
+                network['subnet']['vlan'] = vlan
+                network['subnet']['gateway'] = f'{prefix}.254'
+                network['subnet']['vip'] = f'{prefix}.253'
+            else:
+                # No VLAN means it's on native VLAN
+                network['subnet']['gateway'] = f'{prefix}.254'
+                network['subnet']['vip'] = f'{prefix}.253'
 
         new_leaf['networks'].append(network)
 
@@ -324,6 +328,10 @@ def main():
         # Replace leafs with transformed DefaultLeaf0 if present
         if default_leaf_from_options:
             new_leaf = transform_old_leaf_to_new_format(default_leaf_from_options)
+            print(f"Transformed leaf networks:")
+            for net in new_leaf.get('networks', []):
+                print(f"  {net['name']}: vlan={net.get('subnet', {}).get('vlan', 'none')}")
+
             new_lines_with_leafs = []
             i = 0
             while i < len(new_lines):
