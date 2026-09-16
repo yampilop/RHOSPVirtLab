@@ -32,14 +32,6 @@ description: >
   HOT Template to create basic needed resources after deployment of RHOSPVirtLab
 
 parameters:
-  user_name:
-    type: string
-    description: User name
-    default: test-admin
-  user_password:
-    type: string
-    description: User name
-    default: {{ TestUserPassword }}
   image_rhel_external_id:
     type: string
     description: External ID to reference RHEL image
@@ -245,29 +237,13 @@ resources:
       name: soft-anti-affinity-group
       policies: ['soft-anti-affinity']
 
-  # Keystone resources
-  user:
-    type: OS::Keystone::User
-    properties:
-      name: { get_param: user_name }
-      description: Test admin user
-      enabled: True
-      password: { get_param: user_password }
-      default_project: admin
-      roles:
-        - role: admin
-          domain: Default
-        - role: admin
-          project: admin
-
   # Keypair resources
   undercloud_key:
     type: OS::Nova::KeyPair
-    depends_on: user
     properties:
       name: undercloud-key
       public_key: { get_file: '/home/stack/.ssh/id_rsa.pub' }
-      user: { get_resource: user }
+      user: admin
 
   # Tenant network resources
   test_network:
@@ -363,6 +339,6 @@ resources:
       security_group: { get_resource: default_security_group }
 
 outputs:
-  user_id:
-    description: test-admin user UUID
-    value: { get_resource: user }
+  undercloud_key_id:
+    description: Undercloud keypair for admin user
+    value: { get_resource: undercloud_key }
