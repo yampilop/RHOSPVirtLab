@@ -109,9 +109,14 @@ def migrate_libvirt_vm_to_machine(vm: Dict[str, Any], networks: Dict[str, Any]) 
 
             # Generate MAC address from VM mac + NIC index
             base_mac = vm.get('mac', '0c:1f:0d:00:00:00')
+            # Ensure MAC has 6 octets (old format only had 5)
             mac_parts = base_mac.split(':')
+            if len(mac_parts) == 5:
+                mac_parts.append('00')  # Pad with :00
+
+            # Modify second-to-last octet with NIC index to ensure uniqueness
             nic_index = len(machine['libvirt']['network']['interfaces'])
-            mac_parts[-1] = f'{nic_index:02x}'
+            mac_parts[-2] = f'{nic_index:02x}'
             mac = ':'.join(mac_parts)
 
             interface = {
