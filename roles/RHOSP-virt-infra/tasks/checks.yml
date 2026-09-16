@@ -92,5 +92,5 @@
   when:
     - inventory_hostname == 'localhost'
     - libvirt_required | bool
-    - (memory_values + disk_sizes) | select('string') | list | length > 0
-    - (memory_values + disk_sizes) | select('string') | list | rejectattr('match', 'search', valid_size_pattern) | list | length > 0
+    - memory_values + disk_sizes | select('string') | list | length > 0
+    - (memory_values + disk_sizes) | select('string') | list | reject('match', valid_size_pattern) | list | length > 0
