@@ -68,9 +68,6 @@
 - name: UNDERCLOUD NETWORK - Configure gateway network interfaces
   include_tasks: tasks/undercloud-network.yml
 
-- name: CHECKS - Verify machine profiles
-  import_tasks: tasks/profiles.yml
-
 - name: Red Hat Subscription management
   import_tasks: tasks/subscription.yml
 
@@ -182,6 +179,9 @@
 
 - name: Gather facts to ensure variables are available
   setup:
+
+- name: CHECKS - Verify machine profiles
+  import_tasks: tasks/profiles.yml
 
 - name: Register computed variables again for template access
   set_fact:
