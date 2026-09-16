@@ -15,6 +15,7 @@
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
     kubevirt_undercloud: "{{ (undercloud.type | default('kubevirt')) == 'kubevirt' }}"
     kubevirt_machines: "{{ (machines + [{'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true)]) | selectattr('type', 'equalto', 'kubevirt') | list }}"
+    kubevirt_required: "{{ kubevirt_undercloud | bool or (machines | selectattr('type', 'equalto', 'kubevirt') | list | length > 0) }}"
 
 - name: CHECKS - Ensure pre-provisioned kubevirt machines have valid ctlplane_ip
   fail:
@@ -27,6 +28,7 @@
   vars:
     ctlplane_prefix: "{{ default_leaf.ctlplane_subnet.cidr.split('/')[0].rsplit('.', 1)[0] }}"
   when:
+    - kubevirt_required | bool
     - item.name != 'undercloud'
     - item.pre_provisioned | default(false)
     - (item.openstack.ctlplane_ip is not defined)
@@ -54,14 +56,16 @@
         Additional leafs (DCN) defined: {{ dcn_leafs | length }}
         All leafs: {{ leafs | map(attribute='name') | list }}
   when:
+    - kubevirt_required | bool
     - dcn_leafs | length > 0
-    - (kubevirt_undercloud | bool) or (kubevirt_machines | length > 0)
 
 # Create process
 
 - name: KUBERNETES - Create manifests from templates
   import_tasks: tasks/create_kubernetes_resources.yml
-  when: create | bool
+  when:
+    - kubevirt_required | bool
+    - create | bool
 
 - name: KUBERNETES - Display cleanup instructions
   debug:
@@ -82,6 +86,8 @@
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/00-datasource-pvc.yaml
   delegate_to: localhost
   run_once: true
-  when: cleanup | bool
+  when:
+    - kubevirt_required | bool
+    - cleanup | bool
 
 # TODO: Replace VirtualBMC with KubeVirtBMC (https://github.com/kubevirtbmc/kubevirtbmc)
