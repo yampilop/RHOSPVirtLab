@@ -72,6 +72,7 @@
   when:
     - vbmc_required | bool
     - item.pm is defined
+    - item.pm.port is defined
     - inventory_hostname == default_leaf.hypervisor.split(',')[0]
 
 - name: FIREWALL - Ensure vbmc ports rules are configured to the firewall in public zone for localhost and leafs
@@ -82,6 +83,10 @@
     immediate: yes
     state: enabled
   loop: "{{ libvirt_machines }}"
+  when:
+    - vbmc_required | bool
+    - item.pm is defined
+    - item.pm.port is defined
   become: yes
   when:
     - vbmc_required | bool
