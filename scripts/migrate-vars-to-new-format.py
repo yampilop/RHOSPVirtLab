@@ -84,6 +84,11 @@ def migrate_vms(vms_list: List[Dict[str, Any]]) -> tuple:
                 })
 
         if vm['profile'] == 'undercloud':
+            # Remove management interface from undercloud (it's implicit)
+            machine['libvirt']['network']['interfaces'] = [
+                iface for iface in machine['libvirt']['network']['interfaces']
+                if iface['bridge'] != 'br-management'
+            ]
             undercloud = machine
         else:
             machine['openstack'] = {
