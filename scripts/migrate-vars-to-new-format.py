@@ -67,9 +67,9 @@ def migrate_libvirt_vm_to_machine(vm: Dict[str, Any], networks: Dict[str, Any]) 
         }
 
     # LibVirt-specific config
-    # Convert memory from bytes to Gi
-    memory_bytes = vm.get('memory', 0)
-    memory_gi = memory_bytes / (1024 ** 3) if memory_bytes > 0 else 8
+    # Convert memory from KiB to Gi (old format stores in KiB)
+    memory_kib = vm.get('memory', 0)
+    memory_gi = memory_kib / (1024 ** 2) if memory_kib > 0 else 8
 
     machine['libvirt'] = {
         'title': vm.get('title', ''),
@@ -82,7 +82,7 @@ def migrate_libvirt_vm_to_machine(vm: Dict[str, Any], networks: Dict[str, Any]) 
         }
     }
 
-    # Add root disk
+    # Add root disk (old format stores in bytes)
     if vm.get('disk_size'):
         disk_bytes = vm['disk_size']
         disk_gi = disk_bytes / (1024 ** 3)
