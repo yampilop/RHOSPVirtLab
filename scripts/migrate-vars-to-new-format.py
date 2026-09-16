@@ -330,12 +330,13 @@ def main():
     custom_options = {}
 
     # Extract custom options that might differ from defaults
+    # Skip empty strings and None values
     for key in ['RHOSP_version', 'RHOSP_release', 'external_if', 'dns_servers', 'ntp_servers',
                 'vncproxy', 'BmcUsername', 'BmcPassword', 'OvercloudAdminPassword',
                 'DeployOctavia', 'DeployDesignate', 'DeployFrr', 'RegisterNodes',
                 'LowMemUsage', 'ControllersFencing', 'NeutronDriver', 'UndercloudFullUpdate',
                 'DisableTelemetry', 'CustomRhelImage', 'CustomCirrOSImage', 'CustomOcClientUrl']:
-        if key in options_data:
+        if key in options_data and options_data[key] not in ('', None):
             custom_options[key] = options_data[key]
 
     print(f"\nMigration complete!")
