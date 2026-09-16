@@ -137,3 +137,11 @@ network_config:
 {% endif %}
 {% endif %}
 {% endfor %}
+# Configure any remaining unmapped physical interfaces with DHCP
+{% for prefix in ['eth', 'eno', 'enp'] %}
+{% for idx in range(0, 20) %}
+- type: interface
+  name: {{ prefix }}{{ idx }}
+  use_dhcp: true
+{% endfor %}
+{% endfor %}
