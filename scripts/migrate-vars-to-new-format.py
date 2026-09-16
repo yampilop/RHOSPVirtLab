@@ -18,6 +18,7 @@ import os
 import yaml
 from pathlib import Path
 from typing import Dict, List, Any
+from io import StringIO
 
 
 def load_yaml(filepath: str) -> Dict[str, Any]:
@@ -319,18 +320,43 @@ def main():
     # Migrate leafs from networks
     leafs = [migrate_networks_to_leafs(networks_list)]
 
+    # Handle options.yml migration
+    options_output = os.path.join(new_vars_dir, 'options.yml.migrated')
+    custom_options = {}
+
+    # Extract custom options that might differ from defaults
+    for key in ['RHOSP_version', 'RHOSP_release', 'external_if', 'dns_servers', 'ntp_servers',
+                'vncproxy', 'BmcUsername', 'BmcPassword', 'OvercloudAdminPassword',
+                'DeployOctavia', 'DeployDesignate', 'DeployFrr', 'RegisterNodes',
+                'LowMemUsage', 'ControllersFencing', 'NeutronDriver', 'UndercloudFullUpdate',
+                'DisableTelemetry', 'CustomRhelImage', 'CustomCirrOSImage', 'CustomOcClientUrl']:
+        if key in options_data:
+            custom_options[key] = options_data[key]
+
     print(f"\nMigration complete!")
     print(f"✓ {machines_output}")
+
+    if custom_options or networks_list:
+        print(f"\nOptions to merge into vars/options.yml:")
+        print(f"---")
+        print(f"# Add these to your vars/options.yml:")
+        if custom_options:
+            for key, value in custom_options.items():
+                yaml.dump({key: value}, sys.stdout, default_flow_style=False)
+        if networks_list:
+            print(f"\n# Merge this leafs configuration (update ctlplane/networks as needed):")
+            yaml.dump({'leafs': leafs}, sys.stdout, default_flow_style=False)
+
     print(f"\nNext steps:")
     print(f"1. Review {machines_output} for accuracy")
-    print(f"2. If using networks, merge the leafs configuration into vars/options.yml:")
-    print(f"   leafs: {leafs}")
+    print(f"2. Merge the options shown above into your vars/options.yml")
     print(f"3. Test the configuration with a dry-run")
     print(f"\nNote: This script provides a best-effort migration. Some fields may need manual adjustment:")
     print(f"  - SSH key configurations (id_rsa.pub location)")
     print(f"  - DHCP ranges for networks")
     print(f"  - Allocation pools for subnets")
     print(f"  - Any custom network configurations")
+    print(f"  - Profile-to-role mappings for custom profiles")
 
 
 if __name__ == '__main__':
