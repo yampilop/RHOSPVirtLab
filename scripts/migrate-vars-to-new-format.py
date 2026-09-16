@@ -150,7 +150,11 @@ def main():
             while end_idx < len(lines) and (lines[end_idx].startswith('  ') or lines[end_idx].strip() == ''):
                 end_idx += 1
             undercloud_yaml = yaml.dump(undercloud, default_flow_style=False)
-            lines[i:end_idx] = ['undercloud:', undercloud_yaml]
+            # Indent all lines of the undercloud YAML by 2 spaces
+            indented_lines = ['undercloud:']
+            for yaml_line in undercloud_yaml.rstrip('\n').split('\n'):
+                indented_lines.append('  ' + yaml_line)
+            lines[i:end_idx] = indented_lines
             break
 
     # Find and replace machines section
@@ -168,7 +172,10 @@ def main():
                 machine_lines = machine_yaml.rstrip('\n').split('\n')
                 new_machines_lines.append('- ' + machine_lines[0])
                 for mline in machine_lines[1:]:
-                    new_machines_lines.append('  ' + mline)
+                    if mline.strip():  # Only add non-empty lines
+                        new_machines_lines.append('  ' + mline)
+                    else:
+                        new_machines_lines.append(mline)
 
             lines[i:end_idx] = new_machines_lines
             break
