@@ -186,6 +186,19 @@ Kubernetes Networking:
   UserDefinedNetwork (UDN) resources that implement the actual connectivity.
   The undercloud accesses VMs via the cluster's service networking.
 
+Overcloud Access (Routes and Port Forwarding):
+  When deploying to KubeVirt in OpenShift, the role automatically creates OpenShift routes
+  to expose overcloud services. Each route is configured with a DNS name based on the
+  `KubeVirtRoutesDomain` variable and can be accessed via HTTPS (443) on the cluster:
+
+  - **Horizon Dashboard**: https://horizon-dashboard.KubeVirtRoutesDomain
+  - **Keystone API**: https://keystone.KubeVirtRoutesDomain
+  - **VNC Proxy**: http://vncproxy.KubeVirtRoutesDomain
+  - **Ceph Dashboard** (when Ceph is deployed): https://ceph-dashboard.KubeVirtRoutesDomain
+
+  For access from outside the cluster, expose the OpenShift router's external IP or DNS
+  name through your cluster's ingress controller.
+
 Example Playbook
 ----------------
 

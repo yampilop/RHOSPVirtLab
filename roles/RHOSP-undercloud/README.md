@@ -36,9 +36,9 @@ dns_servers: ['8.8.8.8','8.8.4.4']
 ntp_servers: ['0.pool.ntp.org','1.pool.ntp.org','2.pool.ntp.org','3.pool.ntp.org']
   List of servers to use for NTP syncronization.
 
-TCP port forwarding (fixed at http/80, vnc/6080, keystone/5000) is automatically
-  configured when the control-plane leaf's `ctlplane_subnet.masquerade` is `true`: `post_deployment.sh`
-  installs a small systemd oneshot (`rhospvirtlab-portforward.service`) that adds
+TCP port forwarding (fixed at http/80, vnc/6080, keystone/5000, ceph-dashboard/8444) is
+  automatically configured when the control-plane leaf's `ctlplane_subnet.masquerade` is `true`:
+  `post_deployment.sh` installs a small systemd oneshot (`rhospvirtlab-portforward.service`) that adds
   `iptables` DNAT rules for each port to the overcloud public IP, so the overcloud is
   reachable through the undercloud. The undercloud's ctlplane masquerade (SNAT) provides
   the return path, which is why the rules are only created when masquerade is enabled.
@@ -60,8 +60,8 @@ leafs:
   - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
     `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
     `masquerade`. When `masquerade` is `true` on the control-plane leaf, the undercloud
-    automatically forwards http (80), vnc (6080), and keystone (5000) ports to the overcloud
-    public IP (fixed set, not customizable).
+    automatically forwards http (80), vnc (6080), keystone (5000), and ceph-dashboard (8444)
+    ports to the overcloud public IP (fixed set, not customizable).
   - `additional_bridges` - extra bridges (e.g. `br-external`), each `{name, interface,
     ipv4.address}`.
   - `networks` - the isolated networks carried on this leaf (Tenant, Storage,

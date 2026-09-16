@@ -765,7 +765,13 @@ Execute the script to create basic resources:
 
 ### Open dashboard
 
-From a web browser, open the Overcloud Horizon Dashboard URL pointing to the hypervisor IP/domain name (http://HYPERVISOR:80/dashboard) and login as **test-admin** using the password **redhat**.
+From a web browser, open the Overcloud Horizon Dashboard URL pointing to the hypervisor IP/domain name (http://HYPERVISOR:80/dashboard) and login as **admin** using the password **Redhat01**.
+
+Available port forwards (when deployed with masquerade/port-forward enabled):
+- **Horizon Dashboard**: http://HYPERVISOR:80/dashboard
+- **Keystone API**: http://HYPERVISOR:5000
+- **VNC Proxy**: http://HYPERVISOR:6080
+- **Ceph Dashboard** (when Ceph is deployed): https://HYPERVISOR:8444
 
 ![Dashboard](images/dashboard.png)
 
