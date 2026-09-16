@@ -1,12 +1,6 @@
 ---
 # tasks file for RHOSP-kubevirt-infra
 
-- name: CHECKS - Perform some checks
-  import_tasks: tasks/checks.yml
-
-- name: SETUP - Make the hypervisor setup
-  import_tasks: tasks/setup.yml
-
 - name: SETUP - Register computed variables as facts for template access
   set_fact:
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
@@ -19,6 +13,12 @@
 - name: SETUP - Register kubevirt_required flag
   set_fact:
     kubevirt_required: "{{ kubevirt_undercloud | bool or (kubevirt_machines | length > 0) }}"
+
+- name: CHECKS - Perform some checks
+  import_tasks: tasks/checks.yml
+
+- name: SETUP - Make the hypervisor setup
+  import_tasks: tasks/setup.yml
 
 - name: CHECKS - Ensure pre-provisioned kubevirt machines have valid ctlplane_ip
   fail:
