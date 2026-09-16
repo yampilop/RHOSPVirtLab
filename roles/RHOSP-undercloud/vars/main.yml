@@ -9,6 +9,8 @@ forwarded_ports:
     port: 6080
   - name: keystone
     port: 5000
+  - name: ceph-dashboard
+    port: 8444
 
 # Convenience views over `machines` (overcloud nodes only; the undercloud is separate).
 libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
@@ -230,6 +232,12 @@ deployment_environment:
     DCN: False
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-dashboard.yaml
+    absolute_path: True
+    version: [ 17.1 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml
     absolute_path: True
     version: [ 17.1 ]
@@ -249,6 +257,12 @@ deployment_environment:
     Leafs: All
     Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
   - file: /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml
+    absolute_path: True
+    version: [ 16.2 ]
+    DCN: False
+    Leafs: All
+    Roles: [ 'CephStorage', 'CephAll', 'ComputeHCI', 'DistributedComputeHCI', 'DistributedComputeHCIScaleOut' ]
+  - file: /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-dashboard.yaml
     absolute_path: True
     version: [ 16.2 ]
     DCN: False
