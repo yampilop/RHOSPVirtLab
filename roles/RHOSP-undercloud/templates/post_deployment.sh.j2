@@ -73,6 +73,22 @@ ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logro
 {% endfor %}
 {% endif %}
 
+################################################################################
+### Pacemaker maintenance #####################################################
+################################################################################
+# Schedule pcs resource cleanup every 6 hours on controller nodes
+{% if RHOSP_version >= 17 %}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% for leaf in dcn_leafs %}
+ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% endfor %}
+{% else %}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% for leaf in dcn_leafs %}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% endfor %}
+{% endif %}
+
 {% if (default_leaf.ctlplane_subnet.masquerade | bool) and (forwarded_ports | length > 0) %}
 ################################################################################
 ### Port forwarding to the overcloud ###########################################
