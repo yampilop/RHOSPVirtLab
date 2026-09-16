@@ -63,6 +63,7 @@
     leaf_bridges: |-
       [
       {% for leaf in leafs %}
+      {% if leaf.ctlplane_bridge is defined %}
       {{ ({
            'name': 'RHOSPVirtLab_' ~ (leaf.ctlplane_bridge.name | regex_replace('^br-', '')),
            'hypervisor': leaf.hypervisor,
@@ -86,6 +87,7 @@
                                'netmask': (base.subnet.ip_subnet if base else '0.0.0.0/24') | ipaddr('netmask')}}
                      if ab.ipv4 is defined else {})) | to_json }},
       {% endfor %}
+      {% endif %}
       {% endfor %}
       ]
   when: libvirt_required | bool
