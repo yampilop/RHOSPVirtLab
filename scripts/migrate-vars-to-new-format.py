@@ -55,7 +55,22 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
                 value = custom_options[key]
                 indent = len(line) - len(line.lstrip())
 
-                # Format the value
+                # Find where this value ends (for lists/dicts)
+                j = i + 1
+                while j < len(lines):
+                    next_line = lines[j]
+                    # If line is empty or a comment, include it
+                    if next_line.strip() == '' or next_line.lstrip().startswith('#'):
+                        j += 1
+                        continue
+                    # If line is indented more than the key, it's part of the value
+                    next_indent = len(next_line) - len(next_line.lstrip())
+                    if next_indent > indent:
+                        j += 1
+                    else:
+                        break
+
+                # Format the new value
                 if isinstance(value, (list, dict)):
                     # Multi-line value
                     formatted = yaml.dump({key: value}, default_flow_style=False)
@@ -65,12 +80,13 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
                     new_lines.append(f"{' ' * indent}{key}: {value}\n")
 
                 updated_keys.add(key)
+                i = j  # Skip past the old value
                 matched = True
                 break
 
         if not matched:
             new_lines.append(line)
-        i += 1
+            i += 1
 
     # Add any options that weren't found (new keys)
     for key in custom_options:
@@ -93,8 +109,17 @@ def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: An
                 leafs_found = True
                 # Find the end of the existing leafs block and replace it
                 j = i + 1
-                while j < len(new_lines) and (new_lines[j].startswith('  ') or new_lines[j].strip() == ''):
-                    j += 1
+                indent = 0  # leafs is at root level
+                while j < len(new_lines):
+                    next_line = new_lines[j]
+                    if next_line.strip() == '' or next_line.lstrip().startswith('#'):
+                        j += 1
+                        continue
+                    next_indent = len(next_line) - len(next_line.lstrip())
+                    if next_indent > indent:
+                        j += 1
+                    else:
+                        break
                 # Replace the leafs block
                 formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
                 new_lines[i:j] = [formatted]
