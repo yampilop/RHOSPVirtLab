@@ -245,6 +245,15 @@ resources:
 {% endfor %}
 {% endif %}
 {% endfor %}
+              # Configure management interface for pre-provisioned machines
+{% if deployed_server[leaf.name] and item.name != 'undercloud' %}
+{% set mgmt_iface = (item.libvirt.network.interfaces | selectattr('bridge', 'equalto', 'br-management') | first) if (item.type | default('libvirt')) == 'libvirt' else none %}
+{% if mgmt_iface %}
+              - type: interface
+                name: {{ mgmt_iface.name }}
+                use_dhcp: true
+{% endif %}
+{% endif %}
 
 outputs:
   OS::stack_id:
