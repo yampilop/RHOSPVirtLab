@@ -22,6 +22,10 @@ forwarded_ports:
     port: 5000
     secure: false
     route: keystone
+  - name: ceph-dashboard
+    port: 8444
+    secure: true
+    route: ceph-dashboard
 
 RHEL_version_supported:
   "7.9": {}
