@@ -30,129 +30,22 @@ def load_yaml(filepath: str) -> Dict[str, Any]:
 
 
 def update_options_file(filepath: str, custom_options: Dict[str, Any], leafs: Any = None) -> None:
-    """Update vars/options.yml with migrated options, preserving comments and structure."""
-    import re
-
+    """Update vars/options.yml with migrated options by parsing and updating the dict."""
+    # Parse existing YAML
     with open(filepath, 'r') as f:
-        lines = f.readlines()
+        data = yaml.safe_load(f) or {}
 
-    # Track which options we've updated
-    updated_keys = set()
+    # Update with custom options
+    for key, value in custom_options.items():
+        data[key] = value
 
-    # Process each line
-    new_lines = []
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-
-        # Check if this line defines a key we need to update
-        matched = False
-        for key in custom_options:
-            # Match lines like "key: value" or "key:"
-            pattern = rf'^{re.escape(key)}\s*:'
-            if re.match(pattern, line):
-                # Found the key to update
-                value = custom_options[key]
-                indent = len(line) - len(line.lstrip())
-
-                # Find where this value ends (for lists/dicts)
-                j = i + 1
-                while j < len(lines):
-                    next_line = lines[j]
-                    # If line is empty or a comment, include it
-                    if next_line.strip() == '' or next_line.lstrip().startswith('#'):
-                        j += 1
-                        continue
-                    # If line is indented more than the key, it's part of the value
-                    next_indent = len(next_line) - len(next_line.lstrip())
-                    if next_indent > indent:
-                        j += 1
-                    else:
-                        break
-
-                # Format the new value
-                if isinstance(value, (list, dict)):
-                    # Multi-line value
-                    formatted = yaml.dump({key: value}, default_flow_style=False)
-                    # Split into lines and preserve list structure
-                    formatted_lines = formatted.rstrip('\n').split('\n')
-                    new_lines.extend([line + '\n' for line in formatted_lines])
-                else:
-                    # Single-line value
-                    new_lines.append(f"{' ' * indent}{key}: {value}\n")
-
-                updated_keys.add(key)
-                i = j  # Skip past the old value
-                matched = True
-                break
-
-        if not matched:
-            new_lines.append(line)
-            i += 1
-
-    # Add any options that weren't found (new keys)
-    for key in custom_options:
-        if key not in updated_keys:
-            # Add before any trailing comments at the end
-            value = custom_options[key]
-            formatted = yaml.dump({key: value}, default_flow_style=False)
-            # Split into lines and preserve list structure
-            formatted_lines = formatted.rstrip('\n').split('\n')
-            formatted_lines = [line + '\n' for line in formatted_lines]
-            # Insert before the last empty line or at the end
-            if new_lines and new_lines[-1].strip() == '':
-                new_lines.extend(formatted_lines[:-1])
-                new_lines.append(formatted_lines[-1])
-            else:
-                new_lines.extend(formatted_lines)
-
-    # Add leafs if provided
+    # Update leafs if provided
     if leafs is not None:
-        # Check if leafs already exists
-        leafs_found = False
-        for i, line in enumerate(new_lines):
-            if re.match(r'^leafs\s*:', line):
-                leafs_found = True
-                # Find the end of the existing leafs block
-                j = i + 1
-                # Skip the first line if it's just "leafs:" with value on next line
-                while j < len(new_lines):
-                    next_line = new_lines[j]
-                    # Skip blank lines and comments
-                    if next_line.strip() == '' or next_line.lstrip().startswith('#'):
-                        j += 1
-                        continue
-                    # Check indentation - anything indented more than 'leafs' is part of it
-                    next_indent = len(next_line) - len(next_line.lstrip())
-                    # leafs is at indent 0, so anything with indent > 0 is part of leafs
-                    if next_indent > 0:
-                        j += 1
-                    else:
-                        # Found a line at root level, stop here
-                        break
-
-                # Replace the leafs block
-                formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
-                # Split into lines and preserve list structure
-                formatted_lines = formatted.rstrip('\n').split('\n')
-                formatted_lines = [line + '\n' for line in formatted_lines]
-                new_lines[i:j] = formatted_lines
-                break
-
-        if not leafs_found:
-            # Append leafs at the end
-            formatted = yaml.dump({'leafs': leafs}, default_flow_style=False)
-            # Split into lines and preserve list structure
-            formatted_lines = formatted.rstrip('\n').split('\n')
-            formatted_lines = [line + '\n' for line in formatted_lines]
-            if new_lines and new_lines[-1].strip() == '':
-                new_lines[-1:-1] = formatted_lines
-            else:
-                new_lines.extend(formatted_lines)
+        data['leafs'] = leafs
 
     # Write back the updated file
     with open(filepath, 'w') as f:
-        f.writelines(new_lines)
+        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
 
 def migrate_libvirt_vm_to_machine(vm: Dict[str, Any], networks: Dict[str, Any]) -> Dict[str, Any]:
