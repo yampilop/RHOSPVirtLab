@@ -5,6 +5,8 @@
   changed_when: False
   when:
     - item.pm is defined
+    - item.pm | length > 0
+    - not (item.pre_provisioned | default(false))
     - inventory_hostname == item.libvirt.hypervisor
 
 - name: VIRTUALBMC - Ensure node exists
@@ -23,6 +25,8 @@
   changed_when: False
   when:
     - item.pm is defined
+    - item.pm | length > 0
+    - not (item.pre_provisioned | default(false))
     - inventory_hostname == item.libvirt.hypervisor
 
 - name: VIRTUALBMC - Start node
