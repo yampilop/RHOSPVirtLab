@@ -235,9 +235,6 @@ BmcPassword: admin
 OvercloudAdminPassword: redhat
 OvercloudAdminEmail: admin@example.com
 
-# Password for the test admin user created in overcloud_resources.yaml.
-TestUserPassword: redhat
-
 # Passwords baked into each VM's cloud-init (root and the ci_user account).
 VmRootPassword: redhat
 VmStackPassword: redhat

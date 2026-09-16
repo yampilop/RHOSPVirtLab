@@ -224,8 +224,6 @@ BmcPassword: admin
 # Overcloud admin account created by the undercloud.
 OvercloudAdminPassword: Redhat01
 OvercloudAdminEmail: admin@example.com
-# Password for the test admin user created in overcloud_resources.yaml.
-TestUserPassword: redhat
 
 # Disable telemetry
 DisableTelemetry: True
