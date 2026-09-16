@@ -345,32 +345,23 @@ def main():
     if 'forwarded_ports' in options_data:
         deprecated_options['forwarded_ports'] = options_data['forwarded_ports']
 
-    # Merge options into existing vars/options.yml
-    options_output = os.path.join(new_vars_dir, 'options.yml')
-    existing_options = load_yaml(options_output) or {}
-
-    # Merge custom options
-    if custom_options:
-        existing_options.update(custom_options)
-
-    # Merge leafs configuration
-    if networks_list:
-        existing_options['leafs'] = leafs
-
-    # Write updated options.yml
-    if custom_options or networks_list:
-        print(f"Writing migrated options to {options_output}...")
-        with open(options_output, 'w') as f:
-            f.write("---\n")
-            yaml.dump(existing_options, f, default_flow_style=False)
-
     print(f"\nMigration complete!")
     print(f"✓ {machines_output}")
+
+    # Output migrated options for manual merging (preserves file structure)
     if custom_options or networks_list:
-        print(f"✓ {options_output}")
+        print(f"\nMerge these into vars/options.yml (preserving file structure):")
+        print(f"---")
+        if custom_options:
+            print(f"\n# Updated/added custom options:")
+            for key, value in custom_options.items():
+                yaml.dump({key: value}, sys.stdout, default_flow_style=False)
+        if networks_list:
+            print(f"\n# Add this leafs configuration:")
+            yaml.dump({'leafs': leafs}, sys.stdout, default_flow_style=False)
 
     if deprecated_options:
-        print(f"\nNote: The following old options are no longer used:")
+        print(f"\nNote: The following old options are no longer used in the new format:")
         print(f"  - overcloud_ip: now computed from leaf's External network VIP")
         print(f"  - forwarded_ports: now hardcoded in role vars/main.yml")
         print(f"Old values (for reference):")
@@ -379,7 +370,7 @@ def main():
 
     print(f"\nNext steps:")
     print(f"1. Review {machines_output} for accuracy")
-    print(f"2. Review {options_output} for any customizations")
+    print(f"2. Manually merge the options shown above into vars/options.yml")
     print(f"3. Test the configuration with a dry-run")
     print(f"\nNote: This script provides a best-effort migration. Some fields may need manual adjustment:")
     print(f"  - SSH key configurations (id_rsa.pub location)")
