@@ -54,6 +54,21 @@
   when:
     - deployed_server[leaf.name]
 
+- name: SETUP - Augment RoleBridgeMappings with eth0 for kubevirt roles
+  set_fact:
+    RoleBridgeMappings: >-
+      {{
+        RoleBridgeMappings | combine({
+          item: (
+            (RoleBridgeMappings[item] | default(RoleBridgeMappings['Default'])) +
+            ([{'type': 'interface', 'name': 'eth0', 'use_dhcp': True}]
+             if (kubevirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0
+             else [])
+          )
+        }, recursive=False)
+      }}
+  loop: "{{ overcloud_roles | map(attribute='name') | list }}"
+
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
     src: "nic-configs/nic-config.yaml.j2"
