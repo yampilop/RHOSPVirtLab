@@ -75,18 +75,15 @@
 
 - name: SETUP - Augment RoleBridgeMappings with eth0 for kubevirt roles
   set_fact:
-    RoleBridgeMappings: >-
-      {{
-        RoleBridgeMappings | combine({
-          item: (
-            (RoleBridgeMappings[item] | default(RoleBridgeMappings['Default'])) +
-            ([{'type': 'interface', 'name': 'eth0', 'use_dhcp': True}]
-             if (kubevirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0
-             else [])
-          )
-        }, recursive=False)
-      }}
-  loop: "{{ overcloud_roles | map(attribute='name') | list }}"
+    RoleBridgeMappings: |
+      {%- set updated_mappings = RoleBridgeMappings | combine({}) -%}
+      {%- for role in overcloud_roles | map(attribute='name') | list -%}
+      {%- set has_kubevirt = (kubevirt_machines | selectattr('openstack.role', 'equalto', role) | list | length) > 0 -%}
+      {%- set current_bridges = updated_mappings[role] | default(updated_mappings['Default']) -%}
+      {%- set new_bridges = current_bridges + ([{'type': 'interface', 'name': 'eth0', 'use_dhcp': True}] if has_kubevirt else []) -%}
+      {%- set _ = updated_mappings.update({role: new_bridges}) -%}
+      {%- endfor -%}
+      {{ updated_mappings }}
 
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
