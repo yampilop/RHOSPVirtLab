@@ -78,7 +78,7 @@
     RoleBridgeMappings: |
       {%- set updated_mappings = RoleBridgeMappings | combine({}) -%}
       {%- for role in overcloud_roles | map(attribute='name') | list -%}
-      {%- set has_kubevirt = (kubevirt_machines | selectattr('openstack.role', 'equalto', role) | list | length) > 0 -%}
+      {%- set has_kubevirt = (kubevirt_machines | selectattr('openstack.role', 'equalto', role | lower) | list | length) > 0 -%}
       {%- if role in updated_mappings -%}
       {%- set current_bridges = updated_mappings[role] -%}
       {%- else -%}
@@ -127,7 +127,7 @@
     RoleBridgeMappings: |
       {%- set updated_mappings = RoleBridgeMappings | combine({}) -%}
       {%- for role in overcloud_roles | map(attribute='name') | list -%}
-      {%- set has_kubevirt = (kubevirt_machines | selectattr('openstack.role', 'equalto', role) | list | length) > 0 -%}
+      {%- set has_kubevirt = (kubevirt_machines | selectattr('openstack.role', 'equalto', role | lower) | list | length) > 0 -%}
       {%- if role in updated_mappings -%}
       {%- set current_bridges = updated_mappings[role] -%}
       {%- else -%}
