@@ -89,6 +89,10 @@
       {%- endfor -%}
       {{ updated_mappings }}
 
+- name: DEBUG - Show RoleBridgeMappings for Controller role
+  debug:
+    msg: "Controller bridges: {{ RoleBridgeMappings['Controller'] | default(RoleBridgeMappings['Default']) | to_nice_json }}"
+
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
     src: "nic-configs/nic-config.yaml.j2"
