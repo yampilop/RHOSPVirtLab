@@ -11,8 +11,8 @@ nodes:
     name: "{{ leaf.name ~ '-' ~ vm.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ vm.name, "boot_option:local", 'boot_mode:' ~ vm.pm.mode] | join(',') }}"
     cpu: {{ vm.libvirt.cpus }}
-    memory: {{ (vm.libvirt.memory / 1024) | int }}
-    disk: {{ ((vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first).size / 1073741824) | int }}
+    memory: {% set mem = vm.libvirt.memory %}{% set val = (mem | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (mem | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1048576, 'Mi': 1024, 'Ki': 1}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}
+    disk: {% set disk_size = (vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first).size %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1073741824, 'Mi': 1048576, 'Ki': 1024}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}
     arch: "x86_64"
     pm_type: "{{ vm.pm.type }}"
     pm_user: "{{ vm.pm.user }}"
@@ -32,8 +32,8 @@ nodes:
     name: "{{ leaf.name ~ '-' ~ node.name }}"
     capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", 'boot_mode:' ~ node.pm.mode] | join(',') }}"
     cpu: {{ node.physical.cpus }}
-    memory: {{ (node.physical.memory / 1024) | int }}
-    disk: {{ (node.physical.disk / 1073741824) | int }}
+    memory: {% set mem = node.physical.memory %}{% set val = (mem | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (mem | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1048576, 'Mi': 1024, 'Ki': 1}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}
+    disk: {% set disk_size = node.physical.disk %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1073741824, 'Mi': 1048576, 'Ki': 1024}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}
     arch: "x86_64"
     pm_type: "{{ node.pm.type }}"
 {% if 'manual' not in node.pm.type and 'fake' not in node.pm.type %}
