@@ -104,7 +104,11 @@ resources:
 {% set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
 {% set ns = namespace(nic_index = 2 if deployed_server[leaf.name] else 1) %}
 {% for bridge in role_bridges %}
-{% if bridge.type == 'sriov_pf' %}
+{% if bridge.type == 'interface' %}
+              - type: interface
+                name: {{ bridge.name }}
+                use_dhcp: {{ bridge.use_dhcp | default(false) | lower }}
+{% elif bridge.type == 'sriov_pf' %}
               - type: sriov_pf
                 name: {{ bridge.name }}
                 numvfs: {{ bridge.numvfs }}
