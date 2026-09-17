@@ -64,13 +64,13 @@
         Libvirt machines: {{ (libvirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) }}
         Physical machines: {{ (physical_machines | selectattr('openstack.role', 'equalto', item) | list | length) }}
         Kubevirt machines: {{ (kubevirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) }}
-  when:
-    - (libvirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0 and
-      ((physical_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0 or
-       (kubevirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0)
+  when: |
+    ((libvirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0 and
+     ((physical_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0 or
+      (kubevirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0))
     or
-    - (physical_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0 and
-      (kubevirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0
+    ((physical_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0 and
+     (kubevirt_machines | selectattr('openstack.role', 'equalto', item) | list | length) > 0)
   loop: "{{ overcloud_roles | map(attribute='name') | list }}"
 
 - name: SETUP - Augment RoleBridgeMappings with eth0 for kubevirt roles
