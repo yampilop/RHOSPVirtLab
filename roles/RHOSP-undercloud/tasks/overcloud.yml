@@ -89,17 +89,6 @@
       {%- endfor -%}
       {{ updated_mappings }}
 
-- name: DEBUG - Check kubevirt_machines and their roles
-  debug:
-    msg: |
-      Kubevirt machines: {{ kubevirt_machines | map(attribute='name') | list }}
-      Kubevirt roles: {{ kubevirt_machines | map(attribute='openstack.role') | list }}
-      Controller kubevirt machines: {{ (kubevirt_machines | selectattr('openstack.role', 'equalto', 'controller') | list) | length }}
-
-- name: DEBUG - Show RoleBridgeMappings for Controller role
-  debug:
-    msg: "Controller bridges: {{ RoleBridgeMappings['Controller'] | default(RoleBridgeMappings['Default']) | to_nice_json }}"
-
 - name: TEMPLATES - Prepare the nic-configs templates
   template:
     src: "nic-configs/nic-config.yaml.j2"
