@@ -8,7 +8,28 @@
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
     kubevirt_undercloud: "{{ (undercloud.type | default('kubevirt')) == 'kubevirt' }}"
-    kubevirt_machines: "{{ (machines + [{'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true)]) | selectattr('type', 'equalto', 'kubevirt') | list }}"
+
+- name: SETUP - Add implicit eth0 interface to kubevirt machines
+  set_fact:
+    kubevirt_machines: >-
+      {{
+        (machines | selectattr('type', 'equalto', 'kubevirt')
+         | map('combine', {
+             'kubevirt': (
+               (item.get('kubevirt') or {}) | combine({
+                 'network': (
+                   (item.get('kubevirt', {}).get('network') or {}) | combine({
+                     'interfaces': ([{'name': 'eth0', 'bridge': null}] + (item.get('kubevirt', {}).get('network', {}).get('interfaces') or []))
+                   })
+                 )
+               })
+             )
+           })
+         | list)
+        +
+        ([{'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true)]
+         if (undercloud.type | default('libvirt')) == 'kubevirt' else [])
+      }}
 
 - name: SETUP - Register kubevirt_required flag
   set_fact:
