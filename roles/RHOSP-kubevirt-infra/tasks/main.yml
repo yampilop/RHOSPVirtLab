@@ -11,25 +11,27 @@
 
 - name: SETUP - Add implicit eth0 interface to kubevirt machines
   set_fact:
-    kubevirt_machines: >-
-      {{
-        (machines | selectattr('type', 'equalto', 'kubevirt')
-         | map('combine', {
-             'kubevirt': (
-               (item.get('kubevirt') or {}) | combine({
-                 'network': (
-                   (item.get('kubevirt', {}).get('network') or {}) | combine({
-                     'interfaces': ([{'name': 'eth0', 'bridge': null}] + (item.get('kubevirt', {}).get('network', {}).get('interfaces') or []))
-                   })
-                 )
-               })
-             )
-           })
-         | list)
-        +
-        ([{'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true)]
-         if (undercloud.type | default('libvirt')) == 'kubevirt' else [])
-      }}
+    kubevirt_machines: |
+      {%- set machines_with_eth0 = [] -%}
+      {%- for machine in (machines | selectattr('type', 'equalto', 'kubevirt') | list) -%}
+      {%- set machine_copy = machine | combine({}) -%}
+      {%- if 'kubevirt' not in machine_copy -%}
+      {%- set _ = machine_copy.update({'kubevirt': {}}) -%}
+      {%- endif -%}
+      {%- if 'network' not in machine_copy['kubevirt'] -%}
+      {%- set _ = machine_copy['kubevirt'].update({'network': {}}) -%}
+      {%- endif -%}
+      {%- if 'interfaces' not in machine_copy['kubevirt']['network'] -%}
+      {%- set _ = machine_copy['kubevirt']['network'].update({'interfaces': []}) -%}
+      {%- endif -%}
+      {%- set eth0_iface = {'name': 'eth0', 'bridge': none} -%}
+      {%- set _ = machine_copy['kubevirt']['network']['interfaces'].insert(0, eth0_iface) -%}
+      {%- set _ = machines_with_eth0.append(machine_copy) -%}
+      {%- endfor -%}
+      {%- if (undercloud.type | default('libvirt')) == 'kubevirt' -%}
+      {%- set _ = machines_with_eth0.append({'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true)) -%}
+      {%- endif -%}
+      {{ machines_with_eth0 }}
 
 - name: SETUP - Register kubevirt_required flag
   set_fact:
