@@ -245,10 +245,6 @@ resources:
 {% endfor %}
 {% endif %}
 {% endfor %}
-              # Configure unattached management interface (kubevirt or pre-provisioned machines)
-              - type: interface
-                name: eth0
-                use_dhcp: true
 
 outputs:
   OS::stack_id:
