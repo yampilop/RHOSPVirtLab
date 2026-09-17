@@ -79,7 +79,11 @@
       {%- set updated_mappings = RoleBridgeMappings | combine({}) -%}
       {%- for role in overcloud_roles | map(attribute='name') | list -%}
       {%- set has_kubevirt = (kubevirt_machines | selectattr('openstack.role', 'equalto', role) | list | length) > 0 -%}
-      {%- set current_bridges = updated_mappings[role] | default(updated_mappings['Default']) -%}
+      {%- if role in updated_mappings -%}
+      {%- set current_bridges = updated_mappings[role] -%}
+      {%- else -%}
+      {%- set current_bridges = updated_mappings['Default'] -%}
+      {%- endif -%}
       {%- set new_bridges = current_bridges + ([{'type': 'interface', 'name': 'eth0', 'use_dhcp': True}] if has_kubevirt else []) -%}
       {%- set _ = updated_mappings.update({role: new_bridges}) -%}
       {%- endfor -%}
