@@ -85,7 +85,7 @@ parameter_defaults:
 {% if leaf.hypervisor is defined or (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | list | length > 0) %}{# IF INSTANCES #}
   instances:
 {% if leaf.hypervisor is defined %}{# IF 1 #}
-{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(','))) %}{# IF 1 FOR 1 #}
+{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("openstack.leaf", "equalto", leaf.name)) %}{# IF 1 FOR 1 #}
 {% if deployed_server[leaf.name] %}{# IF 1 FOR 1 IF 1 #}
   - name: {{ vm.name }}
     hostname: {{ vm.name }}
