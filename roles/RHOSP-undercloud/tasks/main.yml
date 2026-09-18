@@ -95,6 +95,7 @@
   command: dnf makecache
   become: yes
   changed_when: false
+  warn: false
 
 - name: MODULES - Enable and configure modules
   copy:
