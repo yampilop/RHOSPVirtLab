@@ -91,7 +91,7 @@
   when: repos_enabled.rc != 0 or (RHOSP_version_supported[RHOSP_version].undercloud_repos | last) not in repos_enabled.stdout
 
 - name: REPOSITORIES - Refresh dnf/yum cache
-  command: dnf makecache
+  shell: dnf makecache
   become: yes
   changed_when: false
   warn: false
