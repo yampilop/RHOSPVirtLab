@@ -11,7 +11,7 @@
   set_fact:
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
-    leafs_by_name: "{{ leafs | items2dict(key_name='name', value_name=None) }}"
+    leafs_by_name: "{{ dict(leafs | map(attribute='name') | zip(leafs)) }}"
     default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
     libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
