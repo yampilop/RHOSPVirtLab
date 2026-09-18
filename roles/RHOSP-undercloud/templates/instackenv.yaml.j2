@@ -1,15 +1,16 @@
 nodes:
-{% set ctlplane_bridge = leaf.ctlplane_bridge.name %}
-{% for vm in libvirt_machines if (vm.libvirt.hypervisor in leaf.hypervisor.split(',')) and (vm.openstack.leaf == leaf.name) and (not vm.pre_provisioned | default(false)) %}
+{% for vm in libvirt_machines if (not vm.pre_provisioned | default(false)) %}
+{% set vm_leaf = leafs_by_name.get(vm.openstack.leaf | default(default_leaf.name)) %}
+{% set ctlplane_bridge = vm_leaf.ctlplane_bridge.name %}
   - ports:
       - address: '{{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}'
 {% if vm.libvirt.hypervisor in default_leaf.hypervisor.split(',') %}
         physical_network: ctlplane
 {% else %}
-        physical_network: {{ leaf.ctlplane_subnet.name }}
+        physical_network: {{ vm_leaf.ctlplane_subnet.name }}
 {% endif %}
-    name: "{{ leaf.name ~ '-' ~ vm.name }}"
-    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ vm.name, "boot_option:local", 'boot_mode:' ~ vm.pm.mode] | join(',') }}"
+    name: "{{ vm_leaf.name ~ '-' ~ vm.name }}"
+    capabilities: "{{ ['node:' ~ vm_leaf.name ~ '-' ~ vm.name, "boot_option:local", 'boot_mode:' ~ vm.pm.mode] | join(',') }}"
     cpu: {{ vm.libvirt.cpus }}
     memory: {% set mem = vm.libvirt.memory %}{% set val = (mem | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (mem | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1048576, 'Mi': 1024, 'Ki': 1}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}
     disk: {% set root_disk = vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first | default(none) %}{% if root_disk %}{% set disk_size = root_disk.size %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1073741824, 'Mi': 1048576, 'Ki': 1024}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}{% else %}0{% endif %}
@@ -22,16 +23,17 @@ nodes:
     pm_port: "{{ vm.pm.port }}"
 {% endfor %}
 
-{% for node in physical_machines if node.openstack.leaf == leaf.name and (not node.pre_provisioned | default(false)) %}
+{% for node in physical_machines if (not node.pre_provisioned | default(false)) %}
+{% set node_leaf = leafs_by_name.get(node.openstack.leaf | default(default_leaf.name)) %}
   - ports:
       - address: '{{ node.physical.mac }}'
 {% if node.openstack.leaf == default_leaf.name %}
         physical_network: ctlplane
 {% else %}
-        physical_network: {{ leaf.ctlplane_subnet.name }}
+        physical_network: {{ node_leaf.ctlplane_subnet.name }}
 {% endif %}
-    name: "{{ leaf.name ~ '-' ~ node.name }}"
-    capabilities: "{{ ['node:' ~ leaf.name ~ '-' ~ node.name, "boot_option:local", 'boot_mode:' ~ node.pm.mode] | join(',') }}"
+    name: "{{ node_leaf.name ~ '-' ~ node.name }}"
+    capabilities: "{{ ['node:' ~ node_leaf.name ~ '-' ~ node.name, "boot_option:local", 'boot_mode:' ~ node.pm.mode] | join(',') }}"
     cpu: {{ node.physical.cpus }}
     memory: {% if node.physical.memory %}{% set mem = node.physical.memory %}{% set val = (mem | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (mem | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1048576, 'Mi': 1024, 'Ki': 1}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}{% else %}0{% endif %}
     disk: {% if node.physical.disk %}{% set disk_size = node.physical.disk %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1073741824, 'Mi': 1048576, 'Ki': 1024}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}{% else %}0{% endif %}
