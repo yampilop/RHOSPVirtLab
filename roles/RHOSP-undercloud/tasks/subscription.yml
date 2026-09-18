@@ -33,7 +33,8 @@
     - rh_activationkey is defined
 
 - name: SUBSCRIPTION - Register the undercloud with raw (with OrgID and Activation Key, fallback)
-  raw: sudo subscription-manager register --org="{{ rh_orgid }}" --activationkey="{{ rh_activationkey }}" --force && sudo subscription-manager release --set="{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"{% if rh_pool is defined and rh_pool %} && sudo subscription-manager attach --pool="{{ rh_pool }}"{% endif %}
+  raw: subscription-manager register --org="{{ rh_orgid }}" --activationkey="{{ rh_activationkey }}" --force && subscription-manager release --set="{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"{% if rh_pool is defined and rh_pool %} && subscription-manager attach --pool="{{ rh_pool }}"{% endif %}
+  become: yes
   when:
     - sub_identity.rc != 0
     - rh_orgid is defined
@@ -64,7 +65,8 @@
     - (rh_orgid is not defined) or (rh_activationkey is not defined)
 
 - name: SUBSCRIPTION - Register the undercloud with raw (with username and password, fallback)
-  raw: sudo subscription-manager register --username="{{ rh_username }}" --password="{{ rh_password }}" --force && sudo subscription-manager release --set="{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"{% if rh_pool is defined and rh_pool %} && sudo subscription-manager attach --pool="{{ rh_pool }}"{% endif %}
+  raw: subscription-manager register --username="{{ rh_username }}" --password="{{ rh_password }}" --force && subscription-manager release --set="{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"{% if rh_pool is defined and rh_pool %} && subscription-manager attach --pool="{{ rh_pool }}"{% endif %}
+  become: yes
   when:
     - sub_identity.rc != 0
     - (rh_orgid is not defined) or (rh_activationkey is not defined)
