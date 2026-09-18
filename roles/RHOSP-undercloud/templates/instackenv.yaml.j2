@@ -1,6 +1,6 @@
 nodes:
 {% set ctlplane_bridge = leaf.ctlplane_bridge.name %}
-{% for vm in libvirt_machines if (vm.libvirt.hypervisor in leaf.hypervisor.split(',')) and (not vm.pre_provisioned | default(false)) %}
+{% for vm in libvirt_machines if (vm.libvirt.hypervisor in leaf.hypervisor.split(',')) and (vm.openstack.leaf == leaf.name) and (not vm.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}'
 {% if vm.libvirt.hypervisor in default_leaf.hypervisor.split(',') %}
@@ -13,6 +13,7 @@ nodes:
     cpu: {{ vm.libvirt.cpus }}
     memory: {% set mem = vm.libvirt.memory %}{% set val = (mem | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (mem | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1048576, 'Mi': 1024, 'Ki': 1}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}
     disk: {% set root_disk = vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first | default(none) %}{% if root_disk %}{% set disk_size = root_disk.size %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1073741824, 'Mi': 1048576, 'Ki': 1024}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}{% else %}0{% endif %}
+
     arch: "x86_64"
     pm_type: "{{ vm.pm.type }}"
     pm_user: "{{ vm.pm.user }}"
@@ -34,6 +35,7 @@ nodes:
     cpu: {{ node.physical.cpus }}
     memory: {% if node.physical.memory %}{% set mem = node.physical.memory %}{% set val = (mem | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (mem | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1048576, 'Mi': 1024, 'Ki': 1}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}{% else %}0{% endif %}
     disk: {% if node.physical.disk %}{% set disk_size = node.physical.disk %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1073741824, 'Mi': 1048576, 'Ki': 1024}.get(unit, 1)) %}{{ ((val * multiplier) | int) }}{% else %}0{% endif %}
+
     arch: "x86_64"
     pm_type: "{{ node.pm.type }}"
 {% if 'manual' not in node.pm.type and 'fake' not in node.pm.type %}
