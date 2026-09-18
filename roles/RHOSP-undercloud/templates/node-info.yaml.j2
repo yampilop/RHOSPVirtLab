@@ -98,6 +98,7 @@ parameter_defaults:
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
     root_size_gb: {% set root_disk = vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first | default(none) %}{% if root_disk %}{% set disk_size = root_disk.size %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1, 'Mi': 0.0009765625, 'Ki': 0.00000095367431640625}.get(unit, 0.000000001)) %}{{ ((val * multiplier) | int - 9) }}{% else %}0{% endif %}
+
 {% endif %}{# IF 1 FOR 1 IF 2 #}
 {% endif %}{# IF 1 FOR 1 IF 1 #}
 {% endfor %}{# IF 1 FOR 1 #}
@@ -114,6 +115,7 @@ parameter_defaults:
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
     root_size_gb: {% if pm.physical.disk %}{% set disk_size = pm.physical.disk %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1, 'Mi': 0.0009765625, 'Ki': 0.00000095367431640625}.get(unit, 0.000000001)) %}{{ ((val * multiplier) | int - 9) }}{% else %}0{% endif %}
+
     network_config:
       net_config_data_lookup:
         {{ leaf.name }}-{{ pm.name }}:
