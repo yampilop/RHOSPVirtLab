@@ -1,3 +1,7 @@
+- name: DHCRELAY - Determine which leaf this hypervisor belongs to
+  set_fact:
+    hypervisor_leaf: "{{ leafs | selectattr('hypervisor', 'search', inventory_hostname) | first }}"
+
 - name: DHCRELAY - Create dhcrelay systemd unit
   template:
     src: "dhcrelay.service.j2"
