@@ -24,7 +24,7 @@ ExecStart=/usr/sbin/dhcrelay -d {{ default_leaf.ctlplane_subnet.cidr | ipaddr('1
 {% if ansible_distribution_version == '7.9' %}
 ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -i {{ hypervisor_leaf.ctlplane_bridge.name }}
 {% elif ansible_distribution_major_version | int >= 10 %}
-ExecStart=/usr/sbin/dnsmasq -d --port=0 --dhcp-relay={{ hostvars[inventory_hostname]['ansible_br_ctlplane'].ipv4.address | default(hostvars['localhost']['ansible_'~external_if].ipv4.address) }},{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}
+ExecStart=/usr/sbin/dnsmasq -d --port=0 --dhcp-relay={{ hostvars[inventory_hostname]['ansible_'~(hypervisor_leaf.ctlplane_bridge.name | replace('-', '_'))].ipv4.address | default(hostvars['localhost']['ansible_'~external_if].ipv4.address) }},{{ hostvars['localhost']['ansible_'~external_if].ipv4.address }}
 {% else %}
 ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if].ipv4.address }} -id {{ hypervisor_leaf.ctlplane_bridge.name }} -iu {{ hypervisor_external_if }}
 {% endif %}
