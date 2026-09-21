@@ -30,9 +30,16 @@ ExecStart=/usr/sbin/dhcrelay -d {{ hostvars['localhost']['ansible_'~external_if]
 {% endif %}
 {% endif %}
 # Self-heal instead of dying silently until the bridge has carrier.
+{% if ansible_distribution_version != '7.9' %}
 Restart=on-failure
 RestartSec=5
+{% endif %}
 StandardError=journal
+{% if ansible_distribution_version == '7.9' %}
+# RHEL 7.9 workaround: use watchdog timeout to detect hung dhcrelay
+WatchdogSec=30
+RuntimeMaxSec=120
+{% endif %}
 
 [Install]
 WantedBy=multi-user.target
