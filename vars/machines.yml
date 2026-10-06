@@ -35,6 +35,18 @@ undercloud:
 #   type: kubevirt
 #   openstack:
 #     local_interface: eth1        # control-plane NIC (eth0 is pod network in kubevirt)
+#   kubevirt:
+#     title: 'RHOSPVirtLab Undercloud'
+#     cpus: 2
+#     memory: 6Gi
+#     disks:
+#     - root: true
+#       size: 100Gi
+#     network:
+#       interfaces:
+#       - name: ctlplane
+#         mac: '0c:1f:0d:10:00:00'
+#         bridge: br-ctlplane
 #
 # Alternative: an admin-prepared PHYSICAL undercloud (see README). Replace the libvirt
 # definition above with:
@@ -128,3 +140,26 @@ machines:
 #     nics:
 #       nic1: 'ens1f0'
 #       nic2: 'ens1f1'
+
+
+# Example KUBEVIRT machine (requires a KUBEVIRT undercloud; see README):
+# All kubevirt machines are pre_provisioned: true until KubeVirtBMC adds power
+# management support (https://github.com/kubevirtbmc/kubevirtbmc).
+#
+# - name: controller0
+#   type: kubevirt
+#   pre_provisioned: true
+#   openstack:
+#     role: controller
+#   kubevirt:
+#     title: 'RHOSPVirtLab Virtual Controller 0'
+#     cpus: 2
+#     memory: 8Gi
+#     disks:
+#     - root: true
+#       size: 50Gi
+#     network:
+#       interfaces:
+#       - name: ctlplane
+#         mac: '0c:1f:0d:11:00:00'
+#         bridge: br-ctlplane
