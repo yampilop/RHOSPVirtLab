@@ -195,11 +195,10 @@ machines:
             bridge: br-external
 
 # Credentials (lab-only weak defaults; override via vault_credentials.yaml — see README).
-# TODO: Power management (pm) not supported until KubeVirtBMC is implemented (https://github.com/kubevirtbmc/kubevirtbmc)
-# BMC / IPMI credentials used to create the KubeVirtBMC endpoints.
+# BMC/IPMI credentials for KubeVirtBMC endpoints (not yet implemented: https://github.com/kubevirtbmc/kubevirtbmc).
 #BmcUsername: admin
 #BmcPassword: admin
-# Passwords baked into each VM's cloud-init (root and the ci_user account).
+# Passwords baked into each VM's cloud-init (root and the overcloud SSH user account).
 VmRootPassword: redhat
 VmStackPassword: redhat
 
