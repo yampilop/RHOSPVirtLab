@@ -54,7 +54,9 @@ leafs:
   Each leaf has:
 
   - `name` - leaf identifier (`overcloud` for the control-plane leaf).
-  - `hypervisor` - the host whose bridges carry this leaf's L2.
+  - `hypervisor` - the host(s) whose bridges carry this leaf's L2; a comma-separated list
+    for multiple hypervisors (the first is primary and owns the gateway IP; see "Multiple
+    hypervisors deployment" in the root README).
   - `ctlplane_bridge` - `{name, interface}` for the control-plane bridge on the
     hypervisor. Set `interface` to trunk a real NIC into the bridge (needed for physical
     nodes); leave it `null` for a VM-only bridge.

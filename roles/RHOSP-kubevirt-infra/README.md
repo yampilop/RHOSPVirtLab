@@ -29,6 +29,9 @@ CustomRhelImage: **"{{ RHOSP_version_supported[RHOSP_version].rhel_image.url }}"
 CustomOcClientUrl: **"https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz"**|*"<url>"*
   Customize the OpenShift client (oc/kubectl) archive URL. Useful for air-gapped environments or to use a specific version. Specify a URL to a tar.gz archive containing oc and kubectl binaries.
 
+CustomRhelImageSize: **"20Gi"**
+  Size of the PVC used to import the RHEL base image via the KubeVirt DataVolume/DataSource.
+
 cleanup: **False**|True
   Clean up KubeVirt resources (VirtualMachines, UserDefinedNetworks, Secrets) before creation.
 
@@ -170,6 +173,28 @@ VmStackPassword: **redhat**
 
 Note: Power management (BMC credentials) is not supported until KubeVirtBMC is implemented
 (https://github.com/kubevirtbmc/kubevirtbmc).
+
+Kubernetes resource settings:
+
+KubeVirtNamespace: **default**
+  Namespace where all the generated Kubernetes/KubeVirt resources are created.
+
+KubeVirtStorageClass: **lvms-vg1**
+  StorageClass used for every PVC/DataVolume this role creates; must name a StorageClass
+  that already exists in the target cluster (cluster-specific, e.g. `ocs-storagecluster-ceph-rbd`, `gp3-csi`).
+
+KubeVirtVolumeMode: **Filesystem**|Block
+  VolumeMode used for every PVC/DataVolume this role creates (standard Kubernetes PVC `volumeMode` values).
+
+KubeVirtAccessMode: **ReadWriteMany**|ReadWriteOnce|ReadOnlyMany
+  AccessMode used for every PVC/DataVolume this role creates (standard Kubernetes PVC `accessModes` values).
+
+KubevirtLabels: **{VirtualMachines: [], VirtualMachineInstances: [], Services: [], Routes: []}**
+  Extra `{key, value}` labels to add to each resource kind listed.
+
+KubeVirtRoutesDomain: **cluster.redhat.lab**
+  Domain suffix used to build the hostnames of the OpenShift Routes this role renders
+  (e.g. `horizon-dashboard.<KubeVirtRoutesDomain>`).
 
 Kubernetes Networking:
   Network configuration for KubeVirt VMs is managed through the Kubernetes cluster's

@@ -185,6 +185,10 @@ localhost ansible_host=localhost ansible_connection=local ansible_become=yes
 ...
 ```
 
+`hypervisor_external_if` sets each non-localhost hypervisor's external uplink interface name (the
+equivalent of the `external_if` option, which only applies to `localhost`); it is required on
+every hypervisor that a `leafs` entry's `hypervisor` field refers to.
+
 ### Test user and ansible installation
 
 ```bash
