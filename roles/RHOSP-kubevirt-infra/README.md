@@ -11,7 +11,6 @@ Tested with Red Hat Enterprise Linux versions 7.9, 8.4, 9.6, or 10.2 (for the RH
 Infrastructure:
 - Kubernetes cluster (OpenShift 4.10+) with KubeVirt installed
 - oc/kubectl CLI access to the cluster with admin privileges
-- RHOSP Undercloud deployed and running
 
 RHEL Cloud Image:
 - RHEL cloud image matching the RHOSP version (for VM base via CustomRhelImage parameter)
