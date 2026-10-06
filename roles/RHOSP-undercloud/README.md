@@ -345,6 +345,7 @@ machines:
     pre_provisioned: false     # optional: true = boot from RHEL base image + cloud-init
     openstack:
       role: PROFILE            # virtual-capable overcloud role
+      leaf: LEAF_NAME          # leaf this machine belongs to (see `leafs` above)
       ctlplane_ip: 192.168.24.121  # required when pre_provisioned (deployed server)
     pm:
       type: ipmi
