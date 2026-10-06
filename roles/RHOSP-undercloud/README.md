@@ -279,14 +279,11 @@ Credentials (lab-only weak defaults; override in `vault_credentials.yaml`):
 BmcUsername / BmcPassword: **admin** / **admin**
   Credentials for the VirtualBMC endpoints and physical-node BMC/IPMI access.
 
-OvercloudAdminPassword: **redhat**
+OvercloudAdminPassword: **Redhat01**
   The overcloud Keystone `admin` password.
 
 OvercloudAdminEmail: **admin@example.com**
   The overcloud `admin` account email.
-
-TestUserPassword: **redhat**
-  Password for the test `admin` user created by `overcloud_resources.yaml`.
 
 undercloud:
   The director host, defined separately from the overcloud `machines` list. It is a
