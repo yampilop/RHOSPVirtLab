@@ -8,6 +8,7 @@
     name: "{{ item }}"
   loop:
     - RHOSPVirtLab_storage
+  become: yes
 
 - name: STORAGE - Delete the pool
   community.libvirt.virt_pool:
@@ -16,6 +17,7 @@
   when: ansible_libvirt_pools[item] is defined
   loop:
     - RHOSPVirtLab_storage
+  become: yes
 
 - name: STORAGE - Gather facts about libvirt storage pools
   community.libvirt.virt_pool:

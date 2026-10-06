@@ -7,6 +7,7 @@
     command: destroy
     name: "{{ item.name }}"
   loop: "{{ libvirt_networks }}"
+  become: yes
   when:
     - inventory_hostname in item.hypervisor.split(',')
     - ansible_libvirt_networks[item.name] is defined
@@ -16,6 +17,7 @@
     command: undefine
     name: "{{ item.name }}"
   loop: "{{ libvirt_networks }}"
+  become: yes
   when:
     - inventory_hostname in item.hypervisor.split(',')
     - ansible_libvirt_networks[item.name] is defined

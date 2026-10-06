@@ -2,18 +2,21 @@
   community.libvirt.virt:
     command: list_vms
   register: all_vms
+  become: yes
 
 - name: DOMAINS - List libvirt VMs
   community.libvirt.virt:
     command: list_vms
     state: running
   register: running_vms
+  become: yes
 
 - name: DOMAINS - Destroy the domain
   community.libvirt.virt:
     command: destroy
     name: "{{ item.name }}"
   loop: "{{ libvirt_machines }}"
+  become: yes
   when:
     - inventory_hostname == item.libvirt.hypervisor
     - item.name in running_vms.list_vms
@@ -23,6 +26,7 @@
     command: undefine
     name: "{{ item.name }}"
   loop: "{{ libvirt_machines }}"
+  become: yes
   when:
     - inventory_hostname == item.libvirt.hypervisor
     - item.name in all_vms.list_vms
@@ -31,6 +35,7 @@
 - name: DOMAINS - Undefine the domain manually when uefi
   shell: "virsh undefine --nvram {{ item.name }}"
   loop: "{{ libvirt_machines }}"
+  become: yes
   when:
     - inventory_hostname == item.libvirt.hypervisor
     - item.name in all_vms.list_vms
