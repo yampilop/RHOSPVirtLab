@@ -187,9 +187,11 @@ Kubernetes Networking:
   The undercloud accesses VMs via the cluster's service networking.
 
 Overcloud Access (Routes and Port Forwarding):
-  When deploying to KubeVirt in OpenShift, the role automatically creates OpenShift routes
-  to expose overcloud services. Each route is configured with a DNS name based on the
-  `KubeVirtRoutesDomain` variable and can be accessed via HTTPS (443) on the cluster:
+  When deploying to KubeVirt in OpenShift, the role renders an OpenShift Route manifest
+  (not applied automatically - run `oc apply -f` on the generated manifests as described
+  in the root README's KubeVirt workflow) to expose overcloud services. Each route is
+  configured with a DNS name based on the `KubeVirtRoutesDomain` variable and can be
+  accessed via HTTPS (443) on the cluster once applied:
 
   - **Horizon Dashboard**: https://horizon-dashboard.KubeVirtRoutesDomain
   - **Keystone API**: https://keystone.KubeVirtRoutesDomain
