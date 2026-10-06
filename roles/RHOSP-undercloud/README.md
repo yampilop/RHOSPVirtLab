@@ -300,7 +300,6 @@ undercloud:
     type: libvirt
     # openstack:                   # optional
     #   local_interface: eth0      # control-plane NIC (-> undercloud.conf), default eth0
-    #   management_interface: mgmt # libvirt only, Ansible-access NIC, default mgmt
     libvirt:
       title: 'Undercloud'
       hypervisor: HYPERVISOR_NAME

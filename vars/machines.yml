@@ -10,9 +10,8 @@
 
 undercloud:
   type: libvirt
-  # openstack:                     # optional - control-plane / management NIC names
+  # openstack:                     # optional - control-plane NIC name
   #   local_interface: eth0
-  #   management_interface: eth1
   libvirt:
     title: 'RHOSPVirtLab Undercloud'
     hypervisor: localhost

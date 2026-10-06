@@ -75,7 +75,6 @@ undercloud:
   type: libvirt
   # openstack:                 # optional
   #   local_interface: eth0    # control-plane NIC name (default eth0)
-  #   management_interface: eth1  # libvirt only, Ansible access NIC (default eth1)
   libvirt:
     title: 'VM_TITLE'
     hypervisor: HYPERVISOR_NAME
@@ -194,8 +193,7 @@ machines:
   inventory `ansible_host`). This role does **not** create it, start a domain for it,
   wait on cloud-init, or reconfigure its interfaces; it only adds an `/etc/hosts` entry
   so the `stack@undercloud` alias resolves. Set `openstack.local_interface` (default
-  `eth0`) to the real control-plane device name; `openstack.management_interface`
-  (default `eth1`) applies only to a libvirt undercloud.
+  `eth0`) to the real control-plane device name.
 
   The `pre_provisioned` flag (top level, both types) records whether the node already
   has an OS loaded ("deployed server") or will be provisioned later by ironic
