@@ -1,8 +1,4 @@
-# Generate a per-machine NoCloud (cidata) cloud-init ISO (<machine>-init.iso),
-# included once per pre_provisioned libvirt machine and attached as a cdrom by
-# domain.xml.j2. A network-config is added for a management interface and/or a
-# pre-provisioned overcloud node's static ctlplane IP. Login user: `stack` for the
-# undercloud role, the overcloud SSH user otherwise.
+# Generate each pre_provisioned libvirt machine's NoCloud cloud-init ISO (<machine>-init.iso), attached as a cdrom by domain.xml.j2; see README.
 
 - name: STORAGE - Determine if {{ machine.name }} has a management interface
   set_fact:

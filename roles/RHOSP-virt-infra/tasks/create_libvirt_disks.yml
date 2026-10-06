@@ -1,8 +1,4 @@
-# Manage the qcow2 volumes for a single libvirt `machine`.
-# Naming (shared with domain.xml.j2): root -> <machine>_root.qcow2,
-# data -> <machine>_data<index>.qcow2. A pre_provisioned root disk is populated from
-# the RHEL base image (virt-resize); otherwise disks start empty. The cloud-init cdrom
-# is handled separately in create_libvirt_cloud_init.yml.
+# Manage the qcow2 root/data volumes for a single libvirt `machine` (naming shared with domain.xml.j2); see README.
 
 - name: STORAGE - Check if disk files exist for {{ machine.name }}
   stat:

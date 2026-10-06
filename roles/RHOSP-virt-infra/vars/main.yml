@@ -62,18 +62,13 @@ dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
 
 pool_location: '/var/lib/libvirt/images/RHOSPVirtLab_storage'
 
-# VirtualBMC install location. On RHEL 9/10 the system interpreter is
-# externally managed (PEP 668), so VirtualBMC is installed into a dedicated
-# venv and the binaries live there; on 7.9-8.4 it goes to /usr/local/bin.
+# VirtualBMC install location: a dedicated venv on RHEL 9/10 (PEP 668 externally-managed), /usr/local/bin on 7.9-8.4.
 vbmc_venv: "/opt/vbmc"
 vbmc_bindir: "{{ (vbmc_venv ~ '/bin') if (ansible_distribution_major_version | int >= 9) else '/usr/local/bin' }}"
 vbmc_path: "{{ vbmc_bindir }}/vbmc"
 vbmcd_path: "{{ vbmc_bindir }}/vbmcd"
 
-# libvirt service/socket units to enable, by host major version:
-#   7  -> monolithic libvirtd.service
-#   8/9 -> libvirtd.socket (socket activation, monolithic daemon)
-#   10 -> monolithic libvirtd removed; modular daemon sockets
+# libvirt service/socket units to enable, by host major version (7: libvirtd.service; 8/9: libvirtd.socket; 10: modular daemon sockets).
 libvirt_units: >-
   {{ ['libvirtd.service'] if (ansible_distribution_major_version | int <= 7)
      else (['virtqemud.socket', 'virtnetworkd.socket', 'virtstoraged.socket', 'virtnodedevd.socket']
@@ -106,9 +101,7 @@ RHEL_version_supported:
       - libvirt-bash-completion
       - libguestfs-tools
       - ipmitool
-      # python3 itself is already the platform interpreter; install pip by name
-      # rather than the @python36 module, whose module-install path is refused on
-      # hosts whose AppStream repo lacks modular metadata ("Fail-Safe repository").
+      # Install pip by name, not the @python36 module (refused on AppStream repos lacking modular metadata).
       - python3-pip
       - python3-lxml
       - python3-libvirt

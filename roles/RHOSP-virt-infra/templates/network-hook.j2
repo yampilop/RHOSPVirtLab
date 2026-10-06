@@ -1,15 +1,5 @@
 #!/bin/bash
-#
-# libvirt network hook.
-#
-# The lab's bridges are forward:bridge: the host owns the gateway IP (nmcli, see
-# create_network_profiles.yml) and the host masquerades outbound traffic (firewalld,
-# see configure_firewall.yml). What firewalld does NOT keep alive is the raw iptables
-# FORWARD ACCEPT that lets replies back into each bridge: libvirt (re)inserts a
-# FORWARD REJECT that shadows it whenever a network is started/restarted, so the rule
-# vanishes on every libvirtd restart. This hook re-applies it on each network event.
-#
-# libvirt calls this as: network <network-name> <started|stopped|updated> ...
+# libvirt network hook: re-applies the FORWARD ACCEPT rule libvirt resets on every network (re)start for forward:bridge gateways; called as "network <name> <event> ...".
 
 set -e
 set -u

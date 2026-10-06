@@ -18,9 +18,7 @@
   notify: HANDLER - restart libvirtd service
   when:
     - inventory_hostname == 'localhost'
-    # The forward:bridge gateway bridges rely on a host FORWARD ACCEPT rule that libvirt
-    # shadows with a FORWARD REJECT on every (re)start. Install the hook whenever such a
-    # bridge exists on localhost so the rule is re-applied on each network event.
+    # Install the hook to re-apply the FORWARD ACCEPT rule libvirt resets on every (re)start for forward:bridge gateways.
     - (libvirt_networks | selectattr('forward', 'equalto', 'bridge') | selectattr('ipv4', 'defined') | selectattr('hypervisor', 'search', 'localhost') | list | length) > 0
 
 - name: NETWORKS - Gather facts about libvirt networks

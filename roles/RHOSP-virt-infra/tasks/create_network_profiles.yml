@@ -15,9 +15,7 @@
       interface_name: "{{ item.bridge }}"
       type: bridge
       autoconnect: yes
-      # A leaf may span several hypervisors (comma-separated `hypervisor`). The bridge is
-      # created on every listed host for L2 continuity, but the gateway IP is assigned only
-      # on the primary (first) host; the others are pure L2 endpoints trunked to it.
+      # The bridge is created on every hypervisor listed in `hypervisor`, but only the primary (first) host gets the gateway IP.
       ip: "{% if item.ipv4 is defined and inventory_hostname == item.hypervisor.split(',')[0] %}{{ ip }}{% else %}{{ noip }}{% endif %}"
       mtu: 1500
       state: up
@@ -111,9 +109,7 @@
     - "{{ dcn_leafs }}"
     - networks
 
-# These routes feed only the DCN-hypervisor connection below, so skip them (and the
-# localhost external_if fact dereference) when there are no DCN leafs - otherwise a
-# single-host lab fails if external_if has no IPv4 address.
+# Skip these DCN-hypervisor routes (and the external_if fact dereference) when there are no DCN leafs.
 - name: NETWORKING - Register DCN hypervisor routes
   set_fact:
     hypervisor_routes: |-
