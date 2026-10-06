@@ -70,6 +70,7 @@
   delegate_to: localhost
   become: false
   run_once: true
+  when: kubevirt_undercloud
 
 - name: KUBERNETES - Render Provisioning Secret manifest
   template:

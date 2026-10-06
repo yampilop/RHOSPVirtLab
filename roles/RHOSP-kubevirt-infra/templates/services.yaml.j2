@@ -1,3 +1,4 @@
+{% if kubevirt_undercloud %}
 ---
 kind: Service
 apiVersion: v1
@@ -23,6 +24,7 @@ spec:
   type: ClusterIP
   selector:
     app: undercloud
+{% endif %}
 ---
 kind: Service
 apiVersion: v1
