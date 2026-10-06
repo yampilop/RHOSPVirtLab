@@ -146,7 +146,7 @@ spec:
               eth{{ loop.index0 + 2 }}:
                 dhcp4: false
                 addresses:
-                - '{{ net.subnet.gateway }}/{{ net.subnet.cidr.split('/')[1] }}'
+                - '{{ net.subnet.gateway }}/{{ net.subnet.ip_subnet.split('/')[1] }}'
 {% endfor %}
 {% endif %}
 {% endif %}
