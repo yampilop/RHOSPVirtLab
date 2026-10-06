@@ -1,3 +1,39 @@
+- name: FIREWALL - Remove the external libvirt network interface and bridge type libvirt network interfaces from public zone
+  firewalld:
+    zone: public
+    interface: "{{ item.bridge }}"
+    permanent: yes
+    immediate: yes
+    state: disabled
+  loop: "{{ libvirt_networks }}"
+  when:
+    - bridges_required | bool
+    - inventory_hostname in item.hypervisor.split(',')
+    - item.forward == 'bridge'
+
+- name: FIREWALL - Remove the other interfaces from libvirt zone
+  firewalld:
+    zone: libvirt
+    interface: "{{ item.bridge }}"
+    permanent: yes
+    immediate: yes
+    state: disabled
+  loop: "{{ libvirt_networks }}"
+  when:
+    - libvirt_required | bool
+    - inventory_hostname in item.hypervisor.split(',')
+    - item.forward != 'bridge'
+
+- name: FIREWALL - Disable masquerade in the firewall
+  firewalld:
+    zone: "{{ item }}"
+    masquerade: yes
+    permanent: yes
+    immediate: yes
+    state: disabled
+  loop: "{{ ['public'] + (['libvirt'] if (libvirt_required | bool) else []) }}"
+  become: yes
+
 - name: FIREWALL - Clean port forwarding rules
   firewalld:
     rich_rule: rule family=ipv4 forward-port port={{ item.port }} protocol=tcp to-port={{ item.port }} to-addr={{ overcloud_ip }}
@@ -7,3 +43,35 @@
     state: disabled
   loop: "{{ forwarded_ports }}"
   when: inventory_hostname == 'localhost'
+
+- name: FIREWALL - Remove vbmc ports rules from the firewall in libvirt zone
+  firewalld:
+    port: "{{ item.pm.port }}/udp"
+    zone: "libvirt"
+    permanent: yes
+    immediate: yes
+    state: disabled
+  loop: "{{ libvirt_machines }}"
+  become: yes
+  when:
+    - vbmc_required | bool
+    - item.pm is defined
+    - item.pm.port is defined
+    - not (item.pre_provisioned | default(false))
+    - inventory_hostname == item.libvirt.hypervisor
+
+- name: FIREWALL - Remove vbmc ports rules from the firewall in public zone
+  firewalld:
+    port: "{{ item.pm.port }}/udp"
+    zone: "public"
+    permanent: yes
+    immediate: yes
+    state: disabled
+  loop: "{{ libvirt_machines }}"
+  become: yes
+  when:
+    - vbmc_required | bool
+    - item.pm is defined
+    - item.pm.port is defined
+    - not (item.pre_provisioned | default(false))
+    - inventory_hostname == item.libvirt.hypervisor
