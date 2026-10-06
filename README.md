@@ -318,6 +318,9 @@ When using DCN Leafs, the playbook sets up the following environment:
 
 ![DCN leafs diagram](images/dcn_leafs_diagram.png)
 
+DCN leafs are not supported together with KubeVirt machines (single-site only; see
+`roles/RHOSP-kubevirt-infra/README.md`).
+
 ## Multiple hypervisors deployment
 
 When using multiple hypervisors for a single leaf, list them (comma-separated) in the

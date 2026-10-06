@@ -49,8 +49,9 @@ leafs:
   is always the default control-plane leaf and must be named `overcloud`; any further
   entries are DCN (edge) leafs. Each role derives two views in its `vars/main.yml`:
   `default_leaf` (the `overcloud` leaf) and `dcn_leafs` (the rest). A single-site lab has
-  just the one `overcloud` leaf; add entries for a DCN/spine-leaf deployment. Each leaf
-  has:
+  just the one `overcloud` leaf; add entries for a DCN/spine-leaf deployment. DCN leafs
+  are not supported together with KubeVirt machines (see `roles/RHOSP-kubevirt-infra/README.md`).
+  Each leaf has:
 
   - `name` - leaf identifier (`overcloud` for the control-plane leaf).
   - `hypervisor` - the host whose bridges carry this leaf's L2.
