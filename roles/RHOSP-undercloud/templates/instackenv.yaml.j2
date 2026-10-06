@@ -1,6 +1,6 @@
 nodes:
 {% set ctlplane_bridge = leaf.ctlplane_bridge.name %}
-{% for vm in libvirt_machines if (vm.openstack.leaf == leaf.name) and (not vm.pre_provisioned | default(false)) %}
+{% for vm in libvirt_machines if (vm.libvirt.hypervisor in leaf.hypervisor.split(',')) and (not vm.pre_provisioned | default(false)) %}
   - ports:
       - address: '{{ (vm.libvirt.network.interfaces | selectattr('bridge', 'equalto', ctlplane_bridge) | list | first).mac }}'
 {% if vm.libvirt.hypervisor in default_leaf.hypervisor.split(',') %}
