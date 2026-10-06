@@ -333,7 +333,7 @@ The playbook sets up the following environment:
 
 If you want to customize the default environment created by the playbook, you need to edit the files:
 
-- `vars/machines.yml` (The unified inventory of lab machines: both libvirt VMs and physical baremetal nodes)
+- `vars/machines.yml` (The lab's machine inventory: the `undercloud` and the `machines` list - libvirt VMs, physical baremetal nodes, or kubevirt VMs)
 - `vars/options.yml` (Customizable parameters like the version of RHOSP to deploy, the cleanup parameter, the `leafs` and `RoleBridgeMappings` networking model, etc.)
 
 You also can add to vars/options.yml any value overriding the default values from the roles.
@@ -345,66 +345,47 @@ separate file: they are derived from the `leafs` model (plus the management NAT 
 
 #### The unified machines model
 
-Both the virtual machines (previously in `vars/vms.yml`) and the physical baremetal
-nodes (previously in `vars/physical.yml`) are now defined in a single list in
-`vars/machines.yml`. Every entry shares a common set of top-level parameters and is
-tagged with a `type` discriminator (`libvirt` for VMs, `physical` for baremetal).
-Technology-specific parameters live in a block named after that type. This makes it
-straightforward to add new virtualization technologies later: define a new `type` and
-a matching block.
+`vars/machines.yml` holds two top-level variables: `undercloud` (a single dict - the
+director host) and `machines` (a list - the overcloud nodes). Both share a `type`
+discriminator - `libvirt`, `physical`, or `kubevirt` - with technology-specific
+parameters in a block named after that type, so adding a new virtualization technology
+later just means defining a new `type` and a matching block.
 
-Common top-level parameters (all types):
+The `undercloud` entry has no `pm` block (the lab never power-manages or enrolls it in
+ironic) and the role injects its access NIC/constants automatically. A `machines` entry
+looks like:
 
 ```yaml
-- name: undercloud          # Unique machine name
-  type: libvirt             # libvirt | physical
-  pre_provisioned: true     # true = OS already loaded; false = ironic provisions later
+- name: compute0             # Unique machine name
+  type: libvirt              # libvirt | physical | kubevirt
   openstack:
-    role: undercloud        # Overcloud role/profile (or 'undercloud')
-    leaf: overcloud         # Leaf/DCN site (mainly for physical nodes)
-  pm:                       # Power management / BMC (both types)
-    type: ipmi              # BMC driver
+    role: compute             # Overcloud role/profile
+    leaf: overcloud           # Leaf/DCN site
+  pm:                         # Power management / BMC (not used for kubevirt)
+    type: ipmi
     user: admin
     password: admin
-    address: localhost      # localhost/hypervisor for VMs, IPMI address for baremetal
-    port: 6230              # virtualbmc port for VMs
-    mode: bios              # bios | uefi (also drives introspection boot_mode)
-```
-
-A `libvirt` machine adds a `libvirt:` block:
-
-```yaml
-  libvirt:
-    title: 'RHOSPVirtLab Undercloud'
-    hypervisor: localhost   # Inventory host that runs the domain
+    address: localhost        # localhost/hypervisor for VMs, IPMI address for baremetal
+    port: 6230                # virtualbmc port for VMs
+    mode: bios                # bios | uefi (also drives introspection boot_mode)
+  libvirt:                    # or `physical:` / `kubevirt:` - see the role READMEs below
+    hypervisor: localhost
     cpus: 4
-    memory: 16777216        # RAM in KiB
-    disks:                  # One or more disks; exactly one root
+    memory: 8Gi
+    disks:
     - root: true
-      size: 107374182400    # bytes
-    - size: 53687091200     # additional data disk(s), any number
+      size: 50Gi
     network:
-      interfaces:           # Each NIC attaches directly to a hypervisor bridge
+      interfaces:
       - name: nic1
         mac: '0c:1f:0d:10:00:00'
         bridge: br-ctlplane
-      - name: mgmt          # access NIC: detected by the name `mgmt` (see below)
-        mac: '0c:1f:0d:10:00:02'
-        bridge: br-management
 ```
 
-A `physical` machine adds a `physical:` block:
-
-```yaml
-  physical:
-    cpus: 4
-    memory: 4194304         # RAM in KiB
-    disk: 53687091200       # bytes
-    mac: '52:54:00:24:61:07'   # boot NIC MAC (used for introspection)
-    nics:                   # logical-nic -> physical device map for os-net-config
-      nic1: 'ens1f0'
-      nic2: 'ens1f1'
-```
+The full field-by-field schema for each type - including the undercloud's shape, the
+`mgmt` access NIC, and `pre_provisioned` - is documented in the matching role README:
+`roles/RHOSP-virt-infra/README.md` (libvirt/physical), `roles/RHOSP-undercloud/README.md`
+(the `machines`/leaf model), and `roles/RHOSP-kubevirt-infra/README.md` (kubevirt).
 
 Notes on the new model:
 
