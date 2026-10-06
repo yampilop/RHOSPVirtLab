@@ -16,9 +16,7 @@ CustomRhelImageSize: "20Gi"
 
 # overcloud parameters
 external_if: eno1
-# Public noVNC proxy address, '[<scheme>://]<host>[:<port>]': host (IP or domain) sets
-# vncproxy_host, a trailing numeric port sets vncproxy_port, and a leading scheme
-# (e.g. https://) sets vncproxy_protocol.
+# Public noVNC proxy address, '[<scheme>://]<host>[:<port>]' (sets vncproxy_host/port/protocol; see README).
 vncproxy: ''
 
 # dns and ntp servers

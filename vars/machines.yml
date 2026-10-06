@@ -1,11 +1,5 @@
 ---
-# Inventory of lab machines, in two separate variables:
-#   undercloud - the single director host (special: never enrolled in ironic and, when
-#                physical, never power-managed by the lab; the role injects its constants).
-#   machines   - the overcloud nodes the undercloud provisions/manages.
-# Both share a `type` discriminator (libvirt | physical) with technology-specific
-# settings in a block named after the type. See the role READMEs for the full
-# field-by-field schema (undercloud, machines and the libvirt/physical blocks).
+# Lab machine inventory: `undercloud` (the director host) and `machines` (the overcloud nodes), each tagged with a `type` (libvirt | physical | kubevirt); see the role READMEs for the full schema.
 
 
 undercloud:
@@ -56,9 +50,7 @@ undercloud:
 #     local_interface: eno1        # control-plane NIC name inside the undercloud
 
 
-# Overcloud nodes (default: one virtual controller + one virtual compute). Default to
-# unprovisioned (ironic); set `pre_provisioned: true` for deployed-server nodes (then
-# add `ctlplane_ip` and make every node in the leaf pre_provisioned). See README.
+# Overcloud nodes (default: one virtual controller + one virtual compute); default unprovisioned, set pre_provisioned: true for deployed-server nodes (see README).
 machines:
 - name: controller0
   type: libvirt

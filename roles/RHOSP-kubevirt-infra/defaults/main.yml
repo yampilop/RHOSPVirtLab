@@ -89,9 +89,7 @@ leafs:
         end: 10.0.0.99
       vip: 10.0.0.253
 
-# The director host, defined separately from the overcloud `machines` (kubevirt VM by
-# default; the role injects its constants). See README.
-# Note: The undercloud is always pre_provisioned (implicit).
+# The director host (kubevirt VM; role-injected constants; always pre_provisioned, implicit). See README.
 undercloud:
   type: kubevirt
   openstack:
@@ -109,11 +107,7 @@ undercloud:
           mac: '0c:1f:0d:10:00:00'
           bridge: br-ctlplane
 
-# The overcloud nodes (virtual and physical); default: one controller + one compute.
-# See README for the full schema.
-# Note: All kubevirt machines are pre_provisioned: true until KubeVirtBMC is implemented
-# (https://github.com/kubevirtbmc/kubevirtbmc), as ironic provisioning requires power
-# management (IPMI/Redfish) which is not yet supported for kubevirt.
+# The overcloud nodes (default: one controller + one compute); always pre_provisioned: true until KubeVirtBMC adds power management (https://github.com/kubevirtbmc/kubevirtbmc). See README.
 machines:
   - name: controller0
     type: kubevirt
