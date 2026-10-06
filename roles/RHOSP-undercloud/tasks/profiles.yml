@@ -1,3 +1,15 @@
+- name: PROFILES - Fail if kubevirt machines are combined with DCN leafs
+  fail:
+    msg: >-
+      ERROR: KubeVirt machines cannot be combined with DCN (Distributed Compute
+      Node) leafs. KubeVirt deployments only support a single site (the
+      'overcloud' leaf) — see roles/RHOSP-kubevirt-infra/README.md. Remove the
+      DCN leaf(s) from vars/options.yml, or remove the KubeVirt machines from
+      vars/machines.yml.
+  when:
+    - kubevirt_machines | length > 0
+    - dcn_leafs | length > 0
+
 - name: PROFILES - Calculate roles count to use in the entire playbook
   set_fact:
     roles_count: |-
