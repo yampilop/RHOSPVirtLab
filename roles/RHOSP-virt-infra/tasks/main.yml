@@ -10,19 +10,19 @@
 - name: SETUP - Register computed variables as facts for template access
   set_fact:
     undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
-    undercloud_is_kubevirt: "{{ (undercloud.type | default('libvirt')) == 'kubevirt' }}"
+    undercloud_is_libvirt: "{{ (undercloud.type | default('libvirt')) == 'libvirt' }}"
     undercloud_effective: >-
       {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
             ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
          }}}, recursive=true))
-         if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else undercloud_base }}
-    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else []) }}"
+         if (undercloud_is_libvirt | bool) else undercloud_base }}
+    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if (undercloud_is_libvirt | bool) else []) }}"
     physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     libvirt_required: "{{ libvirt_machines | length > 0 }}"
     vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
     bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default([]) | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
     management_network_required: >-
-      {{ (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool))
+      {{ (undercloud_is_libvirt | bool)
          or ((machines | selectattr('type', 'equalto', 'libvirt')
                        | selectattr('libvirt.hypervisor', 'equalto', 'localhost')
                        | selectattr('pre_provisioned', 'defined')
@@ -54,7 +54,7 @@
 
 # Assemble the libvirt networks/bridges to manage from the `leafs` model plus the
 # management (NAT) network (prepended when required). See README (Networks) for details.
-# Skip when there are no libvirt machines (kubevirt-only deployments).
+# Skip when there are no libvirt machines to build.
 - name: NETWORKING - Assemble the list of libvirt networks to manage
   set_fact:
     libvirt_networks: "{{ management_part + (leaf_bridges | from_yaml) }}"
@@ -92,7 +92,7 @@
 
 # The overcloud public IP (firewall port-forwards, `overcloud` /etc/hosts alias,
 # network-hook DNAT): the default leaf's External VIP, else its ctlplane VIP.
-# Skip when there are no libvirt machines (kubevirt-only deployments).
+# Skip when there are no libvirt machines to build.
 - name: NETWORKING - Derive the overcloud public IP
   set_fact:
     overcloud_ip: >-

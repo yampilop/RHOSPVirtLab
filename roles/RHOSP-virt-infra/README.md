@@ -62,8 +62,8 @@ leafs:
 undercloud:
   The director host, defined separately from the overcloud `machines` list. This role only
   supports `type: libvirt` (a VM this role creates) or `type: physical` (a pre-existing,
-  admin-prepared host this role does not create). For kubevirt machines, use the
-  RHOSP-kubevirt-infra role. The dict is intentionally minimal - only the fields that
+  admin-prepared host this role does not create); any other `type` is ignored by this role
+  entirely. The dict is intentionally minimal - only the fields that
   actually vary are set. The role injects the constants that never change for the
   undercloud (name=undercloud, pre_provisioned=true, openstack.role=undercloud) so they
   cannot be set wrong. No `pm` block is used (it is the director and is not power-managed
@@ -96,8 +96,8 @@ undercloud:
 
 machines:
   List of the overcloud nodes. This role only manages `type: libvirt` (VMs created by
-  this role) and `type: physical` (baremetal nodes); for kubevirt VMs use the
-  RHOSP-kubevirt-infra role. By default one virtual controller and one virtual compute.
+  this role) and `type: physical` (baremetal nodes); any other entry `type` is ignored by
+  this role entirely. By default one virtual controller and one virtual compute.
   Every entry shares common top-level parameters and is tagged with a `type` discriminator;
   technology-specific parameters live in a block named after the type.
 
