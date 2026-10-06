@@ -4,15 +4,21 @@ source /home/stack/stackrc
 
 [ ! -f /home/stack/clean-steps.txt ] && echo '[{"interface": "deploy", "step": "erase_devices_metadata"}]' > /home/stack/clean-steps.txt
 
+{% set ns = namespace(any_ironic_leaf=false) %}
+{% for dl in leafs %}
+{% if not deployed_server[dl.name] %}
+{% set ns.any_ironic_leaf = true %}
+{% endif %}
+{% endfor %}
 {% if RHOSP_version >= 17.1 %}
 # Delete the overcloud
 metalsmith list
-{% for leaf in dcn_leafs %}
-openstack overcloud delete {{ leaf.name }} -y
+{% for dcn_leaf in dcn_leafs %}
+openstack overcloud delete {{ dcn_leaf.name }} -y
 {% endfor %}
 openstack overcloud delete overcloud -y
 
-{% if not deployed_server[leaf.name] %}
+{% if ns.any_ironic_leaf %}
 # Undeploy the nodes (only for baremetal provisioning)
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node undeploy "$1)}'
 metalsmith list
@@ -38,13 +44,13 @@ echo "Pre-provisioned deployment detected. Skipping Ironic node management."
 {% endif %}
 {% else %}
 # Delete the overcloud
-{% for leaf in dcn_leafs %}
-openstack overcloud delete {{ leaf.name }} -y
+{% for dcn_leaf in dcn_leafs %}
+openstack overcloud delete {{ dcn_leaf.name }} -y
 {% endfor %}
 openstack overcloud delete overcloud -y
 openstack baremetal node list
 
-{% if not deployed_server[leaf.name] %}
+{% if ns.any_ironic_leaf %}
 # Clean the nodes
 openstack baremetal node list -f value -c Name | awk '{system("openstack baremetal node manage "$1)}'
 openstack baremetal node list
