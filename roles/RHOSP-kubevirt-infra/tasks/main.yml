@@ -3,8 +3,6 @@
 
 - name: SETUP - Register computed variables as facts for template access
   set_fact:
-    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
-    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
     default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
     dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
     kubevirt_undercloud: "{{ (undercloud.type | default('kubevirt')) == 'kubevirt' }}"

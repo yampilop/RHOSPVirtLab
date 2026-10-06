@@ -31,10 +31,9 @@ undercloud_effective: >-
      }}}, recursive=true))
      if (undercloud_is_libvirt | bool) else undercloud_base }}
 
-# Convenience views over `machines` (overcloud nodes only). A libvirt undercloud is
+# Convenience view over `machines` (overcloud nodes only). A libvirt undercloud is
 # built by this role so it joins libvirt_machines; any other undercloud type never appears here.
 libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if (undercloud_is_libvirt | bool) else []) }}"
-physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
 
 # Need-based gating flags (see README "When libvirt / VirtualBMC work is skipped").
 # libvirt_required: any VM to build (libvirt undercloud and/or libvirt overcloud nodes).

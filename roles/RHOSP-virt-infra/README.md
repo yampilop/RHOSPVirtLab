@@ -96,9 +96,10 @@ undercloud:
 
 machines:
   List of the overcloud nodes. This role only manages `type: libvirt` (VMs created by
-  this role) and `type: physical` (baremetal nodes); any other entry `type` is ignored by
-  this role entirely. By default one virtual controller and one virtual compute.
-  Every entry shares common top-level parameters and is tagged with a `type` discriminator;
+  this role); any other entry `type` (including `physical` - see RHOSP-undercloud's
+  README for that schema) is ignored by this role entirely. By default one virtual
+  controller and one virtual compute. Every entry shares common top-level parameters and
+  is tagged with a `type` discriminator;
   technology-specific parameters live in a block named after the type.
 
   A libvirt VM (`type: libvirt`):
@@ -136,36 +137,11 @@ machines:
           bridge: br-management  # its IP comes from the inventory `ansible_host`
 ```
 
-  A physical baremetal node (`type: physical`):
-
-```yaml
-  - name: MACHINE_NAME
-    type: physical
-    pre_provisioned: false     # optional: true = OS already loaded (deployed server)
-    openstack:
-      role: PROFILE
-      leaf: LEAF_NAME
-      ctlplane_ip: 192.168.24.131  # required when pre_provisioned (deployed server)
-    pm:
-      type: "ipmi"|"redfish"|"ilo"|"idrac"
-      user: "PM_USER_NAME"
-      password: "PM_PASSWORD"
-      address: "PM_IP_ADDRESS"
-      port: "623"
-      mode: bios               # bios | uefi
-    physical:
-      cpus: AMOUNT_OF_CPUS
-      memory: RAM_IN_GI
-      disk: DISK_SIZE_IN_BYTES
-      mac: 'XX:XX:XX:XX:XX:XX'  # boot NIC MAC (for introspection)
-      nics:
-        nic1: 'ens1f0'
-        nic2: 'ens1f1'
-```
+  `type: physical` entries are not built by this role; see RHOSP-undercloud's README for
+  that schema.
 
   By default `machines` contains one virtual controller and one virtual compute, so the
-  role creates those plus the `undercloud` VM (the defaults ship a commented example for
-  physical nodes).
+  role creates those plus the `undercloud` VM.
 
   The `openstack.role` value can be one of the following:
     - controller
@@ -223,10 +199,10 @@ machines:
   will make it per-leaf, so a leaf rather than the whole deployment is the unit that
   cannot mix.
 
-  Convenience views `libvirt_machines` and `physical_machines` (defined in the role
-  `vars/main.yml`) filter this list by `type`. Because this role builds the undercloud,
-  a libvirt undercloud is appended to `libvirt_machines`; a physical undercloud is
-  admin-prepared and never appears in either view.
+  The convenience view `libvirt_machines` (defined in the role `vars/main.yml`) filters
+  this list by `type`. Because this role builds the undercloud, a libvirt undercloud is
+  appended to `libvirt_machines`; any other undercloud type is admin-prepared/built
+  elsewhere and never appears in it.
 
   **When libvirt / VirtualBMC work is skipped.** The role only touches the parts of the
   hypervisor a given lab actually needs, driven by two derived flags in `vars/main.yml`:
@@ -268,7 +244,7 @@ machines:
 Credentials (lab-only weak defaults; override in `vault_credentials.yaml`):
 
 BmcUsername / BmcPassword: **admin** / **admin**
-  Credentials for the VirtualBMC endpoints this role creates (and physical-node BMC/IPMI access).
+  Credentials for the VirtualBMC endpoints this role creates.
 
 VmRootPassword: **redhat**
   Password baked into each libvirt VM's cloud-init for the `root` account.
