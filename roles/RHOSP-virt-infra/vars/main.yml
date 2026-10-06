@@ -28,7 +28,7 @@ undercloud_effective: >-
   {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
         ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
      }}}, recursive=true))
-     if not (undercloud_is_physical | bool) else undercloud_base }}
+     if (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool)) else undercloud_base }}
 
 # Convenience views over `machines` (overcloud nodes only). A libvirt undercloud is
 # built by this role so it joins libvirt_machines; physical and kubevirt undercloud never appear here.
@@ -49,7 +49,7 @@ bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default(
 # management_network_required: the NAT/access network is needed on localhost only when
 # something there has a mgmt NIC - a libvirt undercloud, or a pre-provisioned localhost VM.
 management_network_required: >-
-  {{ (not (undercloud_is_physical | bool))
+  {{ (not (undercloud_is_physical | bool) and not (undercloud_is_kubevirt | bool))
      or ((machines | selectattr('type', 'equalto', 'libvirt')
                    | selectattr('libvirt.hypervisor', 'equalto', 'localhost')
                    | selectattr('pre_provisioned', 'defined')
