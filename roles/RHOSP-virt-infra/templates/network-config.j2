@@ -19,8 +19,13 @@ ethernets:
 {% endif %}
 {% endfor %}
 {% if (machine.pre_provisioned | default(false)) and (machine.openstack.role != 'undercloud') and (machine.openstack.ctlplane_ip is defined) %}
-{% set ctlplane_net = libvirt_networks | selectattr('name', 'search', 'RHOSPVirtLab_ctlplane') | list | first %}
-{% for iface in machine.libvirt.network.interfaces if iface.bridge == ctlplane_net.bridge %}
+{% set ns = namespace(machine_leaf=none) %}
+{% for l in leafs %}
+{% if machine.libvirt.hypervisor in l.hypervisor.split(',') %}
+{% set ns.machine_leaf = l %}
+{% endif %}
+{% endfor %}
+{% for iface in machine.libvirt.network.interfaces if iface.bridge == ns.machine_leaf.ctlplane_bridge.name %}
   {{ iface.name }}:
     match:
       macaddress: '{{ iface.mac }}'
@@ -29,7 +34,7 @@ ethernets:
       - {{ machine.openstack.ctlplane_ip }}/24
     routes:
       - to: default
-        via: {{ ctlplane_net.ipv4.address }}
+        via: {{ ns.machine_leaf.ctlplane_subnet.gateway }}
         metric: 200
 {% endfor %}
 {% endif %}
