@@ -66,9 +66,8 @@ undercloud:
 ```yaml
 undercloud:
   type: kubevirt
-  # openstack:                 # optional
-  #   local_interface: eth0    # control-plane NIC name (default eth0)
-  #   management_interface: eth1  # Ansible access NIC (default eth1)
+  openstack:
+    local_interface: eth1      # control-plane NIC (default; eth0 is pod network in kubevirt VMs)
   kubevirt:
     title: 'VM_TITLE'
     cpus: AMOUNT_OF_CPUS
@@ -81,7 +80,6 @@ undercloud:
       - name: nic1
         mac: 'XX:XX:XX:XX:XX:XX'
         bridge: br-ctlplane
-      # The mgmt/Ansible-access NIC is injected by the role; do not list it here.
 ```
 
   See `vars/machines.yml` for the full undercloud schema.
@@ -123,9 +121,6 @@ machines:
         - name: nic1
           mac: 'XX:XX:XX:XX:XX:XX'
           bridge: BRIDGE_NAME
-        - name: mgmt           # optional: the Ansible access NIC - name must be `mgmt`
-          mac: 'XX:XX:XX:XX:XX:XX'
-          bridge: br-management  # its IP comes from the inventory `ansible_host`
 ```
 
   By default `machines` contains one virtual controller and one virtual compute, so the
@@ -144,10 +139,10 @@ machines:
   VMs may only use virtual-capable profiles (those with `virtual: True` in the
   `overcloud_roles` variable from `roles/RHOSP-undercloud/vars/main.yml`).
 
-  An interface **named `mgmt`** (the `management_interface_name`) marks the NIC that
-  Ansible uses to reach the machine. Its IP is **not** stored in `machines.yml`; it is
-  taken from the machine's `ansible_host` entry in the `inventory` file. Cloud-init
-  applies that address statically at first boot and os-net-config later reuses it.
+  Unlike RHOSP-virt-infra, this role does not inject a dedicated management NIC. Ansible
+  reaches a kubevirt machine via the IP/hostname set as its `ansible_host` entry in the
+  `inventory` file, obtained from the cluster's networking or DHCP server after the VM
+  boots (see the root README's KubeVirt workflow).
 
   **Pre-provisioning requirement:** All KubeVirt machines must use `pre_provisioned: true`.
   Ironic provisioning is not supported until KubeVirtBMC is implemented. The undercloud
@@ -158,9 +153,8 @@ machines:
     and network-config and attaches it to the VM
 
   The cloud-init login user is `stack` for the undercloud and the overcloud SSH user
-  otherwise (`heat-admin` on 16.2, `tripleo-admin` on 17.1). The management interface
-  (`mgmt` NIC) IP is seeded from the inventory `ansible_host` via network-config.
-  For overcloud nodes, the ctlplane NIC is also configured with the static
+  otherwise (`heat-admin` on 16.2, `tripleo-admin` on 17.1). For overcloud nodes, the
+  ctlplane NIC is configured with the static
   `openstack.ctlplane_ip` so the undercloud can reach it over SSH for deployed-server
   deployment.
 
