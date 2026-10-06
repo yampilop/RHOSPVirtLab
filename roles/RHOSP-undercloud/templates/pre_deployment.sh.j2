@@ -106,9 +106,7 @@ ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_support
 {% endif %}
 
 {% if deployed_server[leaf.name] %}
-# Clear MySQL password on pre-provisioned controller nodes (KCS 7060294)
-# Only on stack updates, not initial deployment
-# https://access.redhat.com/solutions/7060294
+# Clear MySQL password on pre-provisioned controller nodes, stack updates only (KCS 7060294: https://access.redhat.com/solutions/7060294)
 {% if RHOSP_version >= 17.1 %}
 if ! openstack overcloud status >/dev/null 2>&1; then
 {% else %}

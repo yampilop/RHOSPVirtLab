@@ -13,9 +13,7 @@ CustomCirrOSImage: "{{ CirrOSDownloadLink }}"
 create: True
 
 # overcloud parameters
-# Public noVNC proxy address, '[<scheme>://]<host>[:<port>]'. host (IP or domain) sets
-# vncproxy_host; a trailing numeric port sets vncproxy_port; a leading scheme (e.g.
-# https://) sets vncproxy_protocol. Bare '<host>' preserves the original behavior.
+# Public noVNC proxy address, '[<scheme>://]<host>[:<port>]' (sets vncproxy_host/port/protocol; see README).
 vncproxy: ''
 
 

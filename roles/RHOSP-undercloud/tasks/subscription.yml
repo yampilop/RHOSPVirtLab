@@ -9,9 +9,7 @@
     state: present
     org_id: "{{ rh_orgid }}"
     activationkey: "{{ rh_activationkey }}"
-    # Only attach a pool when one is explicitly configured. Under Simple Content Access
-    # (SCA, the default for hosted Red Hat orgs) there are no pools and attaching is
-    # disabled, so omit it and let registration alone grant content.
+    # Only attach a pool when explicitly configured (Simple Content Access orgs have none to attach).
     pool: "{{ rh_pool | default(omit) }}"
     release: "{{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
     force_register: yes

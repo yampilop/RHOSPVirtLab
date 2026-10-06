@@ -88,9 +88,7 @@
     msg: "ERROR: duplicate openstack.ctlplane_ip found among pre-provisioned overcloud nodes ({{ ctlplane_ips }})."
   when: (ctlplane_ips | length) != (ctlplane_ips | unique | list | length)
 
-# A deployed-server (pre_provisioned) node is not power-managed by ironic, so it must not
-# carry a pm block - except when ControllersFencing is on, where controllers keep a pm/BMC
-# for STONITH fencing.
+# A pre_provisioned node must not carry a pm block, except controllers when ControllersFencing is on (STONITH).
 - name: PROFILES - Ensure pre-provisioned nodes define no pm block unless fencing is enabled
   fail:
     msg: >-
@@ -155,9 +153,7 @@
     - "{{ leafs }}"
     - "{{ overcloud_roles }}"
 
-# Routed spine-leaf (DCN) needs a gateway on every subnet: it is the cross-leaf next-hop
-# and the default of TripleO's auto-generated <Net>InterfaceDefaultRoute_<subnet>, which is
-# a required parameter with no default when the subnet omits it (UserParameterMissing).
+# Routed spine-leaf (DCN) needs a gateway on every subnet: it's the cross-leaf next-hop and TripleO's required (no-default) <Net>InterfaceDefaultRoute_<subnet>.
 - name: PROFILES - Ensure DCN leaf networks define a subnet gateway (routed spine-leaf)
   fail:
     msg: >-

@@ -24,16 +24,10 @@ undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical'
 default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
 dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
 
-# Boolean gate for the 16.2 network-isolation / network-environment env files:
-# true when the default leaf defines any networks. It must be a flat variable
-# (the deployment_environment `Variable` gate uses `lookup('vars', ...)`, which takes
-# a plain name and cannot traverse `default_leaf.networks`) and a boolean (the gate
-# resolves it with the `bool` filter, which is False for a non-empty list).
+# Flat boolean gate for the 16.2 network-isolation env files (lookup('vars', ...) needs a plain name; the gate applies | bool).
 default_leaf_has_networks: "{{ (default_leaf.networks | default([]) | length) > 0 }}"
 
-# Management (NAT) gateway, used as pm_addr for localhost libvirt VMs in instackenv.
-# Duplicated here because the virt-infra role vars are not visible in this play; keep in
-# sync with roles/RHOSP-virt-infra/vars/main.yml (libvirt_management_network.ipv4.address).
+# Management (NAT) gateway (pm_addr for localhost libvirt VMs); keep in sync with roles/RHOSP-virt-infra/vars/main.yml.
 libvirt_management_network:
   ipv4:
     address: '192.168.250.1'
@@ -107,9 +101,7 @@ overcloud_roles:
     distributed: True
     max: 3
 
-# Environment files added to the deploy command. Per entry: file; absolute_path (full
-# path vs relative to the leaf templates dir); version (list); DCN (DCN-only);
-# Leafs (All|Default|NotDefault); DeployedServer (include only in deployed-server mode).
+# Environment files added to the deploy command (file, absolute_path, version, DCN, Leafs, DeployedServer); see README.
 deployment_environment:
   - file: overcloud-baremetal-deployed.yaml
     absolute_path: False
