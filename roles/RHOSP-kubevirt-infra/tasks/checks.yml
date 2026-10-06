@@ -68,6 +68,6 @@
       Missing: {{ missing_bridges | join(', ') }}
   when:
     - inventory_hostname == 'localhost'
+    - undercloud.type | default('kubevirt') == 'kubevirt'
     - masquerade_enabled | bool
     - missing_bridges | length > 0
-    - undercloud.type | default('kubevirt') == 'kubevirt'
