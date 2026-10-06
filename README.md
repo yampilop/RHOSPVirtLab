@@ -252,9 +252,14 @@ rh_token: '<TOKEN>'
 
 ## Clean the installation
 
-To start/restart the installation from scratch, you can edit the options.yml file and set `cleanup: True` instead of `False`.
+To start/restart the installation from scratch, add `--extra-vars "cleanup=True"` to the
+ansible-playbook command, for example:
 
-You can also add `--extra-vars "cleanup=True"` to the ansible-playbook command.
+```bash
+ansible-playbook --ask-vault-pass --extra-vars "cleanup=True" infrastructure.yml undercloud.yml
+```
+
+(`cleanup` defaults to `False` in the roles' `defaults/main.yml`.)
 
 ## Execute the Ansible Playbook
 
