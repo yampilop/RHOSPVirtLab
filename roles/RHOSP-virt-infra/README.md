@@ -96,10 +96,9 @@ undercloud:
 
 machines:
   List of the overcloud nodes. This role only manages `type: libvirt` (VMs created by
-  this role); any other entry `type` (including `physical` - see RHOSP-undercloud's
-  README for that schema) is ignored by this role entirely. By default one virtual
-  controller and one virtual compute. Every entry shares common top-level parameters and
-  is tagged with a `type` discriminator;
+  this role); any other entry `type` is ignored by this role entirely. By default one
+  virtual controller and one virtual compute. Every entry shares common top-level
+  parameters and is tagged with a `type` discriminator;
   technology-specific parameters live in a block named after the type.
 
   A libvirt VM (`type: libvirt`):
@@ -137,8 +136,7 @@ machines:
           bridge: br-management  # its IP comes from the inventory `ansible_host`
 ```
 
-  `type: physical` entries are not built by this role; see RHOSP-undercloud's README for
-  that schema.
+  `type: physical` entries are not built by this role.
 
   By default `machines` contains one virtual controller and one virtual compute, so the
   role creates those plus the `undercloud` VM.
@@ -153,8 +151,8 @@ machines:
     - cephstorage
     - computehci
 
-  VMs may only use virtual-capable profiles (those with `virtual: True` in the
-  `overcloud_roles` variable from `roles/RHOSP-undercloud/vars/main.yml`).
+  VMs may only use virtual-capable profiles; other profile choices for a VM are rejected
+  at deployment time.
 
   An interface **named `mgmt`** (the `management_interface_name`) marks the NIC that
   Ansible uses to reach the machine. Its IP is **not** stored in `machines.yml`; it is taken from the machine's

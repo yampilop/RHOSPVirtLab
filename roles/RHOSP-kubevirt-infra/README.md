@@ -11,7 +11,7 @@ Tested with Red Hat Enterprise Linux versions 7.9, 8.4, 9.6, or 10.2 (for the RH
 Infrastructure:
 - Kubernetes cluster (OpenShift 4.10+) with KubeVirt installed
 - oc/kubectl CLI access to the cluster with admin privileges
-- RHOSP Undercloud deployed and running (via RHOSP-undercloud role)
+- RHOSP Undercloud deployed and running
 
 RHEL Cloud Image:
 - RHEL cloud image matching the RHOSP version (for VM base via CustomRhelImage parameter)
@@ -54,9 +54,9 @@ leafs:
 
 undercloud:
   The director host, defined separately from the overcloud `machines` list. This role
-  only supports `type: kubevirt` (a VM this role creates). For libvirt or physical
-  machines, use the RHOSP-virt-infra role. The dict is intentionally minimal - only the
-  fields that actually vary are set. The role injects the constants that never change
+  only supports `type: kubevirt` (a VM this role creates); any other `type` is ignored by
+  this role entirely. The dict is intentionally minimal - only the fields that actually
+  vary are set. The role injects the constants that never change
   for the undercloud (name=undercloud, pre_provisioned=true, openstack.role=undercloud)
   so they cannot be set wrong. No `pm` block is used (it is the director and is not
   power-managed by the lab). When it is a kubevirt VM it is otherwise built like the
@@ -86,7 +86,7 @@ undercloud:
 
 machines:
   List of the overcloud nodes. This role only manages `type: kubevirt` (VMs created by
-  this role); for libvirt or physical machines use the RHOSP-virt-infra role. By default
+  this role); any other entry `type` is ignored by this role entirely. By default
   one virtual controller and one virtual compute. Every entry shares common top-level
   parameters and is tagged with a `type` discriminator; technology-specific parameters
   live in a block named after the type.
@@ -136,13 +136,12 @@ machines:
     - cephstorage
     - computehci
 
-  VMs may only use virtual-capable profiles (those with `virtual: True` in the
-  `overcloud_roles` variable from `roles/RHOSP-undercloud/vars/main.yml`).
+  VMs may only use virtual-capable profiles; other profile choices for a VM are rejected
+  at deployment time.
 
-  Unlike RHOSP-virt-infra, this role does not inject a dedicated management NIC. Ansible
-  reaches a kubevirt machine via the IP/hostname set as its `ansible_host` entry in the
-  `inventory` file, obtained from the cluster's networking or DHCP server after the VM
-  boots (see the root README's KubeVirt workflow).
+  This role does not inject a dedicated management NIC. Ansible reaches a kubevirt
+  machine via the IP/hostname set as its `ansible_host` entry in the `inventory` file,
+  obtained from the cluster's networking or DHCP server after the VM boots.
 
   **Pre-provisioning requirement:** All KubeVirt machines must use `pre_provisioned: true`.
   Ironic provisioning is not supported until KubeVirtBMC is implemented. The undercloud

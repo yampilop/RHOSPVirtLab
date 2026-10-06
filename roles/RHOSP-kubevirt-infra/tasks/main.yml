@@ -47,7 +47,7 @@
       when kubevirt machines are present.
 
       To use DCN deployments:
-        1. Use RHOSP-virt-infra role with libvirt or physical machines instead
+        1. Use libvirt or physical machine types instead (not supported by this role)
         2. Or remove the additional leaf entries from vars/options.yml leafs configuration
            (keep only the `overcloud` leaf when using kubevirt)
 

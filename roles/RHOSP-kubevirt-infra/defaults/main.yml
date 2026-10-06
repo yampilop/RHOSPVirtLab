@@ -16,10 +16,7 @@ cleanup: False
 create: True
 
 # overcloud parameters
-# Leaf configuration: kubevirt only supports the default control-plane leaf (overcloud).
-# DCN (Distributed Cloud Node) configurations are NOT supported with kubevirt machines.
-# For DCN deployments, use libvirt or physical machine types via RHOSP-virt-infra.
-# See README.
+# Leaf configuration: kubevirt only supports the default control-plane leaf (overcloud); DCN is not supported. See README.
 leafs:
 - name: overcloud
   additional_bridges:
