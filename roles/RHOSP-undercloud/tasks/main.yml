@@ -256,15 +256,20 @@
 - name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
 
-- name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
+- name: CONFIGFILES - Set container images prepare file (contains registry credentials)
   template:
-    src: "{{ item }}.j2"
-    dest: "/home/stack/{{ item }}"
+    src: "containers-prepare-parameter.yaml.j2"
+    dest: "/home/stack/containers-prepare-parameter.yaml"
     owner: stack
     group: stack
-  loop:
-    - "containers-prepare-parameter.yaml"
-    - "custom-undercloud-params.yaml"
+    mode: "0600"
+
+- name: CONFIGFILES - Set custom undercloud parameters
+  template:
+    src: "custom-undercloud-params.yaml.j2"
+    dest: "/home/stack/custom-undercloud-params.yaml"
+    owner: stack
+    group: stack
 
 - name: CONFIGFILES - Set undercloud configuration file
   template:

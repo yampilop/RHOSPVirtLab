@@ -17,9 +17,16 @@
   loop:
     - instackenv.yaml
     - node-info.yaml
-    - custom-overcloud.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
+
+- name: "TEMPLATES - Prepare the overcloud environment file for {{ leaf.name }} (contains RHSM credentials when RegisterNodes is set)"
+  template:
+    src: "custom-overcloud.yaml.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/custom-overcloud.yaml"
+    owner: stack
+    group: stack
+    mode: "0600"
 
 - name: "TEMPLATES - Prepare the deployed-server port map for {{ leaf.name }} (16.2)"
   template:
@@ -53,6 +60,14 @@
     - roles_count[leaf.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
 
+- name: "SCRIPTS - Prepare the pre-deployment script for {{ leaf.name }} (contains RHSM credentials)"
+  template:
+    src: "pre_deployment.sh.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/pre_deployment.sh"
+    mode: "0700"
+    owner: stack
+    group: stack
+
 - name: SCRIPTS - Prepare the scripts
   template:
     src: "{{ item }}.j2"
@@ -61,5 +76,4 @@
     owner: stack
     group: stack
   loop:
-    - pre_deployment.sh
     - deploy.sh

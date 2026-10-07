@@ -17,13 +17,20 @@
   loop:
     - instackenv.yaml
     - node-info.yaml
-    - custom-overcloud.yaml
     - network_data.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
     - initial-ceph.conf
     - vip_data.yaml
     - overcloud_resources.yaml
+
+- name: TEMPLATES - Prepare the overcloud environment file (contains RHSM credentials when RegisterNodes is set)
+  template:
+    src: "custom-overcloud.yaml.j2"
+    dest: "/home/stack/templates/custom-overcloud.yaml"
+    owner: stack
+    group: stack
+    mode: "0600"
 
 - name: TEMPLATES - Prepare the deployed-server port map (16.2 deployed servers)
   template:
@@ -127,6 +134,14 @@
       {%- endfor -%}
       {{ updated_mappings }}
 
+- name: SCRIPTS - Prepare the pre-deployment script (contains RHSM credentials)
+  template:
+    src: "pre_deployment.sh.j2"
+    dest: "/home/stack/pre_deployment.sh"
+    mode: "0700"
+    owner: stack
+    group: stack
+
 - name: SCRIPTS - Prepare the scripts
   template:
     src: "{{ item }}.j2"
@@ -135,7 +150,6 @@
     owner: stack
     group: stack
   loop:
-    - pre_deployment.sh
     - deploy.sh
     - post_deployment.sh
     - undeploy.sh
