@@ -12,6 +12,27 @@
   set_fact:
     ci_user: "{{ 'stack' if machine.openstack.role == 'undercloud' else RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }}"
 
+- name: CHECKS - Ensure {{ machine.name }} resolves to a known leaf before rendering its network-config
+  vars:
+    matching_leaf_names: |-
+      [
+      {% for l in leafs %}
+      {% if machine.libvirt.hypervisor in l.hypervisor.split(',') %}
+      "{{ l.name }}",
+      {% endif %}
+      {% endfor %}
+      ]
+  fail:
+    msg: >-
+      ERROR in {{ machine.name }}: no leaf in vars/options.yml declares
+      libvirt.hypervisor ({{ machine.libvirt.hypervisor }}) in its `hypervisor` field.
+      A pre-provisioned machine's ctlplane network-config requires a matching leaf to
+      source the ctlplane bridge/gateway from. Check machines.yml/options.yml for a
+      hypervisor name mismatch.
+  when:
+    - ci_has_ctlplane | bool
+    - (matching_leaf_names | from_yaml | length) == 0
+
 - name: STORAGE - Render user-data for {{ machine.name }}
   template:
     src: "user-data.j2"
