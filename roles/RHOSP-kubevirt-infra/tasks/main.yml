@@ -77,9 +77,13 @@
 
       Or delete individual resources (in reverse order):
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/07-machines.yaml
+      {% if kubevirt_undercloud %}
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/06-undercloud.yaml
+      {% endif %}
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/05-secret-provisioning-ssh-public-key.yaml
+      {% if kubevirt_undercloud %}
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/04-routes.yaml
+      {% endif %}
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/03-services.yaml
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/02-udns.yaml
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/01-datasource.yaml
