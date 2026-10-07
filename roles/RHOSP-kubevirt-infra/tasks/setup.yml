@@ -22,13 +22,34 @@
   register: oc_download
 
 - name: SETUP - Extract openshift-client to ~/bin
-  shell: |
-    cd /tmp
-    tar -xzf openshift-client-linux.tar.gz oc kubectl
-    mv oc kubectl "/home/{{ ansible_user }}/bin/"
-    chmod 0755 "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
-    chown {{ ansible_user }}:{{ ansible_user }} "/home/{{ ansible_user }}/bin/oc" "/home/{{ ansible_user }}/bin/kubectl"
-    rm -f /tmp/openshift-client-linux.tar.gz
+  unarchive:
+    src: "/tmp/openshift-client-linux.tar.gz"
+    dest: "/home/{{ ansible_user }}/bin"
+    remote_src: yes
+    include:
+      - oc
+      - kubectl
+  when:
+    - kubevirt_required | bool
+    - not oc_binary.stat.exists
+
+- name: SETUP - Ensure oc/kubectl have the right permissions
+  file:
+    path: "/home/{{ ansible_user }}/bin/{{ item }}"
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  loop:
+    - oc
+    - kubectl
+  when:
+    - kubevirt_required | bool
+    - not oc_binary.stat.exists
+
+- name: SETUP - Remove the downloaded openshift-client archive
+  file:
+    path: "/tmp/openshift-client-linux.tar.gz"
+    state: absent
   when:
     - kubevirt_required | bool
     - not oc_binary.stat.exists
