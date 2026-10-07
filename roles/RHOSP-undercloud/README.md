@@ -58,8 +58,12 @@ leafs:
     for multiple hypervisors (the first is primary and owns the gateway IP; see "Multiple
     hypervisors deployment" in the root README).
   - `ctlplane_bridge` - `{name, interface}` for the control-plane bridge on the
-    hypervisor. Set `interface` to trunk a real NIC into the bridge (needed for physical
-    nodes); leave it `null` for a VM-only bridge.
+    hypervisor. Set `interface` to trunk a real NIC into the bridge so physical nodes can
+    reach libvirt VMs on the same leaf; leave it `null` for a VM-only bridge. This only
+    takes effect when the deployment has at least one libvirt machine anywhere - a fully
+    physical lab should rely on its own network infrastructure for gateways/VLAN
+    routing/DHCP relay instead and leave this `null` (RHOSP-virt-infra fails early
+    otherwise).
   - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
     `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
     `masquerade`. When `masquerade` is `true` on the control-plane leaf, the undercloud
@@ -476,10 +480,14 @@ Networks:
   become the lab's L2 bridges, named `RHOSPVirtLab_<bridge-without-br->` (e.g.
   `br-ctlplane` -> `RHOSPVirtLab_ctlplane`).
 
-  To add physical nodes, trunk a real hypervisor NIC into a bridge by setting
-  `interface: <ifname>` on that leaf's `ctlplane_bridge` (and/or an `additional_bridges`
-  entry) instead of leaving it `null`. Make sure those interfaces are configured as
-  trunks with a native VLAN on the switch.
+  To add physical nodes to a leaf that also hosts libvirt VMs, trunk a real hypervisor
+  NIC into a bridge by setting `interface: <ifname>` on that leaf's `ctlplane_bridge`
+  (and/or an `additional_bridges` entry) instead of leaving it `null`. Make sure those
+  interfaces are configured as trunks with a native VLAN on the switch. This only
+  applies when the deployment has at least one libvirt machine; a fully physical lab
+  should rely on its own network infrastructure for gateways/VLAN routing/DHCP relay
+  instead and leave `interface: null` everywhere (RHOSP-virt-infra fails early
+  otherwise).
 
 Dependencies
 ------------

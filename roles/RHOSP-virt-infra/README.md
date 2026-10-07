@@ -44,15 +44,20 @@ leafs:
     for multiple hypervisors (the first is primary and owns the gateway IP; see "Multiple
     hypervisors deployment" in the root README).
   - `ctlplane_bridge` - `{name, interface}` for the control-plane bridge on the
-    hypervisor. Set `interface` to trunk a real NIC into the bridge (needed for physical
-    nodes); leave it `null` for a VM-only bridge.
+    hypervisor. Set `interface` to trunk a real NIC into the bridge so physical nodes can
+    reach libvirt VMs on the same leaf; leave it `null` for a VM-only bridge. This only
+    takes effect when the deployment has at least one libvirt machine anywhere (not
+    necessarily on this leaf) - a fully physical lab (no libvirt machines at all) should
+    rely on its own network infrastructure for gateways/VLAN routing/DHCP relay instead
+    and leave this `null`; the role fails early (see CHECKS) if `interface` is set without
+    any libvirt machines present.
   - `ctlplane_subnet` - the provisioning subnet: `name`, `cidr`, `dhcp_start`,
     `dhcp_end`, `inspection_iprange`, `gateway`, `vip` (the control-plane VIP) and
     `masquerade`. When `masquerade` is `true`, the role automatically forwards http (80),
     vnc (6080), keystone (5000), and ceph-dashboard (8444) ports to the overcloud public IP
     via `iptables` DNAT rules, making overcloud services accessible through the hypervisor.
   - `additional_bridges` - extra bridges (e.g. `br-external`), each `{name, interface,
-    ipv4.address}`.
+    ipv4.address}`. The same `interface` restriction as `ctlplane_bridge` applies.
   - `networks` - the isolated networks carried on this leaf (Tenant, Storage,
     InternalApi, StorageMgmt, External, ...). Each network has `name`, `bridge`, `vip`
     (boolean: whether the network gets a VIP), `mtu` and a `subnet` block (`ip_subnet`,
@@ -264,11 +269,15 @@ Networks:
   takes the ctlplane subnet gateway as its host address; an additional bridge takes its
   own `ipv4.address`.
 
-  To add physical nodes, trunk a real hypervisor NIC into a bridge by setting
-  `interface: <ifname>` on that leaf's `ctlplane_bridge` (and/or an `additional_bridges`
-  entry) instead of leaving it `null`; the role then emits the corresponding
-  `hypervisor_if` and wires the uplink. Make sure those interfaces are configured as
-  trunks with a native VLAN on the switch.
+  To add physical nodes to a leaf that also hosts libvirt VMs, trunk a real hypervisor
+  NIC into a bridge by setting `interface: <ifname>` on that leaf's `ctlplane_bridge`
+  (and/or an `additional_bridges` entry) instead of leaving it `null`; the role then
+  emits the corresponding `hypervisor_if` and wires the uplink. Make sure those
+  interfaces are configured as trunks with a native VLAN on the switch. This only
+  applies when the deployment has at least one libvirt machine; a fully physical lab
+  should rely on its own network infrastructure for gateways/VLAN routing/DHCP relay
+  instead and leave `interface: null` everywhere (enforced by a CHECKS task that fails
+  early otherwise).
 
 Example Playbook
 ----------------

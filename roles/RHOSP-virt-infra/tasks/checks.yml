@@ -27,6 +27,35 @@
     - preprovisioned_count | int > 0
     - preprovisioned_count | int < (machines | length)
 
+# Hypervisor-managed bridges/gateways are only needed so physical nodes can reach libvirt
+# VMs on the same leaf; a fully physical lab should rely on its own network
+# infrastructure instead and leave `interface: null` everywhere.
+- name: CHECKS - Fail if a leaf trunks a NIC into a hypervisor bridge without any libvirt machines in the deployment
+  vars:
+    trunking_leafs: |-
+      [
+      {% for leaf in leafs %}
+      {% set extra_ifs = (leaf.additional_bridges | default([])) | selectattr('interface', 'defined') | selectattr('interface') | list %}
+      {% if (leaf.ctlplane_bridge.interface | default(None)) or (extra_ifs | length > 0) %}
+      "{{ leaf.name }}",
+      {% endif %}
+      {% endfor %}
+      ]
+  fail:
+    msg: |
+      Leaf(s) {{ trunking_leafs | from_yaml | join(', ') }} set `ctlplane_bridge.interface`
+      or an `additional_bridges[].interface` to trunk a real NIC into a hypervisor-managed
+      bridge, but no libvirt machines exist anywhere in this deployment.
+
+      Hypervisor-managed bridges/gateways are only needed so physical nodes can reach
+      libvirt VMs on the same leaf. A fully physical lab has no such need: rely on your
+      own network infrastructure for gateways, VLAN routing and DHCP relay instead, and
+      leave `interface: null` on every `ctlplane_bridge`/`additional_bridges` entry.
+  when:
+    - inventory_hostname == 'localhost'
+    - not (libvirt_required | bool)
+    - (trunking_leafs | from_yaml | length) > 0
+
 # Capacity checks only apply when this host builds VMs.
 - name: CHECKS - Get total hypervisor memory planned
   vars:

@@ -461,7 +461,7 @@ undercloud ansible_host=192.168.250.10 ansible_user=stack ...
 #### Customizing networks
 
 - The default configuration should work for most cases.
-- If you will add physical nodes, trunk a real hypervisor NIC into the leaf bridges by setting the `interface` field on the control-plane leaf's `ctlplane_bridge` and the relevant `additional_bridges` (e.g. `br-external`) in the `leafs` variable. Make sure those interfaces are configured as trunks with a native vlan in the switch.
+- If you will add physical nodes to a leaf that also hosts libvirt VMs, trunk a real hypervisor NIC into the leaf bridges by setting the `interface` field on the control-plane leaf's `ctlplane_bridge` and the relevant `additional_bridges` (e.g. `br-external`) in the `leafs` variable. Make sure those interfaces are configured as trunks with a native vlan in the switch. This only applies when the deployment has at least one libvirt machine; a fully physical lab (no libvirt machines anywhere) should rely on its own network infrastructure for gateways/VLAN routing/DHCP relay instead and leave `interface: null` everywhere (RHOSP-virt-infra fails early otherwise).
 
 #### Customizing VMs (`type: libvirt`)
 
