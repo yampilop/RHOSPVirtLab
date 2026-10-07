@@ -88,7 +88,10 @@
 - name: REPOSITORIES - Enable the needed repositories only (raw fallback)
   raw: subscription-manager repos --disable='*' && subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].undercloud_repos | join(' --enable=') }}
   become: yes
-  when: repos_enabled.rc != 0 or (RHOSP_version_supported[RHOSP_version].undercloud_repos | last) not in repos_enabled.stdout
+  when: >-
+    repos_enabled.rc != 0 or
+    (RHOSP_version_supported[RHOSP_version].undercloud_repos
+    | reject('in', repos_enabled.stdout) | list | length > 0)
 
 - name: REPOSITORIES - Refresh dnf/yum cache
   command: dnf makecache
