@@ -6,6 +6,7 @@
   community.libvirt.virt_pool:
     state: inactive
     name: "{{ item }}"
+  when: ansible_libvirt_pools[item] is defined
   loop:
     - RHOSPVirtLab_storage
   become: yes
