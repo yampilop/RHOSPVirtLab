@@ -94,4 +94,4 @@
     - kubevirt_required | bool
     - cleanup | bool
 
-# TODO: Replace VirtualBMC with KubeVirtBMC (https://github.com/kubevirtbmc/kubevirtbmc)
+# TODO: Add power management (pm) support for kubevirt machines via KubeVirtBMC once available (https://github.com/kubevirtbmc/kubevirtbmc)
