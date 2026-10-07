@@ -14,37 +14,59 @@
       bridge_to_gw: "{{ bridge_to_gw | default({}) | combine({item.bridge: item}) }}"
     loop: "{{ gw_networks }}"
 
-  - name: UNDERCLOUD NETWORK - Create configuration script for gateway networks
-    copy:
-      content: |
-        #!/bin/bash
-        set -e
-        {% for iface in gw_interfaces %}
-        {% set gw_net = bridge_to_gw[iface.bridge] %}
-        {% set conn_name = gw_net.name | regex_replace('([a-z0-9])([A-Z])', '\1_\2') | lower %}
-        {% set ifname = "$(ip link show | grep -B1 '" + iface.mac + "' | head -1 | grep -oP '^\d+: \K[^:]*')" %}
-        nmcli connection add type ethernet con-name "{{ conn_name }}" \
-          ifname "{{ ifname }}" \
-          ipv4.method manual \
-          ipv4.addresses "{{ gw_net.subnet.gateway }}/{{ gw_net.subnet.ip_subnet.split('/')[1] }}" \
-          connection.autoconnect yes 2>/dev/null || true
-        nmcli connection up "{{ conn_name }}" 2>/dev/null || true
+  - name: UNDERCLOUD NETWORK - Resolve each gateway interface's MAC address to its kernel name and connection name
+    set_fact:
+      gw_interfaces_resolved: >-
+        {{ (gw_interfaces_resolved | default([])) + [item | combine({'ifname': resolved_ifname, 'conn_name': resolved_conn_name})] }}
+    vars:
+      resolved_ifname: |-
+        {% set ns = namespace(found=none) %}
+        {% for name in hostvars['undercloud'].ansible_facts.interfaces %}
+        {% if hostvars['undercloud'].ansible_facts[name].macaddress | default('') | lower == item.mac | lower %}
+        {% set ns.found = name %}
+        {% endif %}
         {% endfor %}
-      dest: /tmp/configure_gw_networks.sh
-      mode: '0755'
+        {{ ns.found }}
+      resolved_conn_name: "{{ bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}"
+    loop: "{{ gw_interfaces }}"
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+
+  - name: CHECKS - Ensure every gateway interface's MAC address resolved to a kernel interface name
+    fail:
+      msg: >-
+        ERROR: could not find a network interface with MAC address {{ item.mac }} on the
+        undercloud (bridge {{ item.bridge }}). Check vars/machines.yml for a MAC mismatch.
+    loop: "{{ gw_interfaces_resolved | default([]) }}"
+    when:
+      - default_leaf.ctlplane_subnet.masquerade | default(false)
+      - item.ifname == 'None'
+
+  - name: UNDERCLOUD NETWORK - Create gateway network connections via NetworkManager
+    community.general.nmcli:
+      type: ethernet
+      conn_name: "{{ item.conn_name }}"
+      ifname: "{{ item.ifname }}"
+      method4: manual
+      ip4: "{{ bridge_to_gw[item.bridge].subnet.gateway }}/{{ bridge_to_gw[item.bridge].subnet.ip_subnet.split('/')[1] }}"
+      autoconnect: yes
+      state: present
+    loop: "{{ gw_interfaces_resolved | default([]) }}"
+    loop_control:
+      label: "{{ item.conn_name }}"
     become: true
     delegate_to: undercloud
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
 
-  - name: UNDERCLOUD NETWORK - Execute gateway network configuration
-    command: /tmp/configure_gw_networks.sh
+  - name: UNDERCLOUD NETWORK - Activate gateway network connections
+    command: "nmcli connection up {{ item.conn_name }}"
+    loop: "{{ gw_interfaces_resolved | default([]) }}"
+    loop_control:
+      label: "{{ item.conn_name }}"
     become: true
     delegate_to: undercloud
     register: gw_result
-    changed_when: "'successfully added' in gw_result.stdout.lower()"
-    when:
-      - default_leaf.ctlplane_subnet.masquerade | default(false)
-      - gw_interfaces is defined
-      - gw_interfaces | length > 0
+    changed_when: "'successfully activated' in gw_result.stdout.lower()"
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
 
   - name: UNDERCLOUD NETWORK - Enable IP forwarding when masquerade is enabled
     sysctl:
