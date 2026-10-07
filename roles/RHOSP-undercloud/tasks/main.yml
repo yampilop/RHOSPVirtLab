@@ -21,6 +21,20 @@
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
 
+- name: CHECKS - Fail if a DCN leaf shares a hypervisor with the control-plane leaf
+  vars:
+    shared_hypervisors: "{{ dcn_leaf.hypervisor.split(',') | intersect(default_leaf.hypervisor.split(',')) }}"
+  fail:
+    msg: |
+      DCN leaf '{{ dcn_leaf.name }}' shares hypervisor(s) {{ shared_hypervisors | join(', ') }}
+      with the control-plane leaf ('{{ default_leaf.name }}'). Co-locating a DCN leaf on the
+      same physical hypervisor as the control-plane leaf is not supported: each DCN leaf must
+      run on its own dedicated hypervisor(s).
+  loop: "{{ dcn_leafs }}"
+  loop_control:
+    loop_var: dcn_leaf
+  when: shared_hypervisors | length > 0
+
 - name: Wait until cloud-init finishes to grant the sudo access with no password
   raw: test -f /var/lib/cloud/instance/boot-finished
   retries: 30
