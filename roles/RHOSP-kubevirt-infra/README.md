@@ -38,7 +38,10 @@ cleanup: **False**|True
   must run the printed commands yourself.
 
 create: **True**|False
-  Create KubeVirt resources (VirtualMachines, UserDefinedNetworks, Secrets). Useful with cleanup:True to reset the environment.
+  Render the KubeVirt resource manifests (VirtualMachines, UserDefinedNetworks, Secrets)
+  and print the `oc apply` commands needed to create them. Nothing is applied to the
+  cluster automatically; you must run the printed commands yourself. Useful with
+  cleanup:True to reset the environment.
 
 leafs:
   **Single-site only:** KubeVirt deployments support only the default `overcloud` leaf.
