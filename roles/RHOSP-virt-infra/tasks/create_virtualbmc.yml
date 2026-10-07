@@ -12,6 +12,7 @@
 - name: VIRTUALBMC - Ensure node exists
   command: "{{ vbmc_path }} add --username {{ item.item.pm.user }} --password {{ item.item.pm.password }} --port {{ item.item.pm.port }} {{ item.item.name }}"
   loop: "{{ vbmc_status.results }}"
+  no_log: true
   when:
     - item.stdout is defined
     - not item.stdout
