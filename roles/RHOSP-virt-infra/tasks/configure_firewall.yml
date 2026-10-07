@@ -4,14 +4,9 @@
     zone: libvirt
     state: present
     permanent: yes
+    immediate: yes
   become: yes
-  register: firewalld_create_zone
   when: libvirt_required | bool
-
-- name: FIREWALLD - Reload firewall after creating the zone
-  command: "firewall-cmd --reload"
-  become: yes
-  when: firewalld_create_zone.changed
 
 - name: FIREWALL - Ensure the external libvirt network interface and bridge type libvirt network interfaces belong to public zone
   firewalld:
