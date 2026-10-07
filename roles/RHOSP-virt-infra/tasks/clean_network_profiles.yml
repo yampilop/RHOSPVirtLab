@@ -23,11 +23,10 @@
     - networks
 
 - name: NETWORKING - Delete VLAN connections via nmcli
-  command: "nmcli connection delete {{ item }}"
+  community.general.nmcli:
+    conn_name: "{{ item }}"
+    state: absent
   loop: "{{ vlans_to_delete | default([]) | unique }}"
-  register: vlan_delete
-  failed_when: vlan_delete.rc not in [0, 10]
-  changed_when: vlan_delete.rc == 0
 
 - name: NETWORKING - Collect bridge connections to delete
   set_fact:
@@ -38,11 +37,10 @@
   loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Delete bridge connections via nmcli
-  command: "nmcli connection delete {{ item }}"
+  community.general.nmcli:
+    conn_name: "{{ item }}"
+    state: absent
   loop: "{{ bridges_to_delete | default([]) | unique }}"
-  register: bridge_delete
-  failed_when: bridge_delete.rc not in [0, 10]
-  changed_when: bridge_delete.rc == 0
 
 - name: NETWORKING - Delete hypervisor interfaces
   set_fact:
