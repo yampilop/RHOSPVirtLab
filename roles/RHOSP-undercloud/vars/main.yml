@@ -450,9 +450,9 @@ RHOSP_version_supported:
       - rhosp-director-images-x86_64
       - rhosp-director-images-uefi-x86_64
     images_directories:
-      - '/usr/share/rhosp-director-images/ironic-python-agent-latest-17.1-x86_64.tar'
-      - '/usr/share/rhosp-director-images/overcloud-full-latest-17.1-x86_64.tar'
-      - '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.1-x86_64.tar'
+      ipa: '/usr/share/rhosp-director-images/ironic-python-agent-latest-17.1-x86_64.tar'
+      bios: '/usr/share/rhosp-director-images/overcloud-full-latest-17.1-x86_64.tar'
+      uefi: '/usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest-17.1-x86_64.tar'
     container_image_prepare:
       ceph_alertmanager_tag: latest
       ceph_grafana_image: rhceph-6-dashboard-rhel9
@@ -495,8 +495,8 @@ RHOSP_version_supported:
       - ceph-ansible
       - rhosp-director-images
     images_directories:
-      - '/usr/share/rhosp-director-images/overcloud-full-latest-16.2.tar'
-      - '/usr/share/rhosp-director-images/ironic-python-agent-latest-16.2.tar'
+      bios: '/usr/share/rhosp-director-images/overcloud-full-latest-16.2.tar'
+      ipa: '/usr/share/rhosp-director-images/ironic-python-agent-latest-16.2.tar'
     container_image_prepare:
       ceph_alertmanager_tag: v4.6
       ceph_grafana_image: rhceph-4-dashboard-rhel8

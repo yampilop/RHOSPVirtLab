@@ -21,6 +21,25 @@
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
 
+# Only the images actually needed by ironic-provisioned nodes (across every leaf) are
+# worth unpacking: these tarballs are several GB each, and most labs need at most one
+# of the BIOS/UEFI overcloud images, not both - deployed-server-only leafs need neither.
+- name: IMAGES - Determine which director images are actually needed
+  set_fact:
+    ironic_provisioned_machines: "{{ ironic_candidates | rejectattr('pre_provisioned', 'defined') | list + ironic_candidates | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list }}"
+  vars:
+    ironic_candidates: "{{ libvirt_machines + physical_machines }}"
+
+- name: IMAGES - Determine BIOS/UEFI image requirements
+  set_fact:
+    needs_bios_image: >-
+      {{ (ironic_provisioned_machines | rejectattr('pm', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | rejectattr('pm.mode', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined') | rejectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+    needs_uefi_image: >-
+      {{ (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined')
+      | selectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+
 - name: CHECKS - Fail if a DCN leaf shares a hypervisor with the control-plane leaf
   vars:
     shared_hypervisors: "{{ dcn_leaf.hypervisor.split(',') | intersect(default_leaf.hypervisor.split(',')) }}"
@@ -155,14 +174,34 @@
     name: "{{ RHOSP_version_supported[RHOSP_version].packages }}"
     state: latest
 
-- name: IMAGES - Unpack director images
+- name: IMAGES - Unpack the IPA ramdisk image
   unarchive:
-    src: "{{ item }}"
+    src: "{{ RHOSP_version_supported[RHOSP_version].images_directories.ipa }}"
     dest: "/home/stack/images/"
     owner: stack
     group: stack
     remote_src: yes
-  loop: "{{ RHOSP_version_supported[RHOSP_version].images_directories }}"
+  when: ironic_provisioned_machines | length > 0
+
+- name: IMAGES - Unpack the BIOS overcloud image
+  unarchive:
+    src: "{{ RHOSP_version_supported[RHOSP_version].images_directories.bios }}"
+    dest: "/home/stack/images/"
+    owner: stack
+    group: stack
+    remote_src: yes
+  when: needs_bios_image | bool
+
+- name: IMAGES - Unpack the UEFI overcloud image
+  unarchive:
+    src: "{{ RHOSP_version_supported[RHOSP_version].images_directories.uefi }}"
+    dest: "/home/stack/images/"
+    owner: stack
+    group: stack
+    remote_src: yes
+  when:
+    - RHOSP_version_supported[RHOSP_version].images_directories.uefi is defined
+    - needs_uefi_image | bool
 
 - name: IMAGES - Check which test images already exist
   stat:
