@@ -89,20 +89,14 @@ metalsmith list
 
 {% if deployed_server[leaf.name] and (rh_activationkey is defined and rh_activationkey or rh_username is defined and rh_username) %}
 # Prepare pre-provisioned nodes with subscription, repos, and updates
+{% set ansible_adhoc = "ansible -i /home/stack/pre_deployment_inventory.yaml -u " ~ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user ~ " all -b -e \"ansible_python_interpreter=/usr/bin/python3\"" %}
 {% if rh_activationkey is defined and rh_activationkey %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --org={{ rh_orgid }} --activationkey={{ rh_activationkey }}" || true
-{% if rh_pool is defined and rh_pool %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}" || true
-{% endif %}
+{{ ansible_adhoc }} -m redhat_subscription -a "state=present org_id='{{ rh_orgid }}' activationkey='{{ rh_activationkey }}'{% if rh_pool is defined and rh_pool %} pool='{{ rh_pool }}'{% endif %} release='{{ RHOSP_version_supported[RHOSP_version].rhel_release }}' force_register=yes" || { echo "ERROR: subscription-manager registration (activation key) failed on one or more pre-provisioned nodes" >&2; exit 1; }
 {% elif rh_username is defined and rh_username %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager register --username {{ rh_username }} --password {{ rh_password }}" || true
-{% if rh_pool is defined and rh_pool %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager attach --pool={{ rh_pool }}" || true
+{{ ansible_adhoc }} -m redhat_subscription -a "state=present username='{{ rh_username }}' password='{{ rh_password }}'{% if rh_pool is defined and rh_pool %} pool='{{ rh_pool }}'{% endif %} release='{{ RHOSP_version_supported[RHOSP_version].rhel_release }}' force_register=yes" || { echo "ERROR: subscription-manager registration (username/password) failed on one or more pre-provisioned nodes" >&2; exit 1; }
 {% endif %}
-{% endif %}
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager release --set={{ RHOSP_version_supported[RHOSP_version].rhel_release }}"
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(' --enable=') }}"
-ansible -i /home/stack/pre_deployment_inventory.yaml -u {{ RHOSP_version_supported[RHOSP_version].overcloud_ssh_user }} all -e "ansible_python_interpreter=/usr/bin/python3" -m raw -a "sudo dnf update -y"
+{{ ansible_adhoc }} -m rhsm_repository -a "name={{ RHOSP_version_supported[RHOSP_version].nodes_repos | join(',') }}" || { echo "ERROR: enabling repos failed on one or more pre-provisioned nodes" >&2; exit 1; }
+{{ ansible_adhoc }} -m dnf -a "name=* state=latest"
 {% endif %}
 
 {% if deployed_server[leaf.name] %}
