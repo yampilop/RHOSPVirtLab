@@ -71,9 +71,8 @@
 - name: KUBERNETES - Display cleanup instructions
   debug:
     msg: |
-      Kubernetes resources have been cleaned up.
-
-      If you need to manually delete any remaining resources from your Kubernetes/OpenShift cluster, run:
+      This role does not delete resources from the cluster automatically. Run the
+      following commands yourself to remove the KubeVirt resources it generated:
         oc delete -f {{ playbook_dir }}/{{ KubeVirtNamespace }}/
 
       Or delete individual resources (in reverse order):

@@ -33,7 +33,9 @@ CustomRhelImageSize: **"20Gi"**
   Size of the PVC used to import the RHEL base image via the KubeVirt DataVolume/DataSource.
 
 cleanup: **False**|True
-  Clean up KubeVirt resources (VirtualMachines, UserDefinedNetworks, Secrets) before creation.
+  Print the `oc delete` commands needed to remove the KubeVirt resources (VirtualMachines,
+  UserDefinedNetworks, Secrets) this role generates. Nothing is deleted automatically; you
+  must run the printed commands yourself.
 
 create: **True**|False
   Create KubeVirt resources (VirtualMachines, UserDefinedNetworks, Secrets). Useful with cleanup:True to reset the environment.
