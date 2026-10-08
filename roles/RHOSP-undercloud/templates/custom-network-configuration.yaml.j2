@@ -36,12 +36,6 @@ parameter_defaults:
 {% endfor %}
   ControlPlaneDefaultRoute: {{ leaf.ctlplane_subnet.gateway }}
   ControlPlaneSubnet: {{ leaf.ctlplane_subnet.name }}
-  
-  NeutronBridgeMappings: "{{ BridgeMappings }}"
-  NeutronPhysicalBridge: "br-ex"
-  NeutronFlatNetworks: "*"
-  
-  NeutronNetworkVLANRanges: "{{ NetworkVlanRanges }}"
 {% if NeutronDriver == 'ovn' %}
   NeutronTunnelTypes: 'geneve'
   NeutronNetworkType: 'geneve,vlan'
@@ -58,17 +52,6 @@ parameter_defaults:
 {% endfor %}
 {% endfor %}
 {% endif %}
-
-  NovaSchedulerDefaultFilters:
-    - AvailabilityZoneFilter
-    - ComputeFilter
-    - ComputeCapabilitiesFilter
-    - ImagePropertiesFilter
-    - ServerGroupAntiAffinityFilter
-    - ServerGroupAffinityFilter
-    - AggregateInstanceExtraSpecsFilter
-    - NUMATopologyFilter
-    - PciPassthroughFilter
 
 {% if dcn_leafs | length > 0 %}
   NeutronDefaultAvailabilityZones: '{{ default_leaf.name }},{% for leaf in dcn_leafs %}{{ leaf.name }}{{ "," if not loop.last else "" }}{% endfor %}'
@@ -97,83 +80,8 @@ parameter_defaults:
 
 {% endif %}
 
-{% if roles_count[leaf.name]["ComputeOvsDpdkSriov"] > 0 %}
-  ComputeOvsDpdkSriovParameters:
-{% if leaf.name != 'overcloud' %}
-    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
-{% else %}
-    NeutronBridgeMappings: "datacentre:br-ex"
-{% endif %}
-    KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkSriovProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkSriovProperties.hugepages }} {{ ComputeOvsDpdkSriovProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkSriovProperties.isolcpus }}"
-    TunedProfileName: "cpu-partitioning"
-    IsolCpusList: "{{ ComputeOvsDpdkSriovProperties.isolcpus }}"
-    NovaReservedHostMemory: {{ ComputeOvsDpdkSriovProperties.hostmemory }}
-    OvsDpdkSocketMemory: "{{ ComputeOvsDpdkSriovProperties.socketmemory }}"
-    OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkSriovProperties.memorychannels }}"
-    OvsDpdkCoreList: "{{ ComputeOvsDpdkSriovProperties.ovsdpdkcorelist }}"
-    NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkSriovProperties.dedicatedcpus }}"
-    NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkSriovProperties.sharedcpus }}"
-    OvsPmdCoreList: "{{ ComputeOvsDpdkSriovProperties.ovspmdcorelist}}"
-    OvsEnableDpdk: true
-    NovaPCIPassthrough: {{ ComputeOvsDpdkSriovProperties.pcipassthrough }}
-    NeutronPhysicalDevMappings: {{ ComputeOvsDpdkSriovProperties.physicaldevmappings }}
-{% endif %}
-
-{% if roles_count[leaf.name]["ComputeOvsDpdk"] > 0 %}
-  ComputeOvsDpdkParameters:
-{% if leaf.name != 'overcloud' %}
-    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
-{% else %}
-    NeutronBridgeMappings: "datacentre:br-ex"
-{% endif %}
-    KernelArgs: "default_hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepagesz={{ ComputeOvsDpdkProperties.hugepagesz }} hugepages={{ ComputeOvsDpdkProperties.hugepages }} {{ ComputeOvsDpdkProperties.kernelargs }} isolcpus={{ ComputeOvsDpdkProperties.isolcpus }}"
-    TunedProfileName: "cpu-partitioning"
-    IsolCpusList: "{{ ComputeOvsDpdkProperties.isolcpus }}"
-    NovaReservedHostMemory: {{ ComputeOvsDpdkProperties.hostmemory }}
-    OvsDpdkSocketMemory: "{{ ComputeOvsDpdkProperties.socketmemory }}"
-    OvsDpdkMemoryChannels: "{{ ComputeOvsDpdkProperties.memorychannels }}"
-    OvsDpdkCoreList: "{{ ComputeOvsDpdkProperties.ovsdpdkcorelist }}"
-    NovaComputeCpuDedicatedSet: "{{ ComputeOvsDpdkProperties.dedicatedcpus }}"
-    NovaComputeCpuSharedSet: "{{ ComputeOvsDpdkProperties.sharedcpus }}"
-    OvsPmdCoreList: "{{ ComputeOvsDpdkProperties.ovspmdcorelist}}"
-    OvsEnableDpdk: true
-{% endif %}
-
-{% if roles_count[leaf.name]["ComputeSriov"] > 0 %}
-  ComputeSriovParameters:
-{% if leaf.name != 'overcloud' %}
-    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
-{% else %}
-    NeutronBridgeMappings: "datacentre:br-ex"
-{% endif %}
-    IsolCpusList: '{{ ComputeSriovProperties.isolcpus }}'
-    KernelArgs: "default_hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepagesz={{ ComputeSriovProperties.hugepagesz }} hugepages={{ ComputeSriovProperties.hugepages }} {{ ComputeSriovProperties.kernelargs }} isolcpus={{ ComputeSriovProperties.isolcpus }}"
-    TunedProfileName: "cpu-partitioning"
-    NovaComputeCpuDedicatedSet: "{{ ComputeSriovProperties.dedicatedcpus }}"
-    NovaComputeCpuSharedSet: "{{ ComputeSriovProperties.sharedcpus }}"
-    NovaReservedHostMemory: {{ ComputeSriovProperties.hostmemory }}
-    NovaPCIPassthrough: {{ ComputeSriovProperties.pcipassthrough }}
-    NeutronPhysicalDevMappings: {{ ComputeSriovProperties.physicaldevmappings }}
-{% endif %}
-
-{% if roles_count[leaf.name]["ComputeOvsHwOffload"] > 0 %}
-  ComputeOvsHwOffloadParameters:
-{% if leaf.name != 'overcloud' %}
-    NeutronBridgeMappings: "datacentre-{{ leaf.name }}:br-ex"
-{% else %}
-    NeutronBridgeMappings: "datacentre:br-ex"
-{% endif %}
-    IsolCpusList: '{{ ComputeOvsHwOffloadProperties.isolcpus }}'
-    KernelArgs: "default_hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepagesz={{ ComputeOvsHwOffloadProperties.hugepagesz }} hugepages={{ ComputeOvsHwOffloadProperties.hugepages }} {{ ComputeOvsHwOffloadProperties.kernelargs }} isolcpus={{ ComputeOvsHwOffloadProperties.isolcpus }}"
-    OvsHwOffload: true
-    TunedProfileName: "cpu-partitioning"
-    NovaComputeCpuDedicatedSet: "{{ ComputeOvsHwOffloadProperties.dedicatedcpus }}"
-    NovaComputeCpuSharedSet: "{{ ComputeOvsHwOffloadProperties.sharedcpus }}"
-    NovaReservedHostMemory: {{ ComputeOvsHwOffloadProperties.hostmemory }}
-    NovaPCIPassthrough: {{ ComputeOvsHwOffloadProperties.pcipassthrough }}
-    NeutronPhysicalDevMappings: {{ ComputeOvsHwOffloadProperties.physicaldevmappings }}
-{% endif %}
-
 {% if DeployFrr %}
   FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
 {% endif %}
+
+{{ NetworkParameterDefaults | to_yaml | indent(width=2) }}
