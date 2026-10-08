@@ -25,7 +25,19 @@
     - (item.forward == 'bridge')
   loop: "{{ libvirt_networks }}"
 
-- name: NETWORKING - Define hypervisor interfaces
+- name: NETWORKING - Get existing NetworkManager connection profile names
+  command: "nmcli -t -f NAME connection show"
+  become: true
+  register: existing_nm_connections
+  changed_when: false
+  when: bridges_required | bool
+
+# A NIC NetworkManager has never seen (no profile at all, so it may be "unmanaged")
+# sometimes can't be cleanly enslaved into a bridge in one step; claim it into
+# management with a plain profile first, but only the first time - once a profile
+# named after it exists (e.g. the bridge-port one below), skip this to avoid
+# detaching/reattaching it from the bridge on every run.
+- name: NETWORKING - Define hypervisor interfaces (first-run only, to adopt a previously-unmanaged NIC into NetworkManager)
   set_fact:
     network_connections: "{{ (network_connections | default([])) + [connection] }}"
   vars:
@@ -42,6 +54,7 @@
   when:
     - inventory_hostname in item.hypervisor.split(',')
     - (item.forward == 'bridge') and (item.hypervisor_if is defined)
+    - item.hypervisor_if not in (existing_nm_connections.stdout_lines | default([]))
   loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Define network configuration for interfaces bridged to libvirt
