@@ -57,16 +57,29 @@
     delegate_to: undercloud
     when: default_leaf.ctlplane_subnet.masquerade | default(false)
 
+  - name: UNDERCLOUD NETWORK - Get active NetworkManager connections
+    command: "nmcli -t -f NAME connection show --active"
+    become: true
+    delegate_to: undercloud
+    register: gw_active_connections
+    changed_when: false
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+
   - name: UNDERCLOUD NETWORK - Activate gateway network connections
+    # nmcli connection up reports "successfully activated" even when the connection
+    # was already active (it doesn't distinguish no-op from a real transition), so
+    # changed status must come from checking the active-connections list above
+    # instead of parsing that message - only run (and report changed) for
+    # connections that aren't already active.
     command: "nmcli connection up {{ item.conn_name }}"
     loop: "{{ gw_interfaces_resolved | default([]) }}"
     loop_control:
       label: "{{ item.conn_name }}"
     become: true
     delegate_to: undercloud
-    register: gw_result
-    changed_when: "'successfully activated' in gw_result.stdout.lower()"
-    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+    when:
+      - default_leaf.ctlplane_subnet.masquerade | default(false)
+      - item.conn_name not in (gw_active_connections.stdout_lines | default([]))
 
   - name: UNDERCLOUD NETWORK - Enable IP forwarding when masquerade is enabled
     sysctl:
