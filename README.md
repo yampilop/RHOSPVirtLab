@@ -499,7 +499,7 @@ This are the mandatory parameter you most probably need to customize:
         numvfs: 8
 ```
 
-- Set the proper parameters for NFV roles in `ComputeSriovProperties`, `ComputeOvsHwOffloadProperties`, `ComputeOvsDpdkProperties` and/or `ComputeOvsDpdkSriovProperties`.
+- Set any NFV role parameters (e.g. `ComputeSriovParameters`, `ComputeOvsHwOffloadParameters`, `ComputeOvsDpdkParameters`, `ComputeOvsDpdkSriovParameters`) directly under `NetworkParameterDefaults` in `vars/options.yml`; nothing needs to be defined there when not using NFV roles.
 - Choose to deploy Octavia with `DeployOctavia: True`.
 - Choose to deploy Designate with `DeployDesignate: True`.
 - Choose to deploy FRR with `DeployFrr: True`.

@@ -230,8 +230,17 @@ ComputeOvsDpdkSriov:
     - {type: ovs_dpdk_port, name: dpdk1, driver: vfio-pci, members: [nic2v2]}
 ```
 
-ComputeSriovProperties, ComputeOvsHwOffloadProperties, ComputeOvsDpdkProperties, ComputeOvsDpdkSriovProperties:
-  Default properties for NFV roles
+NetworkParameterDefaults:
+  Freeform dict merged directly into `custom-network-configuration.yaml`'s
+  `parameter_defaults` (e.g. `NeutronBridgeMappings`, `NeutronPhysicalBridge`,
+  `NeutronFlatNetworks`, `NeutronNetworkVLANRanges`). Add NFV role parameters here
+  too (e.g. `ComputeSriovParameters`, `ComputeOvsHwOffloadParameters`,
+  `ComputeOvsDpdkParameters`, `ComputeOvsDpdkSriovParameters`) when using NFV roles;
+  nothing needs to be defined here otherwise.
+
+OvercloudParameterDefaults:
+  Freeform dict merged directly into `custom-overcloud.yaml`'s `parameter_defaults`
+  (e.g. `NovaSchedulerDefaultFilters`).
 
 CephStorageProperties:
   Default properties for Ceph roles.
@@ -262,12 +271,6 @@ LowMemUsage: **True** | False
 
 ControllersFencing: **True** | False
   Enables STONITH fencing for the controllers (also forced on when a ComputeInstanceHA role is present).
-
-BridgeMappings: **'datacentre:br-ex'**
-  Default Neutron bridge_mappings applied to the compute nodes.
-
-NetworkVlanRanges: **'datacentre:1:1000'**
-  Neutron network VLAN ranges for the `datacentre` physical network.
 
 SnmpdReadonlyUserPassword: **RHOSPVirtLab**
   Password for the read-only snmpd user configured on the undercloud and overcloud.

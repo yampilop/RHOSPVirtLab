@@ -310,4 +310,4 @@ parameter_defaults:
 {% endfor %}{# IF 8 FOR 1 #}
 {% endif %}{# IF 8 #}
 
-{{ OvercloudParameterDefaults | to_yaml | indent(width=2) }}
+{{ OvercloudParameterDefaults | to_yaml | indent(width=2, first=True) }}

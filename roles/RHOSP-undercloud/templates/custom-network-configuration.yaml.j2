@@ -84,4 +84,4 @@ parameter_defaults:
   FrrOvnBgpAgentDriver: 'ovn_bgp_driver'
 {% endif %}
 
-{{ NetworkParameterDefaults | to_yaml | indent(width=2) }}
+{{ NetworkParameterDefaults | to_yaml | indent(width=2, first=True) }}
