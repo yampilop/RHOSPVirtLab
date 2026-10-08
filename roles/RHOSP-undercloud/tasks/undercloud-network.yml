@@ -41,20 +41,39 @@
       - default_leaf.ctlplane_subnet.masquerade | default(false)
       - item.ifname == 'None'
 
-  - name: UNDERCLOUD NETWORK - Create gateway network connections via NetworkManager
-    community.general.nmcli:
-      type: ethernet
-      conn_name: "{{ item.conn_name }}"
-      ifname: "{{ item.ifname }}"
-      method4: manual
-      ip4: "{{ bridge_to_gw[item.bridge].subnet.gateway }}/{{ bridge_to_gw[item.bridge].subnet.ip_subnet.split('/')[1] }}"
-      autoconnect: yes
-      state: present
+  - name: UNDERCLOUD NETWORK - Get existing NetworkManager connection profile names
+    # community.general.nmcli is deliberately not used here: its nmcli.py module
+    # uses `from __future__ import annotations` (Python 3.7+), which fails with a
+    # SyntaxError when shipped to a Python 3.6 target (e.g. a RHEL 8 undercloud) -
+    # this project supports RHEL 7.9/8.4 targets, so raw nmcli is used instead.
+    command: "nmcli -t -f NAME connection show"
+    become: true
+    delegate_to: undercloud
+    register: gw_existing_connections
+    changed_when: false
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+
+  - name: UNDERCLOUD NETWORK - Create or update gateway network connections via NetworkManager
+    # Adding a connection with a name that already exists doesn't update it - nmcli
+    # happily creates a second profile under the same display name - so an existing
+    # profile must be "modify"-ed instead of "add"-ed again. changed_when mirrors the
+    # original script's behavior: only a brand-new connection counts as changed.
+    command: >-
+      {% if item.conn_name in (gw_existing_connections.stdout_lines | default([])) %}
+      nmcli connection modify {{ item.conn_name }}
+      {% else %}
+      nmcli connection add type ethernet con-name {{ item.conn_name }}
+      {% endif %}
+      ifname {{ item.ifname }}
+      ipv4.method manual
+      ipv4.addresses {{ bridge_to_gw[item.bridge].subnet.gateway }}/{{ bridge_to_gw[item.bridge].subnet.ip_subnet.split('/')[1] }}
+      connection.autoconnect yes
     loop: "{{ gw_interfaces_resolved | default([]) }}"
     loop_control:
       label: "{{ item.conn_name }}"
     become: true
     delegate_to: undercloud
+    changed_when: item.conn_name not in (gw_existing_connections.stdout_lines | default([]))
     when: default_leaf.ctlplane_subnet.masquerade | default(false)
 
   - name: UNDERCLOUD NETWORK - Get active NetworkManager connections

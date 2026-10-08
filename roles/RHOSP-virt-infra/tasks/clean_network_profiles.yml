@@ -22,11 +22,17 @@
     - "{{ dcn_leafs }}"
     - networks
 
+# community.general.nmcli is deliberately not used here: its nmcli.py module uses
+# `from __future__ import annotations` (Python 3.7+), which fails with a SyntaxError
+# when shipped to a Python 3.6 target (e.g. a RHEL 8 hypervisor) - this project
+# supports RHEL 7.9/8.4 targets, so raw nmcli is used instead. rc 10 means the
+# connection didn't exist, which is the idempotent-no-op case, not a real failure.
 - name: NETWORKING - Delete VLAN connections via nmcli
-  community.general.nmcli:
-    conn_name: "{{ item }}"
-    state: absent
+  command: "nmcli connection delete {{ item }}"
   loop: "{{ vlans_to_delete | default([]) | unique }}"
+  register: vlan_delete
+  failed_when: vlan_delete.rc not in [0, 10]
+  changed_when: vlan_delete.rc == 0
 
 - name: NETWORKING - Collect bridge connections to delete
   set_fact:
@@ -37,10 +43,11 @@
   loop: "{{ libvirt_networks }}"
 
 - name: NETWORKING - Delete bridge connections via nmcli
-  community.general.nmcli:
-    conn_name: "{{ item }}"
-    state: absent
+  command: "nmcli connection delete {{ item }}"
   loop: "{{ bridges_to_delete | default([]) | unique }}"
+  register: bridge_delete
+  failed_when: bridge_delete.rc not in [0, 10]
+  changed_when: bridge_delete.rc == 0
 
 - name: NETWORKING - Delete hypervisor interfaces
   set_fact:
