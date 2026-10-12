@@ -1,2 +1,5 @@
 vault_credentials.yaml
 .claude/
+.claude_validate_bugfixes.py
+git_run.sh
+resume.sh
