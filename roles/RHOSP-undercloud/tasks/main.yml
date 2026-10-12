@@ -253,6 +253,25 @@
          if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
          else default_leaf.ctlplane_subnet.vip }}
 
+# Re-registered so pre_deployment.sh.j2 can still resolve needs_bios_image when the
+# play is resumed with `--start-at-task TEMPLATES`, which skips the earlier
+# "IMAGES - Determine BIOS/UEFI image requirements" task above.
+- name: IMAGES - Determine which director images are actually needed (again, for TEMPLATES restart)
+  set_fact:
+    ironic_provisioned_machines: "{{ ironic_candidates | rejectattr('pre_provisioned', 'defined') | list + ironic_candidates | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list }}"
+  vars:
+    ironic_candidates: "{{ libvirt_machines + physical_machines }}"
+
+- name: IMAGES - Determine BIOS/UEFI image requirements (again, for TEMPLATES restart)
+  set_fact:
+    needs_bios_image: >-
+      {{ (ironic_provisioned_machines | rejectattr('pm', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | rejectattr('pm.mode', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined') | rejectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+    needs_uefi_image: >-
+      {{ (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined')
+      | selectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+
 - name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
 
