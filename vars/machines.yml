@@ -1,0 +1,156 @@
+---
+# Lab machine inventory: `undercloud` (the director host) and `machines` (the overcloud nodes), each tagged with a `type` (libvirt | physical | kubevirt); see the role READMEs for the full schema.
+
+
+undercloud:
+  type: libvirt
+  # openstack:                     # optional - control-plane NIC name
+  #   local_interface: eth0
+  libvirt:
+    title: 'RHOSPVirtLab Undercloud'
+    hypervisor: localhost
+    cpus: 4
+    memory: 16Gi
+    disks:
+    - root: true
+      size: 100Gi
+    network:
+      interfaces:
+      - name: nic1
+        mac: '0c:1f:0d:10:00:00'
+        bridge: br-ctlplane
+      # The mgmt/Ansible-access NIC is injected by the role (see README); do not list it.
+
+
+# Alternative: a KUBEVIRT undercloud (see README). Replace the libvirt definition above with:
+#
+# undercloud:
+#   type: kubevirt
+#   openstack:
+#     local_interface: eth1        # control-plane NIC (eth0 is pod network in kubevirt)
+#   kubevirt:
+#     title: 'RHOSPVirtLab Undercloud'
+#     cpus: 2
+#     memory: 6Gi
+#     disks:
+#     - root: true
+#       size: 100Gi
+#     network:
+#       interfaces:
+#       - name: ctlplane
+#         mac: '0c:1f:0d:10:00:00'
+#         bridge: br-ctlplane
+#
+# Alternative: an admin-prepared PHYSICAL undercloud (see README). Replace the libvirt
+# definition above with:
+#
+# undercloud:
+#   type: physical
+#   openstack:
+#     local_interface: eno1        # control-plane NIC name inside the undercloud
+
+
+# Overcloud nodes (default: one virtual controller + one virtual compute); default unprovisioned, set pre_provisioned: true for deployed-server nodes (see README).
+machines:
+- name: controller0
+  type: libvirt
+  openstack:
+    role: controller
+    leaf: overcloud
+    # ctlplane_ip: 192.168.24.121   # required when pre_provisioned: true
+  pm:
+    type: ipmi
+    user: "{{ BmcUsername }}"
+    password: "{{ BmcPassword }}"
+    address: localhost
+    port: 6231
+    mode: bios
+  libvirt:
+    title: 'RHOSPVirtLab Virtual Controller 0'
+    hypervisor: localhost
+    cpus: 2
+    memory: 8Gi
+    disks:
+    - root: true
+      size: 50Gi
+    network:
+      interfaces:
+      - name: nic1
+        mac: '0c:1f:0d:11:00:00'
+        bridge: br-ctlplane
+- name: compute0
+  type: libvirt
+  openstack:
+    role: compute
+    leaf: overcloud
+    # ctlplane_ip: 192.168.24.122   # required when pre_provisioned: true
+  pm:
+    type: ipmi
+    user: "{{ BmcUsername }}"
+    password: "{{ BmcPassword }}"
+    address: localhost
+    port: 6234
+    mode: bios
+  libvirt:
+    title: 'RHOSPVirtLab Virtual Compute 0'
+    hypervisor: localhost
+    cpus: 4
+    memory: 6Gi
+    disks:
+    - root: true
+      size: 50Gi
+    network:
+      interfaces:
+      - name: nic1
+        mac: '0c:1f:0d:12:00:00'
+        bridge: br-ctlplane
+
+
+# Example physical (baremetal) machines:
+# Also default to unprovisioned; set `pre_provisioned: true` for deployed servers.
+#
+# - name: computeovsdpdk0
+#   type: physical
+#   pre_provisioned: false
+#   openstack:
+#     role: computeovsdpdk
+#     leaf: overcloud
+#     # ctlplane_ip: 192.168.24.131   # required when pre_provisioned: true
+#   pm:
+#     type: ipmi
+#     user: admin
+#     password: admin
+#     address: 192.168.122.1
+#     port: 623
+#     mode: bios
+#   physical:
+#     cpus: 4
+#     memory: 4194304
+#     disk: 53687091200
+#     mac: '52:54:00:24:61:07'
+#     nics:
+#       nic1: 'ens1f0'
+#       nic2: 'ens1f1'
+
+
+# Example KUBEVIRT machine (requires a KUBEVIRT undercloud; see README):
+# All kubevirt machines are pre_provisioned: true until KubeVirtBMC adds power
+# management support (https://github.com/kubevirtbmc/kubevirtbmc).
+#
+# - name: controller0
+#   type: kubevirt
+#   pre_provisioned: true
+#   openstack:
+#     role: controller
+#   kubevirt:
+#     title: 'RHOSPVirtLab Virtual Controller 0'
+#     cpus: 2
+#     memory: 8Gi
+#     disks:
+#     - root: true
+#       size: 50Gi
+#     network:
+#       interfaces:
+#       - name: ctlplane
+#         mac: '0c:1f:0d:11:00:00'
+#         bridge: br-ctlplane

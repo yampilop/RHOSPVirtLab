@@ -17,9 +17,26 @@
   loop:
     - instackenv.yaml
     - node-info.yaml
-    - custom-overcloud.yaml
     - custom-network-configuration.yaml
     - custom-ceph.yaml
+
+- name: "TEMPLATES - Prepare the overcloud environment file for {{ leaf.name }} (contains RHSM credentials when RegisterNodes is set)"
+  template:
+    src: "custom-overcloud.yaml.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/custom-overcloud.yaml"
+    owner: stack
+    group: stack
+    mode: "0600"
+
+- name: "TEMPLATES - Prepare the deployed-server port map for {{ leaf.name }} (16.2)"
+  template:
+    src: "deployed-server-ports.yaml.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/deployed-server-ports.yaml"
+    owner: stack
+    group: stack
+  when:
+    - RHOSP_version < 17.1
+    - deployed_server[leaf.name]
 
 - name: "TEMPLATES - Prepare the nic-configs templates for {{ leaf.name }}"
   template:
@@ -28,20 +45,28 @@
     owner: stack
     group: stack
   when:
-    - RHOSP_version < 17.0
+    - RHOSP_version < 17.1
     - roles_count[leaf.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
 
-- name: "TEMPLATES - RHOSP >= 17.0 nic-config files for {{ leaf.name }}"
+- name: "TEMPLATES - RHOSP >= 17.1 nic-config files for {{ leaf.name }}"
   template:
     src: "templates/nic-configs/nic-config.j2"
     dest: "/home/stack/templates/{{ leaf.name }}/nic-configs/{{ item.profile }}.j2"
     owner: stack
     group: stack
   when:
-    - RHOSP_version >= 17.0
+    - RHOSP_version >= 17.1
     - roles_count[leaf.name][item.name] > 0
   loop: "{{ overcloud_roles }}"
+
+- name: "SCRIPTS - Prepare the pre-deployment script for {{ leaf.name }} (contains RHSM credentials)"
+  template:
+    src: "pre_deployment.sh.j2"
+    dest: "/home/stack/templates/{{ leaf.name }}/pre_deployment.sh"
+    mode: "0700"
+    owner: stack
+    group: stack
 
 - name: SCRIPTS - Prepare the scripts
   template:
@@ -51,5 +76,4 @@
     owner: stack
     group: stack
   loop:
-    - pre_deployment.sh
     - deploy.sh

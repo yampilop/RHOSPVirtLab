@@ -1,0 +1,111 @@
+---
+- name: UNDERCLOUD NETWORK - Configure gateway network interfaces with NetworkManager
+  block:
+  - name: UNDERCLOUD NETWORK - Get gateway networks
+    set_fact:
+      gw_networks: "{{ default_leaf.networks | selectattr('subnet.gateway', 'defined') | list }}"
+
+  - name: UNDERCLOUD NETWORK - Get gateway interfaces from undercloud VM
+    set_fact:
+      gw_interfaces: "{{ (undercloud.libvirt.network.interfaces if (undercloud.type | default('libvirt')) == 'libvirt' else undercloud.kubevirt.network.interfaces) | selectattr('bridge', 'in', gw_networks | map(attribute='bridge') | list) | list }}"
+
+  - name: UNDERCLOUD NETWORK - Build bridge to network info mapping
+    set_fact:
+      bridge_to_gw: "{{ bridge_to_gw | default({}) | combine({item.bridge: item}) }}"
+    loop: "{{ gw_networks }}"
+
+  - name: UNDERCLOUD NETWORK - Resolve each gateway interface's MAC address to its kernel name and connection name
+    set_fact:
+      gw_interfaces_resolved: >-
+        {{ (gw_interfaces_resolved | default([])) + [item | combine({'ifname': resolved_ifname, 'conn_name': resolved_conn_name})] }}
+    vars:
+      resolved_ifname: |-
+        {% set ns = namespace(found=none) %}
+        {% for name in hostvars['undercloud'].ansible_facts.interfaces %}
+        {% if hostvars['undercloud'].ansible_facts[name].macaddress | default('') | lower == item.mac | lower %}
+        {% set ns.found = name %}
+        {% endif %}
+        {% endfor %}
+        {{ ns.found }}
+      resolved_conn_name: "{{ bridge_to_gw[item.bridge].name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}"
+    loop: "{{ gw_interfaces }}"
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+
+  - name: CHECKS - Ensure every gateway interface's MAC address resolved to a kernel interface name
+    fail:
+      msg: >-
+        ERROR: could not find a network interface with MAC address {{ item.mac }} on the
+        undercloud (bridge {{ item.bridge }}). Check vars/machines.yml for a MAC mismatch.
+    loop: "{{ gw_interfaces_resolved | default([]) }}"
+    when:
+      - default_leaf.ctlplane_subnet.masquerade | default(false)
+      - item.ifname == 'None'
+
+  - name: UNDERCLOUD NETWORK - Get existing NetworkManager connection profile names
+    # community.general.nmcli is deliberately not used here: its nmcli.py module
+    # uses `from __future__ import annotations` (Python 3.7+), which fails with a
+    # SyntaxError when shipped to a Python 3.6 target (e.g. a RHEL 8 undercloud) -
+    # this project supports RHEL 7.9/8.4 targets, so raw nmcli is used instead.
+    command: "nmcli -t -f NAME connection show"
+    become: true
+    delegate_to: undercloud
+    register: gw_existing_connections
+    changed_when: false
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+
+  - name: UNDERCLOUD NETWORK - Create or update gateway network connections via NetworkManager
+    # Adding a connection with a name that already exists doesn't update it - nmcli
+    # happily creates a second profile under the same display name - so an existing
+    # profile must be "modify"-ed instead of "add"-ed again. changed_when mirrors the
+    # original script's behavior: only a brand-new connection counts as changed.
+    command: >-
+      {% if item.conn_name in (gw_existing_connections.stdout_lines | default([])) %}
+      nmcli connection modify {{ item.conn_name }}
+      {% else %}
+      nmcli connection add type ethernet con-name {{ item.conn_name }}
+      {% endif %}
+      ifname {{ item.ifname }}
+      ipv4.method manual
+      ipv4.addresses {{ bridge_to_gw[item.bridge].subnet.gateway }}/{{ bridge_to_gw[item.bridge].subnet.ip_subnet.split('/')[1] }}
+      connection.autoconnect yes
+    loop: "{{ gw_interfaces_resolved | default([]) }}"
+    loop_control:
+      label: "{{ item.conn_name }}"
+    become: true
+    delegate_to: undercloud
+    changed_when: item.conn_name not in (gw_existing_connections.stdout_lines | default([]))
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+
+  - name: UNDERCLOUD NETWORK - Get active NetworkManager connections
+    command: "nmcli -t -f NAME connection show --active"
+    become: true
+    delegate_to: undercloud
+    register: gw_active_connections
+    changed_when: false
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)
+
+  - name: UNDERCLOUD NETWORK - Activate gateway network connections
+    # nmcli connection up reports "successfully activated" even when the connection
+    # was already active (it doesn't distinguish no-op from a real transition), so
+    # changed status must come from checking the active-connections list above
+    # instead of parsing that message - only run (and report changed) for
+    # connections that aren't already active.
+    command: "nmcli connection up {{ item.conn_name }}"
+    loop: "{{ gw_interfaces_resolved | default([]) }}"
+    loop_control:
+      label: "{{ item.conn_name }}"
+    become: true
+    delegate_to: undercloud
+    when:
+      - default_leaf.ctlplane_subnet.masquerade | default(false)
+      - item.conn_name not in (gw_active_connections.stdout_lines | default([]))
+
+  - name: UNDERCLOUD NETWORK - Enable IP forwarding when masquerade is enabled
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: '1'
+      state: present
+      sysctl_set: yes
+    become: true
+    delegate_to: undercloud
+    when: default_leaf.ctlplane_subnet.masquerade | default(false)

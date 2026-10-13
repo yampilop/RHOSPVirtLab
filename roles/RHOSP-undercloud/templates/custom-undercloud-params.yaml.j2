@@ -1,12 +1,12 @@
 parameter_defaults:
-  AdminPassword: "redhat"
-  AdminEmail: "admin@example.com"
+  AdminPassword: "{{ OvercloudAdminPassword }}"
+  AdminEmail: "{{ OvercloudAdminEmail }}"
 
   # Snmp definitions
   SnmpdReadonlyUserPassword: {{ SnmpdReadonlyUserPassword }}
 
 {% if UndercloudExtraFirewallRules is defined and UndercloudExtraFirewallRules %}
-{% if RHOSP_version > 17.0 %}
+{% if RHOSP_version >= 17.1 %}
   ExtraFirewallRules:
 {% for key in UndercloudExtraFirewallRules.keys() %}
     '{{ key }}': {{ UndercloudExtraFirewallRules[key] | to_yaml }}

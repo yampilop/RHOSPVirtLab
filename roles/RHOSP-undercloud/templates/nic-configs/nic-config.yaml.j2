@@ -33,28 +33,28 @@ parameters:
     type: number
 
 {% for network in roles_networks[item.name] %}
-  {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}IpSubnet:
+  {{ network }}IpSubnet:
     default: ''
-    description: IP address/subnet on the {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }} network
+    description: IP address/subnet on the {{ network }} network
     type: string
-  {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}NetworkVlanID:
-    default: {{ leaf.networks[network].vlan | default(1) }}
-    description: Vlan ID for the {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }} network traffic.
+  {{ network }}NetworkVlanID:
+    default: {{ (leaf.networks | selectattr('name', 'equalto', network) | first).subnet.vlan | default(1) }}
+    description: Vlan ID for the {{ network }} network traffic.
     type: number
-  {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu:
+  {{ network }}Mtu:
     default: 1500
     description: The maximum transmission unit (MTU) size(in bytes) that is
       guaranteed to pass through the data path of the segments in the
-      {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }} network.
+      {{ network }} network.
     type: number
-  {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}InterfaceDefaultRoute:
+  {{ network }}InterfaceDefaultRoute:
     default: ''
-    description: default route for the {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }} network
+    description: default route for the {{ network }} network
     type: string
-  {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}InterfaceRoutes:
+  {{ network }}InterfaceRoutes:
     default: []
     description: >
-      Routes for the {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }} network traffic.
+      Routes for the {{ network }} network traffic.
       JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
@@ -77,10 +77,7 @@ parameters:
 resources:
 
   MinViableMtu:
-    # This resource resolves the minimum viable MTU for interfaces, bonds and
-    # bridges that carry multiple VLANs. Each VLAN may have different MTU. The
-    # bridge, bond or interface must have an MTU to allow the VLAN with the
-    # largest MTU.
+    # Minimum viable MTU: max across the carried VLANs so the bridge/bond fits the largest
     type: OS::Heat::Value
     properties:
       type: number
@@ -90,7 +87,7 @@ resources:
           data:
             - {get_param: ControlPlaneMtu}
 {% for network in roles_networks[item.name] if network != 'External' %}
-            - {get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu}
+            - {get_param: {{ network }}Mtu}
 {% endfor %}
 
   OsNetConfigImpl:
@@ -104,16 +101,37 @@ resources:
           params:
             $network_config:
               network_config:
-{% if 'Dpdk' in item.name %}
-              - type: linux_bridge
-{% else %}
-              - type: ovs_bridge
+{% set role_bridges = RoleBridgeMappings[item.name] | default(RoleBridgeMappings['Default']) %}
+{% set ns = namespace(nic_index = 2 if deployed_server[leaf.name] else 1) %}
+{% for bridge in role_bridges %}
+{% if bridge.type == 'interface' %}
+              - type: interface
+                name: {{ bridge.name }}
+                use_dhcp: {{ bridge.use_dhcp | default(false) | lower }}
+{% elif bridge.type == 'sriov_pf' %}
+              - type: sriov_pf
+                name: {{ bridge.name }}
+                numvfs: {{ bridge.numvfs }}
+                promisc: true
+                use_dhcp: false
+                nm_controlled: true
+                mtu:
+                  get_param: ExternalMtu
+                defroute: false
+{% if bridge.link_mode is defined %}
+                link_mode: {{ bridge.link_mode }}
 {% endif %}
-{% if 'RHOSPVirtLab_ctlplane' not in leaf.networks.External.network %}
-                name: br-vlans
 {% else %}
-                name: br-ex
+{% if bridge.native is defined and bridge.native == 'CtlPlane' %}
+{% set bridge_mtu_line = 'get_attr: [MinViableMtu, value]' %}
+{% elif bridge.native is defined and bridge.native in roles_networks[item.name] %}
+{% set bridge_mtu_line = 'get_param: ' ~ bridge.native ~ 'Mtu' %}
+{% else %}
+{% set bridge_mtu_line = '' %}
 {% endif %}
+              - type: {{ bridge.type }}
+                name: {{ bridge.name }}
+{% if bridge.native is defined and bridge.native == 'CtlPlane' %}
                 mtu:
                   get_attr: [MinViableMtu, value]
                 use_dhcp: false
@@ -133,126 +151,104 @@ resources:
                     - - default: true
                         next_hop:
                           get_param: ControlPlaneDefaultRoute
-                members:
-                - type: interface
-                  name: {{ interfaces[item.name].ControlPlane }}
-                  mtu:
-                    get_attr: [MinViableMtu, value]
-                  # force the MAC address of the bridge to this interface
-                  primary: true
-{% for network in roles_networks[item.name] if ('RHOSPVirtLab_ctlplane' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}
-                - type: vlan
-                  mtu:
-                    get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu
-                  vlan_id:
-                    get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}NetworkVlanID
-                  addresses:
-                  - ip_netmask:
-                      get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}IpSubnet
-                  routes:
-                    list_concat_unique:
-                      - get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}InterfaceRoutes
-{% endfor %}
-{% if ('External' in roles_networks[item.name]) and ('RHOSPVirtLab_external' in leaf.networks.External.network) %}
-{% if 'Dpdk' in item.name %}
-              - type: linux_bridge
-{% else %}
-              - type: ovs_bridge
-{% endif %}
-                name: br-ex
+{% elif bridge.native is defined and bridge.native in roles_networks[item.name] %}
                 mtu:
-                  get_param: External{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu
+                  get_param: {{ bridge.native }}Mtu
                 use_dhcp: false
                 addresses:
                 - ip_netmask:
-                    get_param: External{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}IpSubnet
+                    get_param: {{ bridge.native }}IpSubnet
                 routes:
                   list_concat_unique:
-                    - get_param: External{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}InterfaceRoutes
+                    - get_param: {{ bridge.native }}InterfaceRoutes
+{% if bridge.native == 'External' and (default_leaf.networks | selectattr('name', 'equalto', 'External') | first).subnet.gateway is defined %}
                     - - default: true
                         next_hop:
-                          get_param: External{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}InterfaceDefaultRoute
+                          get_param: ExternalInterfaceDefaultRoute
+{% endif %}
+{% else %}
+                use_dhcp: false
+{% endif %}
+{% if bridge.members is defined %}
                 members:
-{% if (('Sriov' in item.name) or ('HwOffload' in item.name)) and ('v' in interfaces[item.name].External) %}
+{% for member in bridge.members %}
+{% if member is string %}
+{% if 'v' in member %}
                 - type: sriov_vf
-                  device: {{ interfaces[item.name].External.split('v')[0] }}
-                  vfid: {{ interfaces[item.name].External.split('v')[1] }}
-                  mtu:
-                    get_param: External{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu
-                  # force the MAC address of the bridge to this interface
-                  primary: true
+                  device: {{ member.split('v')[0] }}
+                  vfid: {{ member.split('v')[1] }}
 {% else %}
                 - type: interface
-                  name: {{ interfaces[item.name].External }}
+                  name: nic{{ ns.nic_index }}
+{% set ns.nic_index = ns.nic_index + 1 %}
+{% endif %}
+{% if bridge_mtu_line %}
                   mtu:
-                    get_param: External{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu
+                    {{ bridge_mtu_line }}
+{% endif %}
+{% if loop.first %}
                   # force the MAC address of the bridge to this interface
                   primary: true
 {% endif %}
-{% for network in roles_networks[item.name] if ('RHOSPVirtLab_external' in leaf.networks[network].network) and (leaf.networks[network].vlan is defined) %}
-                - type: vlan
-                  mtu:
-                    get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}Mtu
-                  vlan_id:
-                    get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}NetworkVlanID
-                  addresses:
-                  - ip_netmask:
-                      get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}IpSubnet
-                  routes:
-                    list_concat_unique:
-                      - get_param: {{ network }}{{ leaf.name if (RHOSP_version == 13.0 and leaf.name != DefaultLeaf0.name) else '' }}InterfaceRoutes
+{% else %}
+                - type: {{ member.type }}
+{% if member.name is defined %}
+                  name: {{ member.name }}
+{% endif %}
+{% if member.type == 'ovs_dpdk_bond' %}
+                  mtu: {{ member.mtu | default(9000) }}
+                  rx_queue: {{ member.rx_queue | default(1) }}
+                  ovs_extra:
+{% for p in member.members %}
+{% set p_name = 'nic' ~ ns.nic_index %}
+{% set ns.nic_index = ns.nic_index + 1 %}
+                    - set Interface {{ p_name }} options:n_rxq_desc=4096
+                    - set Interface {{ p_name }} options:n_txq_desc=4096
 {% endfor %}
 {% endif %}
-
-{% if ('Dpdk' in item.name) and (interfaces[item.name].DpdkBonds is defined) and (interfaces[item.name].DpdkBonds|length > 0) %}
-              - type: ovs_user_bridge
-                name: br-dpdk
-                use_dhcp: false
-                members:
-{% for dpdkbond in interfaces[item.name].DpdkBonds %}
-                - type: ovs_dpdk_bond
-                  name: {{ dpdkbond.name }}
-                  mtu: 9000
-                  rx_queue: 1
-                  ovs_extra:
-{% for port in dpdkbond.ports %}
-                    - set Interface {{ port.name }} options:n_rxq_desc=4096
-                    - set Interface {{ port.name }} options:n_txq_desc=4096
-{% endfor %}
+{% if member.members is defined %}
                   members:
-{% for port in dpdkbond.ports %}
-                  - type: ovs_dpdk_port
-                    name: {{ port.name }}
-                    driver: {{ port.driver }}
+{% for p in member.members %}
+                  - type: {{ p.type }}
+                    name: nic{{ ns.nic_index }}
+{% set ns.nic_index = ns.nic_index + 1 %}
+{% if p.driver is defined %}
+                    driver: {{ p.driver }}
+{% endif %}
+{% if p.members is defined %}
                     members:
-{% if 'v' in port.interface %}
+{% for sub in p.members %}
+{% if 'v' in sub %}
                     - type: sriov_vf
-                      device: {{ port.interface.split('v')[0] }}
-                      vfid: {{ port.interface.split('v')[1] }}
+                      device: {{ sub.split('v')[0] }}
+                      vfid: {{ sub.split('v')[1] }}
 {% else %}
                     - type: interface
-                      name: {{ port.interface }}
-{% endif %}
-{% endfor %}
-{% endfor %}
-{% endif %}
-
-{% if (('Sriov' in item.name) or ('HwOffload' in item.name)) and (interfaces[item.name].Sriov is defined) %}
-{% for sriovif in interfaces[item.name].Sriov %}
-              - type: sriov_pf
-                name: {{ sriovif.device }}
-                numvfs: {{ sriovif.numvfs }}
-                promisc: true
-                use_dhcp: false
-                nm_controlled: true
-                mtu:
-                  get_param: ExternalMtu
-                defroute: false
-{% if 'HwOffload' in item.name %}
-                link_mode: switchdev
+                      name: nic{{ ns.nic_index }}
+{% set ns.nic_index = ns.nic_index + 1 %}
 {% endif %}
 {% endfor %}
 {% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% for network in roles_networks[item.name] if network in (bridge.vlans | default([])) %}
+                - type: vlan
+                  mtu:
+                    get_param: {{ network }}Mtu
+                  vlan_id:
+                    get_param: {{ network }}NetworkVlanID
+                  addresses:
+                  - ip_netmask:
+                      get_param: {{ network }}IpSubnet
+                  routes:
+                    list_concat_unique:
+                      - get_param: {{ network }}InterfaceRoutes
+{% endfor %}
+{% endif %}
+{% endfor %}
 
 outputs:
   OS::stack_id:

@@ -7,68 +7,186 @@
 - name: SETUP - Make the hypervisor setup
   import_tasks: tasks/setup.yml
 
+- name: SETUP - Register computed variables as facts for template access
+  set_fact:
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    undercloud_is_libvirt: "{{ (undercloud.type | default('libvirt')) == 'libvirt' }}"
+    undercloud_effective: >-
+      {{ (undercloud_base | combine({'libvirt': {'network': {'interfaces':
+            ((undercloud.libvirt.network.interfaces | default([])) + [undercloud_management_interface])
+         }}}, recursive=true))
+         if (undercloud_is_libvirt | bool) else undercloud_base }}
+    libvirt_machines: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list) + ([undercloud_effective] if (undercloud_is_libvirt | bool) else []) }}"
+    libvirt_required: "{{ libvirt_machines | length > 0 }}"
+    vbmc_required: "{{ (machines | selectattr('type', 'equalto', 'libvirt') | list | length) > 0 }}"
+    bridges_required: "{{ (libvirt_required | bool) or ((libvirt_networks | default([]) | selectattr('hypervisor_if', 'defined') | list | length) > 0) }}"
+    management_network_required: >-
+      {{ (undercloud_is_libvirt | bool)
+         or ((machines | selectattr('type', 'equalto', 'libvirt')
+                       | selectattr('libvirt.hypervisor', 'equalto', 'localhost')
+                       | selectattr('pre_provisioned', 'defined')
+                       | selectattr('pre_provisioned') | list | length) > 0) }}
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+  vars:
+    undercloud_base: "{{ {'name': 'undercloud', 'pre_provisioned': true, 'openstack': {'role': 'undercloud'}} | combine(undercloud, recursive=true) }}"
+
+- name: CHECKS - Ensure pre-provisioned libvirt machines have valid ctlplane_ip
+  fail:
+    msg: |
+      ERROR in {{ item.name }}: pre-provisioned machines require
+      openstack.ctlplane_ip inside {{ default_leaf.ctlplane_subnet.cidr }} and outside the
+      DHCP ({{ default_leaf.ctlplane_subnet.dhcp_start }}-{{ default_leaf.ctlplane_subnet.dhcp_end }}),
+      inspection ({{ default_leaf.ctlplane_subnet.inspection_iprange }}) and reserved
+      (.1-.3, .254) ranges.
+  vars:
+    ctlplane_prefix: "{{ default_leaf.ctlplane_subnet.cidr.split('/')[0].rsplit('.', 1)[0] }}"
+  when:
+    - item.name != 'undercloud'
+    - item.pre_provisioned | default(false)
+    - (item.openstack.ctlplane_ip is not defined)
+      or (item.openstack.ctlplane_ip.rsplit('.', 1)[0] != ctlplane_prefix)
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) in [0, 1, 2, 3, 254, 255])
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.dhcp_start.rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.dhcp_end.rsplit('.', 1)[1] | int))
+      or ((item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) >= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[0].rsplit('.', 1)[1] | int) and (item.openstack.ctlplane_ip.rsplit('.', 1)[1] | int) <= (default_leaf.ctlplane_subnet.inspection_iprange.split(',')[1].rsplit('.', 1)[1] | int))
+  loop: "{{ libvirt_machines }}"
+
+# Assemble the libvirt networks/bridges from the `leafs` model plus the management (NAT) network when required (see README); skipped when there are no libvirt machines to build.
+- name: NETWORKING - Assemble the list of libvirt networks to manage
+  set_fact:
+    libvirt_networks: "{{ management_part + (leaf_bridges | from_yaml) }}"
+  vars:
+    management_part: "{{ [libvirt_management_network] if (management_network_required | bool) else [] }}"
+    leaf_bridges: |-
+      [
+      {% for leaf in leafs %}
+      {{ ({
+           'name': 'RHOSPVirtLab_' ~ (leaf.ctlplane_bridge.name | regex_replace('^br-', '')),
+           'hypervisor': leaf.hypervisor,
+           'bridge': leaf.ctlplane_bridge.name,
+           'forward': 'bridge',
+           'ipv4': {'address': leaf.ctlplane_subnet.gateway,
+                    'netmask': leaf.ctlplane_subnet.cidr | ipaddr('netmask')}
+         } | combine({'hypervisor_if': leaf.ctlplane_bridge.interface}
+                     if leaf.ctlplane_bridge.interface else {})) | to_json }},
+      {% for ab in leaf.additional_bridges | default([]) %}
+      {% set on_bridge = leaf.networks | default([]) | selectattr('bridge', 'equalto', ab.name) | list %}
+      {% set native = on_bridge | rejectattr('subnet.vlan', 'defined') | list %}
+      {% set base = (native | first) if native else ((on_bridge | first) if on_bridge else none) %}
+      {{ ({
+           'name': 'RHOSPVirtLab_' ~ (ab.name | regex_replace('^br-', '')),
+           'hypervisor': leaf.hypervisor,
+           'bridge': ab.name,
+           'forward': 'bridge'
+         } | combine({'hypervisor_if': ab.interface} if ab.interface else {})
+           | combine({'ipv4': {'address': ab.ipv4.address,
+                               'netmask': (base.subnet.ip_subnet if base else '0.0.0.0/24') | ipaddr('netmask')}}
+                     if ab.ipv4 is defined else {})) | to_json }},
+      {% endfor %}
+      {% endfor %}
+      ]
+  when: libvirt_required | bool
+
+# Derive the overcloud public IP (firewall port-forwards, /etc/hosts alias, network-hook DNAT) from the default leaf's External or ctlplane VIP; skipped when there are no libvirt machines to build.
+- name: NETWORKING - Derive the overcloud public IP
+  set_fact:
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+  when: libvirt_required | bool
+
 # Cleanup process
 
 - name: DHCRELAY - Clean DHCP relay
   import_tasks: clean_dhcrelay.yml
   when:
     - cleanup | bool
-    - DCNLeafs | length > 0
+    - dcn_leafs | length > 0
 
 - name: FIREWALL - Clean firewall
   import_tasks: clean_firewall.yml
-  when: cleanup | bool
+  when:
+    - cleanup | bool
+    - bridges_required | bool
+
+- name: VIRTUALBMC - Clean VirtualBMC
+  import_tasks: clean_virtualbmc.yml
+  when:
+    - cleanup | bool
+    - vbmc_required | bool
+
+- name: LIBVIRT - Clean libvirt domains
+  import_tasks: clean_libvirt_domains.yml
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
+
+- name: STORAGE - Clean cloud-init files and ISOs
+  import_tasks: clean_libvirt_cloud_init.yml
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
+
+- name: LIBVIRT - Clean libvirt storage pools and images
+  import_tasks: clean_libvirt_storage.yml
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
+
+- name: LIBVIRT - Clean libvirt networks
+  import_tasks: clean_libvirt_networks.yml
+  when:
+    - cleanup | bool
+    - libvirt_required | bool
 
 - name: NETWORKING - Clean network profiles
   import_tasks: clean_network_profiles.yml
   when:
     - cleanup | bool
     - not create | bool
-
-- name: VIRTUALBMC - Clean VirtualBMC
-  import_tasks: clean_virtualbmc.yml
-  when: cleanup | bool
-
-- name: LIBVIRT - Clean libvirt domains
-  import_tasks: clean_libvirt_domains.yml
-  when: cleanup | bool
-
-- name: LIBVIRT - Clean libvirt storage pools and images
-  import_tasks: clean_libvirt_storage.yml
-  when: cleanup | bool
-
-- name: LIBVIRT - Clean libvirt networks
-  import_tasks: clean_libvirt_networks.yml
-  when: cleanup | bool
+    - bridges_required | bool
 
 # Create process
 
 - name: NETWORKING - Create network profiles
   import_tasks: create_network_profiles.yml
-  when: create | bool
+  when:
+    - create | bool
+    - bridges_required | bool
 
 - name: LIBVIRT - Configure libvirt networks
   import_tasks: create_libvirt_networks.yml
-  when: create | bool
+  when:
+    - create | bool
+    - libvirt_required | bool
 
 - name: LIBVIRT - Configure libvirt storage pools and images
   import_tasks: create_libvirt_storage.yml
-  when: create | bool
+  when:
+    - create | bool
+    - libvirt_required | bool
 
 - name: LIBVIRT - Configure libvirt domains
   import_tasks: create_libvirt_domains.yml
-  when: create | bool
+  when:
+    - create | bool
+    - libvirt_required | bool
 
 - name: VIRTUALBMC - Configure VirtualBMC
   import_tasks: create_virtualbmc.yml
-  when: create | bool
+  when:
+    - create | bool
+    - vbmc_required | bool
 
 - name: FIREWALL - Configure firewall
   import_tasks: configure_firewall.yml
-  when: create | bool
+  when:
+    - create | bool
+    - bridges_required | bool
 
 - name: DHCRELAY - Configure DHCP relay
   import_tasks: configure_dhcrelay.yml
   when:
     - create | bool
-    - DCNLeafs | length > 0
+    - dcn_leafs | length > 0

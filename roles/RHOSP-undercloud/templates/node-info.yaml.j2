@@ -1,37 +1,42 @@
-{% if RHOSP_version < 17.0 %}
+{% if RHOSP_version < 17.1 %}{# IF 0 #}
 
 parameter_defaults:
-{% for ocrole in overcloud_roles %}
-{% if roles_count[leaf.name][ocrole.name] > 0 %}
+{% for ocrole in overcloud_roles %}{# IF 0 FOR 1 #}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}{# IF 0 FOR 1 IF 1 #}
   Overcloud{{ ocrole.name }}Flavor: baremetal
   {{ ocrole.name }}Count: {{ roles_count[leaf.name][ocrole.name] }}
-{% endif %}
-{% endfor %}
+{% endif %}{# IF 0 FOR 1 IF 1 #}
+{% endfor %}{# IF 0 FOR 1 #}
 
-{% if RHOSP_version == 13.0 and leaf.name == DefaultLeaf0.name %}
-{% for dcnleaf in DCNLeafs %}
-{% for ocrole in overcloud_roles if (ocrole.virtual | bool) %}
-{% if roles_count[dcnleaf.name][ocrole.name] > 0 %}
-  Overcloud{{ ocrole.name }}{{ dcnleaf.name }}Flavor: baremetal
-  {{ ocrole.name }}{{ dcnleaf.name }}Count: {{ roles_count[dcnleaf.name][ocrole.name] }}
-{% endif %}
-{% endfor %}
-{% endfor %}
-{% endif %}
+{% else %}{# IF 0 #}
 
-{% else %}
-
-{% if leaf.name != DefaultLeaf0.name %}
+{% if leaf.name != default_leaf.name %}{# IF 0.1 #}
 {% set name = "_" ~ leaf.name %}
-{% else %}
+{% else %}{# IF 0.1 #}
 {% set name = "" %}
-{% endif %}
+{% endif %}{# IF 0.1 #}
 
-{% for ocrole in overcloud_roles %}
-{% if roles_count[leaf.name][ocrole.name] > 0 %}
+{% macro net_list(ocrole, name, ctlplane_ip='') %}
+    networks:
+    - network: ctlplane
+{% if ctlplane_ip %}{# MACRO IF 1 #}
+      fixed_ip: {{ ctlplane_ip }}
+{% endif %}{# MACRO IF 1 #}
+{% if not deployed_server[leaf.name] %}{# MACRO IF 2 #}
+      vif: true
+{% endif %}{# MACRO IF 2 #}
+{% for network in leaf.networks if network.name in roles_networks[ocrole.name] %}{# MACRO FOR 1 #}
+    - network: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}
+      subnet: {{ network.name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower }}_subnet{{ name }}
+{% endfor %}{# MACRO FOR 1 #}
+{%- endmacro %}
+
+{% for ocrole in overcloud_roles %}{# IF 0 FOR 2 #}
+{% if roles_count[leaf.name][ocrole.name] > 0 %}{# IF 0 FOR 2 IF 1 #}
 - name: {{ ocrole.name }}
   count: {{ roles_count[leaf.name][ocrole.name] }}
-{% if ocrole.name == 'Controller' %}
+{% if not deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 1 #}
+{% if ocrole.name == 'Controller' %}{# IF 0 FOR 2 IF 1 IF 1 IF 1 #}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
     extra_vars:
@@ -43,8 +48,8 @@ parameter_defaults:
         /home=1GB
         /srv=10GB
         /var=100%
-{% endif %}
-{% if ('Sriov' in ocrole.name) or ('OvsHwOffload' in ocrole.name) or ('OvsDpdk' in ocrole.name) %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 IF 1 #}
+{% if ('Sriov' in ocrole.name) or ('OvsHwOffload' in ocrole.name) or ('OvsDpdk' in ocrole.name) %}{# IF 0 FOR 2 IF 1 IF 1 IF 2 #}
   ansible_playbooks:
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
     extra_vars:
@@ -52,71 +57,87 @@ parameter_defaults:
       tuned_isolated_cores: '{{ vars[ocrole.name + 'Properties'].isolcpus }}'
       tuned_profile: 'cpu-partitioning'
       reboot_wait_timeout: 1800
-{% endif %}
-{% if 'OvsDpdk' in ocrole.name %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 IF 2 #}
+{% if 'OvsDpdk' in ocrole.name %}{# IF 0 FOR 2 IF 1 IF 1 IF 3 #}
   - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-openvswitch-dpdk.yaml
     extra_vars:
       pmd: '{{ vars[ocrole.name + 'Properties'].ovspmdcorelist }}'
       memory_channels: '{{ vars[ocrole.name + 'Properties'].memorychannels }}'
       socket_mem: '{{ vars[ocrole.name + 'Properties'].socketmemory }}'
-{% endif %}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 IF 3 #}
+{% endif %}{# IF 0 FOR 2 IF 1 IF 1 #}
   defaults:
-    networks:
-    - network: ctlplane
-      vif: true
-{% if 'Storage' in roles_networks[ocrole.name] %}
-    - network: storage
-      subnet: storage_subnet{{ name }}
-{% endif %}
-{% if 'StorageMgmt' in roles_networks[ocrole.name] %}
-    - network: storage_mgmt
-      subnet: storage_mgmt_subnet{{ name }}
-{% endif %}
-{% if 'InternalApi' in roles_networks[ocrole.name] %}
-    - network: internal_api
-      subnet: internal_api_subnet{{ name }}
-{% endif %}
-{% if 'Tenant' in roles_networks[ocrole.name] %}
-    - network: tenant
-      subnet: tenant_subnet{{ name }}
-{% endif %}
-{% if 'External' in roles_networks[ocrole.name] %}
-    - network: external
-      subnet: external_subnet{{ name }}
-{% endif %}
+{% if deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 2 #}
+    managed: false
+{% endif %}{# IF 0 FOR 2 IF 1 IF 2 #}
+{{ net_list(ocrole, name) }}
     network_config:
       network_config_update: true
-      template: /home/stack/templates/{{ leaf.name ~ "/" if leaf.name != DefaultLeaf0.name else "" }}nic-configs/{{ ocrole.profile }}.j2
+      template: /home/stack/templates/{{ leaf.name ~ "/" if leaf.name != default_leaf.name else "" }}nic-configs/{{ ocrole.profile }}.j2
+{% if not deployed_server[leaf.name] %}{# IF 0 FOR 2 IF 1 IF 3 #}
       default_route_network:
-      - external
+      - {{ (leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).name | regex_replace('([a-z0-9])([A-Z])', '\\1_\\2') | lower
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else 'ctlplane' }}
     swap_size_mb: 8192
+{% endif %}{# IF 0 FOR 2 IF 1 IF 3 #}
+{% endif %}{# IF 0 FOR 2 IF 1 #}
+{% if ((leaf.hypervisor is defined) and ((libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(',')) | list | length > 0) or (physical_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("openstack.leaf", "equalto", leaf.name) | list | length > 0))) or (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | list | length > 0) %}{# IF INSTANCES #}
   instances:
-{% for vm in (vms | selectattr("profile", "equalto", ocrole.profile) | selectattr("hypervisor", "in", leaf.hypervisor)) %}
+{% if leaf.hypervisor is defined %}{# IF 1 #}
+{% for vm in (libvirt_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("libvirt.hypervisor", "in", leaf.hypervisor.split(','))) %}{# IF 1 FOR 1 #}
+{% if deployed_server[leaf.name] %}{# IF 1 FOR 1 IF 1 #}
+  - name: {{ vm.name }}
+    hostname: {{ vm.name }}
+{{ net_list(ocrole, name, vm.openstack.ctlplane_ip) }}
+{% else %}{# IF 1 FOR 1 IF 1 #}
   - name: {{ leaf.name }}-{{ vm.name }}
-{% if not vm.uefi %}
+{% if vm.pm.mode != 'uefi' %}{# IF 1 FOR 1 IF 2 #}
     image:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
-    root_size_gb: {{ (vm.disk_size / 1073741824) | int - 9 }}
-{% endif %}
-{% endfor %}
-{% for pm in (physical | selectattr("profile", "equalto", ocrole.profile) | selectattr("leaf", "equalto", leaf.name)) %}
+    root_size_gb: {% set root_disk = vm.libvirt.disks | selectattr('root', 'defined') | selectattr('root') | list | first | default(none) %}{% if root_disk %}{% set disk_size = root_disk.size %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1, 'Mi': 0.0009765625, 'Ki': 0.00000095367431640625}.get(unit, 0.000000001)) %}{{ ((val * multiplier) | int - 9) }}{% else %}0{% endif %}
+
+{% endif %}{# IF 1 FOR 1 IF 2 #}
+{% endif %}{# IF 1 FOR 1 IF 1 #}
+{% endfor %}{# IF 1 FOR 1 #}
+{% for pm in (physical_machines | selectattr("openstack.role", "equalto", ocrole.profile) | selectattr("openstack.leaf", "equalto", leaf.name)) %}{# IF 1 FOR 2 #}
+{% if deployed_server[leaf.name] %}{# IF 1 FOR 2 IF 1 #}
+  - name: {{ pm.name }}
+    hostname: {{ pm.name }}
+{{ net_list(ocrole, name, pm.openstack.ctlplane_ip) }}
+{% else %}{# IF 1 FOR 2 IF 1 #}
   - name: {{ leaf.name }}-{{ pm.name }}
-{% if 'boot_mode:uefi' not in pm.capabilities %}
+{% if pm.pm.mode != 'uefi' %}{# IF 1 FOR 2 IF 2 #}
     image:
       href: "file:///var/lib/ironic/images/overcloud-full.raw"
       kernel: "file:///var/lib/ironic/images/overcloud-full.vmlinuz"
       ramdisk: "file:///var/lib/ironic/images/overcloud-full.initrd"
-    root_size_gb: {{ (pm.disk_size / 1073741824) | int - 9 }}
+    root_size_gb: {% if pm.physical.disk %}{% set disk_size = pm.physical.disk %}{% set val = (disk_size | regex_replace('[A-Za-z]', '') | float) %}{% set unit = (disk_size | regex_replace('^[0-9]+', '')) %}{% set multiplier = ({'Gi': 1, 'Mi': 0.0009765625, 'Ki': 0.00000095367431640625}.get(unit, 0.000000001)) %}{{ ((val * multiplier) | int - 9) }}{% else %}0{% endif %}
+
     network_config:
       net_config_data_lookup:
         {{ leaf.name }}-{{ pm.name }}:
-{% for nic, interface in pm.nics.items() %}
-          {{ nic }}: '{{ pm.mac if nic == 'nic1' else interface }}'
+{% for nic, interface in pm.physical.nics.items() %}{# IF 1 FOR 2 IF 2 FOR 1 #}
+          {{ nic }}: '{{ pm.physical.mac if nic == 'nic1' else interface }}'
+{% endfor %}{# IF 1 FOR 2 IF 2 FOR 1 #}
+{% endif %}{# IF 1 FOR 2 IF 2 #}
+{% endif %}{# IF 1 FOR 2 IF 1 #}
+{% endfor %}{# IF 1 FOR 2 #}
+{% else %}{# IF 1 #}
+{% for vm in (kubevirt_machines | selectattr("openstack.role", "equalto", ocrole.profile)) %}{# IF 1 FOR 3 #}
+  - name: {{ vm.name }}
+    hostname: {{ vm.name }}
+{{ net_list(ocrole, name, vm.openstack.ctlplane_ip if vm.openstack.ctlplane_ip is defined else '') }}
+    network_config:
+      net_config_data_lookup:
+        {{ vm.name }}:
+{% for interface in vm.kubevirt.network.interfaces %}
+          {{ interface.name }}: '{{ interface.mac }}'
 {% endfor %}
-{% endif %}
-{% endfor %}
-{% endif %}
-{% endfor %}
-{% endif %}
+{% endfor %}{# IF 1 FOR 3 #}
+{% endif %}{# IF 1 #}
+{% endif %}{# IF INSTANCES #}
+{% endfor %}{# FOR ocrole #}
+{% endif %}{# IF RHOSP_version < 17.1 #}

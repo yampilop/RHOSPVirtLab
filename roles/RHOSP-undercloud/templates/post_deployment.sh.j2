@@ -1,14 +1,8 @@
 {% set rhel_image_name = 'rhel' ~ RHOSP_version_supported[RHOSP_version].rhel_release %}
 {% set rhel_image_file = RHOSP_version_supported[RHOSP_version].rhel_image.name %}
-{% set ceph_count = (roles_count[DefaultLeaf0.name]["CephStorage"] + roles_count[DefaultLeaf0.name]["CephAll"]) %}
-{% set hci_count = (roles_count[DefaultLeaf0.name]["ComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCI"] + roles_count[DefaultLeaf0.name]["DistributedComputeHCIScaleOut"]) %}
-#/bin/bash
-
-{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
-# Get servers list
-source ~/stackrc
-SERVERS=$(openstack server list -f value -c Name)
-{% endif %}
+{% set ceph_count = (roles_count[default_leaf.name]["CephStorage"] + roles_count[default_leaf.name]["CephAll"]) %}
+{% set hci_count = (roles_count[default_leaf.name]["ComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCI"] + roles_count[default_leaf.name]["DistributedComputeHCIScaleOut"]) %}
+#!/bin/bash
 
 source /home/stack/overcloudrc
 
@@ -16,9 +10,9 @@ source /home/stack/overcloudrc
 ### Overcloud images ###########################################################
 ################################################################################
 
-{% if (DCNLeafs | length > 0) and ((ceph_count + hci_count) > 0) %}
-openstack image show '{{ rhel_image_name }}' &>/dev/null || (qemu-img convert -f qcow2 -O raw images/{{ rhel_image_file }} images/{{ rhel_image_file }}.raw && glance image-create --disk-format raw --container-format bare --name '{{ rhel_image_name }}' --file images/{{ rhel_image_file }}.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show '{{ rhel_image_name }}' -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
-openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw images/cirros.qcow2 images/cirros.raw && glance image-create --disk-format raw --container-format bare --name CirrOS --file images/cirros.raw --visibility public --store {{ DefaultLeaf0.name }} && glance image-import $(openstack image show CirrOS -c id -f value) --stores {% for dcn_leaf in DCNLeafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
+{% if (dcn_leafs | length > 0) and ((ceph_count + hci_count) > 0) %}
+openstack image show '{{ rhel_image_name }}' &>/dev/null || (qemu-img convert -f qcow2 -O raw images/{{ rhel_image_file }} images/{{ rhel_image_file }}.raw && glance image-create --disk-format raw --container-format bare --name '{{ rhel_image_name }}' --file images/{{ rhel_image_file }}.raw --visibility public --store {{ default_leaf.name }} && glance image-import $(openstack image show '{{ rhel_image_name }}' -c id -f value) --stores {% for dcn_leaf in dcn_leafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
+openstack image show CirrOS &>/dev/null || (qemu-img convert -f qcow2 -O raw images/cirros.qcow2 images/cirros.raw && glance image-create --disk-format raw --container-format bare --name CirrOS --file images/cirros.raw --visibility public --store {{ default_leaf.name }} && glance image-import $(openstack image show CirrOS -c id -f value) --stores {% for dcn_leaf in dcn_leafs if (roles_count[dcn_leaf.name]["CephStorage"] + roles_count[dcn_leaf.name]["CephAll"] + roles_count[dcn_leaf.name]["ComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCI"] + roles_count[dcn_leaf.name]["DistributedComputeHCIScaleOut"]) > 0 %}{{ dcn_leaf.name }}{{ "," if not loop.last else "" }}{% endfor %} --import-method copy-image)
 {% else %}
 openstack image show '{{ rhel_image_name }}' &>/dev/null || openstack image create --disk-format qcow2 --min-disk 12 --min-ram 1536 --file images/{{ rhel_image_file }} --public '{{ rhel_image_name }}'
 openstack image show CirrOS &>/dev/null || openstack image create --disk-format qcow2 --min-disk 2 --min-ram 512 --file images/cirros.qcow2 --public CirrOS
@@ -48,27 +42,7 @@ openstack stack show overcloud_resources &>/dev/null || openstack stack create \
 --parameter "default_security_group_id=${SECGROUPID}" \
 overcloud_resources
 
-{% if (RHOSP_version == 13.0) and (DCNLeafs | length > 0) %}
-# Manual host addition for host aggregates needed for RHOSP 13.0 DCN
-{% for leaf in DCNLeafs %}
-{% if (vms | selectattr("hypervisor", "equalto", leaf.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", leaf.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
-for HOST in $SERVERS; do
-  if [[ $HOST == *"{{ leaf.name }}"* ]]; then
-    openstack aggregate add host {{ leaf.name }} $HOST.localdomain
-  fi
-done
-{% endif %}
-{% endfor %}
-{% if (vms | selectattr("hypervisor", "equalto", DefaultLeaf0.hypervisor) | selectattr("profile", "match", "compute|ceph") | list | length + physical | selectattr("leaf", "equalto", DefaultLeaf0.name) | selectattr("profile", "match", "compute|ceph") | list | length ) > 0 %}
-for HOST in $SERVERS; do
-  if [[ $HOST == *"{{ DefaultLeaf0.name }}"* ]]; then
-    openstack aggregate add host {{ DefaultLeaf0.name }} $HOST.localdomain
-  fi
-done
-{% endif %}
-{% endif %}
-
-{% if DeployOctavia and RHOSP_version < 17%}
+{% if DeployOctavia and RHOSP_version < 17 %}
 # Octavia configuration
 openstack loadbalancer flavorprofile show amphora-single-profile &>/dev/null || openstack loadbalancer flavorprofile create --name amphora-single-profile --provider amphora --flavor-data '{"loadbalancer_topology": "SINGLE"}'
 openstack loadbalancer flavor show standalone-lb &>/dev/null || openstack loadbalancer flavor create --name standalone-lb --flavorprofile amphora-single-profile --description "A non-high availability load balancer for testing."
@@ -79,22 +53,77 @@ source ~/stackrc
 export ANSIBLE_HOST_KEY_CHECKING=False
 
 {% if (RHOSP_version >= 17) %}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' undercloud,{{ DefaultLeaf0.name }}
-{% for leaf in DCNLeafs %}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' undercloud,{{ default_leaf.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' undercloud,{{ default_leaf.name }}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' undercloud,{{ default_leaf.name }}
+{% for leaf in dcn_leafs %}
 ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    size 100M"' {{ leaf.name }}
 ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    compress"' {{ leaf.name }}
 ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/rsyslog insertafter="{" line="    daily"' {{ leaf.name }}
 {% endfor %}
 {% else %}
 tripleo-ansible-inventory --static-yaml-inventory ~/tripleo-ansible-inventory.yaml
-ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' undercloud,{{ DefaultLeaf0.name }}
-ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' undercloud,{{ DefaultLeaf0.name }}
-{% for leaf in DCNLeafs %}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' undercloud,{{ default_leaf.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' undercloud,{{ default_leaf.name }}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' undercloud,{{ default_leaf.name }}
+{% for leaf in dcn_leafs %}
 ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    size 100M"' {{ leaf.name }}
 ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    compress"' {{ leaf.name }}
 ansible -i ~/tripleo-ansible-inventory.yaml -b -m lineinfile -a 'path=/etc/logrotate.d/syslog insertafter="{" line="    daily"' {{ leaf.name }}
 {% endfor %}
+{% endif %}
+
+################################################################################
+### Pacemaker maintenance #####################################################
+################################################################################
+# Schedule pcs resource cleanup every 6 hours on controller nodes
+{% if RHOSP_version >= 17 %}
+ansible -i ~/overcloud-deploy/overcloud/config-download/overcloud/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% for leaf in dcn_leafs %}
+ansible -i ~/overcloud-deploy/{{ leaf.name }}/config-download/{{ leaf.name }}/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% endfor %}
+{% else %}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% for leaf in dcn_leafs %}
+ansible -i ~/tripleo-ansible-inventory.yaml -b -m cron -a 'name="pcs resource cleanup" hour="0,6,12,18" minute="0" job="pcs resource cleanup" user="root" state="present"' Controller
+{% endfor %}
+{% endif %}
+
+{% if (default_leaf.ctlplane_subnet.masquerade | bool) and (forwarded_ports | length > 0) %}
+################################################################################
+### Port forwarding to the overcloud ###########################################
+################################################################################
+# DNAT the forwarded_ports to the overcloud public IP ({{ overcloud_ip }}), SNAT them too (full-NAT) so replies return via the undercloud regardless of the external network, installed as a systemd oneshot so the rules survive reboots.
+sudo tee /usr/local/sbin/rhospvirtlab-portforward.sh >/dev/null <<'EOF'
+#!/bin/bash
+# Managed by RHOSPVirtLab (RHOSP-undercloud): forward service ports to the overcloud.
+set -e
+sysctl -w net.ipv4.ip_forward=1
+{% for port_entry in forwarded_ports %}
+iptables -t nat -C PREROUTING -p tcp --dport {{ port_entry.port }} -j DNAT --to-destination {{ overcloud_ip }}:{{ port_entry.port }} 2>/dev/null || \
+  iptables -t nat -A PREROUTING -p tcp --dport {{ port_entry.port }} -j DNAT --to-destination {{ overcloud_ip }}:{{ port_entry.port }}
+iptables -t nat -C POSTROUTING -p tcp -d {{ overcloud_ip }} --dport {{ port_entry.port }} -j MASQUERADE 2>/dev/null || \
+  iptables -t nat -A POSTROUTING -p tcp -d {{ overcloud_ip }} --dport {{ port_entry.port }} -j MASQUERADE
+iptables -C FORWARD -p tcp -d {{ overcloud_ip }} --dport {{ port_entry.port }} -j ACCEPT 2>/dev/null || \
+  iptables -I FORWARD 1 -p tcp -d {{ overcloud_ip }} --dport {{ port_entry.port }} -j ACCEPT
+{% endfor %}
+EOF
+sudo chmod 0755 /usr/local/sbin/rhospvirtlab-portforward.sh
+
+sudo tee /etc/systemd/system/rhospvirtlab-portforward.service >/dev/null <<'EOF'
+[Unit]
+Description=RHOSPVirtLab undercloud port forwarding to the overcloud
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/rhospvirtlab-portforward.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now rhospvirtlab-portforward.service
 {% endif %}

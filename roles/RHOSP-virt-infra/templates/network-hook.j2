@@ -1,59 +1,51 @@
 #!/bin/bash
+# libvirt network hook: re-applies the FORWARD ACCEPT rule libvirt resets on every network (re)start for forward:bridge gateways; called as "network <name> <event> ...".
 
 set -e
 set -u
 
 iptables='/usr/sbin/iptables'
 
-external_if='{{ external_if }}'
-external_ip=`ip addr show dev ${external_if} | grep -o "inet [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"`
-forward_network='{{ forward_network }}'
-bridge='{{ (networks | selectattr("name", "equalto", forward_network) | list | first).bridge }}'
+# Map of managed libvirt network name -> host bridge, for every forward:bridge network
+# that owns a gateway IP on this host (the ones the host masquerades).
+declare -A bridges=(
+{% for net in libvirt_networks if net.forward == 'bridge' and (net.ipv4 is defined) and ('localhost' in net.hypervisor.split(',')) %}
+  ["{{ net.name }}"]="{{ net.bridge }}"
+{% endfor %}
+)
 
-internal_ip='{{ overcloud_ip }}'
-
-ports=( {{ forwarded_ports | join(' ') }} )
-
-rules_update() {
-  network_name="$1"
+forward_update() {
+  bridge="$1"
   action="$2"
-  
+
   FORWARD="$iptables $action FORWARD -o $bridge -j ACCEPT"
-  
+
   if [ -z "${DEBUG_RULES:-}" ]; then
     `$FORWARD`
   else
     echo $FORWARD
   fi
-
-  for port in ${ports[@]}; do
-    PREROUTING="$iptables -t nat $action PREROUTING -d ${external_ip} -i ${external_if} -p tcp -m tcp --dport ${port} -j DNAT --to-destination ${internal_ip}:${port}"
-
-    if [ -z "${DEBUG_RULES:-}" ]; then
-      `$PREROUTING`
-    else
-      echo $PREROUTING
-    fi
-  done
 }
 
 network_name="$1"
 network_task="$2"
 
-if [ "${network_name}" = "${forward_network}" ]; then
+bridge="${bridges[$network_name]:-}"
+
+if [ -n "${bridge}" ]; then
 
   case "${network_task}" in
     started)
-      rules_update ${network_name} " -I "
+      forward_update "${bridge}" " -I "
     ;;
-  
+
     stopped)
-      rules_update ${network_name} " -D "
+      forward_update "${bridge}" " -D "
     ;;
 
     updated)
-      rules_update ${network_name} " -D "
-      rules_update ${network_name} " -I "
+      forward_update "${bridge}" " -D "
+      forward_update "${bridge}" " -I "
     ;;
 
     *)

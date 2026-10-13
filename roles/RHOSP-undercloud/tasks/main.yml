@@ -6,12 +6,89 @@
     msg: "The selected RHOSP version ({{ RHOSP_version }}) is not supported by this role."
   when: RHOSP_version_supported[RHOSP_version] is not defined
 
+# Register computed vars as facts so they're available in template contexts
+- name: Register computed variables as facts for template access
+  set_fact:
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
+    libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    kubevirt_machines: "{{ machines | selectattr('type', 'equalto', 'kubevirt') | list }}"
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+
+# Only the images actually needed by ironic-provisioned nodes (across every leaf) are
+# worth unpacking: these tarballs are several GB each, and most labs need at most one
+# of the BIOS/UEFI overcloud images, not both - deployed-server-only leafs need neither.
+- name: IMAGES - Determine which director images are actually needed
+  set_fact:
+    ironic_provisioned_machines: "{{ ironic_candidates | rejectattr('pre_provisioned', 'defined') | list + ironic_candidates | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list }}"
+  vars:
+    ironic_candidates: "{{ libvirt_machines + physical_machines }}"
+
+- name: IMAGES - Determine BIOS/UEFI image requirements
+  set_fact:
+    needs_bios_image: >-
+      {{ (ironic_provisioned_machines | rejectattr('pm', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | rejectattr('pm.mode', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined') | rejectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+    needs_uefi_image: >-
+      {{ (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined')
+      | selectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+
+- name: CHECKS - Fail if a DCN leaf shares a hypervisor with the control-plane leaf
+  vars:
+    shared_hypervisors: "{{ dcn_leaf.hypervisor.split(',') | intersect(default_leaf.hypervisor.split(',')) }}"
+  fail:
+    msg: |
+      DCN leaf '{{ dcn_leaf.name }}' shares hypervisor(s) {{ shared_hypervisors | join(', ') }}
+      with the control-plane leaf ('{{ default_leaf.name }}'). Co-locating a DCN leaf on the
+      same physical hypervisor as the control-plane leaf is not supported: each DCN leaf must
+      run on its own dedicated hypervisor(s).
+  loop: "{{ dcn_leafs }}"
+  loop_control:
+    loop_var: dcn_leaf
+  when: shared_hypervisors | length > 0
+
 - name: Wait until cloud-init finishes to grant the sudo access with no password
   raw: test -f /var/lib/cloud/instance/boot-finished
   retries: 30
   register: cmd_res
   changed_when: false
   until: cmd_res is success
+  when: not undercloud_is_physical | bool
+
+- name: SSH - Ensure the stack ssh directory exists
+  file:
+    path: /home/stack/.ssh
+    state: directory
+    owner: stack
+    group: stack
+    mode: '0700'
+
+- name: Copy hypervisor SSH keys to undercloud
+  block:
+    - name: Copy private key
+      copy:
+        src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+        dest: /home/stack/.ssh/id_rsa
+        mode: '0600'
+        owner: stack
+        group: stack
+      when: not undercloud_is_physical | bool
+
+    - name: Copy public key
+      copy:
+        src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+        dest: /home/stack/.ssh/id_rsa.pub
+        mode: '0644'
+        owner: stack
+        group: stack
+      when: not undercloud_is_physical | bool
 
 - name: Configure swap file on the undercloud
   include_role:
@@ -21,6 +98,9 @@
   hostname:
     name: undercloud.localdomain
 
+- name: UNDERCLOUD NETWORK - Configure gateway network interfaces
+  include_tasks: tasks/undercloud-network.yml
+
 - name: Red Hat Subscription management
   import_tasks: tasks/subscription.yml
 
@@ -28,6 +108,28 @@
   rhsm_repository:
     name: "{{ RHOSP_version_supported[RHOSP_version].undercloud_repos }}"
     purge: yes
+  register: repo_result
+  failed_when: false
+
+- name: REPOSITORIES - Verify repos were enabled
+  command: subscription-manager repos --list-enabled
+  become: yes
+  register: repos_enabled
+  changed_when: false
+  failed_when: false
+
+- name: REPOSITORIES - Enable the needed repositories only (raw fallback)
+  raw: subscription-manager repos --disable='*' && subscription-manager repos --enable={{ RHOSP_version_supported[RHOSP_version].undercloud_repos | join(' --enable=') }}
+  become: yes
+  when: >-
+    repos_enabled.rc != 0 or
+    (RHOSP_version_supported[RHOSP_version].undercloud_repos
+    | reject('in', repos_enabled.stdout) | list | length > 0)
+
+- name: REPOSITORIES - Refresh dnf/yum cache
+  command: dnf makecache
+  become: yes
+  changed_when: false
 
 - name: MODULES - Enable and configure modules
   copy:
@@ -52,27 +154,11 @@
   yum:
     name: '*'
     state: latest
+  when: UndercloudFullUpdate | default(true) | bool
   notify: HANDLER - Reboot the machine
 
-- name: NETWORKING - Define management network connection
-  set_fact:
-    network_connections: "{{ network_connections + [connection] }}"
-  vars:
-    connection:
-      name: "eth1"
-      interface_name: "eth1"
-      type: ethernet
-      autoconnect: yes
-      mtu: 1500
-      state: up
-      ip:
-        dhcp4: yes
-
-- name: NETWORKING - Configure network using system role
-  import_role:
-    name: rhel-system-roles.network
-  vars:
-    network_allow_restart: yes
+# Cloud-init configures both mgmt and eth0 (ctlplane) via network-config.j2, so no need
+# for rhel-system-roles.network. A physical undercloud is admin-prepared and left untouched.
 
 - name: CONFIGFILES - Create images directory
   file:
@@ -88,28 +174,59 @@
     name: "{{ RHOSP_version_supported[RHOSP_version].packages }}"
     state: latest
 
-- name: IMAGES - Unpack director images
+- name: IMAGES - Unpack the IPA ramdisk image
   unarchive:
-    src: "{{ item }}"
+    src: "{{ RHOSP_version_supported[RHOSP_version].images_directories.ipa }}"
     dest: "/home/stack/images/"
     owner: stack
     group: stack
     remote_src: yes
-  loop: "{{ RHOSP_version_supported[RHOSP_version].images_directories }}"
+  when: ironic_provisioned_machines | length > 0
 
-- name: IMAGES - Download images for testing
-  ignore_errors: true
-  get_url:
-    url: "{{ item.url }}"
-    dest: "images/{{ item.name }}"
+- name: IMAGES - Unpack the BIOS overcloud image
+  unarchive:
+    src: "{{ RHOSP_version_supported[RHOSP_version].images_directories.bios }}"
+    dest: "/home/stack/images/"
     owner: stack
     group: stack
-    timeout: 30
+    remote_src: yes
+  when: needs_bios_image | bool
+
+- name: IMAGES - Unpack the UEFI overcloud image
+  unarchive:
+    src: "{{ RHOSP_version_supported[RHOSP_version].images_directories.uefi }}"
+    dest: "/home/stack/images/"
+    owner: stack
+    group: stack
+    remote_src: yes
+  when:
+    - RHOSP_version_supported[RHOSP_version].images_directories.uefi is defined
+    - needs_uefi_image | bool
+
+- name: IMAGES - Check which test images already exist
+  stat:
+    path: "images/{{ item.name }}"
   loop:
     - url: "{{ CustomRhelImage }}"
       name: "{{ RHOSP_version_supported[RHOSP_version].rhel_image.name }}"
-    - url: "{{ CirrOSDownloadLink }}"
+    - url: "{{ CustomCirrOSImage }}"
       name: "cirros.qcow2"
+  loop_control:
+    label: "{{ item.name }}"
+  register: test_images_stat
+
+# Skip any image already present (large files); loops over the stat results.
+- name: IMAGES - Download images for testing
+  get_url:
+    url: "{{ item.item.url }}"
+    dest: "images/{{ item.item.name }}"
+    owner: stack
+    group: stack
+    timeout: 30
+  loop: "{{ test_images_stat.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: not item.stat.exists
   retries: 3
   delay: 10
   register: result
@@ -119,18 +236,59 @@
   debug:
     msg: "Use --start-at-task TEMPLATES to start from here and re-render the templates."
 
-- name: CHECKS - Verify vms and physical profiles
+- name: Gather facts to ensure variables are available
+  setup:
+
+- name: Register computed variables again for template access
+  set_fact:
+    default_leaf: "{{ leafs | selectattr('name', 'equalto', 'overcloud') | first }}"
+    dcn_leafs: "{{ leafs | rejectattr('name', 'equalto', 'overcloud') | list }}"
+    default_leaf_has_networks: "{{ ((leafs | selectattr('name', 'equalto', 'overcloud') | first).networks | default([]) | length) > 0 }}"
+    libvirt_machines: "{{ machines | selectattr('type', 'equalto', 'libvirt') | list }}"
+    physical_machines: "{{ machines | selectattr('type', 'equalto', 'physical') | list }}"
+    kubevirt_machines: "{{ machines | selectattr('type', 'equalto', 'kubevirt') | list }}"
+    undercloud_is_physical: "{{ (undercloud.type | default('libvirt')) == 'physical' }}"
+    overcloud_ip: >-
+      {{ (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | first).subnet.vip
+         if (default_leaf.networks | default([]) | selectattr('name', 'equalto', 'External') | list | length > 0)
+         else default_leaf.ctlplane_subnet.vip }}
+
+# Re-registered so pre_deployment.sh.j2 can still resolve needs_bios_image when the
+# play is resumed with `--start-at-task TEMPLATES`, which skips the earlier
+# "IMAGES - Determine BIOS/UEFI image requirements" task above.
+- name: IMAGES - Determine which director images are actually needed (again, for TEMPLATES restart)
+  set_fact:
+    ironic_provisioned_machines: "{{ ironic_candidates | rejectattr('pre_provisioned', 'defined') | list + ironic_candidates | selectattr('pre_provisioned', 'defined') | rejectattr('pre_provisioned') | list }}"
+  vars:
+    ironic_candidates: "{{ libvirt_machines + physical_machines }}"
+
+- name: IMAGES - Determine BIOS/UEFI image requirements (again, for TEMPLATES restart)
+  set_fact:
+    needs_bios_image: >-
+      {{ (ironic_provisioned_machines | rejectattr('pm', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | rejectattr('pm.mode', 'defined') | list | length > 0)
+      or (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined') | rejectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+    needs_uefi_image: >-
+      {{ (ironic_provisioned_machines | selectattr('pm', 'defined') | selectattr('pm.mode', 'defined')
+      | selectattr('pm.mode', 'equalto', 'uefi') | list | length > 0) }}
+
+- name: CHECKS - Verify machine profiles
   import_tasks: tasks/profiles.yml
 
-- name: CONFIGFILES - Set container images prepare file and custom undercloud parameters
+- name: CONFIGFILES - Set container images prepare file (contains registry credentials)
   template:
-    src: "{{ item }}.j2"
-    dest: "/home/stack/{{ item }}"
+    src: "containers-prepare-parameter.yaml.j2"
+    dest: "/home/stack/containers-prepare-parameter.yaml"
     owner: stack
     group: stack
-  loop:
-    - "containers-prepare-parameter.yaml"
-    - "custom-undercloud-params.yaml"
+    mode: "0600"
+
+- name: CONFIGFILES - Set custom undercloud parameters
+  template:
+    src: "custom-undercloud-params.yaml.j2"
+    dest: "/home/stack/custom-undercloud-params.yaml"
+    owner: stack
+    group: stack
 
 - name: CONFIGFILES - Set undercloud configuration file
   template:
@@ -142,12 +300,12 @@
 - name: STACK - Import tasks for the main stack
   include_tasks: tasks/overcloud.yml
   loop:
-    - "{{ DefaultLeaf0 }}"
+    - "{{ default_leaf }}"
   loop_control:
     loop_var: leaf
 
 - name: DCN - Import tasks for each DCN Leaf
   include_tasks: tasks/leafs.yml
-  loop: "{{ DCNLeafs }}"
+  loop: "{{ dcn_leafs }}"
   loop_control:
     loop_var: leaf

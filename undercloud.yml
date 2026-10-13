@@ -1,0 +1,22 @@
+---
+- name: Openstack undercloud configuration
+  hosts: openstack
+  vars_files:
+    - vars/options.yml
+    - vars/machines.yml
+    - vault_credentials.yaml
+  gather_facts: no
+
+  pre_tasks:
+    - name: Wait for the undercloud to come up
+      wait_for_connection:
+        timeout: 120
+      when: create | bool
+
+    - name: Gathering facts
+      setup:
+      when: create | bool
+
+  roles:
+    - role: RHOSP-undercloud
+      when: create | bool
