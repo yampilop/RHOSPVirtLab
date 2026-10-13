@@ -167,7 +167,7 @@ resources:
       ephemeral: {{ size.ephemeral }}
       swap: {{ size.swap }}
       is_public: True
-      extra_specs: { "sriov": true, "hw:cpu_policy": "dedicated", "hw:mem_page_size": "large" }
+      extra_specs: { "sriov": "True", "hw:cpu_policy": "dedicated", "hw:mem_page_size": "large" }
 {% endif %}
 {% endfor %}
 
